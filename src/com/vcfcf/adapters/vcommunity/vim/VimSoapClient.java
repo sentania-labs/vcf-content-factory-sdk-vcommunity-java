@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import javax.net.ssl.HttpsURLConnection;
@@ -139,8 +138,10 @@ public final class VimSoapClient implements VimSession {
                 + "<_this type=\"ServiceInstance\">ServiceInstance</_this>"
                 + "</RetrieveServiceContent>", "RetrieveServiceContent", false, shortReadMs);
         if (!sc.isOk()) {
-            return VimResult.fault(sc.faultClass(), "reading the service content failed: "
-                    + sc.message(), null, sc.bytes(), sc.cause());
+            // a pin mismatch already says everything; other failures get the step they hit
+            String m = findPin(sc.cause()) != null ? sc.message()
+                    : "reading the service content failed: " + sc.message();
+            return VimResult.fault(sc.faultClass(), m, null, sc.bytes(), sc.cause());
         }
         XmlNode rv = sc.value().find("returnval");
         if (rv == null) {
@@ -298,7 +299,7 @@ public final class VimSoapClient implements VimSession {
                 + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
                 + "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soapenv:Body>"
                 + bodyXml + "</soapenv:Body></soapenv:Envelope>";
-        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+        HttpURLConnection conn = (HttpURLConnection) java.net.URI.create(url).toURL().openConnection();
         if (conn instanceof HttpsURLConnection) {
             tls.secure((HttpsURLConnection) conn);
         }

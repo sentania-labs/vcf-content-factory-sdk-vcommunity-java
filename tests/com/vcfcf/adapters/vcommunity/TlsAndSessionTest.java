@@ -96,6 +96,7 @@ public final class TlsAndSessionTest {
             T.contains(r.message(), "does not match the vCenter Thumbprint", "text names the field");
             T.contains(r.message(), Thumbprints.of(vc.cert, 256), "text carries the presented thumbprint");
             T.contains(r.message(), "Pinned", "text names the mode");
+            T.check(r.message().startsWith("The certificate vCenter presented"), "text is the pin message as is");
             T.notContains(r.message(), "very-secret-pw", "message");
             T.check(r.cause() instanceof PinMismatchException || r.cause() != null, "cause kept");
             T.check(!Reachability.isUnreachable(r.cause()), "a wrong pin is not 'unreachable'");
