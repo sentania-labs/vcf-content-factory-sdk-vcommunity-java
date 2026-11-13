@@ -213,7 +213,7 @@ public final class CheckListTest {
         f.put("esx", new OpsHttpException("x", 400, null, "{\"message\":\"Request parameter is invalid\"}"));
         e = store.refresh(one(ListKind.ESXI_SETTINGS, "esx"), f).get(ListKind.ESXI_SETTINGS);
         T.eq(Outcome.FETCH_FAILED, e.outcome, "400 without a code is a failed read");
-        T.contains(e.problem, "HTTP 400; it said: {\"message\":\"Request parameter is invalid\"}", "the answer's words");
+        T.contains(e.problem, "HTTP 400; it said: Request parameter is invalid", "the answer's message, not its markup");
         f.put("esx", new OpsHttpException("x", 400, null, "y".repeat(500)));
         e = store.refresh(one(ListKind.ESXI_SETTINGS, "esx"), f).get(ListKind.ESXI_SETTINGS);
         T.check(e.problem.length() < 400, "the excerpt is bounded: " + e.problem.length());

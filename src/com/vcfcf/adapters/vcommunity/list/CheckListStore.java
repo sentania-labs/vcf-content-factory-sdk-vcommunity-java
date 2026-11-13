@@ -154,11 +154,11 @@ public final class CheckListStore {
                         new ArrayList<>(), "Configuration file '" + name + ".xml' does not exist in "
                         + "VCF Operations, so its list is empty.", 0, 0);
             }
-            // The answer's own words are kept, bounded: an HTTP 400 with no apiErrorCode (seen on
+            // The answer's message is kept, bounded, never markup: an HTTP 400 with no apiErrorCode (seen on
             // 8.18.7) cannot be told from a missing file without them.
-            String said = e.bodyExcerpt().isEmpty() ? "" : "; it said: "
-                    + (e.bodyExcerpt().length() > 120 ? e.bodyExcerpt().substring(0, 120) + "..."
-                            : e.bodyExcerpt());
+            String msg = ErrorText.of(e.bodyExcerpt());
+            String said = msg.isEmpty() ? "" : "; it said: "
+                    + (msg.length() > 120 ? msg.substring(0, 120) + "..." : msg);
             return failed(kind, name, Outcome.FETCH_FAILED, "VCF Operations answered HTTP "
                     + e.status() + (e.apiErrorCode() == null ? "" : " (error " + e.apiErrorCode() + ")")
                     + said);

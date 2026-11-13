@@ -1,6 +1,7 @@
 package com.vcfcf.adapters.vcommunity;
 
 import com.vcfcf.adapters.vcommunity.list.CheckListStore;
+import com.vcfcf.adapters.vcommunity.list.ConfigFileFetch;
 import com.vcfcf.adapters.vcommunity.list.ListKind;
 import com.vcfcf.adapters.vcommunity.ops.OpsApi;
 import com.vcfcf.adapters.vcommunity.tls.ThumbprintProbe;
@@ -138,7 +139,7 @@ public final class ConnectionTester {
 
         if (suite) {
             Map<ListKind, CheckListStore.Entry> entries = store.refresh(cfg.filesInUse(),
-                    path -> ops.get(path, "*/*"));
+                    path -> ConfigFileFetch.fetch(ops, path));
             for (CheckListStore.Entry e : entries.values()) {
                 r.lines.add(e.summary());
                 if (!e.ok() && e.outcome != CheckListStore.Outcome.NOT_CONFIGURED) {
