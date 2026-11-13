@@ -7,6 +7,7 @@ import com.vcfcf.adapters.vcommunity.health.FailureCause;
 import com.vcfcf.adapters.vcommunity.health.Failures;
 import com.vcfcf.adapters.vcommunity.health.WarnCounter;
 import com.vcfcf.adapters.vcommunity.list.CheckListStore;
+import com.vcfcf.adapters.vcommunity.list.ConfigFileFetch;
 import com.vcfcf.adapters.vcommunity.list.ListKind;
 import com.vcfcf.adapters.vcommunity.ops.LastPushed;
 import com.vcfcf.adapters.vcommunity.ops.OpsApi;
@@ -173,7 +174,7 @@ public final class CycleEngine {
             s.collectorStatus.put(COLLECTOR_CHECK_LISTS, Status.FAILED);
         } else {
             try {
-                lists = store.refresh(cfg.filesInUse(), path -> ops.get(path, "*/*"));
+                lists = store.refresh(cfg.filesInUse(), path -> ConfigFileFetch.fetch(ops, path));
                 accountLists(lists, failures, s);
             } catch (RuntimeException e) {
                 lists = new EnumMap<>(ListKind.class);
