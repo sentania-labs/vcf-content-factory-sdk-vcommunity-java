@@ -57,6 +57,14 @@ public final class Failures {
         if (first == null) first = bound(cause + ": " + message);
     }
 
+    /**
+     * Count values that were not sent because their source was absent in a read that
+     * succeeded (design 5.1 rule 2): not a failed read, only a figure for Collection Health.
+     */
+    public synchronized void addWithheld(int n) {
+        if (n > 0) withheld += n;
+    }
+
     /** Failed read units this cycle. */
     public synchronized int readsFailed() {
         return units.size();

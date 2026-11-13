@@ -10,7 +10,8 @@ import java.util.Set;
 
 /**
  * The one way a value is queued for a push (design 5.6): per resource id, per
- * key, one string property or one finite number. It refuses, counts and logs
+ * key, one string property, one numeric property (a {@link Double}) or one
+ * finite stat. It refuses, counts and logs
  * once per key what must never be sent: a null or blank resource id or key, a
  * null value, a NaN or an infinity. A refusal is a programming error in a
  * collector, not a failed read, so it is counted apart ({@link #refused()}).
@@ -18,7 +19,7 @@ import java.util.Set;
  */
 public final class PushSet {
 
-    private final Map<String, Map<String, String>> props = new LinkedHashMap<>();
+    private final Map<String, Map<String, Object>> props = new LinkedHashMap<>();
     private final Map<String, Map<String, Double>> stats = new LinkedHashMap<>();
     private final Set<String> warnedKeys = new HashSet<>();
     private final Log log;
@@ -35,7 +36,18 @@ public final class PushSet {
         if (!valid(resourceId, key) || value == null) {
             return refuse(key, value == null ? "a null value" : "a blank id or key");
         }
-        Map<String, String> m = props.computeIfAbsent(resourceId, k -> new LinkedHashMap<>());
+        Map<String, Object> m = props.computeIfAbsent(resourceId, k -> new LinkedHashMap<>());
+        if (m.put(key, value) == null) propCount++;
+        return true;
+    }
+
+    /** Queue a numeric property (design 4.4, R43); false when it was refused (NaN, infinity, blank id or key). */
+    public boolean numProp(String resourceId, String key, double value) {
+        if (!valid(resourceId, key) || Double.isNaN(value) || Double.isInfinite(value)) {
+            return refuse(key, Double.isNaN(value) || Double.isInfinite(value)
+                    ? "a NaN or infinite number" : "a blank id or key");
+        }
+        Map<String, Object> m = props.computeIfAbsent(resourceId, k -> new LinkedHashMap<>());
         if (m.put(key, value) == null) propCount++;
         return true;
     }
@@ -64,7 +76,8 @@ public final class PushSet {
         return false;
     }
 
-    public Map<String, Map<String, String>> properties() {
+    /** Per resource, per key: a {@link String} property or a {@link Double} numeric property. */
+    public Map<String, Map<String, Object>> properties() {
         return Collections.unmodifiableMap(props);
     }
 

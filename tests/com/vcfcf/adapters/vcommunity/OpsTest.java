@@ -117,8 +117,8 @@ public final class OpsTest {
         T.done("push set refuses what must never be sent");
     }
 
-    static Map<String, Map<String, String>> props(String... kv) {
-        Map<String, Map<String, String>> m = new LinkedHashMap<>();
+    static Map<String, Map<String, Object>> props(String... kv) {
+        Map<String, Map<String, Object>> m = new LinkedHashMap<>();
         for (int i = 0; i < kv.length; i += 3) {
             m.computeIfAbsent(kv[i], k -> new LinkedHashMap<>()).put(kv[i + 1], kv[i + 2]);
         }
@@ -127,7 +127,7 @@ public final class OpsTest {
 
     static void lastPushed() {
         LastPushed lp = new LastPushed(12);
-        Map<String, Map<String, String>> all = props("r1", "a", "1", "r1", "b", "2", "r2", "a", "1");
+        Map<String, Map<String, Object>> all = props("r1", "a", "1", "r1", "b", "2", "r2", "a", "1");
         LastPushed.Selection s1 = lp.select(all, 1);
         T.eq(3, s1.toSend().values().stream().mapToInt(Map::size).sum(), "first cycle sends everything");
         s1.commit();
@@ -174,7 +174,12 @@ public final class OpsTest {
         }
 
         @Override
-        public PushOutcome pushBatch(Map<String, Map<String, String>> properties, Map<String, Map<String, Double>> stats, long ts) {
+        public String post(String path, String jsonBody) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public PushOutcome pushBatch(Map<String, Map<String, Object>> properties, Map<String, Map<String, Double>> stats, long ts) {
             throw new UnsupportedOperationException();
         }
     }

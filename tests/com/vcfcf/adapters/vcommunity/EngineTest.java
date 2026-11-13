@@ -42,7 +42,7 @@ public final class EngineTest {
         RuntimeException resourceRuntime;
         IOException versionFailure;
         PushOutcome outcome = new PushOutcome(2, 1, 0, 0, 0, false);
-        final List<Map<String, Map<String, String>>> pushedProps = new ArrayList<>();
+        final List<Map<String, Map<String, Object>>> pushedProps = new ArrayList<>();
         final List<Map<String, Map<String, Double>>> pushedStats = new ArrayList<>();
         final List<Long> pushedAt = new ArrayList<>();
         final List<String> paths = new ArrayList<>();
@@ -70,7 +70,12 @@ public final class EngineTest {
         }
 
         @Override
-        public PushOutcome pushBatch(Map<String, Map<String, String>> properties,
+        public String post(String path, String jsonBody) throws IOException {
+            throw new IOException("no POST in this fake");
+        }
+
+        @Override
+        public PushOutcome pushBatch(Map<String, Map<String, Object>> properties,
                 Map<String, Map<String, Double>> stats, long ts) {
             pushedProps.add(properties);
             pushedStats.add(stats);
@@ -174,14 +179,14 @@ public final class EngineTest {
         T.check(firstProps >= 3, "first cycle sends the properties");
         r.clock.addAndGet(300_000);
         r.run();
-        Map<String, Map<String, String>> second = r.ops.pushedProps.get(1);
+        Map<String, Map<String, Object>> second = r.ops.pushedProps.get(1);
         T.check(second.isEmpty(), "second cycle: no property changed, none sent: " + second);
         T.check(!r.ops.pushedStats.get(1).isEmpty(), "stats are sent every cycle");
         // a failure shows up in the property, which then changes
         r.ops.files.put("vm_options", new java.net.ConnectException("x"));
         r.clock.addAndGet(300_000);
         r.run();
-        Map<String, String> third = r.ops.pushedProps.get(2).get("vc-res-1");
+        Map<String, Object> third = r.ops.pushedProps.get(2).get("vc-res-1");
         T.check(third != null && third.containsKey(HEALTH + "First Failure"), "changed property sent: " + third);
         // every 12th cycle everything is sent again
         for (int i = 4; i < 12; i++) {

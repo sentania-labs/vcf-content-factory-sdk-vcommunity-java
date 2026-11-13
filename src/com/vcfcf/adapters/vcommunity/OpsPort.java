@@ -39,10 +39,20 @@ final class OpsPort implements OpsApi {
     }
 
     @Override
-    public PushOutcome pushBatch(Map<String, Map<String, String>> properties,
+    public String post(String path, String jsonBody) throws IOException, InterruptedException {
+        try {
+            return stitcher.post(path, jsonBody);
+        } catch (SuiteApiHttpException e) {
+            throw new OpsHttpException("Suite API answered HTTP " + e.getStatusCode(),
+                    e.getStatusCode(), e.getApiErrorCode(), e.getBodyExcerpt());
+        }
+    }
+
+    @Override
+    public PushOutcome pushBatch(Map<String, Map<String, Object>> properties,
             Map<String, Map<String, Double>> stats, long timestampMs) {
         if (properties.isEmpty() && stats.isEmpty()) return PushOutcome.NOTHING;
-        SuiteApiBatchResult r = stitcher.pushBatch(properties, stats, timestampMs);
+        SuiteApiBatchResult r = stitcher.pushTypedBatch(properties, stats, timestampMs);
         return new PushOutcome(r.getSent(), r.getBatchesOk(), r.getBatchesFailed(),
                 r.getSkipped(), r.getDropped(), r.isStopped());
     }

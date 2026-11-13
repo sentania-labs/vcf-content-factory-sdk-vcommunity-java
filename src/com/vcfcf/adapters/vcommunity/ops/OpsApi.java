@@ -19,7 +19,19 @@ public interface OpsApi {
      */
     String get(String path, String accept) throws IOException, InterruptedException;
 
-    /** Properties first, then stats, in batches; every value stamped {@code timestampMs}. */
-    PushOutcome pushBatch(Map<String, Map<String, String>> properties,
+    /**
+     * An authenticated POST of a JSON query body (the read-style endpoints
+     * {@code .../query}).
+     *
+     * @throws OpsHttpException a non-2xx answer, with its status and error code
+     * @throws IOException      a network failure
+     */
+    String post(String path, String jsonBody) throws IOException, InterruptedException;
+
+    /**
+     * Properties first, then stats, in batches; every value stamped {@code timestampMs}. A
+     * property value is a {@link String}, or a {@link Double} sent as a numeric property.
+     */
+    PushOutcome pushBatch(Map<String, Map<String, Object>> properties,
             Map<String, Map<String, Double>> stats, long timestampMs);
 }

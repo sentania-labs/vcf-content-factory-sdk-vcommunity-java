@@ -116,7 +116,7 @@ public final class HealthTest {
         s.collectorStatus.put("guest", Status.NOT_RUN);
         PushSet ps2 = new PushSet(null);
         CollectionHealth.vcenterKeys(ps2, "vc-1", s);
-        Map<String, String> pr = ps2.properties().get("vc-1");
+        Map<String, Object> pr = ps2.properties().get("vc-1");
         T.eq("boom", pr.get(p + "First Warning"), "first warning text");
         T.eq("F-LOGIN: no", pr.get(p + "First Failure"), "first failure text");
         T.eq("PARTIAL", pr.get(p + "Collector:check_lists|Status"), "collector status");

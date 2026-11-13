@@ -27,12 +27,12 @@ public final class LastPushed {
 
     /** What to send, and what to remember once it was sent. */
     public final class Selection {
-        private final Map<String, Map<String, String>> toSend = new LinkedHashMap<>();
+        private final Map<String, Map<String, Object>> toSend = new LinkedHashMap<>();
         private final List<Object[]> pending = new ArrayList<>();
         private int considered;
 
         /** The properties to send this cycle. */
-        public Map<String, Map<String, String>> toSend() {
+        public Map<String, Map<String, Object>> toSend() {
             return toSend;
         }
 
@@ -54,14 +54,15 @@ public final class LastPushed {
      * @param all     every property of this cycle
      * @param cycleNo this cycle's number, counted from 1 since the start
      */
-    public Selection select(Map<String, Map<String, String>> all, long cycleNo) {
+    public Selection select(Map<String, Map<String, Object>> all, long cycleNo) {
         Selection sel = new Selection();
         boolean full = cycleNo % refreshEvery == 0;
-        for (Map.Entry<String, Map<String, String>> r : all.entrySet()) {
+        for (Map.Entry<String, Map<String, Object>> r : all.entrySet()) {
             Map<String, Long> known = hashes.get(r.getKey());
-            for (Map.Entry<String, String> p : r.getValue().entrySet()) {
+            for (Map.Entry<String, Object> p : r.getValue().entrySet()) {
                 sel.considered++;
-                long h = hash(p.getValue());
+                long h = hash(p.getValue() instanceof String ? (String) p.getValue()
+                        : "\u0001n:" + p.getValue());
                 Long old = known == null ? null : known.get(p.getKey());
                 if (full || old == null || old != h) {
                     sel.toSend.computeIfAbsent(r.getKey(), k -> new LinkedHashMap<>())
