@@ -18,10 +18,11 @@ description: >
   Yuzseven (github.com/vmbro/VCF-Operations-vCommunity) as continued by
   e1-rahabok (github.com/e1-rahabok/VCF-vCommunity-Adapter) 0.8.1.
   This build collects the property keys of clusters, hosts, virtual machines,
-  datastores and the vCenter; the derived metrics, the own objects, the guest
+  datastores and the vCenter, and delivers the content libraries, their items
+  and the VM templates as objects of its own; the derived metrics, the guest
   checks and the content come in later phases.
 version: 1.0.0
-build_number: 6
+build_number: 7
 tier: 2
 released: false
 
@@ -37,7 +38,8 @@ content_foreign_adapter_kinds: [VMWARE, Container]
 # Where the keys land. Documentation only: the groups are the exact prefixes.
 # This build pushes the property keys (phase P2) and the Collection Health keys;
 # the rest are listed in the design and are filled in as the collectors arrive.
-# docs/p2-key-coverage.tsv counts every key of the key map against the tests.
+# docs/p2-key-coverage.tsv and docs/p3-key-coverage.tsv count every key of the key
+# map against the tests (P3: the 26 keys of the three own kinds).
 stitch_targets:
   - adapter_kind: VMWARE
     resource_kind: VMwareAdapter Instance

@@ -3,6 +3,38 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.7 (Unreleased)
+
+Phase P3, the pak's own objects (design 4.11, rows R227 to R252).
+
+- feat(adapter): Content Library and Library Item objects, read from the vSphere
+  Automation REST API (login, list, library, item list, item; logout in a
+  `finally`) over the same TLS posture as the vim25 session, so the three vCenter
+  TLS modes apply to it and a wrong pin sends no password. An item is a child of its
+  library. A library or item that cannot be read is skipped and counted
+  (`F-REST-LIST`, `F-REST-LIB`, `F-REST-ITEM`); its library's counts are not sent
+  rather than counted over the items that answered.
+- feat(adapter): VM Template objects, one per VM that vCenter marks as a template,
+  from the VM read (no read of their own) with the datastore and folder names beside
+  it. Identified by MoRef and vCenter UUID, so two templates of one name are two
+  objects. Delivered whether or not the vCenter adapter also models the VM (DV-47).
+- feat(adapter): the Content Libraries traversal spec (Content Library > Library Item).
+- feat(adapter): an own object that vCenter no longer has is marked not existing by
+  the platform after 12 complete cycles, and only for a kind that was read in full:
+  a failed or partial read (a denied library, a failed item, the deadline, a VM with
+  no `config.template`) proves nothing. Renamed objects take their new name.
+- feat(adapter): the cycle now runs where the own objects are enumerated, at the top
+  of the collection; the values of an object that is new start with the next cycle.
+- fix(adapter): own objects reproduce upstream where it shows (Q8, one switch in
+  `text/Quirks.java`): a text the answer does not have is the empty text; a figure it
+  does not have is not sent as the zero upstream sends.
+- test: `OwnObjectsTest` (libraries local, subscribed, empty, bare; items without files;
+  templates in folders and with the same name; a denied library; failed items, list
+  and login; kinds read in full; 2,620 items and 700 templates; the deadline; the TLS
+  modes; the session), the describe test for the traversal spec, Python rounding and
+  JSON text vectors, and `docs/p3-key-coverage.tsv`, generated from the key map with a
+  value assertion for each of its 26 rows.
+
 ## 1.0.0.6 (Unreleased)
 
 P2 review pass (`docs/reviews/p2-properties-review.md`).

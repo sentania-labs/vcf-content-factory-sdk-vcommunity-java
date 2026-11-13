@@ -142,4 +142,8 @@ No metrics.
 | `vCommunity|VM Template|VM Folder` | property |
 | `vCommunity|VM Template|Disk Used (GB)` | metric |
 
-No traversal spec yet: Content Library > Library Item arrives with the library phase.
+## Traversal specs
+
+### vCommunity Content Libraries
+
+Root: `Content Library`. Path: `vcfcf_vcommunity::Content Library||vcfcf_vcommunity::Library Item::child`.

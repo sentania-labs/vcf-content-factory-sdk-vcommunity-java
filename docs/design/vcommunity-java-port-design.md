@@ -569,6 +569,54 @@ Plain-JDK tests cover every class outside the two SDK-marked ones, with fixtures
   VM's `datastore` order; Folder (R232) from R-FO (DV-48). Memory (GB) `str(round(MB/1024, 2))` via `PyText`;
   absent sources withheld.
 
+#### 4.11.1 Built in P3: where it runs, identity, and what proves an object gone
+
+*Added in the P3 build (build 7); the rows it adds to the register are DV-78 to DV-82.*
+
+- **Where the cycle runs.** The own objects can only be named after the vCenter has been read, and the
+  platform decides which of them vanished from what `enumerateResources` delivers, so the whole cycle (4.1)
+  runs there: the collector object is delivered first, then the cycle runs, then every own object it read.
+  The collector's `collect()` reports the cycle (self metrics, a failed login); each own object's `collect()`
+  hands over the values the cycle read for it; the library relationships go with the collector's collect
+  (`collectRelationships`). Discovery alone (`getDiscoverer`) delivers only the collector and reads nothing.
+- **REST.** `RestClient` (login `POST /api/session` Basic, `GET` with the `vmware-api-session-id` header,
+  `DELETE /api/session` in a `finally`) takes the account's `VcenterTls`, the same object the SOAP session and the
+  probe use, so Trust on First Use, Enabled (platform trust and name check) and Pinned (SHA-256 or SHA-512,
+  compared before the Basic header is sent) apply to it and there is no other way to connect. One REST session
+  per cycle (parity), 10 s connect, 60 s read, 16 MiB per answer, redirects off. `LibraryReader` reads libraries and
+  items on a pool of 4 (DV-46 isolation); the list calls answer identifiers only and the API does not page them,
+  so a library of N items costs N calls, each checked against the cycle deadline. Each answer is cut down to the
+  fields the keys use as soon as it is parsed (heap, 9.3).
+- **Templates** come from the one VM read (4.5: the paths of R-VM include `config.template`, `config.guestFullName`,
+  `config.version`, `summary.config.numCpu`, `summary.config.memorySizeMB`, `summary.storage.committed`,
+  `datastore`, `parent`); datastore names come from the datastore read and folder names from one read of the
+  templates' parent folders (R-FO; if the vCenter refuses the list because a folder went, each is asked alone).
+- **Identity, and what the differential joins on.** Resource kind keys keep upstream's strings with their spaces
+  (`Content Library`, `Library Item`, `VM Template`), and the UI shows the same display names, so the join is
+  **resource kind display name + identifier values**, with the object name as a check and neither the adapter kind
+  (`vcfcf_vcommunity` against `vCommunity`) nor the Ops resource id (different on every instance):
+
+  | Kind | Identifiers (the join) | Name (the check) |
+  |---|---|---|
+  | `Content Library` | `Library ID` (the library's UUID) | library `name` |
+  | `Library Item` | `Item ID` (the item's UUID) | item `name` |
+  | `VM Template` | `VMEntityObjectID` (the MoRef) + `VMEntityVCID` (the vCenter's instance UUID) | the VM's `name` |
+
+  Names are not unique: the Python baseline of the lab has three pairs of templates with one name in different
+  folders, which is why the name is only a check. The same vCenter gives the same identifiers to both packs.
+- **Relationship.** One full child set per library whose items were all read (`setRelationships` through
+  `RelationshipBuilder`), so a library read in part keeps its links. A library with no items sends no call (the
+  builder sends none for an empty set); its former children go with their objects when the platform deletes them.
+  The traversal spec `vCommunity Content Libraries` is rooted at `Content Library` (the first hop is reachable).
+- **What proves an object gone** (`kindsReadThisCycle`, DV-79): `Content Library` when the list and every library
+  were read; `Library Item` when, besides, every item list and every item was read and named; `VM Template` when
+  the VM read finished and no VM was left of unknown kind (a VM whose `config.template` was not returned, as
+  vCenter leaves it for an inaccessible one, may be a template). A successful empty library list is a reading ("no
+  libraries", 5.1 rule 3) and proves both library kinds. The collector kind is excluded and never marked. The
+  framework marks an object after `notExistingMissedCycles()` (12) complete cycles, and never in a cycle that failed.
+- **Lag.** The framework collects the resources the platform listed when the cycle began; an object created by this
+  cycle's enumeration is not among them, so its values start with the next cycle (DV-78).
+
 ### 4.12 Business Applications collector
 
 - Reads: Container Tier, BusinessService, Enterprise resources (unscoped), their CHILD relationships, the
@@ -648,7 +696,7 @@ Failure cause catalogue (`FailureCause`, each with a fixed id used in logs and t
 | 7 | `"N/A"` PCI fields with no PCI match | nothing | DV-14 |
 | 8 | NIC Status `"Disconnected"`, Duplex `"half-duplex"` on link down | Status kept (reading; Q2); Duplex nothing | DV-15 |
 | 9 | DRS Score 0 when DRS is off or negative | nothing | DV-16 |
-| 10 | empty strings (template guest OS, hardware version, datastore list, folder; library and item text) | nothing when absent; `""` only when the source returned an empty value | DV-17 |
+| 10 | empty strings (template guest OS, hardware version, datastore list, folder; library and item text) | the empty text, as upstream (Q8, P3: owner direction, one switch); nothing when a failed read left the source unknown | DV-17, Q8 |
 | 11 | library counts treat a missing `cached` / `security_compliance` as not stored / not compliant | the library's count withheld | DV-18 |
 | 12 | resource pool counts 0 for an unmatched cluster or a silently empty pool query | nothing; `0` for a matched cluster with no pools after a successful read | DV-19 |
 | 13 | VMware Tools counts 0/0 when the unscoped VM query silently returns nothing | nothing on a failed query; `0` only after a successful query | DV-20 |
@@ -720,7 +768,7 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-14 | `"N/A"` PCI fields | nothing | report honestly | no `N/A` |
 | DV-15 | Duplex `"half-duplex"` on link down | nothing while down | a down link has no duplex | Duplex blank (or last real value, Q1) while the link is down |
 | DV-16 | DRS Score 0 when DRS off or negative | nothing | report honestly | no false 0 scores in DRS views |
-| DV-17 | empty strings for absent template and library fields | nothing when absent | report honestly | blank stays blank, no overwrite of a real value with "" |
+| DV-17 | empty strings for absent template and library fields | **text: superseded by quirk Q8 (P3, owner direction "match first"): the empty text is sent, as upstream.** Figures (vCPUs `"0"`, Memory `"0.0"`, Disk Used and sizes `0.0`) stay withheld (DV-11); a value a failed read left unknown is never sent | report honestly | blank stays blank, no overwrite of a real value with "" |
 | DV-18 | missing `cached` / `security_compliance` counted as not stored / not compliant | library count withheld | report honestly | the two counts may be absent for some libraries (E-L1) |
 | DV-19 | resource pool counts 0 for unmatched clusters or a silent empty query | nothing | report honestly | no false zeros |
 | DV-20 | Tools counts 0/0 on a silently empty query | nothing on failure | report honestly | no false "all tools fine" |
@@ -782,8 +830,13 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-75 | `str()` of any value | a reference value is `'vim.<Type>:<id>'` for the types in `PyText` (HostSystem, ResourcePool, Folder, Datacenter, Datastore, Network, the dvs types and the other common ones), skipped and reported for any other type; base64 is `b'...'`. The quoting of a managed object's `str()` is from memory of pyVmomi, not yet checked live | W2, N7 | an entry whose value is a reference of an unlisted type has no key |
 | DV-76 | `missingSet` not looked at (pyVmomi ignores it) | a path in an object's `missingSet` is a failed read of that value (one unit per type, naming the first path and the fault), not an absent one | W7; 5.1 | `reads_failed` shows a partial-permission read |
 | DV-77 | a collector exception is caught around one object's function and logged at WARNING | counted as `F-COLLECT-<read>` for that object (one withheld value), the read goes on; a read in which every object threw is a failed read of the type | W6, N1 | FAILED, not PARTIAL, for a broken collector |
+| DV-78 | all objects and values of a cycle in one result; a new object has its values at once | the cycle runs in `enumerateResources` and each own object's `collect()` hands over its values, so an object created by a cycle gets its values on the next one | the platform collects the resource list it had when the cycle began (`VcfCfAdapter.onCollect` iterates the argument), and the vanished-object count reads only the enumeration; found in P3 | a new library, item or template exists at once with its name and identifiers and has no keys for one interval (5 minutes), once. Whether same-cycle metric data for a just-registered resource would land is untested (E-N2) |
+| DV-79 | an object that vCenter no longer has is never deleted by the pack; a template converted back to a VM keeps its object; "ages out under the Operations object-removal policy" is inferred | the platform marks it not existing after 12 complete cycles (`kindsReadThisCycle`), only for a kind read in full (4.11.1); a failed or partial read, the deadline, an unknown VM, a failed login and an unreachable vCenter prove nothing | "no unbounded growth" (P3 brief); `vanished_object_lifecycle.md` | deleted libraries, items and templates disappear from VCF Operations after the platform's retention; before, they stayed with no data. Neither the START of a returned object nor deletion has been seen live (E-N3) |
+| DV-80 | library counts over whichever items answered (an item that failed aborted everything: DV-46); a missing size counts as 0 | all four counts (R249-R252) are withheld together when an item failed, had no name or was not reached, and `Total Size (GB)` is also withheld when any item has no `size` (DV-18 extended to the sum; DV-11) | report honestly (5.1 rule 4) | a library with a partial read has its properties and no counts |
+| DV-81 | an item, library or template with no name: a missing `name` aborts the whole library collection (`KeyError`), and a template with no name is named `Unknown` | no object for it, counted (`F-REST-ITEM`, `F-REST-LIB`, `F-SOAP-R-VM`), and the kind is not read in full | a name is half of an object's key | none unless vCenter sends one |
+| DV-82 | (unknown whether names follow vCenter) | `isResourceRenameAllowed()` is on and each own key is looked up before it is delivered, so a renamed library, item or template takes its new name | without it the SDK keeps the first name for good, and a renamed object would look gone to the vanished-object count | names follow vCenter (the unifi pak's build 18 does the same, live proven there) |
 
-77 rows (DV-55, DV-58 and DV-59 are conditional or retired; DV-33 is retired into quirk Q3).
+82 rows (DV-55, DV-58 and DV-59 are conditional or retired; DV-33 is retired into quirk Q3; DV-17 is superseded for text by quirk Q8; DV-78 to DV-82 are the P3 additions, proposed).
 
 ### 5.8 Upstream quirks reproduced for the match (candidates to fix after the first differential)
 
@@ -802,6 +855,7 @@ the factory's local clone of it is 31 commits past that tag and already fixes Q1
 | Q5 | R96 Op Notification Timeout | `max(0, int(v))`: a negative value read (-1, no timeout) is sent as `0` | the value read | `Quirks.NEGATIVE_OP_TIMEOUT_IS_ZERO` (read in `VmCollector.opNotificationTimeout`) |
 | Q6 | R112-R118 Detailed Data | the pattern `(\w+)=['"](.*?)['"]` ends a value at the first quote of either kind, so `prettyName='Windows "11" Pro'` is `Windows` | end a value at the quote that opened it | `DetailedDataParser.CUT_AT_FIRST_QUOTE` |
 | Q7 | R2-R6 Licensing | two assignments with the same license name on one host share one instance; their fields overwrite one another one by one, so keys of both can remain (a key the second lacks keeps the first's) | one instance per assignment (or per name and key) | `HostCollector.addLicenses` (the instance name is `a.name`) |
+| Q8 | R227, R228, R231, R232 (VM Template Guest OS, Hardware Version, Datastore, VM Folder; vCPUs and Memory are figures: DV-11), R234-R243 (Library Item texts), R245-R248 (Content Library texts) | `str(v or "")` / `_text()`: a field the answer or the read does not have is pushed as the empty string, so a local library has Subscription URL and Automatic Sync `""` and every item of one has Last Sync and Source Item ID `""` (the lab's Python baseline: 2 of the 4 library properties and 2 of the 10 item properties, on all 23 objects) | nothing for a field that was not returned (DV-17, the owner's "a missing read sends nothing") | `Quirks.ABSENT_OWN_TEXT_IS_EMPTY` and `Quirks.ownText` (read in `LibraryCollector` and `TemplateCollector`); `true` as shipped, `false` is DV-17 |
 
 Not a quirk of upstream but a place where the port could not reproduce it: a VM Options list that holds exactly
 `config.tools` returns real values upstream (the path is then a key of its read); the port sends `None` for
@@ -1223,7 +1277,7 @@ tolerance for timing-skewed KPIs); every difference must map to a DV id listed i
 | P0 Prerequisites | managed_paks entry; T1, T2, T3 in the framework (tooling, framework-reviewer, PR); kpi table and content inventories committed (insufficiencies 1-3); recon for Q8 | registry reader lists the pak; buildkit release carrying T1-T3 |
 | P1 Skeleton and configuration parity | describe.xml (2.1-2.4), `VCommunityConfig`, TLS modes, probe, session, `vCommunityCollector`, Test Connection (login, Suite API reachability, each check-list file's outcome and item count in the result message), health keys, self metrics | account dialog on 9.0.2 matches 0.8.1 field for field (labels, defaults, enums, main vs Advanced) seen in a browser; Test Connection passes in all three TLS modes against a lab vCenter and fails with the right text for a wrong pin; collector object DATA_RECEIVING; self metrics present |
 | P2 Properties | 4.3-4.8 and 4.10 property rows, licensing mask, check lists, VM Options isolation | differential over the property rows: equal or registered; a deliberately bad VM Options entry costs only its key |
-| P3 Own objects | libraries, items, templates, relationship, traversal | objects, identifiers, Content Library > Library Item in the UI tree; differential on R227-R252 |
+| P3 Own objects | libraries, items, templates, relationship, traversal | objects, identifiers, Content Library > Library Item in the UI tree; differential on R227-R252. **Built in build 7** (4.11.1, `docs/p3-key-coverage.tsv`); the live proof is still to run |
 | P4 Derived metrics | section 7, 4.9, 4.12, Datacenter, resource pools, port groups, periodic check across one full window | fixture tests green; differential within tolerance over 24 hours with at least one periodic window and one Delta |
 | P5 Guest and events | section 8, T2 | experiments G1-G9 pass; keys and events on a Windows VM and on the hardened DC |
 | P6 Content | section 10, after the tooling items land | stock-id guard clean on all three lines; dashboards counted after install (52); views render; alerts fire after two samples |
@@ -1261,7 +1315,7 @@ Each with a recommendation; none blocks P0-P1.
 | E2 | UI labels and units for upstream's keys today versus ours on VMWARE objects (map gap 1) |
 | E3 | Numeric property push and a string sample into a numeric property history (R43) |
 | E4 | POST read endpoints (`resources/stats/latest/query`, `resources/properties/latest/query`, `resources/stats/query`) under the ambient identity on 8.18.7 and on a Cloud Proxy; per-instance `net:<nic>|speed` returned (map gap 13) |
-| E5 | Does the VMware adapter create VirtualMachine resources for templates (map gap 9) |
+| E5 | Does the VMware adapter create VirtualMachine resources for templates (map gap 9). *Answered for the lab by the 2026-11-13 Python baseline: each of the 10 VM Template objects has a VirtualMachine resource of the same name among the 124 of the VMware adapter.* |
 | E6 | PropertyCollector representation of an empty array versus an absent path |
 | E7 | InvalidProperty fault names the path on vCenter 7, 8 and 9 |
 | E8 | `summary.drsScore`, `mem:DRAM|memory_tier_total_capacity`, `mem:NVMe|*`, 20-second-peak keys present on 8.18 (map gaps 12, 14) |
@@ -1275,6 +1329,9 @@ Each with a recommendation; none blocks P0-P1.
 | E16 | Cloud Proxy collector heap and reachability of vCenter 443 and ESXi 443 |
 | E17 | The 19 rename-only built-in views exist with the same ids on all three lines |
 | E-L1 | How often library items omit `cached` / `security_compliance` |
+| E-N1 | The REST item list: does any supported vCenter page it (the map says it does not)? |
+| E-N2 | Does metric data for a resource registered in the same collect result land (DV-78), or only from the next cycle? |
+| E-N3 | A library, item or template deleted in vCenter: marked not existing after 12 cycles and deleted after retention; and a returned object gets back (DV-79) |
 | G1-G9 | Section 8.7 |
 
 ## TOOLSET GAPS

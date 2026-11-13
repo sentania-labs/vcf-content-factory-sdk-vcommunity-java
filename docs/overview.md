@@ -3,27 +3,28 @@
 ## What's in the Pack
 
 VCF Content Factory vCommunity is a Java port of the vCommunity management
-pack. It reads a vCenter over the vim25 SOAP API (and, in a later phase, the
-vSphere Automation REST API for content libraries) and pushes the `vCommunity|`
-keys onto the objects the vCenter adapter already has in VCF Operations: hosts,
-clusters, virtual machines, datastores, datacenters, the vCenter object and the
-vSphere World. It also creates three object kinds of its own.
+pack. It reads a vCenter over the vim25 SOAP API and the vSphere Automation REST
+API (content libraries) and pushes the `vCommunity|` keys onto the objects the
+vCenter adapter already has in VCF Operations: hosts, clusters, virtual machines,
+datastores, datacenters, the vCenter object and the vSphere World. It also
+creates three object kinds of its own.
 
-This build is the second phase of the port. It provides the account, the vCenter
+This build is the third phase of the port. It provides the account, the vCenter
 TLS modes, the session, Test Connection, the collection cycle with its health
-keys, and the property keys of clusters, hosts, virtual machines, datastores and
-the vCenter. The derived metrics, the own objects, the guest checks and the
-content come in later phases; `p2-key-coverage.tsv` in this folder's parent
-(`docs/`) says, key by key, what this build collects.
+keys, the property keys of clusters, hosts, virtual machines, datastores and the
+vCenter, and the three own kinds with their keys and relationship. The derived
+metrics, the guest checks and the content come in later phases;
+`p2-key-coverage.tsv` and `p3-key-coverage.tsv` in this folder's parent (`docs/`)
+say, key by key, what this build collects.
 
 ### Resource kinds
 
 | Kind | Key | What it represents |
 |------|-----|--------------------|
 | VCF Content Factory vCommunity Collector | `vCommunityCollector` | One per account. The collection cycle runs for it, so an unreachable vCenter shows the account as down. Carries no metrics. |
-| Content Library | `Content Library` | A content library of the vCenter (later phase). |
-| Library Item | `Library Item` | An item of a content library (later phase). |
-| VM Template | `VM Template` | A VM that is a template in the vCenter (later phase). |
+| Content Library | `Content Library` | A content library of the vCenter. Identified by its library ID; the parent of its items. |
+| Library Item | `Library Item` | An item of a content library, of any type. Identified by its item ID. |
+| VM Template | `VM Template` | A VM that is a template in the vCenter. Identified by its MoRef and the vCenter UUID, so two templates with one name are two objects. |
 
 ### Metrics scope
 
@@ -114,7 +115,8 @@ pushes nothing onto the vCenter's objects.
 
 ## Known Limitations
 
-- Only the property keys are collected in this build; the derived metrics, the own objects, the guest checks and the content are later phases (`docs/p2-key-coverage.tsv`).
+- This build collects the property keys and the three own kinds; the derived metrics, the guest checks and the content are later phases (`docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`).
+- A new library, item or template is created at once and gets its values on the next collection (five minutes later). One that vCenter no longer has is marked not existing after 12 complete collections, and only when everything that could contain it was read.
 - Trust on First Use sends the credentials before any certificate check, as the
   original pack did. The certificate it presents is compared after the login with
   the one recorded on the vCenter object, and `vCommunity|Certificate|Status`

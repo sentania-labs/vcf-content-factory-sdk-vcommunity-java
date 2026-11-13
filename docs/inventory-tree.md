@@ -1,10 +1,13 @@
 # Inventory Tree: VCF Content Factory vCommunity
 
-> Generated from `describe.xml` v0.0.0.6. Do not edit: regenerated on every build.
+> Generated from `describe.xml` v0.0.0.7. Do not edit: regenerated on every build.
+
+**Traversal Spec:** vCommunity Content Libraries
 
 ## Traversal Tree
 
-
+- **Content Library** (`Content Library`)
+  - **Library Item** (`Library Item`)
 
 > \* = identifying (unique) key
 
@@ -14,7 +17,7 @@
 |------|--------------|-----------------|-----------|
 | `vCommunityCollector` | VCF Content Factory vCommunity Collector | `vcenter` *, `config_files` * | - |
 | `Content Library` | Content Library | `Library ID` * | - |
-| `Library Item` | Library Item | `Item ID` * | - |
+| `Library Item` | Library Item | `Item ID` * | Content Library |
 | `VM Template` | VM Template | `VMEntityObjectID` *, `VMEntityVCID` * | - |
 
 ## Metrics Pushed Onto
