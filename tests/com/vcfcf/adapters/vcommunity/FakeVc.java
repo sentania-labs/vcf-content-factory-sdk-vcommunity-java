@@ -38,11 +38,25 @@ final class FakeVc implements AutoCloseable {
         final String action;
         final String cookie;
         final String body;
+        /** A REST request (no SOAPAction): its method and path with query, and the two headers that matter. */
+        final String method;
+        final String path;
+        final String session;
+        final String authorization;
 
         Req(String action, String cookie, String body) {
+            this(action, cookie, body, null, null, null, null);
+        }
+
+        Req(String action, String cookie, String body, String method, String path, String session,
+                String authorization) {
             this.action = action;
             this.cookie = cookie;
             this.body = body;
+            this.method = method;
+            this.path = path;
+            this.session = session;
+            this.authorization = authorization;
         }
     }
 
@@ -51,11 +65,22 @@ final class FakeVc implements AutoCloseable {
         final int status;
         final String setCookie;
         final String body;
+        final String contentType;
 
         Resp(int status, String setCookie, String body) {
+            this(status, setCookie, body, "text/xml; charset=utf-8");
+        }
+
+        Resp(int status, String setCookie, String body, String contentType) {
             this.status = status;
             this.setCookie = setCookie;
             this.body = body;
+            this.contentType = contentType;
+        }
+
+        /** A JSON answer of the vSphere Automation REST API. */
+        static Resp json(int status, String body) {
+            return new Resp(status, null, body, "application/json");
         }
     }
 
@@ -72,6 +97,8 @@ final class FakeVc implements AutoCloseable {
     final List<Req> requests = new CopyOnWriteArrayList<>();
     final AtomicInteger connections = new AtomicInteger();
     private volatile Handler handler;
+    /** Answers the requests that carry no SOAPAction (the REST API), if set. */
+    private volatile Handler restHandler;
     private volatile boolean running = true;
     /** Send header names in lower case, as a proxy in front of the vCenter may. */
     volatile boolean lowercaseHeaders;
@@ -161,6 +188,10 @@ final class FakeVc implements AutoCloseable {
         this.handler = h;
     }
 
+    void setRestHandler(Handler h) {
+        this.restHandler = h;
+    }
+
     List<Req> seen(String action) {
         List<Req> out = new ArrayList<>();
         for (Req r : requests) if (r.action.equals(action)) out.add(r);
@@ -215,6 +246,8 @@ final class FakeVc implements AutoCloseable {
                 int len = 0;
                 String action = "";
                 String cookie = null;
+                String session = null;
+                String authorization = null;
                 String h;
                 while ((h = readLine(in)) != null && !h.isEmpty()) {
                     String lower = h.toLowerCase();
@@ -223,7 +256,10 @@ final class FakeVc implements AutoCloseable {
                         action = h.substring(11).trim();
                         if (action.startsWith("urn:vim25/")) action = action.substring(10);
                     } else if (lower.startsWith("cookie:")) cookie = h.substring(7).trim();
+                    else if (lower.startsWith("vmware-api-session-id:")) session = h.substring(22).trim();
+                    else if (lower.startsWith("authorization:")) authorization = h.substring(14).trim();
                 }
+                String[] rl = line.split(" ");
                 byte[] body = new byte[len];
                 int off = 0;
                 while (off < len) {
@@ -231,18 +267,26 @@ final class FakeVc implements AutoCloseable {
                     if (n < 0) return;
                     off += n;
                 }
-                Req r = new Req(action, cookie, new String(body, StandardCharsets.UTF_8));
+                boolean rest = action.isEmpty() && restHandler != null && rl.length >= 2;
+                Req r = rest
+                        ? new Req("REST " + rl[0] + " " + rl[1], cookie, new String(body, StandardCharsets.UTF_8),
+                                rl[0], rl[1], session, authorization)
+                        : new Req(action, cookie, new String(body, StandardCharsets.UTF_8));
                 requests.add(r);
-                Resp resp = handler.handle(r);
+                Resp resp = rest ? restHandler.handle(r) : handler.handle(r);
                 byte[] rb = resp.body.getBytes(StandardCharsets.UTF_8);
                 StringBuilder head = new StringBuilder();
                 head.append("HTTP/1.1 ").append(resp.status).append(resp.status == 200 ? " OK" : " Other").append("\r\n");
-                head.append(hdr("Content-Type")).append(": text/xml; charset=utf-8\r\n");
+                head.append(hdr("Content-Type")).append(": ").append(resp.contentType).append("\r\n");
                 head.append(hdr("Content-Length")).append(": ").append(rb.length).append("\r\n");
                 if (resp.setCookie != null) head.append(hdr("Set-Cookie")).append(": ").append(resp.setCookie).append("\r\n");
                 head.append("\r\n");
-                out.write(head.toString().getBytes(StandardCharsets.UTF_8));
-                out.write(rb);
+                // one write: two small writes meet Nagle and the peer's delayed ACK, 40 ms a request
+                byte[] hb = head.toString().getBytes(StandardCharsets.UTF_8);
+                byte[] all = new byte[hb.length + rb.length];
+                System.arraycopy(hb, 0, all, 0, hb.length);
+                System.arraycopy(rb, 0, all, hb.length, rb.length);
+                out.write(all);
                 out.flush();
             }
         } catch (IOException | RuntimeException e) {

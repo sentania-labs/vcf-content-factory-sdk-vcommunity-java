@@ -75,6 +75,8 @@ public final class VmCollector {
             List<String> optionPaths) {
         RetrieveRequest r = new RetrieveRequest(READ, KIND, PAGE, null);
         for (String p : SCALARS) r.path(p);
+        // the VM Template objects are built from the same read (design 4.11)
+        for (String p : TemplateScan.PATHS) r.path(p);
         if (!Quirks.TOOLS_ALWAYS_NONE) {
             for (String p : TOOLS_PATHS) r.path(p);
         }

@@ -100,6 +100,12 @@ public final class PropertyCollection {
         public Integer unmatched;
         public final Map<String, Status> status = new LinkedHashMap<>();
         public boolean deadlineHit;
+        /** The templates the VM read found; null when the VM read did not finish. */
+        public TemplateScan templates;
+        /** Datastore MoRef value to name; null when the datastore read did not finish. */
+        public Map<String, String> datastoreNames;
+        /** Folder MoRef value to name for the templates' parents; null when that read failed. */
+        public Map<String, String> folderNames;
         private Runnable afterCleanPush = () -> { };
 
         /** Remember what was sent; call it once, after a clean push. */
@@ -147,8 +153,10 @@ public final class PropertyCollection {
             }
             Future<List<ObjectOut>> fCluster = pool.submit(() -> clusters(in));
             Future<HostResult> fHost = pool.submit(() -> hosts(in, advSettings, pkgList));
-            Future<List<ObjectOut>> fVm = pool.submit(() -> vms(in, vmParams, vmOptions));
-            Future<List<ObjectOut>> fDs = pool.submit(() -> datastores(in));
+            TemplateScan scan = new TemplateScan();
+            Map<String, String> dsNames = new ConcurrentHashMap<>();
+            Future<List<ObjectOut>> fVm = pool.submit(() -> vms(in, vmParams, vmOptions, scan));
+            Future<List<ObjectOut>> fDs = pool.submit(() -> datastores(in, dsNames));
             Future<Map<String, List<HostCollector.Assignment>>> fLic = pool.submit(() -> licenses(in));
             Future<Map<String, String>> fOpt = pool.submit(() -> vcenterSettings(in));
 
@@ -175,6 +183,12 @@ public final class PropertyCollection {
             Map<String, List<HostCollector.Assignment>> lic = await(fLic, in, res, C_HOST,
                     "the license read");
             Map<String, String> settings = await(fOpt, in, res, C_VCENTER, "the vCenter settings read");
+            if (vm != null) {
+                // the templates came with the VM read; their names come with the datastore and folder reads
+                res.templates = scan;
+                res.datastoreNames = ds == null ? null : dsNames;
+                res.folderNames = scan.rows.isEmpty() ? new HashMap<>() : folders(in, scan);
+            }
 
             if (host != null) {
                 if (lic == null && !res.deadlineHit && clock.getAsLong() < in.deadlineMs) {
@@ -322,8 +336,13 @@ public final class PropertyCollection {
         return simpleRead(in, C_CLUSTER, ClusterCollector.request(), ClusterCollector::collect);
     }
 
-    private List<ObjectOut> datastores(Input in) {
-        return simpleRead(in, C_DATASTORE, DatastoreCollector.request(), DatastoreCollector::collect);
+    private List<ObjectOut> datastores(Input in, Map<String, String> names) {
+        // the templates name their datastores from this read: no read of their own (design 4.11)
+        return simpleRead(in, C_DATASTORE, DatastoreCollector.request(), row -> {
+            String n = row.name();
+            if (n != null) names.put(row.obj.value, n);
+            return DatastoreCollector.collect(row);
+        });
     }
 
     private List<ObjectOut> simpleRead(Input in, String collector, RetrieveRequest req,
@@ -703,13 +722,13 @@ public final class PropertyCollection {
 
     // ---- virtual machines
 
-    private List<ObjectOut> vms(Input in, List<String> vmParams, List<String> vmOptions) {
+    private List<ObjectOut> vms(Input in, List<String> vmParams, List<String> vmOptions, TemplateScan scan) {
         List<String> accepted = acceptedOptions(in, vmOptions);
         Set<String> nonScalar = ConcurrentHashMap.newKeySet();
         List<ObjectOut> out = new ArrayList<>();
         Tally tally = new Tally();
         String[] fault = new String[1];
-        RetrieveStats st = readVms(in, vmParams, accepted, nonScalar, out, tally, fault);
+        RetrieveStats st = readVms(in, vmParams, accepted, nonScalar, out, tally, fault, scan);
         if (st == null && !accepted.isEmpty() && ("TooLarge".equals(fault[0]) || "Parse".equals(fault[0]))) {
             // An entry whose value is huge or deeply nested (a whole config, a snapshot tree) can fail the
             // page. The base VM keys are never lost to an Options entry (5.5 rule 3): read again without
@@ -721,7 +740,7 @@ public final class PropertyCollection {
             nonScalar.clear();
             tally = new Tally();
             accepted = Collections.emptyList();
-            st = readVms(in, vmParams, accepted, nonScalar, out, tally, fault);
+            st = readVms(in, vmParams, accepted, nonScalar, out, tally, fault, scan);
         }
         if (st == null || allFailed(tally)) return null;
         for (String p : st.droppedPaths()) {
@@ -740,13 +759,48 @@ public final class PropertyCollection {
     }
 
     private RetrieveStats readVms(Input in, List<String> vmParams, List<String> accepted, Set<String> nonScalar,
-            List<ObjectOut> out, Tally tally, String[] fault) {
+            List<ObjectOut> out, Tally tally, String[] fault, TemplateScan scan) {
         RetrieveRequest req = VmCollector.request(!vmParams.isEmpty(), new HashSet<>(vmParams), accepted);
+        scan.reset(); // a page that failed is read again from the start, never added to
         return read(in, C_VM, req, row -> {
             ObjectOut o = guarded(rw -> VmCollector.collect(rw, vmParams, accepted, nonScalar), row,
                     in.failures, C_VM, VmCollector.READ, tally);
             if (o != null) out.add(o);
+            scan.take(row);
         }, fault);
+    }
+
+    // ---- folders of the templates
+
+    /** The folders the templates are in, by MoRef value; null when the read failed (counted). */
+    private Map<String, String> folders(Input in, TemplateScan scan) {
+        Set<String> wanted = new java.util.LinkedHashSet<>();
+        for (TemplateScan.Row r : scan.rows) if (r.parent != null) wanted.add(r.parent);
+        Map<String, String> out = new HashMap<>();
+        if (wanted.isEmpty()) return out;
+        List<MoRef> refs = new ArrayList<>();
+        for (String w : wanted) refs.add(new MoRef("Folder", w));
+        com.vcfcf.adapters.vcommunity.vim.RowSink sink = row -> {
+            String n = row.name();
+            if (n != null) out.put(row.obj.value, n);
+        };
+        String[] fault = new String[1];
+        RetrieveStats st = read(in, TemplateCollector.COLLECTOR, folderRequest(refs), sink, fault);
+        if (st == null && "ManagedObjectNotFound".equals(fault[0])) {
+            // a folder went between the two reads and vCenter refused the whole list: ask for each
+            // alone, so only the templates of the folder that went are without its name
+            out.clear();
+            st = new RetrieveStats();
+            for (MoRef f : refs) {
+                if (stopNow(in)) break;
+                read(in, TemplateCollector.COLLECTOR, folderRequest(Collections.singletonList(f)), sink);
+            }
+        }
+        return st == null ? null : out;
+    }
+
+    private static RetrieveRequest folderRequest(List<MoRef> refs) {
+        return new RetrieveRequest("R-FO", "Folder", 100, refs);
     }
 
     private synchronized void suspendOptions() {
