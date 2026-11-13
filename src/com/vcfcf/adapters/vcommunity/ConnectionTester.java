@@ -33,11 +33,22 @@ public final class ConnectionTester {
     /** What the test found, one line per item, in order. */
     public static final class Report {
         public final List<String> lines = new ArrayList<>();
-        private boolean attention;
+        private final List<String> attentionLines = new ArrayList<>();
 
         /** True when something in the report needs the admin's attention. */
         public boolean needsAttention() {
-            return attention;
+            return !attentionLines.isEmpty();
+        }
+
+        /** The lines of the report that need the admin's attention, each as it appears in it. */
+        public List<String> attentionLines() {
+            return attentionLines;
+        }
+
+        /** Add a line that needs attention. */
+        void flag(String line) {
+            lines.add(line);
+            attentionLines.add(line);
         }
 
         /** The lines as one text. */
@@ -62,21 +73,26 @@ public final class ConnectionTester {
         About about = session.value();
         r.lines.add("Logged in to " + (about == null ? "the vCenter" : about.describe()));
         if (about == null || about.instanceUuid == null || about.instanceUuid.trim().isEmpty()) {
-            r.attention = true;
-            r.lines.add("WARNING: the vCenter did not report an instance UUID, so its objects "
+            r.flag("WARNING: the vCenter did not report an instance UUID, so its objects "
                     + "cannot be matched in VCF Operations");
         }
 
         ThumbprintProbe.Result pr = probe.probe(cfg.asciiHost(), cfg.port, 10_000);
-        if (!pr.ok()) r.attention = true;
-        r.lines.add("vCenter TLS Validation: " + cfg.tlsMode.label + "; "
+        String tlsLine = "vCenter TLS Validation: " + cfg.tlsMode.label + "; "
                 + (pr.ok() ? "the certificate's SHA-256 thumbprint is " + pr.thumbprint()
-                        : "the certificate thumbprint could not be read (" + pr.failure() + ")"));
+                        : "the certificate thumbprint could not be read (" + pr.failure() + ")");
+        if (pr.ok()) r.lines.add(tlsLine);
+        else r.flag(tlsLine);
 
         boolean suite = false;
         if (ops == null) {
-            r.attention = true;
-            r.lines.add("WARNING: the VCF Operations Suite API is not available to this instance");
+            // Not a warning: during a test the account is not configured, so the Suite API client
+            // cannot be built here (the credential it uses during collection is supplied by the
+            // platform to a configured account; the files it falls back to are not readable from
+            // every node). Collection reports its own Suite API state every cycle.
+            r.lines.add("The VCF Operations Suite API is not checked during a test (its client "
+                    + "uses a credential the platform gives a configured account); collection "
+                    + "reports its state in the Collection Health keys");
         } else {
             try {
                 ops.get("/api/versions/current", null);
@@ -85,8 +101,7 @@ public final class ConnectionTester {
             } catch (InterruptedException e) {
                 throw e;
             } catch (IOException | RuntimeException e) {
-                r.attention = true;
-                r.lines.add("WARNING: the VCF Operations Suite API did not answer from where this "
+                r.flag("WARNING: the VCF Operations Suite API did not answer from where this "
                         + "test ran (" + e.getClass().getSimpleName() + "); collection pushes "
                         + "through it");
             }
@@ -97,11 +112,15 @@ public final class ConnectionTester {
                     path -> ops.get(path, "*/*"));
             for (CheckListStore.Entry e : entries.values()) {
                 r.lines.add(e.summary());
-                if (!e.ok() && e.outcome != CheckListStore.Outcome.NOT_CONFIGURED) r.attention = true;
+                if (!e.ok() && e.outcome != CheckListStore.Outcome.NOT_CONFIGURED) {
+                    r.attentionLines.add(e.summary());
+                }
             }
+        } else if (ops == null) {
+            r.lines.add("Check-list files were not read (they come through the Suite API, which "
+                    + "is not checked during a test)");
         } else {
-            r.attention = true;
-            r.lines.add("Check-list files were not read (the Suite API did not answer)");
+            r.flag("Check-list files were not read (the Suite API did not answer)");
         }
         return r;
     }

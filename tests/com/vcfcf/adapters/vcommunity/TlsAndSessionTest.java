@@ -255,13 +255,18 @@ public final class TlsAndSessionTest {
             }
             return FakeVc.happy().handle(r);
         })) {
-            try (VimSoapClient c = client(vc, tofu(), "svc", "pw", new T.RecLog())) {
+            T.RecLog slog = new T.RecLog();
+            try (VimSoapClient c = client(vc, tofu(), "svc", "pw-sess", slog)) {
                 T.check(c.ensureSession().isOk(), "first login");
+                T.eq(1, slog.infos.size(), "one line for the login: " + slog.infos);
+                T.contains(slog.infos.get(0), "vCenter login succeeded (new session): VMware vCenter Server 8.0.3", "login line: version and 'new'");
                 T.eq(1, vc.seen("Login").size(), "one login");
                 T.eq(1, vc.seen("RetrieveServiceContent").size(), "one service content read");
                 T.check(c.ensureSession().isOk(), "second cycle keeps the session");
                 T.eq(1, vc.seen("Login").size(), "still one login (keepalive only)");
                 T.eq(1, vc.seen("CurrentTime").size(), "one keepalive");
+                T.eq(2, slog.infos.size(), "one more line for the reuse: " + slog.infos);
+                T.contains(slog.infos.get(1), "vCenter session reused (kept alive, no new login): VMware vCenter Server 8.0.3", "reuse line");
                 FakeVc.Req ka = vc.seen("CurrentTime").get(0);
                 T.contains(ka.cookie, "vmware_soap_session", "the keepalive carries the session cookie");
                 T.check(vc.seen("Login").get(0).cookie == null, "the login carries none");
@@ -271,7 +276,19 @@ public final class TlsAndSessionTest {
                 mode[0] = 0;
                 T.check(again.isOk(), "a lapsed session logs in again: " + again.message());
                 T.eq(2, vc.seen("Login").size(), "second login after NotAuthenticated");
+                T.eq(3, slog.infos.size(), "one line for the renewal, not two: " + slog.infos);
+                T.contains(slog.infos.get(2), "vCenter session renewed (the held session had expired; logged in again)", "renewal line");
+                c.close("reconfigure");
+                T.eq(4, slog.infos.size(), "one line for the logout: " + slog.infos);
+                T.eq("vCenter session logged out (reason: reconfigure)", slog.infos.get(3), "logout line and its reason");
+                c.close("stop");
+                T.eq(4, slog.infos.size(), "a second close says nothing: no session was held");
             }
+            // nothing in any of those lines is a secret
+            T.notContains(slog.all(), "pw-sess", "no password in the log");
+            T.notContains(slog.all(), "vmware_soap_session", "no session cookie in the log");
+            T.notContains(slog.all(), "svc", "no user name in the log");
+            T.check(slog.warns.isEmpty() && slog.errors.isEmpty(), "all four are INFO, none a warning");
             T.eq(1, vc.seen("Logout").size(), "close() logs the session out");
             T.check(vc.seen("Logout").get(0).cookie != null, "the logout carries the cookie");
             // a closed client never logs in again

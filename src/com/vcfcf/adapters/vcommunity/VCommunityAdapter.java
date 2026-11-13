@@ -109,7 +109,7 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
             WarnCounter warns = new WarnCounter(log);
             VimSoapClient vim = new VimSoapClient(cfg.hostPort(), cfg.user, cfg.password(),
                     buildTls(cfg), warns);
-            SuiteApiStitcher sas = openStitcher();
+            SuiteApiStitcher sas = openStitcher(true);
             OpsPort ops = sas == null ? null : new OpsPort(sas);
             CycleEngine engine = new CycleEngine(cfg, vim, ThumbprintProbe.TLS, ops,
                     new CheckListStore(warns), warns, System::currentTimeMillis);
@@ -132,7 +132,7 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
                     + e.getClass().getSimpleName() + "); see the configure ERROR in the log";
             logError("VCommunityAdapter could not build its vCenter client", e);
         } finally {
-            if (old != null) release(old);
+            if (old != null) release(old, "reconfigure");
         }
     }
 
@@ -153,11 +153,18 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
         return VcenterTls.create(cfg.tlsMode, cfg.thumbprint, platform, CertificateNames::secure);
     }
 
-    /** The Suite API client, or null (logged) when this instance cannot have one. */
-    private SuiteApiStitcher openStitcher() {
+    /**
+     * The Suite API client, or null when this instance cannot have one. Collection
+     * logs that at WARN: nothing can be pushed. Test Connection does not: there the
+     * account is not configured, so the credential the client uses during
+     * collection does not exist yet and the answer is always "no" (finding 4 of
+     * the 0.0.0.2 live run); the report says so as a plain line.
+     */
+    private SuiteApiStitcher openStitcher(boolean collection) {
         try {
             return SuiteApiStitcher.create(this, componentLogger(SuiteApiStitcher.class));
         } catch (RuntimeException e) {
+            if (!collection) return null;
             logWarn("the local VCF Operations Suite API is unavailable to this instance ("
                     + e.getClass().getSimpleName() + "); nothing can be pushed onto vCenter "
                     + "objects until it is");
@@ -165,9 +172,9 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
         }
     }
 
-    private void release(Runtime r) {
+    private void release(Runtime r, String reason) {
         try {
-            r.vim.close();
+            r.vim.close(reason);
         } catch (RuntimeException ignored) {
             // best effort
         }
@@ -216,18 +223,19 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
             WarnCounter log = new WarnCounter(pakLog());
             VimSoapClient vim = new VimSoapClient(c.hostPort(), c.user, c.password(), buildTls(c),
                     log);
-            SuiteApiStitcher sas = openStitcher();
+            SuiteApiStitcher sas = openStitcher(false);
             try {
                 ConnectionTester.Report report = ConnectionTester.run(c, vim,
                         ThumbprintProbe.TLS, sas == null ? null : new OpsPort(sas),
                         new CheckListStore(log));
-                String line = "Test Connection OK: " + report.text();
-                // Whether INFO from a Test Connection reaches a log under the package entry
-                // is unverified (live experiment); anything the admin must act on is WARN.
-                if (report.needsAttention()) logWarn(line);
-                else logInfo(line);
+                // The success line is INFO, which is not written anywhere during a Test Connection:
+                // no instance log exists yet, and under the pak's own conf/logging.properties
+                // entry only WARN and above reach collector.log (SKILL.md, Logging). Our code
+                // never logs success at WARN. What the admin must act on is WARN, one line each.
+                logInfo("Test Connection OK: " + report.text());
+                for (String a : report.attentionLines()) logWarn("Test Connection: " + a);
             } finally {
-                vim.close();
+                vim.close("test finished");
                 if (sas != null) {
                     try {
                         sas.discard();
@@ -370,7 +378,7 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
     public void onDiscard() {
         Runtime r = this.runtime;
         this.runtime = null;
-        if (r != null) release(r);
+        if (r != null) release(r, "stop");
         super.onDiscard();
     }
 

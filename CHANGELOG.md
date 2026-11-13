@@ -3,6 +3,29 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.3 (Unreleased)
+
+- fix(adapter): the session is visible in the account log at INFO, one line each:
+  login (vCenter product and version, new session), reuse each cycle, renewal
+  when the held session expired, logout with its reason (`reconfigure` or
+  `stop`); and one cycle summary line (duration, vCenter object matched, objects
+  not matched, series and properties pushed, reads failed, values withheld,
+  warnings). Before, only the expiry line existed, so a live run could not show a
+  session being opened, reused or ended.
+- fix(adapter): a pin mismatch keeps its message under FIPS. The provider's alert
+  is an IOException that is not an SSLException, so the cause walk was skipped;
+  the walk now covers every IOException, causes and suppressed, and the pinned
+  trust manager records its decision per thread as a last resort. Other TLS
+  failures name the alert and the mode; an untrusted chain in Enabled says to
+  accept the certificate in Validate Connection or use Pinned.
+- fix(adapter): Test Connection logs success at INFO only (never WARN); each thing
+  needing attention is its own WARN line. A Suite API client that cannot be built
+  during a test is a plain "not checked during a test" line, not a warning.
+- fix(adapter): a failed check-list read shows the answer's own words (bounded),
+  so an HTTP 400 with no apiErrorCode (seen on 8.18.7) can be told from a missing
+  file next time; it is still a failed read, not an absent file.
+- docs: log lines, Test Connection logging, creating an account through the API.
+
 ## 1.0.0.2 (Unreleased)
 
 - fix(adapter): the session cookie is found whatever the case of the

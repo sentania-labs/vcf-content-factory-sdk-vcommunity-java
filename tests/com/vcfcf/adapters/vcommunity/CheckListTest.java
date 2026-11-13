@@ -208,6 +208,19 @@ public final class CheckListTest {
         T.check(e.items.isEmpty() && !e.lastGood, "list cleared");
         T.contains(e.problem, "does not exist", "problem");
 
+        // An HTTP 400 that names no apiErrorCode (seen on 8.18.7) is not taken for an absent file:
+        // it is a failed read, and it shows the answer's own words so the next look can settle it.
+        f.put("esx", new OpsHttpException("x", 400, null, "{\"message\":\"Request parameter is invalid\"}"));
+        e = store.refresh(one(ListKind.ESXI_SETTINGS, "esx"), f).get(ListKind.ESXI_SETTINGS);
+        T.eq(Outcome.FETCH_FAILED, e.outcome, "400 without a code is a failed read");
+        T.contains(e.problem, "HTTP 400; it said: {\"message\":\"Request parameter is invalid\"}", "the answer's words");
+        f.put("esx", new OpsHttpException("x", 400, null, "y".repeat(500)));
+        e = store.refresh(one(ListKind.ESXI_SETTINGS, "esx"), f).get(ListKind.ESXI_SETTINGS);
+        T.check(e.problem.length() < 400, "the excerpt is bounded: " + e.problem.length());
+        f.put("esx", new OpsHttpException("x", 400, null));
+        e = store.refresh(one(ListKind.ESXI_SETTINGS, "esx"), f).get(ListKind.ESXI_SETTINGS);
+        T.notContains(e.problem, "it said", "no excerpt, no clause");
+
         f.put("esx", "<L>x</L>");
         store.refresh(one(ListKind.ESXI_SETTINGS, "esx"), f);
         f.put("esx", new OpsHttpException("x", 400, 1501));

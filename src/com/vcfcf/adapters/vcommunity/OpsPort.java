@@ -34,7 +34,7 @@ final class OpsPort implements OpsApi {
             return accept == null ? stitcher.get(path) : stitcher.get(path, accept);
         } catch (SuiteApiHttpException e) {
             throw new OpsHttpException("Suite API answered HTTP " + e.getStatusCode(),
-                    e.getStatusCode(), e.getApiErrorCode());
+                    e.getStatusCode(), e.getApiErrorCode(), e.getBodyExcerpt());
         }
     }
 

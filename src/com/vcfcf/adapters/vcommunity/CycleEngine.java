@@ -226,7 +226,33 @@ public final class CycleEngine {
             s.propertiesPushed = selection.toSend().values().stream().mapToInt(Map::size).sum();
         }
         s.cycleSeconds = (clock.now() - t0) / 1000.0;
+        log.info(summaryLine(cycleNo, s, failure));
         return new Result(failure, cause, s, about, presented, lists);
+    }
+
+    /**
+     * The one line a cycle leaves at INFO: how long, what it matched and pushed,
+     * how much failed. No object names, no values, no credential; a failure text
+     * is the credential-free one the cycle itself reports.
+     */
+    static String summaryLine(long cycleNo, CollectionHealth.Summary s, String failure) {
+        StringBuilder b = new StringBuilder("Collection cycle ").append(cycleNo)
+                .append(failure == null ? " finished in " : " failed after ")
+                .append(String.format(java.util.Locale.ROOT, "%.1f", s.cycleSeconds)).append(" s: ");
+        if (failure != null) b.append(bound(failure)).append("; ");
+        b.append("vCenter object matched=").append(s.vcenterResolved ? "yes" : "no")
+                .append(", objects not matched=").append(count(s.objectsUnmatched))
+                .append(", series pushed=").append(count(s.seriesPushed))
+                .append(", properties pushed=").append(count(s.propertiesPushed))
+                .append(", reads failed=").append(s.readsFailed)
+                .append(", values withheld=").append(s.valuesWithheld)
+                .append(", warnings=").append(s.warnings);
+        if (s.deadlineHit) b.append(", deadline reached");
+        return b.toString();
+    }
+
+    private static String count(Integer n) {
+        return n == null ? "n/a" : n.toString();
     }
 
     /** Copy the failure counters and the warning counts into the summary. */

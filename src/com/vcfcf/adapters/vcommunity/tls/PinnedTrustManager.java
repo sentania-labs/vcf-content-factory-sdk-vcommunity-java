@@ -19,6 +19,12 @@ public final class PinnedTrustManager extends X509ExtendedTrustManager {
 
     private final String pin;
     private final int bits;
+    /**
+     * The mismatch this thread's handshake last raised. A provider may rewrap the
+     * exception beyond recognition on its way out of the socket; the thread that
+     * ran the handshake can still ask what the trust manager decided.
+     */
+    private final ThreadLocal<PinMismatchException> lastMismatch = new ThreadLocal<>();
 
     /** @param pinHex lowercase hex, 64 or 128 characters */
     public PinnedTrustManager(String pinHex) {
@@ -37,7 +43,23 @@ public final class PinnedTrustManager extends X509ExtendedTrustManager {
         // Constant time: the pin is not a secret, but there is no reason to leak how much matched.
         boolean same = MessageDigest.isEqual(presented.getBytes(StandardCharsets.US_ASCII),
                 pin.getBytes(StandardCharsets.US_ASCII));
-        if (!same) throw new PinMismatchException(presented, bits);
+        if (!same) {
+            PinMismatchException e = new PinMismatchException(presented, bits);
+            lastMismatch.set(e);
+            throw e;
+        }
+    }
+
+    /** Forget any mismatch recorded on this thread (call before a connection). */
+    public void clearMismatch() {
+        lastMismatch.remove();
+    }
+
+    /** The mismatch recorded on this thread since {@link #clearMismatch()}, cleared by the read; or null. */
+    public PinMismatchException takeMismatch() {
+        PinMismatchException e = lastMismatch.get();
+        lastMismatch.remove();
+        return e;
     }
 
     @Override

@@ -83,11 +83,11 @@ pushes nothing onto the vCenter's objects.
   original pack did, and in this build it stores and compares nothing (change
   reporting arrives with the vCenter collector phase). Use Pinned or Enabled on a
   network that is not fully trusted.
-- Test Connection: the pak writes a summary line (login, certificate
-  thumbprint, Suite API, each check-list file with its outcome and item count)
-  to the adapter log, at INFO, or WARN when something needs attention. Whether
-  the dialog can show text for a passing test is **unverified**; the first
-  install on 9.0.2 should try a success-path message and record what the dialog
-  shows. Likewise whether the INFO line reaches a log under the pak's logging
-  entry.
+- Test Connection: the pak logs in to the vCenter and reads its certificate.
+  The Suite API and the check-list files are checked only where the test can
+  build the Suite API client, which is normally not the case (no configured
+  account yet); the report says so and it is not a warning. A passing test
+  writes its INFO line nowhere (no per-account log exists during a test, and
+  only WARN reaches `collector.log`); what needs attention is one WARN line each.
+  Whether the dialog can show text for a passing test is **unverified**.
 - Not yet proven on a live instance: see the phase 1 exit proof in the design.

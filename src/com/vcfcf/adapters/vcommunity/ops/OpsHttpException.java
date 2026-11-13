@@ -8,11 +8,23 @@ public final class OpsHttpException extends IOException {
 
     private final int status;
     private final Integer apiErrorCode;
+    private final String bodyExcerpt;
 
     public OpsHttpException(String message, int status, Integer apiErrorCode) {
+        this(message, status, apiErrorCode, "");
+    }
+
+    /** @param bodyExcerpt the start of the error body (already bounded and sanitised), or null */
+    public OpsHttpException(String message, int status, Integer apiErrorCode, String bodyExcerpt) {
         super(message);
         this.status = status;
         this.apiErrorCode = apiErrorCode;
+        this.bodyExcerpt = bodyExcerpt == null ? "" : bodyExcerpt;
+    }
+
+    /** The start of the error body the server sent, or "" (server text: bounded, never trusted). */
+    public String bodyExcerpt() {
+        return bodyExcerpt;
     }
 
     public int status() {

@@ -2,6 +2,7 @@ package com.vcfcf.adapters.vcommunity.vim;
 
 import com.vcfcf.adapters.vcommunity.Log;
 import com.vcfcf.adapters.vcommunity.tls.PinMismatchException;
+import com.vcfcf.adapters.vcommunity.tls.TlsFailure;
 import com.vcfcf.adapters.vcommunity.tls.VcenterTls;
 
 import java.io.ByteArrayOutputStream;
@@ -117,15 +118,23 @@ public final class VimSoapClient implements VimSession {
             VimResult<XmlNode> ka = rawCall("<CurrentTime xmlns=\"urn:vim25\">"
                     + "<_this type=\"ServiceInstance\">ServiceInstance</_this></CurrentTime>",
                     "CurrentTime", true, shortReadMs);
-            if (ka.isOk()) return VimResult.ok(about, ka.bytes());
+            if (ka.isOk()) {
+                log.info("vCenter session reused (kept alive, no new login): " + described(about));
+                return VimResult.ok(about, ka.bytes());
+            }
             if (!"NotAuthenticated".equals(ka.faultClass())) {
                 return VimResult.fault(ka.faultClass(), "the session check failed: "
                         + ka.message(), null, ka.bytes(), ka.cause());
             }
-            log.info("vCenter session expired; logging in again");
             clearSession();
+            return login("renewed");
         }
-        return login();
+        return login("new");
+    }
+
+    /** The vCenter's product and version for a log line; never a credential. */
+    private static String described(About a) {
+        return a == null ? "vCenter" : a.describe();
     }
 
     /** A new cycle may try to log in again after a failed login. */
@@ -134,7 +143,11 @@ public final class VimSoapClient implements VimSession {
         loginFailure = null;
     }
 
-    private VimResult<About> login() {
+    /**
+     * @param how {@code new} or {@code renewed} (the held session had expired) picks the one
+     *        log line a successful login writes; null writes none (the caller already has)
+     */
+    private VimResult<About> login(String how) {
         String failed = loginFailure;
         if (failed != null) {
             return VimResult.fault("InvalidLogin", "not logging in again this cycle (the last "
@@ -145,7 +158,7 @@ public final class VimSoapClient implements VimSession {
                 + "</RetrieveServiceContent>", "RetrieveServiceContent", false, shortReadMs);
         if (!sc.isOk()) {
             // a pin mismatch already says everything; other failures get the step they hit
-            String m = findPin(sc.cause()) != null ? sc.message()
+            String m = TlsFailure.explain(sc.cause(), tls.mode()) != null ? sc.message()
                     : "reading the service content failed: " + sc.message();
             return VimResult.fault(sc.faultClass(), m, null, sc.bytes(), sc.cause());
         }
@@ -202,6 +215,12 @@ public final class VimSoapClient implements VimSession {
             logoutAndClear();
             return VimResult.fault("Closed", CLOSED, null, 0, null);
         }
+        if ("renewed".equals(how)) {
+            log.info("vCenter session renewed (the held session had expired; logged in again): "
+                    + described(a));
+        } else if ("new".equals(how)) {
+            log.info("vCenter login succeeded (new session): " + described(a));
+        }
         return VimResult.ok(a, sc.bytes() + lg.bytes());
     }
 
@@ -227,7 +246,7 @@ public final class VimSoapClient implements VimSession {
                 log.warn("vCenter session not authenticated on " + operation
                         + "; logging in again and retrying once");
                 clearSession();
-                VimResult<About> l = login();
+                VimResult<About> l = login(null); // the warning above is this event's line
                 if (!l.isOk()) {
                     return VimResult.fault(l.faultClass(), l.message(), null, 0, l.cause());
                 }
@@ -238,13 +257,32 @@ public final class VimSoapClient implements VimSession {
 
     /** Log out (bounded wait) and refuse every later call. Never throws. */
     @Override
-    public synchronized void close() {
-        closed = true;
-        logoutAndClear();
+    public void close() {
+        close("closed");
     }
 
-    private void logoutAndClear() {
+    /**
+     * Log out and refuse every later call, saying why in the log (one line,
+     * only when a session was actually held). Never throws.
+     *
+     * @param reason {@code reconfigure} or {@code stop}, for the log line
+     */
+    @Override
+    public synchronized void close(String reason) {
+        closed = true;
+        boolean held = cookie != null;
+        boolean out = logoutAndClear();
+        if (held) {
+            log.info(out ? "vCenter session logged out (reason: " + reason + ")"
+                    : "vCenter logout did not complete (reason: " + reason + "); the session "
+                            + "expires on its own");
+        }
+    }
+
+    /** Logs the held session out and forgets it; false when the logout could not be sent or failed. */
+    private boolean logoutAndClear() {
         MoRef sm = sessionManager;
+        boolean ok = true;
         if (sm != null && cookie != null) {
             try {
                 postOnce("<Logout xmlns=\"urn:vim25\"><_this type=\"SessionManager\">"
@@ -252,9 +290,11 @@ public final class VimSoapClient implements VimSession {
                         LOGOUT_TIMEOUT_MS, LOGOUT_TIMEOUT_MS, null);
             } catch (Exception ignored) {
                 // an idle session expires on its own
+                ok = false;
             }
         }
         clearSession();
+        return ok;
     }
 
     private void clearSession() {
@@ -282,7 +322,8 @@ public final class VimSoapClient implements VimSession {
         } catch (PinMismatchWrapper e) {
             return VimResult.fault("Transport", e.getMessage(), null, 0, e.getCause());
         } catch (IOException e) {
-            return VimResult.fault("Transport", describe(e), null, 0, e);
+            String tlsText = TlsFailure.explain(e, tls.mode());
+            return VimResult.fault("Transport", tlsText != null ? tlsText : describe(e), null, 0, e);
         } catch (RuntimeException e) {
             return VimResult.fault("Transport", operation + " failed: "
                     + e.getClass().getSimpleName(), null, 0, e);
@@ -305,6 +346,7 @@ public final class VimSoapClient implements VimSession {
                 + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
                 + "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soapenv:Body>"
                 + bodyXml + "</soapenv:Body></soapenv:Envelope>";
+        tls.clearPinMismatch();
         HttpURLConnection conn = (HttpURLConnection) java.net.URI.create(url).toURL().openConnection();
         if (conn instanceof HttpsURLConnection) {
             tls.secure((HttpsURLConnection) conn);
@@ -350,22 +392,16 @@ public final class VimSoapClient implements VimSession {
             }
             String fault = readCapped(conn.getErrorStream(), MAX_FAULT_BYTES);
             return faultResult(operation, code, fault);
-        } catch (javax.net.ssl.SSLException e) {
-            conn.disconnect();
-            PinMismatchException pm = findPin(e);
-            if (pm != null) throw new PinMismatchWrapper(pm);
-            throw e;
         } catch (IOException | RuntimeException e) {
             conn.disconnect(); // never reuse a connection that failed
+            // Not only an SSLException: the FIPS provider throws its own alert, an IOException of
+            // another kind, with the pin mismatch below it. When the chain was rewrapped past
+            // recognition, the trust manager's own record of this thread's handshake answers.
+            PinMismatchException pm = TlsFailure.findPin(e);
+            if (pm == null) pm = tls.takePinMismatch();
+            if (pm != null) throw new PinMismatchWrapper(pm);
             throw e;
         }
-    }
-
-    private static PinMismatchException findPin(Throwable t) {
-        for (int i = 0; t != null && i < 10; i++, t = t.getCause()) {
-            if (t instanceof PinMismatchException) return (PinMismatchException) t;
-        }
-        return null;
     }
 
     /**

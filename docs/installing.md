@@ -101,19 +101,60 @@ name in the account; do not edit the reference file.
 
 ## What Test Connection checks
 
-Validate Connection logs in to the vCenter and reads its certificate. It also
-asks whether the Suite API answers and reads each check-list file in use. A
-failed login (including a wrong pin) fails the test and the dialog shows why.
-A Suite API that does not answer, or a check-list file that is missing,
-unreadable or invalid, does not fail the test: the test can run on another node
-than collection does, and a bad file is a reported problem, never fatal.
+Validate Connection logs in to the vCenter and reads its certificate. A failed
+login (including a wrong pin, in every TLS mode and under FIPS) fails the test
+and the dialog shows why.
 
-The test writes one line to the adapter log with what it found (the login, the
-thumbprint, the Suite API, each file with its outcome and item count): at INFO
-when all is well, at WARN when something needs attention. Whether the dialog
-can show a message for a passing test, and whether the INFO line reaches a log
-under the pak's logging setup, are **not yet verified**: they are experiments
-for the first install on 9.0.2.
+It does **not** check the Suite API or read the check-list files. A test runs
+before the account exists, and the Suite API client uses a credential the
+platform gives a configured account, so the client cannot be built during a test
+(the report says "not checked during a test", not a warning). If the Suite API
+client can be built where the test runs, the test uses it: it then asks whether
+the API answers and reads each check-list file in use, and a file that is
+missing, unreadable or invalid is reported, never fatal. Collection reports the
+Suite API's state every cycle (the Collection Health keys, the log).
+
+What the test logs, and where: its success line is written at INFO, and **a test
+has no per-account log**, so under the pak's logging setup an INFO line from a
+test is not written to any file. Only what needs attention is written, at WARN,
+one line each (`Test Connection: ...`), into the collector's `collector.log`.
+A passing test therefore leaves no log line; the dialog is its result. (Showing a
+success message in the dialog is not done: it is not known whether the dialog
+displays one for a passing test.)
+
+## Logs
+
+The account's own log is
+`/storage/log/vcops/log/adapters/VCommunityAdapter/VCommunityAdapter_<id>.log`
+on the node that collects. The pak writes INFO lines to it, and the build ships
+`conf/logging.properties` (`com.vcfcf.adapters.vcommunity=INFO`) so the account
+log is at INFO by default (8.18 ignores that file, and the adapter raises its own
+logger to INFO there). These lines are always written, no secret, no object
+names:
+
+| Event | Line (start) | When |
+|-------|--------------|------|
+| Login | `vCenter login succeeded (new session): <product> <version>` | the first cycle, and after a failed or lost session |
+| Reuse | `vCenter session reused (kept alive, no new login): <product> <version>` | every cycle that keeps the session |
+| Renewal | `vCenter session renewed (the held session had expired; logged in again)` | the vCenter ended the session |
+| Cycle | `Collection cycle <n> finished in <s> s: ... series pushed=..., reads failed=...` | every cycle (`failed after` when the login failed) |
+| Logout | `vCenter session logged out (reason: reconfigure)` or `(reason: stop)` | the account was edited, or the adapter instance was stopped or removed |
+
+If an account is edited you should see the logout line, then `VCommunityAdapter
+configured` and a new-session login line on the next cycle.
+
+## Creating an account through the API
+
+The UI fills in the describe defaults; the REST API does not.
+
+- **Send every non-credential identifier explicitly** (the describe declares 19; the live 0.0.0.2 run needed 18 of them) on
+  `POST /api/adapters`: the server applies no `default=` from the describe, so an
+  omitted identifier is not defaulted by the platform. (The pak reads an omitted
+  check-list file field as its default name, and an empty string as "no list".)
+- **A new instance starts STOPPED.** Start it with
+  `PUT /api/adapters/{id}/monitoringstate/start`.
+- **`POST /api/adapters/testConnection` stores the credential** it was given as a
+  side effect. Delete it afterwards if the test was a probe.
 
 ## Troubleshooting
 

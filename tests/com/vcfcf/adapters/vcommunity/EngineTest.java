@@ -133,6 +133,7 @@ public final class EngineTest {
         deadline();
         gatedLists();
         tester();
+        cycleSummaryLine();
     }
 
     static void happy() throws Exception {
@@ -395,6 +396,34 @@ public final class EngineTest {
         T.done("engine: the guest lists are read only when their switch is on");
     }
 
+    /** The one INFO line a cycle leaves (finding 1 of the 0.0.0.2 live run). */
+    static void cycleSummaryLine() throws Exception {
+        Rig r = new Rig(cfg());
+        r.ops.files.put("vm_options", "<L>config.version</L>");
+        r.run();
+        long n = r.log.infos.stream().filter(l -> l.startsWith("Collection cycle ")).count();
+        T.eq(1L, n, "one summary line per cycle: " + r.log.infos);
+        String line = r.log.infos.stream().filter(l -> l.startsWith("Collection cycle ")).findFirst().get();
+        T.contains(line, "Collection cycle 1 finished in 0.0 s:", "number and duration");
+        T.contains(line, "vCenter object matched=yes", "objects");
+        T.contains(line, "objects not matched=0", "unmatched");
+        T.contains(line, "series pushed=", "series");
+        T.contains(line, "reads failed=0", "reads failed");
+        T.notContains(line, "n/a", "everything was measured in a clean cycle: " + line);
+        r.run();
+        T.contains(r.log.infos.get(r.log.infos.size() - 1), "Collection cycle 2 finished", "the second cycle counts on");
+
+        // a failed login still leaves its line, with the credential-free reason
+        Rig f = new Rig(cfg());
+        f.vim.next = VimResult.fault("InvalidLogin", "login failed: vCenter rejected the user name or password", null, 0, null);
+        f.run();
+        String fl = f.log.infos.get(f.log.infos.size() - 1);
+        T.contains(fl, "Collection cycle 1 failed after", "failure line");
+        T.contains(fl, "rejected the user name or password", "why");
+        T.contains(fl, "series pushed=n/a", "unmeasured is said, not zero");
+        T.done("engine: one summary line per cycle at INFO");
+    }
+
     static void tester() throws Exception {
         VCommunityConfig c = cfg();
         Rig r = new Rig(c);
@@ -412,6 +441,11 @@ public final class EngineTest {
         T.contains(text, "VM Advanced Parameters 'vm_advanced_parameters': ABSENT", "absent file");
         T.notContains(text, "svc", "no account detail beyond what is needed");
         T.check(rep.needsAttention(), "a missing file and a skipped entry need attention");
+        T.eq(2, rep.attentionLines().size(), "exactly the two lines that need it: " + rep.attentionLines());
+        String attn = String.join("|", rep.attentionLines());
+        T.contains(attn, "VM Options 'vm_options'", "the skipped entry's file");
+        T.contains(attn, "VM Advanced Parameters 'vm_advanced_parameters'", "the absent file");
+        T.notContains(attn, "ESXi Advanced System Settings", "a file that is fine is not an attention line");
         Rig clean = new Rig(c);
         ConnectionTester.Report ok = ConnectionTester.run(c, clean.vim, (h, p, t) -> ThumbprintProbe.Result.found("cd".repeat(32)),
                 clean.ops, new CheckListStore(clean.log));
@@ -433,9 +467,16 @@ public final class EngineTest {
         noSuite.ops.versionFailure = new java.net.SocketTimeoutException("slow");
         ConnectionTester.Report r2 = ConnectionTester.run(c, noSuite.vim, noSuite.probe, noSuite.ops, new CheckListStore(noSuite.log));
         T.contains(r2.text(), "did not answer", "said");
+        T.check(r2.needsAttention(), "a client that was built and did not answer IS a warning");
+        T.contains(String.join("|", r2.attentionLines()), "WARNING: the VCF Operations Suite API did not answer", "attention line");
         T.contains(r2.text(), "Check-list files were not read", "and the files were not claimed");
         ConnectionTester.Report r3 = ConnectionTester.run(c, noSuite.vim, noSuite.probe, null, new CheckListStore(noSuite.log));
-        T.contains(r3.text(), "not available to this instance", "no client");
+        // No Suite API client is what a test normally has (the account is not configured): it is
+        // said as a plain line, not a warning, and the files are not claimed to have been read.
+        T.contains(r3.text(), "not checked during a test", "no client is said plainly");
+        T.contains(r3.text(), "Check-list files were not read", "and the files were not read");
+        T.notContains(r3.text(), "WARNING", "not presented as a warning");
+        T.check(!r3.needsAttention() && r3.attentionLines().isEmpty(), "nothing needs attention: " + r3.attentionLines());
         // a probe that fails is said, not hidden
         ConnectionTester.Report r4 = ConnectionTester.run(c, r.vim, (h, p, t) -> ThumbprintProbe.Result.failed("no route"),
                 r.ops, new CheckListStore(r.log));

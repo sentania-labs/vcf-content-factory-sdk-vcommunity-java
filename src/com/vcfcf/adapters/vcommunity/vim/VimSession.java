@@ -12,4 +12,9 @@ public interface VimSession extends AutoCloseable {
     /** Log out and refuse every later call. Never throws. */
     @Override
     void close();
+
+    /** {@link #close()}, saying why in the log ({@code reconfigure}, {@code stop}). */
+    default void close(String reason) {
+        close();
+    }
 }

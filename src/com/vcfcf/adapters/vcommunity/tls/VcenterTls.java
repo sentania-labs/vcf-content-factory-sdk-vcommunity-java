@@ -34,11 +34,15 @@ public final class VcenterTls {
     private final TlsMode mode;
     private final SSLSocketFactory factory;
     private final Securer securer;
+    /** Only in the Pinned mode. */
+    private final PinnedTrustManager pinned;
 
-    private VcenterTls(TlsMode mode, SSLSocketFactory factory, Securer securer) {
+    private VcenterTls(TlsMode mode, SSLSocketFactory factory, Securer securer,
+            PinnedTrustManager pinned) {
         this.mode = mode;
         this.factory = factory;
         this.securer = securer;
+        this.pinned = pinned;
     }
 
     /**
@@ -52,15 +56,16 @@ public final class VcenterTls {
         try {
             switch (mode) {
                 case TRUST_ON_FIRST_USE:
-                    return new VcenterTls(mode, contextWith(new TrustAllManager()), null);
+                    return new VcenterTls(mode, contextWith(new TrustAllManager()), null, null);
                 case PINNED:
-                    return new VcenterTls(mode, contextWith(new PinnedTrustManager(pinHex)), null);
+                    PinnedTrustManager pm = new PinnedTrustManager(pinHex);
+                    return new VcenterTls(mode, contextWith(pm), null, pm);
                 case ENABLED:
                     if (platformCtx == null || securer == null) {
                         throw new IllegalArgumentException(
                                 "Enabled needs the platform trust context and its name check");
                     }
-                    return new VcenterTls(mode, platformCtx.getSocketFactory(), securer);
+                    return new VcenterTls(mode, platformCtx.getSocketFactory(), securer, null);
                 default:
                     throw new IllegalArgumentException("unknown TLS mode " + mode);
             }
@@ -68,6 +73,16 @@ public final class VcenterTls {
             throw new IllegalStateException("could not build the TLS context: "
                     + e.getClass().getSimpleName(), e);
         }
+    }
+
+    /**
+     * A posture over a socket factory the caller built, for tests that need a
+     * provider's failure shape the JDK cannot produce (the FIPS provider's alerts).
+     * No name check; {@code pinned} may be null.
+     */
+    public static VcenterTls forTesting(TlsMode mode, SSLSocketFactory factory,
+            PinnedTrustManager pinned) {
+        return new VcenterTls(mode, factory, null, pinned);
     }
 
     private static SSLSocketFactory contextWith(TrustManager tm) throws GeneralSecurityException {
@@ -82,6 +97,16 @@ public final class VcenterTls {
 
     public SSLSocketFactory socketFactory() {
         return factory;
+    }
+
+    /** Forget a pin mismatch recorded on this thread; call before a connection. */
+    public void clearPinMismatch() {
+        if (pinned != null) pinned.clearMismatch();
+    }
+
+    /** The pin mismatch this thread's last handshake raised, or null (also in the other modes). */
+    public PinMismatchException takePinMismatch() {
+        return pinned == null ? null : pinned.takeMismatch();
     }
 
     /** Whether the certificate's name is checked at all (only Enabled does). */
