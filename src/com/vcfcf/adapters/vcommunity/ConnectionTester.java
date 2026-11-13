@@ -64,6 +64,28 @@ public final class ConnectionTester {
      */
     public static Report run(VCommunityConfig cfg, VimSession vim, ThumbprintProbe.Probe probe,
             OpsApi ops, CheckListStore store) throws Exception {
+        return run(cfg, vim, probe, ops, store, null, true);
+    }
+
+    /** The text the framework's client builder starts with when no Suite API credential resolves. */
+    static final String NO_CREDENTIAL = "SuiteApiStitchClient: cannot resolve Suite API credentials";
+
+    /**
+     * Whether a failure to build the Suite API client is the one expected during a test (the
+     * account is not configured, so no credential resolves). Anything else is a real problem.
+     */
+    public static boolean isNoCredentialInTest(RuntimeException e) {
+        return e instanceof IllegalStateException && e.getMessage() != null
+                && e.getMessage().startsWith(NO_CREDENTIAL);
+    }
+
+    /**
+     * @param notBuilt the class of the exception that stopped the Suite API client being built
+     *        ({@code ops} is then null), or null
+     * @param expected whether that failure is the known no-credential case of a test
+     */
+    public static Report run(VCommunityConfig cfg, VimSession vim, ThumbprintProbe.Probe probe,
+            OpsApi ops, CheckListStore store, String notBuilt, boolean expected) throws Exception {
         Report r = new Report();
         vim.beginCycle();
         VimResult<About> session = vim.ensureSession();
@@ -90,9 +112,16 @@ public final class ConnectionTester {
             // cannot be built here (the credential it uses during collection is supplied by the
             // platform to a configured account; the files it falls back to are not readable from
             // every node). Collection reports its own Suite API state every cycle.
-            r.lines.add("The VCF Operations Suite API is not checked during a test (its client "
-                    + "uses a credential the platform gives a configured account); collection "
-                    + "reports its state in the Collection Health keys");
+            if (expected || notBuilt == null) {
+                r.lines.add("The VCF Operations Suite API is not checked during a test (its client "
+                        + "uses a credential the platform gives a configured account"
+                        + (notBuilt == null ? "" : "; " + notBuilt) + "); collection reports its "
+                        + "state in the Collection Health keys");
+            } else {
+                r.flag("WARNING: the VCF Operations Suite API client could not be built during "
+                        + "this test (" + notBuilt + "), and that is not the usual 'no configured "
+                        + "account yet' case; collection pushes through it");
+            }
         } else {
             try {
                 ops.get("/api/versions/current", null);
@@ -117,8 +146,10 @@ public final class ConnectionTester {
                 }
             }
         } else if (ops == null) {
-            r.lines.add("Check-list files were not read (they come through the Suite API, which "
-                    + "is not checked during a test)");
+            String why = "Check-list files were not read (they come through the Suite API, which "
+                    + "is not checked during a test)";
+            if (expected || notBuilt == null) r.lines.add(why);
+            else r.flag(why);
         } else {
             r.flag("Check-list files were not read (the Suite API did not answer)");
         }

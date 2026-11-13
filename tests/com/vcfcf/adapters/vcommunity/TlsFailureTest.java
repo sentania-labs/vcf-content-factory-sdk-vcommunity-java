@@ -77,6 +77,47 @@ public final class TlsFailureTest {
         loopsAndDepth();
         otherModes();
         throughTheClient();
+        staleRecord();
+    }
+
+    /** N1: a mismatch recorded on this thread is never reported on a later unrelated failure. */
+    static void staleRecord() throws Exception {
+        try (FakeVc vc = new FakeVc(FakeVc.happy())) {
+            PinnedTrustManager tm = new PinnedTrustManager("ab".repeat(32));
+            // a mismatch is decided on this thread, outside any client call
+            try {
+                tm.checkServerTrusted(new X509Certificate[] {vc.cert}, "RSA");
+            } catch (CertificateException expected) {
+                // recorded
+            }
+            VcenterTls tls = VcenterTls.forTesting(TlsMode.PINNED,
+                    new FailingFactory(() -> new java.net.ConnectException("refused")), tm);
+            try (VimSoapClient c = new VimSoapClient("localhost:" + vc.port(), "svc", "pw", tls, new T.RecLog(), 5000, 10000, 10000)) {
+                VimResult<About> r = c.ensureSession();
+                T.notContains(r.message(), "pinned", "a stale record is not a pin mismatch: " + r.message());
+                T.check(Reachability.isUnreachable(r.cause()), "it is the refusal it was");
+            }
+            // and a record the cause walk did not need is still taken, so it cannot outlive the call
+            PinnedTrustManager tm2 = new PinnedTrustManager("ab".repeat(32));
+            VcenterTls tls2 = VcenterTls.forTesting(TlsMode.PINNED, new FailingFactory(
+                    () -> new SSLHandshakeException("x") {
+                        private static final long serialVersionUID = 1L;
+                        { initCause(pin()); }
+                    }, () -> {
+                        try {
+                            tm2.checkServerTrusted(new X509Certificate[] {vc.cert}, "RSA");
+                        } catch (CertificateException expected) {
+                            // recorded
+                        }
+                    }), tm2);
+            try (VimSoapClient c = new VimSoapClient("localhost:" + vc.port(), "svc", "pw", tls2, new T.RecLog(), 5000, 10000, 10000)) {
+                T.check(!c.ensureSession().isOk(), "fails");
+            }
+            T.check(tls2.takePinMismatch() == null, "the record did not outlive the call");
+            T.throwsIae(() -> VcenterTls.forTesting(TlsMode.ENABLED, new FailingFactory(() -> null), null),
+                    "Enabled", "the test seam refuses Enabled");
+        }
+        T.done("a pin mismatch record never outlives its call nor colours a later failure");
     }
 
     static void shapes() {
@@ -132,6 +173,23 @@ public final class TlsFailureTest {
         // the same shape wrapped as the FIPS alert
         T.contains(TlsFailure.explain(new TlsFatalAlert("certificate_unknown(46)", pkix), TlsMode.ENABLED),
                 "not trusted by this collector", "Enabled, untrusted, FIPS shape");
+        // N2: an expired or revoked certificate does not get the 'accept it' advice
+        Throwable expired = new SSLHandshakeException("validity").initCause(
+                new java.security.cert.CertPathValidatorException("validity check failed", null, null, -1,
+                        java.security.cert.CertPathValidatorException.BasicReason.EXPIRED));
+        String ex = TlsFailure.explain(expired, TlsMode.ENABLED);
+        T.contains(ex, "expired, not yet valid or revoked", "expired");
+        T.notContains(ex, "Accept the certificate", "no accept advice for an expired certificate");
+        T.contains(TlsFailure.explain(new SSLHandshakeException("x").initCause(
+                new java.security.cert.CertificateExpiredException("NotAfter: x")), TlsMode.ENABLED),
+                "expired, not yet valid or revoked", "CertificateExpiredException");
+        T.contains(TlsFailure.explain(new TlsFatalAlert("certificate_expired(45)", new java.security.cert.CertPathValidatorException(
+                "revoked", null, null, -1, java.security.cert.CertPathValidatorException.BasicReason.REVOKED)), TlsMode.ENABLED),
+                "expired, not yet valid or revoked", "revoked, FIPS shape");
+        // N3: server text stays one line
+        String nl = TlsFailure.explain(new TlsFatalAlert("bad\nthing\r\n" + "x".repeat(400), null), TlsMode.PINNED);
+        T.notContains(nl, "\n", "no newline"); T.notContains(nl, "\r", "no carriage return");
+        T.check(nl.length() < 400, "bounded: " + nl.length());
         // outside Enabled an untrusted chain cannot happen; it is not described as one
         T.notContains(TlsFailure.explain(pkix, TlsMode.PINNED), "not trusted by this collector", "Pinned");
         // an Enabled failure that is not a chain failure (a name mismatch the framework checks) is a plain TLS line

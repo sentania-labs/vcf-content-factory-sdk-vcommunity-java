@@ -239,7 +239,7 @@ public final class CycleEngine {
         StringBuilder b = new StringBuilder("Collection cycle ").append(cycleNo)
                 .append(failure == null ? " finished in " : " failed after ")
                 .append(String.format(java.util.Locale.ROOT, "%.1f", s.cycleSeconds)).append(" s: ");
-        if (failure != null) b.append(bound(failure)).append("; ");
+        if (failure != null) b.append(Failures.bound(failure)).append("; ");
         b.append("vCenter object matched=").append(s.vcenterResolved ? "yes" : "no")
                 .append(", objects not matched=").append(count(s.objectsUnmatched))
                 .append(", series pushed=").append(count(s.seriesPushed))
@@ -344,6 +344,7 @@ public final class CycleEngine {
     }
 
     private static String bound(String s) {
+        s = Failures.bound(s); // one line
         return s.length() > 160 ? s.substring(0, 160) + "..." : s;
     }
 }

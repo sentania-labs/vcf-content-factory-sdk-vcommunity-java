@@ -98,7 +98,8 @@ public final class Failures {
         }
     }
 
-    static String bound(String s) {
+    /** One bounded line: control characters (newlines) become spaces. For any text a server sent. */
+    public static String bound(String s) {
         if (s == null) return "";
         String t = s.replaceAll("[\\p{Cntrl}]", " ");
         return t.length() > MAX_TEXT ? t.substring(0, MAX_TEXT) : t;

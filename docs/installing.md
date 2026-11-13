@@ -102,13 +102,14 @@ name in the account; do not edit the reference file.
 ## What Test Connection checks
 
 Validate Connection logs in to the vCenter and reads its certificate. A failed
-login (including a wrong pin, in every TLS mode and under FIPS) fails the test
-and the dialog shows why.
+login (including a wrong pin in Pinned, or an untrusted certificate in Enabled,
+also under FIPS) fails the test and the dialog shows why.
 
 It does **not** check the Suite API or read the check-list files. A test runs
 before the account exists, and the Suite API client uses a credential the
 platform gives a configured account, so the client cannot be built during a test
-(the report says "not checked during a test", not a warning). If the Suite API
+(the report says "not checked during a test", not a warning; any other reason
+the client cannot be built is still a warning, with the exception class). If the Suite API
 client can be built where the test runs, the test uses it: it then asks whether
 the API answers and reads each check-list file in use, and a file that is
 missing, unreadable or invalid is reported, never fatal. Collection reports the
@@ -139,6 +140,15 @@ names:
 | Renewal | `vCenter session renewed (the held session had expired; logged in again)` | the vCenter ended the session |
 | Cycle | `Collection cycle <n> finished in <s> s: ... series pushed=..., reads failed=...` | every cycle (`failed after` when the login failed) |
 | Logout | `vCenter session logged out (reason: reconfigure)` or `(reason: stop)` | the account was edited, or the adapter instance was stopped or removed |
+
+A re-login in the middle of a cycle (a call finding the session gone) will write
+only a WARN, `session not authenticated on <operation>; logging in again`. No
+vim25 read exists in this phase to cause it; the row is added when the first one
+lands (P2).
+
+A logout the vCenter refuses reads `vCenter logout did not complete (reason: ...)`,
+and one for a session that had already ended reads `vCenter session had already
+ended (reason: ...)`; neither says "logged out".
 
 If an account is edited you should see the logout line, then `VCommunityAdapter
 configured` and a new-session login line on the next cycle.

@@ -109,7 +109,7 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
             WarnCounter warns = new WarnCounter(log);
             VimSoapClient vim = new VimSoapClient(cfg.hostPort(), cfg.user, cfg.password(),
                     buildTls(cfg), warns);
-            SuiteApiStitcher sas = openStitcher(true);
+            SuiteApiStitcher sas = openStitcher();
             OpsPort ops = sas == null ? null : new OpsPort(sas);
             CycleEngine engine = new CycleEngine(cfg, vim, ThumbprintProbe.TLS, ops,
                     new CheckListStore(warns), warns, System::currentTimeMillis);
@@ -153,18 +153,11 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
         return VcenterTls.create(cfg.tlsMode, cfg.thumbprint, platform, CertificateNames::secure);
     }
 
-    /**
-     * The Suite API client, or null when this instance cannot have one. Collection
-     * logs that at WARN: nothing can be pushed. Test Connection does not: there the
-     * account is not configured, so the credential the client uses during
-     * collection does not exist yet and the answer is always "no" (finding 4 of
-     * the 0.0.0.2 live run); the report says so as a plain line.
-     */
-    private SuiteApiStitcher openStitcher(boolean collection) {
+    /** The Suite API client, or null (logged at WARN: nothing can be pushed) when this instance cannot have one. */
+    private SuiteApiStitcher openStitcher() {
         try {
             return SuiteApiStitcher.create(this, componentLogger(SuiteApiStitcher.class));
         } catch (RuntimeException e) {
-            if (!collection) return null;
             logWarn("the local VCF Operations Suite API is unavailable to this instance ("
                     + e.getClass().getSimpleName() + "); nothing can be pushed onto vCenter "
                     + "objects until it is");
@@ -223,11 +216,22 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
             WarnCounter log = new WarnCounter(pakLog());
             VimSoapClient vim = new VimSoapClient(c.hostPort(), c.user, c.password(), buildTls(c),
                     log);
-            SuiteApiStitcher sas = openStitcher(false);
+            // During a test the account is not configured, so the client usually cannot be built
+            // (no per-instance credential, finding 4 of the 0.0.0.2 live run). Only that known
+            // case is a plain line; any other failure is reported as a warning, with its class.
+            SuiteApiStitcher sas = null;
+            String notBuilt = null;
+            boolean expected = false;
+            try {
+                sas = SuiteApiStitcher.create(this, componentLogger(SuiteApiStitcher.class));
+            } catch (RuntimeException e) {
+                notBuilt = e.getClass().getSimpleName();
+                expected = ConnectionTester.isNoCredentialInTest(e);
+            }
             try {
                 ConnectionTester.Report report = ConnectionTester.run(c, vim,
                         ThumbprintProbe.TLS, sas == null ? null : new OpsPort(sas),
-                        new CheckListStore(log));
+                        new CheckListStore(log), notBuilt, expected);
                 // The success line is INFO, which is not written anywhere during a Test Connection:
                 // no instance log exists yet, and under the pak's own conf/logging.properties
                 // entry only WARN and above reach collector.log (SKILL.md, Logging). Our code

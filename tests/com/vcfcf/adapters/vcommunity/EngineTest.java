@@ -421,6 +421,13 @@ public final class EngineTest {
         T.contains(fl, "Collection cycle 1 failed after", "failure line");
         T.contains(fl, "rejected the user name or password", "why");
         T.contains(fl, "series pushed=n/a", "unmeasured is said, not zero");
+        // N3: server text in the summary stays one line
+        Rig nl = new Rig(cfg());
+        nl.vim.next = VimResult.fault("Http", "Login was refused (HTTP 500): bad\nthing\r\nsecond line", null, 0, null);
+        nl.run();
+        String nll = nl.log.infos.get(nl.log.infos.size() - 1);
+        T.notContains(nll, "\n", "no newline"); T.notContains(nll, "\r", "no carriage return");
+        T.contains(nll, "bad thing", "the text is kept, flattened");
         T.done("engine: one summary line per cycle at INFO");
     }
 
@@ -474,6 +481,18 @@ public final class EngineTest {
         // No Suite API client is what a test normally has (the account is not configured): it is
         // said as a plain line, not a warning, and the files are not claimed to have been read.
         T.contains(r3.text(), "not checked during a test", "no client is said plainly");
+        // W2: the known no-credential case is plain; anything else is a warning that names its class
+        T.check(ConnectionTester.isNoCredentialInTest(new IllegalStateException(
+                "SuiteApiStitchClient: cannot resolve Suite API credentials. Ambient credential load failed: x")), "known case");
+        T.check(!ConnectionTester.isNoCredentialInTest(new IllegalStateException("something else")), "other message");
+        T.check(!ConnectionTester.isNoCredentialInTest(new IllegalArgumentException(
+                "SuiteApiStitchClient: cannot resolve Suite API credentials")), "other class");
+        ConnectionTester.Report known = ConnectionTester.run(c, noSuite.vim, noSuite.probe, null, new CheckListStore(noSuite.log), "IllegalStateException", true);
+        T.check(!known.needsAttention(), "expected: no warning");
+        T.contains(known.text(), "IllegalStateException", "the class is in the plain line too");
+        ConnectionTester.Report odd = ConnectionTester.run(c, noSuite.vim, noSuite.probe, null, new CheckListStore(noSuite.log), "NoClassDefFoundError", false);
+        T.check(odd.needsAttention(), "unexpected: a warning");
+        T.contains(String.join("|", odd.attentionLines()), "WARNING: the VCF Operations Suite API client could not be built during this test (NoClassDefFoundError)", "names the class");
         T.contains(r3.text(), "Check-list files were not read", "and the files were not read");
         T.notContains(r3.text(), "WARNING", "not presented as a warning");
         T.check(!r3.needsAttention() && r3.attentionLines().isEmpty(), "nothing needs attention: " + r3.attentionLines());

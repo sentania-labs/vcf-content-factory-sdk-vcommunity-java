@@ -31,7 +31,7 @@ This pak pushes keys onto resource kinds owned by other management packs, throug
 ## Quick Reference
 
 - **Adapter kind:** `vcfcf_vcommunity`
-- **Version:** 0.0.0.3
+- **Version:** 0.0.0.4
 - **Traversal spec:** (none)
 - **Resource kinds:** 4
 - **Metrics pushed onto:** VMwareAdapter Instance (VMWARE) (see [Metrics Pushed Onto](#metrics-pushed-onto))

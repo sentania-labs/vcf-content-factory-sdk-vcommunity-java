@@ -78,10 +78,13 @@ public final class VcenterTls {
     /**
      * A posture over a socket factory the caller built, for tests that need a
      * provider's failure shape the JDK cannot produce (the FIPS provider's alerts).
-     * No name check; {@code pinned} may be null.
+     * No name check, so never the Enabled mode; {@code pinned} may be null.
      */
     public static VcenterTls forTesting(TlsMode mode, SSLSocketFactory factory,
             PinnedTrustManager pinned) {
+        if (mode == TlsMode.ENABLED) {
+            throw new IllegalArgumentException("Enabled needs the name check; use create()");
+        }
         return new VcenterTls(mode, factory, null, pinned);
     }
 

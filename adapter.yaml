@@ -20,7 +20,7 @@ description: >
   This build is the first phase: the account, vCenter TLS modes, session,
   Test Connection and collection health. No vCommunity key is collected yet.
 version: 1.0.0
-build_number: 3
+build_number: 4
 tier: 2
 released: false
 

@@ -3,6 +3,29 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.4 (Unreleased)
+
+- fix(adapter): a logout the vCenter refuses is no longer logged as "logged out":
+  a refusal says `vCenter logout did not complete (...)`, and a session that had
+  already ended says so (review W1).
+- fix(adapter): Test Connection treats only the known no-credential failure of the
+  Suite API client as a plain "not checked" line; any other reason the client
+  cannot be built is a WARN naming the exception class, and the class is in the
+  plain line too (W2).
+- test: `BcHandshakeTest` runs real handshakes under BouncyCastle JSSE (jars
+  fetched from Maven Central, SHA-256 pinned, test only, same as the compliance
+  adapter): a wrong pin and an untrusted chain, through the adapter's own client
+  (W3). The provider throws `TlsFatalAlert`, an IOException, with the pin
+  mismatch as its direct cause.
+- fix(adapter): the per-thread pin record is always taken, never left behind,
+  and a stale one is not reported on a later failure (N1); an expired, not yet
+  valid or revoked certificate no longer gets the "accept the certificate"
+  advice (N2); server and provider text in the cycle summary and in TLS
+  failures is one bounded line (N3); the test seam `VcenterTls.forTesting` refuses
+  Enabled (N4).
+- docs: wording for the TLS failures, the mid-cycle re-login (P2), and deviation
+  DV-67 (Test Connection on an unsaved account reads no check-list files) (N5, N6).
+
 ## 1.0.0.3 (Unreleased)
 
 - fix(adapter): the session is visible in the account log at INFO, one line each:

@@ -753,8 +753,9 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-64 | (not in upstream) | a check-list entry skipped inside a file that was read is a reported problem (WARN, counted in the skipped total), not a failed read; the file's `check_lists` status is PARTIAL, FAILED only when every file failed and none is in force | the list is in force | `reads_failed` counts files, not entries |
 | DV-65 | host used as entered | a Unicode host name is converted to its punycode form for the certificate name check, the URL and the probe | the name check wants the ASCII form | Unicode names work in Enabled mode |
 | DV-66 | SOAP answers read whole | answers built into a tree are capped at 1 MiB and 32 levels; redirects are not followed | bound memory and keep the session cookie from leaving | an oversized or deeply nested answer fails the call |
+| DV-67 | Test Connection reads each check-list file in use (section 11, P1) | a Test Connection on a not-yet-saved account does not read the check-list files and does not ask whether the Suite API answers: the Suite API client cannot be built in that context (the per-instance credential it uses is supplied to a configured account; observed live 2026-11-13 as `IllegalStateException` in every test). The report says so as a plain line, not a warning; any other reason the client cannot be built is still a WARN with the exception class. The files are read every cycle in collection, where a missing or bad one is counted and reported. Owner accepted 2026-11-13 by delegation ("give me a match and let's iterate from there"); to be revisited if a live Edit-then-Validate on an existing account shows the client can be built there | the client does not exist during a test | Test Connection never shows check-list outcomes for a new account; they appear in the first cycle |
 
-66 rows (DV-55, DV-58 and DV-59 are conditional).
+67 rows (DV-55, DV-58 and DV-59 are conditional).
 
 ---
 

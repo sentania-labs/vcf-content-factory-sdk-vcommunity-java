@@ -1,6 +1,7 @@
 package com.vcfcf.adapters.vcommunity.vim;
 
 import com.vcfcf.adapters.vcommunity.Log;
+import com.vcfcf.adapters.vcommunity.health.Failures;
 import com.vcfcf.adapters.vcommunity.tls.PinMismatchException;
 import com.vcfcf.adapters.vcommunity.tls.TlsFailure;
 import com.vcfcf.adapters.vcommunity.tls.VcenterTls;
@@ -271,30 +272,46 @@ public final class VimSoapClient implements VimSession {
     public synchronized void close(String reason) {
         closed = true;
         boolean held = cookie != null;
-        boolean out = logoutAndClear();
+        String out = logoutAndClear();
         if (held) {
-            log.info(out ? "vCenter session logged out (reason: " + reason + ")"
-                    : "vCenter logout did not complete (reason: " + reason + "); the session "
-                            + "expires on its own");
+            if (out == null) {
+                log.info("vCenter session logged out (reason: " + reason + ")");
+            } else if (out.startsWith(ENDED)) {
+                log.info("vCenter session had already ended (reason: " + reason + "); nothing "
+                        + "to log out");
+            } else {
+                log.info("vCenter logout did not complete (reason: " + reason + "): " + out
+                        + "; the session expires on its own");
+            }
         }
     }
 
-    /** Logs the held session out and forgets it; false when the logout could not be sent or failed. */
-    private boolean logoutAndClear() {
+    private static final String ENDED = "ended";
+
+    /**
+     * Logs the held session out and forgets it. Null when vCenter accepted the logout;
+     * {@code ended...} when it answered NotAuthenticated (the session was already gone);
+     * otherwise a short credential-free reason it did not complete.
+     */
+    private String logoutAndClear() {
         MoRef sm = sessionManager;
-        boolean ok = true;
+        String outcome = null;
         if (sm != null && cookie != null) {
             try {
-                postOnce("<Logout xmlns=\"urn:vim25\"><_this type=\"SessionManager\">"
-                        + xml(sm.value) + "</_this></Logout>", "Logout", true,
-                        LOGOUT_TIMEOUT_MS, LOGOUT_TIMEOUT_MS, null);
-            } catch (Exception ignored) {
+                VimResult<XmlNode> r = postOnce("<Logout xmlns=\"urn:vim25\"><_this "
+                        + "type=\"SessionManager\">" + xml(sm.value) + "</_this></Logout>",
+                        "Logout", true, LOGOUT_TIMEOUT_MS, LOGOUT_TIMEOUT_MS, null);
+                if (!r.isOk()) {
+                    outcome = "NotAuthenticated".equals(r.faultClass()) ? ENDED
+                            : Failures.bound(r.message());
+                }
+            } catch (Exception e) {
                 // an idle session expires on its own
-                ok = false;
+                outcome = e.getClass().getSimpleName();
             }
         }
         clearSession();
-        return ok;
+        return outcome;
     }
 
     private void clearSession() {
@@ -397,8 +414,10 @@ public final class VimSoapClient implements VimSession {
             // Not only an SSLException: the FIPS provider throws its own alert, an IOException of
             // another kind, with the pin mismatch below it. When the chain was rewrapped past
             // recognition, the trust manager's own record of this thread's handshake answers.
+            // The record is always taken, so it never outlives the call that made it.
+            PinMismatchException recorded = tls.takePinMismatch();
             PinMismatchException pm = TlsFailure.findPin(e);
-            if (pm == null) pm = tls.takePinMismatch();
+            if (pm == null) pm = recorded;
             if (pm != null) throw new PinMismatchWrapper(pm);
             throw e;
         }

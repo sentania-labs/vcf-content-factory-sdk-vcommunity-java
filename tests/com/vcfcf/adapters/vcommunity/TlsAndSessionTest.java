@@ -44,6 +44,7 @@ public final class TlsAndSessionTest {
         oversizedAndRedirect();
         deepXml();
         sessionLifecycle();
+        logoutOutcomes();
         loginFailures();
         unreachable();
     }
@@ -298,6 +299,30 @@ public final class TlsAndSessionTest {
             T.check(!closed.isOk() && "Closed".equals(closed.faultClass()), "closed client refuses");
         }
         T.done("session: keepalive, relogin once, logout, closed");
+    }
+
+    /** W1: the log says what the vCenter answered to a logout, not only that one was sent. */
+    static void logoutOutcomes() throws Exception {
+        String[][] cases = {
+            {"NotAuthenticated", "The session is not authenticated.", "vCenter session had already ended (reason: reconfigure); nothing to log out"},
+            {"NotSupported", "refused\nby a proxy", "vCenter logout did not complete (reason: reconfigure): Logout was refused (HTTP 500)"},
+        };
+        for (String[] c : cases) {
+            try (FakeVc vc = new FakeVc(r -> r.action.equals("Logout") ? FakeVc.fault(c[0], c[1]) : FakeVc.happy().handle(r))) {
+                T.RecLog log = new T.RecLog();
+                VimSoapClient v = client(vc, tofu(), "svc", "pw", log);
+                T.check(v.ensureSession().isOk(), "login");
+                int before = log.infos.size();
+                v.close("reconfigure");
+                T.eq(before + 1, log.infos.size(), "one line: " + log.infos);
+                String line = log.infos.get(log.infos.size() - 1);
+                T.contains(line, c[2], c[0] + " wording");
+                T.notContains(line, "logged out", c[0] + " is not called a logout");
+                T.notContains(line, "\n", "one line");
+                T.check(!v.hasSession(), "the session is forgotten either way");
+            }
+        }
+        T.done("logout: refused and already ended are each said as what they are");
     }
 
     static void loginFailures() throws Exception {

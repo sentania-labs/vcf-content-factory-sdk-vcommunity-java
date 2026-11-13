@@ -1,6 +1,7 @@
 package com.vcfcf.adapters.vcommunity.tls;
 
 import com.vcfcf.adapters.vcommunity.VCommunityConfig.TlsMode;
+import com.vcfcf.adapters.vcommunity.health.Failures;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -19,7 +20,6 @@ import java.util.Set;
 public final class TlsFailure {
 
     private static final int MAX_NODES = 64;
-    private static final int MAX_TEXT = 200;
 
     private TlsFailure() {}
 
@@ -39,6 +39,11 @@ public final class TlsFailure {
         if (t == null) return null;
         PinMismatchException pin = findPin(t);
         if (pin != null) return pin.getMessage();
+        if (mode == TlsMode.ENABLED && find(t, 3) != null) {
+            return "the vCenter's certificate is expired, not yet valid or revoked (vCenter TLS "
+                    + "Validation: Enabled). Renew the certificate on the vCenter, or use Pinned "
+                    + "with its thumbprint. No credential was sent.";
+        }
         if (mode == TlsMode.ENABLED && find(t, 1) != null) {
             return "the vCenter's certificate is not trusted by this collector (vCenter TLS "
                     + "Validation: Enabled). Accept the certificate in Validate Connection, or "
@@ -46,16 +51,16 @@ public final class TlsFailure {
         }
         Throwable alert = find(t, 2);
         if (alert == null) return null;
-        String m = alert.getMessage();
+        // one line: the alert text is the provider's, bounded and stripped of control characters
+        String m = Failures.bound(alert.getMessage());
         return "the TLS connection to the vCenter failed (" + alert.getClass().getSimpleName()
-                + (m == null || m.isEmpty() ? "" : ": " + (m.length() > MAX_TEXT
-                        ? m.substring(0, MAX_TEXT) + "..." : m))
+                + (m.isEmpty() ? "" : ": " + m)
                 + "); vCenter TLS Validation: " + (mode == null ? "unknown" : mode.label);
     }
 
     /**
      * Breadth first over causes and suppressed. kind 0: a pin mismatch; 1: an
-     * untrusted chain; 2: any TLS handshake failure (an SSLException, or a
+     * untrusted chain; 3: an expired, not yet valid or revoked certificate; 2: any TLS handshake failure (an SSLException, or a
      * BouncyCastle alert, matched by name so no provider class is needed).
      */
     private static Throwable find(Throwable start, int kind) {
@@ -68,6 +73,16 @@ public final class TlsFailure {
             switch (kind) {
                 case 0:
                     if (cur instanceof PinMismatchException) return cur;
+                    break;
+                case 3:
+                    if (cur instanceof java.security.cert.CertificateExpiredException
+                            || cur instanceof java.security.cert.CertificateNotYetValidException
+                            || (cur instanceof java.security.cert.CertPathValidatorException
+                                    && isValidityReason(
+                                            (java.security.cert.CertPathValidatorException) cur))
+                            || mentions(cur, "validity check failed")) {
+                        return cur;
+                    }
                     break;
                 case 1:
                     if (cur instanceof java.security.cert.CertPathBuilderException
@@ -90,6 +105,13 @@ public final class TlsFailure {
             }
         }
         return null;
+    }
+
+    private static boolean isValidityReason(java.security.cert.CertPathValidatorException e) {
+        java.security.cert.CertPathValidatorException.Reason r = e.getReason();
+        return r == java.security.cert.CertPathValidatorException.BasicReason.EXPIRED
+                || r == java.security.cert.CertPathValidatorException.BasicReason.NOT_YET_VALID
+                || r == java.security.cert.CertPathValidatorException.BasicReason.REVOKED;
     }
 
     private static boolean mentions(Throwable t, String text) {
