@@ -30,6 +30,12 @@ Phase P2, the property keys.
   (the framework's typed push, 1.0.27).
 - feat(adapter): properties are sent when they change, after a start and in a
   full refresh every 12th cycle; numbers go every cycle (DV-49).
+- fix(adapter): an absent check-list file is absent on 8.18.7 as on 9.x (the XML
+  error there carries no code the framework reads; a refusal with none is asked
+  about once more as JSON), and the `it said:` text is the server's message, never
+  markup. An unexpected failure on one object is counted for that object and does
+  not fail its type. A full refresh forgets pushed-value hashes of objects that
+  are gone.
 - test: fixture tests through the engine, the real vim25 client and a local
   server that answers hand-built SOAP: paged and large inventories (heap shape
   checked), optional parts missing, empty values, refused paths, failed pages,
