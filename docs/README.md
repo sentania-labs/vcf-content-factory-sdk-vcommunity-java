@@ -26,12 +26,61 @@ This pak pushes keys onto resource kinds owned by other management packs, throug
 
 | Key group |
 |-----------|
+| `vCommunity\|Certificate\|*` |
+| `vCommunity\|Configuration\|*` |
 | `vCommunity\|Collection Health\|*` |
+
+### ClusterComputeResource (VMWARE)
+
+- **Matched on:** VMEntityObjectID + VMEntityVCID (the MoRef and the vCenter's instance UUID, never a name)
+
+| Key group |
+|-----------|
+| `vCommunity\|Cluster Configuration\|*` |
+
+### HostSystem (VMWARE)
+
+- **Matched on:** VMEntityObjectID + VMEntityVCID
+
+| Key group |
+|-----------|
+| `vCommunity\|Configuration\|*` |
+| `vCommunity\|Licensing:<license name>\|*` |
+| `vCommunity\|Storage Adapter\|*` |
+| `vCommunity\|Storage Adapter:<hba>\|*` |
+| `vCommunity\|Network\|*` |
+| `vCommunity\|Network\|Device:<vmnic>\|*` |
+| `vCommunity\|Runtime\|*` |
+| `vCommunity\|Hardware\|*` |
+| `vCommunity\|Capability\|*` |
+
+### VirtualMachine (VMWARE)
+
+- **Matched on:** VMEntityObjectID + VMEntityVCID
+
+| Key group |
+|-----------|
+| `vCommunity\|Configuration\|*` |
+| `vCommunity\|Guest\|*` |
+| `vCommunity\|Runtime\|*` |
+| `vCommunity\|Summary\|*` |
+| `vCommunity\|Network\|Network Adapters:<label>\|*` |
+| `vCommunity\|Virtual Disk:<label>\|*` |
+| `vCommunity\|Options\|*` |
+
+### Datastore (VMWARE)
+
+- **Matched on:** VMEntityObjectID + VMEntityVCID
+
+| Key group |
+|-----------|
+| `vCommunity\|Identifiers\|*` |
+| `vCommunity\|Summary\|*` |
 
 ## Quick Reference
 
 - **Adapter kind:** `vcfcf_vcommunity`
-- **Version:** 0.0.0.4
+- **Version:** 0.0.0.5
 - **Traversal spec:** (none)
 - **Resource kinds:** 4
-- **Metrics pushed onto:** VMwareAdapter Instance (VMWARE) (see [Metrics Pushed Onto](#metrics-pushed-onto))
+- **Metrics pushed onto:** VMwareAdapter Instance (VMWARE), ClusterComputeResource (VMWARE), HostSystem (VMWARE), VirtualMachine (VMWARE), Datastore (VMWARE) (see [Metrics Pushed Onto](#metrics-pushed-onto))

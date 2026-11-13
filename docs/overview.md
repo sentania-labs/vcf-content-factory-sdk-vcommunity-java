@@ -9,9 +9,12 @@ keys onto the objects the vCenter adapter already has in VCF Operations: hosts,
 clusters, virtual machines, datastores, datacenters, the vCenter object and the
 vSphere World. It also creates three object kinds of its own.
 
-This build is the first phase of the port. It provides the account, the vCenter
-TLS modes, the session, Test Connection and the collection cycle with its
-health keys. It collects no `vCommunity|` key yet.
+This build is the second phase of the port. It provides the account, the vCenter
+TLS modes, the session, Test Connection, the collection cycle with its health
+keys, and the property keys of clusters, hosts, virtual machines, datastores and
+the vCenter. The derived metrics, the own objects, the guest checks and the
+content come in later phases; `p2-key-coverage.tsv` in this folder's parent
+(`docs/`) says, key by key, what this build collects.
 
 ### Resource kinds
 
@@ -30,7 +33,8 @@ declare keys on another adapter's kinds, and a pushed key carries no label or
 unit of its own. `REFERENCE.md` lists what is declared; `adapter.yaml`
 (`stitch_targets`) lists where keys land.
 
-In this build the adapter pushes only its own health figures:
+In this build the adapter pushes the property keys (see below) and its own
+health figures:
 
 - on the pak's adapter instance, the `Collection|` self metrics (cycle time,
   failed reads, values withheld, objects not matched, check-list entries
@@ -61,6 +65,29 @@ pushes nothing onto the vCenter's objects.
   in `Collection|reads_failed` and `Collection|values_withheld`, and the first
   cause is in `Collection|last_error`. A figure the cycle could not measure (for
   example the number of series sent when a push failed) is not sent either.
+- **A value that is not there is not sent.** An unset property, a switched-off
+  feature (high availability, DRS, EVC), a link that is down, a license with no
+  expiry: the key is left out, where the original pack sent `None`, `null`,
+  `Unknown`, `N/A`, `0` or `half-duplex`. The key then keeps its last value in
+  VCF Operations (a pushed key cannot be deleted), so a view can show an old
+  setting for a feature that was since turned off; whether to blank such keys
+  once is an open owner question (Q1). A count of what was read and found empty
+  (no adapters, no extents on a VMFS datastore) is sent as `0`.
+- **Unmatched objects.** An object of the vCenter whose Ops resource cannot be
+  found by instance UUID plus MoRef, or is claimed by two resources, gets no
+  keys and is counted in `Collection|objects_unmatched`. The Ops lists are read
+  once, again every 12th cycle, and again when a new object turns up that the
+  list does not have.
+- **A page that fails fails its type.** A cluster, host, VM or datastore read is
+  paged; if any page fails, nothing from that type is sent that cycle and the
+  failure is counted (`F-SOAP-R-CL`, `-R-HO`, `-R-VM`, `-R-DS`). The hosts' option
+  list, license assignments and vCenter settings are separate reads: a failure
+  there withholds only their keys.
+- **Properties are sent when they change.** After a start and in a full refresh
+  every 12th cycle everything is sent; between, only what changed. Numbers are
+  sent every cycle.
+- **License keys are masked.** A host license key is pushed as `*****-*****-*****-*****-MN90P`
+  (every group but the last replaced); the full key is never sent or logged.
 - **The cycle always reports.** A failed login fails the cycle and the account
   shows an error, or down when the vCenter cannot be reached; the self metrics
   still land.
@@ -78,11 +105,12 @@ pushes nothing onto the vCenter's objects.
 
 ## Known Limitations
 
-- No `vCommunity|` key is collected in this build.
+- Only the property keys are collected in this build; the derived metrics, the own objects, the guest checks and the content are later phases (`docs/p2-key-coverage.tsv`).
 - Trust on First Use sends the credentials before any certificate check, as the
-  original pack did, and in this build it stores and compares nothing (change
-  reporting arrives with the vCenter collector phase). Use Pinned or Enabled on a
-  network that is not fully trusted.
+  original pack did. The certificate it presents is compared after the login with
+  the one recorded on the vCenter object, and `vCommunity|Certificate|Status`
+  says `Recorded`, `Unchanged` or `Changed` (for 24 hours); it is a report, not a
+  refusal. Use Pinned or Enabled on a network that is not fully trusted.
 - Test Connection: the pak logs in to the vCenter and reads its certificate.
   The Suite API and the check-list files are checked only where the test can
   build the Suite API client, which is normally not the case (no configured

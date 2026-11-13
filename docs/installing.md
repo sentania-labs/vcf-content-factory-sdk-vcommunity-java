@@ -18,7 +18,11 @@ built-in views it shipped. The migration guide arrives with the content phase.
 
 ## Permissions Required
 
-Read-only access to the vCenter inventory. Guest operations (a later phase,
+Read-only access to the vCenter inventory. The license assignments and the
+vCenter settings are read with the privileges of the account in the credential
+(Global > Licenses and Global > Settings in a custom role; a read-only role may
+not have them: a refused read is counted as `F-SOAP-R-LIC` or `F-SOAP-R-OPT` and
+withholds only those keys; this is not yet checked on a live vCenter). Guest operations (a later phase,
 off by default) need the Windows account in the credential and the guest
 operations privileges on the VMs it checks.
 
@@ -35,7 +39,7 @@ The account's **vCenter TLS Validation** (Advanced Settings) has three modes.
 
 | Mode | What it does |
 |------|--------------|
-| Trust on First Use (default) | Accepts any certificate and any name. The account's credentials go to whatever answers, before any certificate check. This build reads the presented thumbprint every cycle but stores and compares nothing: recording it and reporting a change (the Certificate keys) arrives with the vCenter collector phase. |
+| Trust on First Use (default) | Accepts any certificate and any name. The account's credentials go to whatever answers, before any certificate check. The presented thumbprint is read every cycle and compared with the one recorded on the vCenter object: `vCommunity|Certificate|Status` is `Recorded` (first sight), `Unchanged` or `Changed` (a different certificate, shown for 24 hours, with the previous thumbprint and the time). A report, not a refusal; if the Suite API cannot give back what was recorded, the status is left out rather than guessed. |
 | Enabled | Uses the collector's own trust, including certificates accepted in Validate Connection, and checks that the certificate names the host entered. Enter the host by a name on the certificate. |
 | Pinned | Compares the SHA-256 (64 hex digits) or SHA-512 (128) thumbprint of the vCenter's certificate with **vCenter Thumbprint (SHA-256)**, during the handshake and before any credential is sent. The chain and the name are not checked. |
 
@@ -141,10 +145,14 @@ names:
 | Cycle | `Collection cycle <n> finished in <s> s: ... series pushed=..., reads failed=...` | every cycle (`failed after` when the login failed) |
 | Logout | `vCenter session logged out (reason: reconfigure)` or `(reason: stop)` | the account was edited, or the adapter instance was stopped or removed |
 
-A re-login in the middle of a cycle (a call finding the session gone) will write
-only a WARN, `session not authenticated on <operation>; logging in again`. No
-vim25 read exists in this phase to cause it; the row is added when the first one
-lands (P2).
+A re-login in the middle of a cycle (a call finding the session gone) writes
+only a WARN, `session not authenticated on <operation>; logging in again`, and
+the call is repeated once.
+
+Each property read also writes one INFO line, for example `R-VM pages=50
+rows=2500 bytes=... calls=... maxRowNodes=... droppedPaths=0`: its pages, objects
+and bytes, and the most elements held for one object (the heap check). A property
+vCenter refuses writes `F-SOAP-INVALIDPROP` once, with the path.
 
 A logout the vCenter refuses reads `vCenter logout did not complete (reason: ...)`,
 and one for a session that had already ended reads `vCenter session had already

@@ -3,6 +3,38 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.5 (Unreleased)
+
+Phase P2, the property keys.
+
+- feat(adapter): clusters, hosts, virtual machines, datastores and the vCenter
+  object get their `vCommunity|` property keys (146 rows of the key map; the
+  count per row is in `docs/p2-key-coverage.tsv`, generated from the key map and
+  checked against the tests). Each cycle reads the objects of a type through the
+  property collector in pages, as a stream: one object is held at a time, and
+  of a large value only what a key uses is kept. A page that fails fails its
+  whole type (nothing from it is sent); an object with no unique Ops resource
+  gets no keys and is counted; a failed read, a refused property path and a
+  value that is not there are each withheld and counted, never sent as `None`,
+  `null`, `Unknown`, `N/A`, `0` or `False`.
+- feat(adapter): host license keys are masked to their last group; the full key
+  is never pushed or logged (DV-25). PCI ids are four hex digits of the unsigned
+  value (DV-33). A VM Options entry vCenter refuses is dropped and reported and
+  costs only its own key (DV-26); a value that is an object or a list is skipped
+  and reported once.
+- feat(adapter): the certificate status (`Recorded`, `Unchanged`, `Changed`,
+  previous thumbprint, last changed) is kept in memory and read back from the
+  vCenter object once after a start; a failed read-back or probe sends no status
+  and never records over what is there (DV-23).
+- feat(adapter): `Maintenance Mode Required` is pushed as a numeric property
+  (the framework's typed push, 1.0.27).
+- feat(adapter): properties are sent when they change, after a start and in a
+  full refresh every 12th cycle; numbers go every cycle (DV-49).
+- test: fixture tests through the engine, the real vim25 client and a local
+  server that answers hand-built SOAP: paged and large inventories (heap shape
+  checked), optional parts missing, empty values, refused paths, failed pages,
+  per-host call failures, the deadline, matching by UUID and MoRef.
+
 ## 1.0.0.4 (Unreleased)
 
 - fix(adapter): a logout the vCenter refuses is no longer logged as "logged out":

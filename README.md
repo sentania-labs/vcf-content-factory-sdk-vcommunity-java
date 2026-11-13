@@ -12,10 +12,13 @@ so the two are never an upgrade of each other (see `docs/installing.md`).
 
 ## Status
 
-Phase 1 of the port: the account (the 19 fields and credential of the original
-pack), the three vCenter TLS modes, the vim25 session, Test Connection, the
-collection cycle skeleton with its Collection Health keys and self metrics.
-**No `vCommunity|` key is collected yet**; each later phase adds collectors.
+Phase 2 of the port (properties). Phase 1 gave the account (the 19 fields and
+credential of the original pack), the three vCenter TLS modes, the vim25
+session, Test Connection and the cycle with its Collection Health keys and self
+metrics. Phase 2 adds the property keys of clusters, hosts, virtual machines,
+datastores and the vCenter. `docs/p2-key-coverage.tsv` lists every key of the key
+map with whether this build collects it and the test that proves it; the
+derived metrics, own objects, guest checks and content come in later phases.
 The design is in `docs/design/` (start with `vcommunity-java-port-design.md`).
 
 ## Documentation
@@ -36,9 +39,11 @@ src/com/vcfcf/adapters/vcommunity/   # adapter source
   VCommunityAdapter.java             #   lifecycle, Test Connection, discovery (SDK side)
   OpsPort.java                       #   Suite API port (SDK side)
   VCommunityConfig.java              #   the 19 fields, defaults, fallbacks (SDK-free)
-  CycleEngine.java                   #   one cycle: session, probe, lists, binding, health
+  CycleEngine.java                   #   one cycle: session, probe, lists, binding, properties, health
   ConnectionTester.java              #   Test Connection logic
-  vim/                               #   raw SOAP session, no JAX-WS and no vim25.jar
+  vim/                               #   raw SOAP session, paged streamed reads, no JAX-WS and no vim25.jar
+  coll/                              #   what each object kind's keys read; the property phase
+  text/                              #   Python text rules, license key mask
   tls/                               #   trust on first use, platform trust, pin; probe
   ops/                               #   resource identity, push set, push on change
   list/                              #   check-list files: parse, validate, store

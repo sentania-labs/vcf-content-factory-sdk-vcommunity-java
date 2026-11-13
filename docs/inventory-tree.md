@@ -1,6 +1,6 @@
 # Inventory Tree: VCF Content Factory vCommunity
 
-> Generated from `describe.xml` v0.0.0.4. Do not edit: regenerated on every build.
+> Generated from `describe.xml` v0.0.0.5. Do not edit: regenerated on every build.
 
 ## Traversal Tree
 
@@ -27,4 +27,53 @@ This pak pushes keys onto resource kinds owned by other management packs, throug
 
 | Key group |
 |-----------|
+| `vCommunity\|Certificate\|*` |
+| `vCommunity\|Configuration\|*` |
 | `vCommunity\|Collection Health\|*` |
+
+### ClusterComputeResource (VMWARE)
+
+- **Matched on:** VMEntityObjectID + VMEntityVCID (the MoRef and the vCenter's instance UUID, never a name)
+
+| Key group |
+|-----------|
+| `vCommunity\|Cluster Configuration\|*` |
+
+### HostSystem (VMWARE)
+
+- **Matched on:** VMEntityObjectID + VMEntityVCID
+
+| Key group |
+|-----------|
+| `vCommunity\|Configuration\|*` |
+| `vCommunity\|Licensing:<license name>\|*` |
+| `vCommunity\|Storage Adapter\|*` |
+| `vCommunity\|Storage Adapter:<hba>\|*` |
+| `vCommunity\|Network\|*` |
+| `vCommunity\|Network\|Device:<vmnic>\|*` |
+| `vCommunity\|Runtime\|*` |
+| `vCommunity\|Hardware\|*` |
+| `vCommunity\|Capability\|*` |
+
+### VirtualMachine (VMWARE)
+
+- **Matched on:** VMEntityObjectID + VMEntityVCID
+
+| Key group |
+|-----------|
+| `vCommunity\|Configuration\|*` |
+| `vCommunity\|Guest\|*` |
+| `vCommunity\|Runtime\|*` |
+| `vCommunity\|Summary\|*` |
+| `vCommunity\|Network\|Network Adapters:<label>\|*` |
+| `vCommunity\|Virtual Disk:<label>\|*` |
+| `vCommunity\|Options\|*` |
+
+### Datastore (VMWARE)
+
+- **Matched on:** VMEntityObjectID + VMEntityVCID
+
+| Key group |
+|-----------|
+| `vCommunity\|Identifiers\|*` |
+| `vCommunity\|Summary\|*` |

@@ -17,10 +17,11 @@ description: >
   libraries, library items and VM templates). Port of vCommunity by Onur
   Yuzseven (github.com/vmbro/VCF-Operations-vCommunity) as continued by
   e1-rahabok (github.com/e1-rahabok/VCF-vCommunity-Adapter) 0.8.1.
-  This build is the first phase: the account, vCenter TLS modes, session,
-  Test Connection and collection health. No vCommunity key is collected yet.
+  This build collects the property keys of clusters, hosts, virtual machines,
+  datastores and the vCenter; the derived metrics, the own objects, the guest
+  checks and the content come in later phases.
 version: 1.0.0
-build_number: 4
+build_number: 5
 tier: 2
 released: false
 
@@ -34,11 +35,49 @@ content_naming: unprefixed
 content_foreign_adapter_kinds: [VMWARE, Container]
 
 # Where the keys land. Documentation only: the groups are the exact prefixes.
-# Phase 1 pushes only the Collection Health keys; the rest are listed so the
-# document matches the design and is filled in as the collectors arrive.
+# This build pushes the property keys (phase P2) and the Collection Health keys;
+# the rest are listed in the design and are filled in as the collectors arrive.
+# docs/p2-key-coverage.tsv counts every key of the key map against the tests.
 stitch_targets:
   - adapter_kind: VMWARE
     resource_kind: VMwareAdapter Instance
     identity: "VMEntityVCID (the vCenter's about.instanceUuid); exactly one object must carry it, otherwise the keys are held back and counted"
     key_groups:
+      - "vCommunity|Certificate|*"
+      - "vCommunity|Configuration|*"
       - "vCommunity|Collection Health|*"
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    identity: "VMEntityObjectID + VMEntityVCID (the MoRef and the vCenter's instance UUID, never a name)"
+    key_groups:
+      - "vCommunity|Cluster Configuration|*"
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    identity: "VMEntityObjectID + VMEntityVCID"
+    key_groups:
+      - "vCommunity|Configuration|*"
+      - "vCommunity|Licensing:<license name>|*"
+      - "vCommunity|Storage Adapter|*"
+      - "vCommunity|Storage Adapter:<hba>|*"
+      - "vCommunity|Network|*"
+      - "vCommunity|Network|Device:<vmnic>|*"
+      - "vCommunity|Runtime|*"
+      - "vCommunity|Hardware|*"
+      - "vCommunity|Capability|*"
+  - adapter_kind: VMWARE
+    resource_kind: VirtualMachine
+    identity: "VMEntityObjectID + VMEntityVCID"
+    key_groups:
+      - "vCommunity|Configuration|*"
+      - "vCommunity|Guest|*"
+      - "vCommunity|Runtime|*"
+      - "vCommunity|Summary|*"
+      - "vCommunity|Network|Network Adapters:<label>|*"
+      - "vCommunity|Virtual Disk:<label>|*"
+      - "vCommunity|Options|*"
+  - adapter_kind: VMWARE
+    resource_kind: Datastore
+    identity: "VMEntityObjectID + VMEntityVCID"
+    key_groups:
+      - "vCommunity|Identifiers|*"
+      - "vCommunity|Summary|*"
