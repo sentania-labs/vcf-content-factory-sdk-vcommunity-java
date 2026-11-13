@@ -217,8 +217,9 @@ public final class PropertiesTest {
 
     static void run(String name, Scenario s) throws Exception {
         Coverage.scenario = "PropertiesTest: " + name;
+        long t0 = System.currentTimeMillis();
         s.go();
-        T.done("properties: " + name);
+        T.done("properties: " + name + " (" + (System.currentTimeMillis() - t0) + " ms)");
     }
 
     // ------------------------------------------------------------------ values
@@ -775,6 +776,21 @@ public final class PropertiesTest {
             for (FakeVc.Req q : r.reqs("RetrievePropertiesEx")) if (q.body.contains("config.nosuch")) askedAfter++;
             T.eq(asked, askedAfter, "a refused entry is not asked for again");
             T.eq(0.0, r.health(1, "Collector:vm|Failures"), "and not counted again");
+        }
+        // entries that name paths the collector reads anyway, or hold a reference, an object or a date
+        vc = dataset();
+        try (Rig r = standard(fake, vc)) {
+            files(r.ops, "", "", "", "config.hardware.device,config.extraConfig,runtime.host,config.createDate,config.maxMksConnections,name");
+            r.run();
+            for (String k : new String[] {"config.hardware.device", "config.extraConfig", "runtime.host"}) {
+                none(r, VM, "Options|" + k); // a list, or a reference whose Python text is not reproduced
+                T.contains(r.log.all(), k, "reported: " + k);
+            }
+            eq(r, VM, "Options|config.createDate", "2024-05-06 07:08:09+00:00");
+            eq(r, VM, "Options|config.maxMksConnections", "40");
+            eq(r, VM, "Options|name", "web01");
+            eq(r, VM, "Virtual Disk:Hard disk 1|Key", "2000"); // the device list is still read for its keys
+            eq(r, VM, "Configuration|SCSI Controllers|Count", 5.0);
         }
         // a property this vCenter does not have (an older version): its keys are withheld, the VM is not lost
         vc = dataset();

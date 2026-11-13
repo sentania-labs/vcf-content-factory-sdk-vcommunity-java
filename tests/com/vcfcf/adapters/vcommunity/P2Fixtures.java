@@ -298,6 +298,7 @@ final class P2Fixtures {
         v.put("config.hardware", SoapFx.obj("VirtualHardware", e("numCPU", "4") + e("memoryMB", "8192")));
         v.put("config.cpuAffinity.affinitySet", arr("ArrayOfInt", e("int", "0") + e("int", "1")));
         v.put("config.createDate", SoapFx.date("2024-05-06T07:08:09Z"));
+        v.put("runtime.host", SoapFx.moref("HostSystem", "host-1"));
         return v;
     }
 

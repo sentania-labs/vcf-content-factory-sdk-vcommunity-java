@@ -75,7 +75,10 @@ public final class VmCollector {
         if (extraConfigWanted) {
             r.path(EXTRA_CONFIG, PathSpec.elements(e -> extraKeys.contains(e.childText("key"))));
         }
-        for (String p : optionPaths) r.path(p);
+        // an entry that names a path already read keeps that path's pruning
+        for (String p : optionPaths) {
+            if (!r.paths().containsKey(p)) r.path(p);
+        }
         return r;
     }
 
