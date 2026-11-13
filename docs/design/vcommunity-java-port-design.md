@@ -253,8 +253,10 @@ compliance build 102 rule); own objects that need no vCenter (none do) would sti
 - A row is indexed only with a resource id, a MoRef and a VCID equal to the pinned VCID.
 - A MoRef carried by two rows of this vCenter matches neither (counted `objects_unmatched`, DV-07).
 - No name fallback, ever.
-- Page size 5000 (500 for VirtualMachine), refresh every 12th cycle, on a change in the vCenter object set,
-  or on a MoRef miss (at most once per 12 cycles per kind), as vsanperf does.
+- Page size 5000 (500 for VirtualMachine), refresh every 12th cycle, after a failed read, and for objects the
+  list does not know: at once for a new one, then after 2, 4, 8 and every 12 cycles at most while it stays
+  missing (DV-68; the first version, "at most once per 12 cycles", left a late-discovered VM keyless for up to
+  an hour).
 - A failed page fails that kind's map for the cycle (no partial maps); the previous map is kept if one
   exists and was built under the same VCID, else that kind's pushes are held back.
 
@@ -466,8 +468,16 @@ Plain-JDK tests cover every class outside the two SDK-marked ones, with fixtures
   `config|hardware|memoryKB`) with the latest-stats fallback for shares (R70-R71); VM latest stats for D5/D6.
 - Owns: R70-R131, R256, R257 (properties and the two share metrics), R157-R158, R194, R214 (KPIs); guest keys
   R72-R80 come from the guest phase (section 8).
-- VMs that are templates (`config.template = true`) go to the Template collector, not here (parity: upstream
-  publishes no VM keys on them; confirm in the differential).
+- VMs that are templates (`config.template = true`): *corrected in P2 review.* Upstream 0.8.1 publishes the VM
+  keys on every VirtualMachine resource it matches in Ops, templates included
+  (`collectors/vm/collectVMData.py`, the loop skips only unmatched MoRefs), and also builds a VM Template object
+  for it. The port does the same: no `config.template` test in the VM collector. Whether the VMware adapter
+  models templates as VirtualMachine resources (E5) decides whether any template gets VM keys. The Template
+  collector (P3) adds the VM Template objects and does not remove the VM keys.
+- **Tools Sync Time and Tools Upgrade Policy (R105, R106)** are the text `None` on every VM, as upstream (quirk
+  Q1, section 5.8): upstream looks them up under `config.tools`, a path its read never has.
+- **Virtual Disk keys (R124-R130)** are published only for a VM that has a network adapter, as upstream (quirk
+  Q2): its disk loop sits after an early return for a VM with none.
 - Device-derived families (R120-R130): SCSI controllers by `busNumber`, type names per the TSV mapping; an
   unmapped controller type renders as its vim25 `xsi:type` local name (DV-34). Network adapters instance
   `deviceInfo.label` stripped; Virtual Disk instance `deviceInfo.label`. A device without a label: withheld
@@ -581,10 +591,11 @@ Section 8.
 ### 5.1 Rule
 
 1. **Read failed** (a call raised, timed out, returned non-2xx, a page failed, the object's row is missing
-   from a bulk result, a batch failed, the deadline cut it): the affected keys get **nothing**; the failure
+   from a bulk result, a path is in an object's `missingSet` because vCenter could not read it (a permission,
+   a fault: an unset property is simply left out, it is not in the set), a batch failed, the deadline cut it): the affected keys get **nothing**; the failure
    is counted once per cause (`Failures.add(cause, object, keysWithheld)`); one WARN line per cause per cycle
    with the count and the first object.
-2. **Read succeeded and the source is absent or unset** (path in `missingSet` or not returned, JSON field
+2. **Read succeeded and the source is absent or unset** (path not returned, JSON field
    missing, CSV cell empty): the key gets **nothing**. Not counted as a failure (counted only in
    `values_withheld` when a row of the TSV is flagged `Y:` for it, so the register stays measurable).
 3. **Read succeeded and the value itself is the reading** (a returned empty array counts 0; link down means
@@ -662,17 +673,23 @@ to `*****-*****-*****-*****-00000`). DV-25.
 1. **Syntax** (`VmOptionPath.isValid`): one or more segments separated by `.`, each matching
    `[A-Za-z][A-Za-z0-9]*`, at most 256 characters. Anything else (spaces, `[0]`, `/`, a trailing dot) is
    skipped and reported before any call.
-2. **Probe** (once per distinct list content and vCenter session, re-run after a reconnect): one
-   `RetrieveProperties` of type `VirtualMachine` for one VM MoRef with only the list paths, through
-   `postFixingPaths` in drop mode. Every path vCenter rejects as `InvalidProperty` is removed and reported
+2. **Probe** (once per distinct list content and vCenter session, re-run after a new login): the first page
+   (one VM) of a `RetrievePropertiesEx` of type `VirtualMachine` over the container view with only the list
+   paths, through `postFixingPaths` in drop mode; the token it leaves is cancelled (DV-71). Every path vCenter rejects as `InvalidProperty` is removed and reported
    (`F-SOAP-INVALIDPROP` names the path, not counted as a cycle failure after the first report). The accepted
    set is cached under the list content hash.
-3. **Main read:** only accepted paths join R-VM. If the main read still faults with InvalidProperty (a
+3. **Main read:** only accepted paths join R-VM, each as a value of one element (children are skipped as they
+   stream, so an entry that is an object, a list, a snapshot tree or a whole `config` costs no tree and no
+   depth). If the main read still faults with InvalidProperty (a
    vCenter upgrade between probes), `postFixingPaths` drops the named path and repeats; the base VM keys are
-   never lost to an options entry (DV-26). A fault that does not name a path fails R-VM as a whole (rule 1).
-4. **Values:** a scalar (string, number, boolean, enum, dateTime) renders via `PyText`; a data object or an
-   array is skipped and reported once ("not a single value") because upstream's Python object text cannot
-   be reproduced (DV-26). Unset on a VM: nothing.
+   never lost to an options entry (DV-26). A fault that does not name a path fails R-VM as a whole (rule 1),
+   except a page that is too large or not parseable while entries are in the read (DV-74): the VMs are read
+   again without the entries, which stay off until the list or the session changes.
+4. **Values:** a scalar (string, number, boolean, enum, dateTime, base64 bytes as `b'...'`, a reference of a
+   known type as `'vim.HostSystem:host-12'`) renders via `PyText`; a data object, a list, or a reference of a
+   type with no Python name in the table is skipped, reported once, and left out of every later read, because
+   upstream's text for it (a multi-line object repr) cannot be reproduced (DV-26, DV-75). Unset on a VM:
+   nothing.
 
 ### 5.6 Never send a null
 
@@ -712,14 +729,14 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-23 | certificate `Recorded`/`Unknown` on failed read-back or probe; recorded thumbprint overwritten | withheld; recorded value never overwritten | a failed read must not reset trust history | no spurious `Recorded` after an Ops hiccup; a real change is never masked |
 | DV-24 | aggregates over partial batches | withheld unless all input reads succeeded | report honestly (issue 60) | fewer values during partial failures, none of them wrong |
 | DV-25 | full host license key published | masked to the last group | secret hygiene (owner decision) | views show `*****-...-MN90P` |
-| DV-26 | one invalid VM Options path fails the whole VM read; object values published as Python text | invalid path skipped and reported, VM read unaffected; non-scalar values skipped | isolation (owner decision); Python object text is not reproducible | a typo in the list costs one key, not every VM key |
+| DV-26 | one invalid VM Options path fails the whole VM read; object values published as Python text | invalid path skipped and reported, VM read unaffected; a data object or list value skipped (see DV-75 for references); an entry is read as a value of one element, so one that is huge or deeply nested cannot fail the page (DV-74) | isolation (owner decision); Python object text is not reproducible | a typo in the list costs one key, not every VM key |
 | DV-27 | file read failure or invalid XML: list empty this cycle | fetch or parse failure keeps the last good list; an absent file clears it | do not silently stop collecting on an Ops hiccup | check-list keys keep updating through transient store errors; the event says so |
 | DV-28 | Windows service and event files read every cycle, events raised for them even with monitoring Disabled | read only when the matching monitoring is Enabled | no spurious configuration events | no warning events about files nobody uses |
 | DV-29 | unknown guest TLS mode fails the whole cycle | guest phase off for the cycle, health `guest` = FAILED, rest collects | isolation | a typo there no longer stops all collection |
 | DV-30 | event-list structure not checked (silent in the guest) | validated, problem reported, list not used | report honestly | operator told the file is wrong |
 | DV-31 | events sent as SDK events in the collect result (configuration problems on vCenter, Windows events on VMs) | `POST /api/events/bulk` as DIAGNOSTIC/LOG | NOTIFICATION events pushed onto a foreign VM are silently dropped; DIAGNOSTIC lands (`vcommunity-notification-events-foreign-vm.md`) | events appear on the object's events/troubleshooting timeline, not the notification stream (Q11) |
 | DV-32 | Warnings in Last Cycle counts every logger's WARN records | counts the pak's WARN lines and failed push batches; adds the health keys of 5.2 and the self metrics of 2.4 | the pak cannot hook every logger; failures need their own counts | counts can differ from upstream's; more health detail |
-| DV-33 | PCI ids formatted from signed shorts (ids above 0x7FFF negative, E13) | unsigned 4-digit hex | correct id | `8086`, not `-7f7a` (only if E13 shows upstream is negative) |
+| DV-33 | PCI ids formatted from signed shorts (ids above 0x7FFF negative) | **retired in the P2 review**: reproduced for the match, quirk Q3 (section 5.8) | the owner wants an exact match first | `-7f7a` as upstream; see Q3 for the correct form |
 | DV-34 | unknown SCSI controller type shows a Python class name | the vim25 type name | Python names not reproducible | different text for rare controller types |
 | DV-35 | resource pool levels from Ops PARENT relationships, one GET per pool | from the vim25 pool tree | P calls per cycle down to one read | same values if E9 confirms; else fallback |
 | DV-36 | port groups read again per Datacenter | from the host bulk read plus DVPG per Datacenter | cost | none |
@@ -745,7 +762,7 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-56 | whole `guest` object read for every VM | the ten sub-paths | bytes and heap | none (Detailed Data on an older vCenter: withheld, as rule 2) |
 | DV-57 | sentinel instance names (`Unknown Adapter`, `unknown`, `Unknown`) for devices without labels | such devices not published | a sentinel instance is a fake object | no `Unknown` instances |
 | DV-58 | (only if Q3 is accepted) disconnected hosts keep their last Availability | Availability published for every host of the vCenter | issue 86 | World availability includes disconnected hosts |
-| DV-59 | (only if T3 has not landed) `Maintenance Mode Required` numeric property | withheld until T3 | no string into a numeric history | key absent until the framework sends numeric properties |
+| DV-59 | (retired: T3 landed in buildkit 1.0.27) | `Maintenance Mode Required` goes out as a numeric property, 1.0 or 0.0, as upstream | n/a | none; whether Ops stores it as a number is E3 |
 | DV-60 | a check-list item with a line break is used verbatim (always invalid) | skipped and reported | report honestly | operator told to add commas |
 | DV-61 | port parsed with `int()`, any integer accepted | port must be 1 to 65535, else the account fails naming the field | a port outside the range cannot connect | clearer message for `0` or `70000` |
 | DV-62 | a check-list file name is used as typed (a blank field requests `SolutionConfig/.xml`) | a blank field reads no file (no failure); a name that is a path or a query (slash, backslash, `?`, control character, `.` or `..` alone) is refused and reported; any other name is percent-encoded | the name goes into a URL | no request for a blank field; a path-like name is reported, not sent |
@@ -755,7 +772,41 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-66 | SOAP answers read whole | answers built into a tree are capped at 1 MiB and 32 levels; redirects are not followed | bound memory and keep the session cookie from leaving | an oversized or deeply nested answer fails the call |
 | DV-67 | Test Connection reads each check-list file in use (section 11, P1) | a Test Connection on a not-yet-saved account does not read the check-list files and does not ask whether the Suite API answers: the Suite API client cannot be built in that context (the per-instance credential it uses is supplied to a configured account; observed live 2026-11-13 as `IllegalStateException` in every test). The report says so as a plain line, not a warning; any other reason the client cannot be built is still a WARN with the exception class. The files are read every cycle in collection, where a missing or bad one is counted and reported. Owner accepted 2026-11-13 by delegation ("give me a match and let's iterate from there"); to be revisited if a live Edit-then-Validate on an existing account shows the client can be built there | the client does not exist during a test | Test Connection never shows check-list outcomes for a new account; they appear in the first cycle |
 
-67 rows (DV-55, DV-58 and DV-59 are conditional).
+| DV-68 | the Ops resource lists are read every cycle | each kind's list is read when missing, after a failed read, every 12th cycle, and again for objects it does not know: at once for a new one, then after 2, 4, 8 and every 12 cycles at most while it stays missing. A failed refresh keeps the previous list (same vCenter UUID only) | cost; found in the P2 review (W3): the first version left a VM keyless for up to 12 cycles | a VM the vCenter adapter discovers a few minutes late has keys within about two cycles of Ops knowing it; one the adapter never models costs a list read every 12th cycle |
+| DV-69 | (not an upstream key) | `Objects Not Matched` counts the vCenter objects of the four kinds with no unique Ops resource as well as the vCenter object; sent only when the vCenter lookup and every kind's read and list completed and no deadline hit | additive (5.2); DV-63 | the figure is absent in a cycle that could not measure it |
+| DV-70 | a bad host options row cannot occur (config.option is part of the host read) | the options are a separate read (R-HOO) for the connected hosts; a connected host with no row in it is a failed read unit, and a host that left between the two reads is asked for alone | heap; N8 | only that host's options keys are lost |
+| DV-71 | no token handling | the one-VM probe, a failed page and a read stopped at the deadline release the server's result set (`CancelRetrievePropertiesEx`); a read stops paging at the deadline or an interrupt and does not run on into the next cycle | W4, W5 | none |
+| DV-72 | leaf paths such as `configuration.dasConfig.enabled` | the paths `configuration.dasConfig` and `configuration.drsConfig` are read as subtrees and pruned | one read per object; same values | none; an InvalidProperty on them would show as `F-SOAP-INVALIDPROP` (E7) |
+| DV-73 | one `QueryAssignedLicenses` | one call for every assignment (cap 256 MiB, deadline-checked); if it fails, one call per connected host with `entityId`, so a vCenter whose full answer is too large still has its hosts' licensing | W9 | none when the fallback works; a failed host call is a counted unit |
+| DV-74 | a bad VM Options entry fails the VM read | when the VM page fails as too large or unparseable with entries in the read, the VMs are read again without the entries, which stay off (WARN naming them) until the list or the session changes | 5.5 rule 3; B3 | the entries are lost for that list; no base VM key is |
+| DV-75 | `str()` of any value | a reference value is `'vim.<Type>:<id>'` for the types in `PyText` (HostSystem, ResourcePool, Folder, Datacenter, Datastore, Network, the dvs types and the other common ones), skipped and reported for any other type; base64 is `b'...'`. The quoting of a managed object's `str()` is from memory of pyVmomi, not yet checked live | W2, N7 | an entry whose value is a reference of an unlisted type has no key |
+| DV-76 | `missingSet` not looked at (pyVmomi ignores it) | a path in an object's `missingSet` is a failed read of that value (one unit per type, naming the first path and the fault), not an absent one | W7; 5.1 | `reads_failed` shows a partial-permission read |
+| DV-77 | a collector exception is caught around one object's function and logged at WARNING | counted as `F-COLLECT-<read>` for that object (one withheld value), the read goes on; a read in which every object threw is a failed read of the type | W6, N1 | FAILED, not PARTIAL, for a broken collector |
+
+77 rows (DV-55, DV-58 and DV-59 are conditional or retired; DV-33 is retired into quirk Q3).
+
+### 5.8 Upstream quirks reproduced for the match (candidates to fix after the first differential)
+
+Owner direction, 2026-11-13: "give me a match and let's iterate from there." Where upstream 0.8.1 does
+something a careful reader would not want and the result is visible in published keys or values, the port
+reproduces it for now. Each quirk has one seam, a named constant or method in `text/Quirks.java` (or the one
+class named), so that it can be flipped in one edit. Found by reading `git show v0.8.1:<path>` of the original;
+the factory's local clone of it is 31 commits past that tag and already fixes Q1 and Q2.
+
+| Q | Key rows | What upstream 0.8.1 does | What would be correct | The one place to change |
+|---|---|---|---|---|
+| Q1 | R105 Tools Sync Time, R106 Tools Upgrade Policy | reads `prop_dict.get("config.tools")`, a key its VM read never returns (it asks for the leaf paths), so it sends the text `None` for both on every VM. Exception not reproduced: a VM Options list that holds exactly `config.tools` | the values of `config.tools.syncTimeWithHost` and `toolsUpgradePolicy` (a boolean, `manual`/`upgradeAtPowerCycle`) | `Quirks.TOOLS_ALWAYS_NONE` (read in `VmCollector.tools` and `VmCollector.request`); false reads the two leaf paths and sends them |
+| Q2 | R124-R130 Virtual Disk keys (seven per disk) | `vm_disk.py` returns before the disk loop when the VM has no `VirtualEthernetCard`, so such a VM has no Virtual Disk key | the disk keys on every VM that has a disk | `Quirks.DISKS_NEED_A_VNIC` (read in `VmCollector.devices`) |
+| Q3 | R33, R34, R35 PCI Vendor, Device and SubVendor ID | `f"{v:04x}"` of the signed 16-bit id the API sends: 0x8086 (Intel) is `-7f7a`, -1 is `-001`, an id under 0x8000 is four digits | the unsigned id, `8086` | `Quirks.PCI_IDS_SIGNED` and `Quirks.pciId` |
+| Q4 | every string key that is present but blank, for example R3/R4 license key and edition (empty), R11 Max EVC, R21-R25 adapter fields, R28-R29, R31-R32, R36, R38 NIC fields, R40-R46 package fields, R110 Customization Status, R112-R118 Detailed Data, R122-R123 vNIC, R130 disk share level, R145 EVC Mode (and EVC Enabled for a mode of spaces), R226 Patch Level | pushes the empty string, or a value of spaces stripped to the empty string where upstream calls `.strip()`; an empty value where it tests truthiness is no key | nothing for a blank value | `Quirks.BLANK_STRINGS_PUSHED`, `Quirks.text`, `Quirks.strippedIfTruthy` |
+| Q5 | R96 Op Notification Timeout | `max(0, int(v))`: a negative value read (-1, no timeout) is sent as `0` | the value read | `Quirks.NEGATIVE_OP_TIMEOUT_IS_ZERO` (read in `VmCollector.opNotificationTimeout`) |
+| Q6 | R112-R118 Detailed Data | the pattern `(\w+)=['"](.*?)['"]` ends a value at the first quote of either kind, so `prettyName='Windows "11" Pro'` is `Windows` | end a value at the quote that opened it | `DetailedDataParser.CUT_AT_FIRST_QUOTE` |
+| Q7 | R2-R6 Licensing | two assignments with the same license name on one host share one instance; their fields overwrite one another one by one, so keys of both can remain (a key the second lacks keeps the first's) | one instance per assignment (or per name and key) | `HostCollector.addLicenses` (the instance name is `a.name`) |
+
+Not a quirk of upstream but a place where the port could not reproduce it: a VM Options list that holds exactly
+`config.tools` returns real values upstream (the path is then a key of its read); the port sends `None` for
+the two Tools keys regardless (a VM Options entry of that name is read as one more option). Registered as part
+of Q1.
 
 ---
 
@@ -1084,7 +1135,7 @@ default case, `vsanperf-mp-v3.md` "Heap").
 | Ops maps | about 0.5 MB | ids and MoRefs only |
 | read-backs | under 2 MB | parsed to `double` arrays per resource |
 | PushSet | about 2 MB of stats; properties up to about 12 MB on a full refresh | properties are serialized batch by batch (1 MB), not all at once |
-| LastPushed | about 6 MB (120,000 hashes) | long hashes keyed by interned resource and key ids |
+| LastPushed | about 16 MB at 10,000 VMs of 60 properties (600,000 values) | one open addressing table of two longs per value, keyed by a hash of the resource id and the key; measured 19 MB retained in a 70 MB heap by `LastPushedHeapTest` (the first version, maps of maps of strings, took 87 MB) |
 | guest | 4 x 1 MB CSV cap | per-VM release |
 
 Expected peak about 30 to 45 MB, retained about 15 MB. Must be measured.

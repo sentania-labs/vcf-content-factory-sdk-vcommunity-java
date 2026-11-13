@@ -21,7 +21,7 @@ description: >
   datastores and the vCenter; the derived metrics, the own objects, the guest
   checks and the content come in later phases.
 version: 1.0.0
-build_number: 5
+build_number: 6
 tier: 2
 released: false
 

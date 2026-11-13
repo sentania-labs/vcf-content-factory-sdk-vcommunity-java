@@ -76,8 +76,17 @@ pushes nothing onto the vCenter's objects.
 - **Unmatched objects.** An object of the vCenter whose Ops resource cannot be
   found by instance UUID plus MoRef, or is claimed by two resources, gets no
   keys and is counted in `Collection|objects_unmatched`. The Ops lists are read
-  once, again every 12th cycle, and again when a new object turns up that the
-  list does not have.
+  once, again every 12th cycle, and again for objects they do not know: at once
+  for a new object, then after 2, 4 and 8 cycles and every 12th at most while it
+  stays missing, so a VM the vCenter adapter discovers a few minutes late has
+  keys within a cycle or two of Ops knowing it.
+- **Matches the original, quirks included.** For now the pak reproduces what the
+  original 0.8.1 publishes even where it looks wrong, so the first comparison
+  against it is exact: the two VM Tools keys are the text `None`, a VM with no
+  network adapter has no Virtual Disk keys, PCI ids above 0x7FFF are signed
+  (`-7f7a`), blank strings are pushed as they are, and so on. Each is a
+  one-edit switch in `text/Quirks.java` and is listed in the design (section 5.8)
+  to be fixed after the first differential.
 - **A page that fails fails its type.** A cluster, host, VM or datastore read is
   paged; if any page fails, nothing from that type is sent that cycle and the
   failure is counted (`F-SOAP-R-CL`, `-R-HO`, `-R-VM`, `-R-DS`). The hosts' option

@@ -3,6 +3,40 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.6 (Unreleased)
+
+P2 review pass (`docs/reviews/p2-properties-review.md`).
+
+- fix(adapter): match upstream 0.8.1 where it shows in the keys, for now: Tools Sync
+  Time and Tools Upgrade Policy are the text `None`; a VM with no network adapter
+  has no Virtual Disk keys; PCI ids are the signed form (`-7f7a` for 0x8086);
+  blank strings are pushed as upstream pushes them, not withheld; a negative
+  operation notification timeout is `0`. All behind switches in `text/Quirks.java`,
+  listed in design section 5.8, with the key map notes corrected.
+- fix(adapter): a VM Options entry is read as a value of one element, so one that is
+  an object, a snapshot tree or a whole config cannot fail the VM page; one found
+  not to be a single value is dropped from later reads; if the page fails anyway
+  with entries in it, the VMs are read again without them. References of known
+  types print as pyVmomi prints them, bytes as `b'...'`.
+- fix(adapter): a read stops paging at the deadline and releases its server-side
+  result set and view (`CancelRetrievePropertiesEx`), the probe's and a failed
+  page's included; per-host calls stop too.
+- fix(adapter): a `missingSet` fault is a failed read, not an absent value; a read
+  in which every object threw is FAILED and its values counted; a collector
+  fault is `F-COLLECT-<read>`.
+- fix(adapter): a new object is no longer keyless for up to 12 cycles: the Ops list
+  is read again for it at once, then after 2, 4, 8 cycles.
+- fix(adapter): the pushed-value table takes 19 MB at 10,000 VMs (was 87 MB); a
+  heap-capped test runs it. License assignments fall back to one call per host
+  when the one call fails.
+- fix(adapter): a 404 on the check-list JSON look no longer makes a file absent or
+  clears the list; only its apiErrorCode is used; markup is never quoted.
+- fix(adapter): a host that left between the two host reads no longer loses every
+  host's options; package and license text is as sent; an EVC mode of spaces is a
+  mode; the VM Options probe runs again after a new login.
+- docs: design updated (4.5, 5.1, 5.5, register DV-68 to DV-77, new section 5.8);
+  the coverage table now needs a test that compared each key's value.
+
 ## 1.0.0.5 (Unreleased)
 
 Phase P2, the property keys.
