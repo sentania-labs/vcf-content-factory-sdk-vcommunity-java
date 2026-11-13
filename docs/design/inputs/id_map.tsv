@@ -1,0 +1,99 @@
+old_id	new_id	pak_view_title	diff_class
+2486078e-790e-485b-8ab5-70c1da351a0d	bfe9ee51-4b55-448f-ab45-9ef42c7370f4	Datastore Type	real_presentation_only
+c94b11bf-18c5-41c4-80fe-26ae5882dd45	6db76c99-efb6-4643-9ff2-4501ccecc7f4	ESXi BIOS version distribution	real_presentation_only
+16d4447f-ae24-4d6d-b4ef-c5f2a3321351	21302225-dc45-4938-9123-f1422480cdca	ESXi BIOS Versions	real_presentation_only
+9a556ea6-db06-4ad5-b1a1-84bb1ae7032e	16b9b05c-c0e0-4c1c-b7d5-7232d0a64687	ESXi Cluster Settings	real_structural
+4d9b6ad6-3325-42ff-8593-77793e547a4d	34fd21d0-0853-4f9c-b3f2-e52216842d91	ESXi Configuration List	real_structural
+45281acb-5643-4a0c-b4d2-300548289b89	bc0cd2ec-f609-4c91-8ff6-2c87e37de38a	ESXi Distribution by Core Counts	real_structural
+e2d1f3c7-336f-4eeb-80a1-144d1252bc5e	43b5a59e-d45b-4cef-b5a3-debb9a4e566f	ESXi Distribution by CPU GHz	real_structural
+41127d01-e62b-4d46-89d4-7293ed86103c	2a643d45-6706-43f4-86d6-d68419f9b9e4	ESXi Distribution by CPU Socket	real_presentation_only
+614c2d3f-98f0-4862-8dcd-fd6b0b4c799d	23acd23f-1310-46ce-88fd-9ee7a5783635	ESXi Distribution by Hardware Model	real_presentation_only
+5c20ba39-9d8b-4272-b01d-8dbafeded995	203336f6-7ecf-46b6-bfd1-1f746e6ce117	ESXi Distribution by Memory Size	real_structural
+d4ba9e73-bc26-4f5f-8cef-504a37cfc988	182a4bfa-b9c9-448d-a41a-5982673f33dc	ESXi Distribution by NIC Speed	real_presentation_only
+51ea3aa0-2671-44da-ac00-8c265767ad83	31b26c6d-5c86-46db-b6be-0385af92bafc	ESXi Distribution by Storage Path Counts	real_presentation_only
+524d0468-8f9d-460b-a2a5-95c2d8846661	1190d0fc-a95d-434b-84c5-d932a66ab1ea	ESXi Distribution by Versions	real_structural
+998cf7f2-b636-4ac5-96b2-833c81f3097c	3bd0917a-f9cb-4097-a640-d81dc24da94a	ESXi Hardware Model	real_presentation_only
+74639bd8-2ece-4032-b22f-ffc23e65598f	cc809d78-008b-4715-a603-4a43d4c274da	ESXi HyperThread Capability	real_structural
+680f4627-e5c6-4ac5-8c54-87f02ad2b122	4e41a54d-a13c-409b-8c97-06e028f72bcc	ESXi NTP Running	real_presentation_only
+6d865efb-5dcd-496f-9a07-ced99f530142	f3dc056c-bd52-42f4-b821-bd8e37bd092b	ESXi on Maintenance Mode	real_structural
+6f0a54e7-c3a5-42bb-a989-fda47cf1c50a	f62618d5-7f91-47cf-a3b1-172d7da0b7da	ESXi Switch property	real_structural
+617644c5-bb68-43e0-b388-057358525ec6	dde0721f-7e54-4233-a29c-5558636b5301	ESXi Unavailable	real_structural
+493527e2-d992-4e56-98ae-d9245c255174	a7131dd9-a7e0-460e-b372-69150892a7e7	ESXi Utilization List	real_structural
+d1ba847b-582f-427f-b041-feab824feaa8	d5410074-fc36-48bb-93e2-197d2f276b20	ESXi vMotion Status	real_presentation_only
+fa10900c-2d88-41d6-86c9-046349ccc5bf	ac9078f7-cca4-402c-a837-66531a1e83e8	Guest OS CPU Queue Trend	real_structural
+9d5498ba-848f-4d23-8b6e-765a566a0659	3dae7fec-9531-45df-8e0b-8e6615e235e6	Guest OS Distribution	real_presentation_only
+19729c38-20e3-4fea-bb9f-0576126c25ec	cc508013-e7d0-4fbf-98e2-d22c881b7812	Guest OS from Tools	real_presentation_only
+df2e3054-5db5-478f-bb7d-fbcaccd7960e	79879a4a-e36e-4854-9c61-d21332a2ddab	Guest OS Memory Paging Trend	real_structural
+72cefd21-9a01-45e6-a33c-ea2a6897ac5d	0babc727-6938-4e90-b91d-5e13a3d8b564	Guest OS Partition List	real_structural
+5fc79159-ddc9-4f38-8dc6-461c79b379f4	a2f50231-b339-4cd0-98dd-8ed4a25a57a9	Local Datastore with VM	real_structural
+9a77a4b5-0329-459c-9f42-7087f0d911a6	f0a5f04e-17c3-4c6d-817c-eb65e296c9cd	VM Configuration	real_structural
+0f5cd0c6-a06c-4be0-9af1-16adc6eac7ac	dd0b0eb1-f968-423f-914f-515d5629fc95	VM CPU Limit	real_structural
+3b0e097b-b3f1-453f-adc9-ad47c9c5ca4c	02184055-983a-4242-b105-a04d94999ada	VM CPU Ready Distribution	real_structural
+3b6b0e60-7924-4d26-9a11-5fdde36e8a77	a4c37007-25d1-4ab8-a197-e2418142cc06	VM CPU Ready Distribution for Profiling	real_structural
+ccfc42fb-aaf3-439e-8111-3a0f1bf7713a	fef92c3c-3c4f-4313-b457-ea93668ee64b	VM CPU Size Distribution	real_structural
+b8af9e79-a062-4e3b-8501-7bbc64a6a3f9	cd47bb2a-0514-468d-b79c-b2ca3ee969c6	VM CPU Utilization	real_structural
+0ef97d2c-770b-4c74-9c82-28a766164a39	8140bbaf-f202-4e0d-b66e-778ed9061722	VM Disk Latency Distribution	real_structural
+a8b54a14-038c-4f1b-ab93-1cc0a6f4bc00	f9047c09-a372-4f0a-95c2-7bc0eefaace4	VM Disk Latency Distribution for Profiling	real_structural
+8d44e30e-9bb1-4df1-bf1f-8d2f44276af4	88914dd5-ad98-45d9-85e0-6dd1bb8f5f5a	VM Distribution by CPU Reservation	real_structural
+40c5bbc9-db9d-468c-8094-2137d22e53a7	dcafd7ee-a0f7-4963-bbb1-b30f4043511a	VM Distribution by CPU Share	real_structural
+850c16a9-3fa6-416a-a4e2-35a6509928aa	217aafe0-9e16-4f47-b98b-31f99273312c	VM Distribution by CPU Size	real_presentation_only
+ad2f56bc-3a78-4045-b2b5-c953781b5c76	36f0222e-a1b2-4260-a286-b17fdbdc6c9e	VM Distribution by CPU to add	real_structural
+c655b25c-42be-4512-9c9b-8b4d6beefd71	72a85fd6-5824-444f-9ae9-f91408e4fcbe	VM Distribution by Disk Size	real_structural
+f752ddef-406d-4868-bd78-8b00aaa425cc	c2a9ba5f-747d-4284-a09b-d63b40a49728	VM Distribution by Memory Reservation	real_structural
+23b3812d-fac8-449a-acb7-488a388a0716	eefb0c9f-31d1-4971-800e-00f480abc919	VM Distribution by Memory Share	real_structural
+95416c42-b863-415c-88b8-c5294f43daa1	2c7a6092-6c3f-427f-87c5-5a7a2cccb9cf	VM Distribution by Memory to add	real_presentation_only
+6c06a467-d9b3-4965-8164-4e5c43940924	68de2830-eeaf-49df-aeda-a60fadc2b9e9	VM Distribution by Reclaimable CPU	real_structural
+8161f003-c456-47b2-9ce3-b88affa8c7d1	eadc211b-772e-4178-863a-b1fe018929ae	VM Distribution by Reclaimable Disk	real_structural
+7e913396-7712-438c-a22f-97140fea9892	b1d06f85-bef9-42c2-89ca-bddf5a5613ef	VM Distribution by Reclaimable Memory	real_presentation_only
+7bcb4d10-700f-4bee-94f1-03ffada5ae65	d78a2e36-e12f-4d98-9b49-71c8043822fa	VM Distribution by Snapshots Age	real_structural
+7bb1bf81-8895-4008-b770-5c7fc106c22a	ec868fe4-b7b4-4620-8e20-38f23667b21f	VM Hardware Version	real_presentation_only
+de1ff68b-1a78-4939-996d-600b0abef33e	093a55c0-332c-486a-a346-4b549fc63a21	VM Memory Contention Distribution	real_structural
+3ede5e0a-2121-4579-a250-26648589cb4a	76e2cd25-11ac-4923-a4a2-0deb5ed794a7	VM Memory Contention Distribution for Profiling	real_structural
+bf6bb2c6-12e3-417e-916f-70ab5ec411ad	62f0a9c3-bef0-4c27-8f3c-da3f08b169b8	VM Memory Distribution	real_presentation_only
+6db204b2-0315-4488-8cbc-bbe33c74dac9	223a2177-e1a6-4e2b-a207-b28db8339245	VM Memory Limit	real_structural
+a3849f91-76c6-4791-81d7-65245e321233	4f798a43-fc5b-4760-b744-1b159644f9a9	VM Memory Size Distribution	real_structural
+5c3441f2-4619-441c-ad02-0b01ead34813	65ad9e7b-a972-48f4-9d0f-f59e03f27d99	VM Memory to reclaim (idle)	real_presentation_only
+f129ab04-a919-4b80-b0ad-39783db28adf	1304ea60-5615-4a71-9454-68140418006f	VM Network Card Configuration	real_structural
+f982ee15-5502-49e2-8efc-0a405b5bfa83	f22f2ab7-f504-4718-9bb8-9d24d51e72ba	VM Network Configuration	real_structural
+fc20d8a6-9f74-4b78-9022-7441c6d877e9	8f50f651-58b8-4545-9711-ba8fd07e003c	VM Network Top Talkers	real_structural
+3c32ba9d-e71c-4f2c-bf46-844d1b07857f	ba5453bc-3da3-4b4c-b63a-ad3649fcd8a0	VM Performance List	real_structural
+bf0d0ad1-53d5-42d7-a1a1-67f908642d5d	77cb575f-e70d-4549-9779-281203327307	VM Snapshot by Size	real_presentation_only
+4d71034d-6368-4284-be94-94887f87eddc	6f55b53b-5d64-4ee8-9f7f-0969d6d3d090	VM Snapshot Size	real_presentation_only
+7d0d858d-628d-49e9-b076-4fb15d757cc3	7ae0e346-6f45-41e6-84df-8bfd94f04223	VM Snapshots List	real_structural
+02230501-23d6-4512-858e-381d60876e73	a54e74b2-06dc-4645-a64d-5040e5ba4c3d	VM Storage Heavy Hitters	real_structural
+81ef5dfc-b519-4981-8a8e-ee1dbb516aca	6ec4c367-a145-420e-b205-95247739a82c	VM Tools States	real_presentation_only
+3a424415-c06f-4b5b-b742-5b8d25c7e5ba	561d5ce1-c473-401a-bfc6-47472a305412	VM Virtual Disk Distribution	real_structural
+56abf797-0534-4b73-bc27-693317a206ac	7ccaaa23-fb7c-4d4d-9258-e2f018681d60	VM Virtual Disks	real_structural
+e0e0972a-2da0-4544-a53f-9e55b09c74a3	ded11263-20b6-48fc-9879-87cc5790cd30	VM Virtual Disks counts	real_presentation_only
+40b1d206-8616-47e2-9bee-6142b4427180	506b9eae-b51c-4467-abfb-890bbd824117	VM with Hot Add CPU	real_presentation_only
+2805f0a4-e58b-432b-861d-cffe1604fbfc	b69238ce-fc85-40a7-80c7-800549985196	VM with Hot Add Memory	real_presentation_only
+ea6cf8d9-087a-4882-b98b-9acd2d4021ed	8b84e50a-7040-4648-93b5-a4012ab39062	VM with Hot Remove CPU	real_presentation_only
+40e416d0-0ee4-4aa2-9ad6-93d162f668a0	d94478fc-f741-4508-87f9-962ad34ae8ed	VM with many Network Cards	real_structural
+97e71e70-094d-435d-b4f4-99da4e489ec2	7609bc5e-ef78-414e-9d6c-7f7119545bf6	VM with no Guest counters	real_presentation_only
+f1474ada-0abe-4e6b-937a-ec4e7d82e420	415075d8-dadd-4f7a-890f-b49ee1674344	VMware Tools Version	real_presentation_only
+27f6a2e8-ddac-4dc2-b3bf-5f222af701db	c87c6499-8beb-4caa-89c4-b6865d5692ea	vSphere Cluster Admission Control Policy	real_presentation_only
+dadb69af-f77f-4644-8355-588f41c2f4f0	23c3c66b-cc72-4070-a67b-326841e7e5dd	vSphere Cluster Configuration List	real_structural
+b5f3660a-082c-4af9-b89e-bc670d932e99	7cec1e92-feb7-40a5-996f-ccc06bff1581	vSphere Cluster Distribution by CPU Reservation	real_structural
+8986cc9d-5a60-407d-bdbf-25a1bc082b18	5f3896e4-6823-4a66-9aa0-d477f2182dc1	vSphere Cluster distribution by VM count	real_presentation_only
+9030cd79-ee63-42a2-9f03-7b2ac3f56d22	eb16757e-5f8d-46c3-a990-f84c22273f74	vSphere Cluster DPM Status	real_presentation_only
+9e427b59-a30a-475c-bafc-a1943d9f2f0d	818ca87d-feb3-4b3c-8534-ba47cfeaf610	vSphere Cluster DRS Automation Level	real_structural
+94b25c6a-bc08-4b7f-83e5-d55d4b6d89e1	f1096f58-89ab-464e-beab-c81738a706e3	vSphere Cluster DRS Automation Status	real_presentation_only
+fcab0100-1881-48b6-bd07-aaeaa3ee669e	825a660e-b021-46ad-b905-f88a519dab8d	vSphere Cluster DRS Status	real_presentation_only
+fc64c67a-d5b0-4a03-a10b-767b9b247120	4e1d6191-5a75-4e7f-b8c5-c48a5576347e	vSphere Cluster HA Admission Control status	real_presentation_only
+e041c79b-910f-477b-9d7a-d84e495119cb	9ebf801c-6e49-4aab-a462-3db925de984e	vSphere Cluster HA Status	real_presentation_only
+f83a4c60-9931-4305-95f9-93f724be86fe	cb5ca3cc-1fda-4216-99e3-72d5565bfd59	vSphere Cluster Memory Reservation	real_structural
+cd6c06c5-7ac5-4edc-a2c8-5b8777512d59	ae50759f-16c4-4465-a735-36043f7e9767	vSphere Cluster Performance List 1	real_structural
+c20dadab-e990-4917-aa75-04d8433da27e	3c9878e2-f570-4309-8093-8b8de7c5c81b	vSphere Cluster Performance Profiling	real_structural
+de04afbf-832d-4bb9-a13c-c7680356c00f	58383fdc-6074-4310-aa1e-b0aa577e23df	vSphere Clusters distribution by ESXi count	real_presentation_only
+86d58689-64de-4faf-9a53-2425decfe6a6	43b5dc53-b296-4eb7-87fa-7a435386488f	vSphere Data Center Network List	real_structural
+3a88e1a7-511c-440d-868b-65df4a2c7898	2b76463b-40e5-41ea-b575-8d03736239ee	vSphere Data Centers Inventory	real_structural
+ba5d47b2-2a6d-4f19-8e11-105fb13c5bf9	d53cbf8a-6b5a-4ce2-8f0f-15babc4a6e30	vSphere Distributed Switch Configuration	real_structural
+8d497409-b506-4027-bc22-27cda696116e	9b1f2a63-57bb-4eb3-8420-af311d165bf5	vSphere Distributed Switch Inventory	real_structural
+87399ea9-d93a-4591-b15b-d30a9003972e	28042bb1-5d32-455c-86c0-b65af38c02ac	vSphere ESXi Memory Utilization	real_structural
+9911f98d-0e2a-4d4f-aefe-973e28ecf1cc	1045bd7c-eae6-441b-99c8-ac2fc102336f	vSphere Performance Profiling	real_structural
+49b13b68-dee2-483d-8df8-1b6d7957d01c	1be018ca-1588-40c4-9bc4-9dfc4849d6a5	vSphere Port Group Configuration	real_structural
+7888104e-2210-4539-a589-8cefa7a0361d	82883181-5199-4666-aa3e-4c5521086ab1	vSphere Port Group Inventory	real_structural
+24bd3eec-5fe8-4a90-9ad9-fa570b791973	ae763586-1fb7-4328-9c0a-d9290114766c	vSphere Port Group Promiscuous Mode Allowed	real_presentation_only
+2788178d-7df4-47d7-81de-016f7a1cd18d	f31188cc-6862-4885-9bfc-67c644a12cba	vSphere Resource Pool Configuration	real_structural
+6efeb9b2-3c38-4842-8ee9-88f6b25e5460	a746c425-7fd0-4106-bdb1-c7684081d1ba	vSphere Resource Pool List	real_structural
+1fa18cd9-f908-4120-9c81-797282a3db37	4b68ff93-9213-418c-8b7a-ee389e360979	vSphere Switch Version	real_structural

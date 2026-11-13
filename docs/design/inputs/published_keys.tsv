@@ -1,0 +1,255 @@
+object_type	key	metric_or_property	unit	source_collector_file	instanced	config_driven	in_definition
+VMWARE:HostSystem	vCommunity|Configuration|Install Date|UTC	property		properties/host/host_install_date.py:14			yes
+VMWARE:HostSystem	vCommunity|Licensing:{license_name}|Name	property		properties/host/host_licensing.py:35	yes		NO
+VMWARE:HostSystem	vCommunity|Licensing:{license_name}|License Key	property		properties/host/host_licensing.py:36	yes		NO
+VMWARE:HostSystem	vCommunity|Licensing:{license_name}|Edition Key	property		properties/host/host_licensing.py:37	yes		NO
+VMWARE:HostSystem	vCommunity|Licensing:{license_name}|License Expiration Date	property		properties/host/host_licensing.py:40	yes		NO
+VMWARE:HostSystem	vCommunity|Licensing:{license_name}|Remaining Days	metric		properties/host/host_licensing.py:43	yes		NO
+VMWARE:HostSystem	vCommunity|Storage Adapter|Number of HBA	property		properties/host/host_configurations.py:72			yes
+VMWARE:HostSystem	vCommunity|Configuration|VAAI|ATS Heartbeat	property		properties/host/host_configurations.py:73			yes
+VMWARE:HostSystem	vCommunity|Configuration|VAAI|ATS Locking	property		properties/host/host_configurations.py:74			yes
+VMWARE:HostSystem	vCommunity|Configuration|Config Status	property		properties/host/host_configurations.py:75			yes
+VMWARE:HostSystem	vCommunity|Configuration|Max EVC	property		properties/host/host_configurations.py:76			yes
+VMWARE:HostSystem	vCommunity|Network|DHCP	property		properties/host/host_configurations.py:77			yes
+VMWARE:HostSystem	vCommunity|Network|Search Domain	property		properties/host/host_configurations.py:78			yes
+VMWARE:HostSystem	vCommunity|Configuration|Time Zone|Name	property		properties/host/host_configurations.py:79			NO
+VMWARE:HostSystem	vCommunity|Configuration|Time Zone|Description	property		properties/host/host_configurations.py:80			yes
+VMWARE:HostSystem	vCommunity|Configuration|Time Zone|GMT Offset	property		properties/host/host_configurations.py:81			yes
+VMWARE:HostSystem	vCommunity|Runtime|Boot Time	property		properties/host/host_configurations.py:82			NO
+VMWARE:HostSystem	vCommunity|Hardware|BIOS Vendor	property		properties/host/host_configurations.py:83			NO
+VMWARE:HostSystem	vCommunity|Capability|Storage vMotion Supported	property		properties/host/host_configurations.py:84			yes
+VMWARE:HostSystem	vCommunity|Storage Adapter:{hba_device}|Device	property		properties/host/host_configurations.py:65	yes		NO
+VMWARE:HostSystem	vCommunity|Storage Adapter:{hba_device}|Bus	property		properties/host/host_configurations.py:66	yes		NO
+VMWARE:HostSystem	vCommunity|Storage Adapter:{hba_device}|Model	property		properties/host/host_configurations.py:67	yes		NO
+VMWARE:HostSystem	vCommunity|Storage Adapter:{hba_device}|PCI	property		properties/host/host_configurations.py:68	yes		NO
+VMWARE:HostSystem	vCommunity|Storage Adapter:{hba_device}|Status	property		properties/host/host_configurations.py:69	yes		NO
+VMWARE:HostSystem	vCommunity|Storage Adapter:{hba_device}|Type	property		properties/host/host_configurations.py:70	yes		NO
+VMWARE:HostSystem	vCommunity|Configuration|Advanced System Settings|{key}	property		properties/host/host_advanced_settings.py:21		yes	NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|Device Name	property		properties/host/host_uplink.py:65	yes		NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|Driver Version	property		properties/host/host_uplink.py:66	yes		NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|Firmware Version	property		properties/host/host_uplink.py:67	yes		NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|Status	property		properties/host/host_uplink.py:68	yes		NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|PCI Vendor Name	property		properties/host/host_uplink.py:71	yes		NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|PCI Device Name	property		properties/host/host_uplink.py:72	yes		NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|PCI Vendor ID (VID)	property		properties/host/host_uplink.py:73	yes		NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|PCI Device ID (DID)	property		properties/host/host_uplink.py:74	yes		NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|PCI SubVendor ID (SVID)	property		properties/host/host_uplink.py:75	yes		NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|MAC	property		properties/host/host_uplink.py:77	yes		NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|Wake On Lan Supported	property		properties/host/host_uplink.py:78	yes		NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|PCI	property		properties/host/host_uplink.py:79	yes		NO
+VMWARE:HostSystem	vCommunity|Network|Device:{device}|Duplex	property		properties/host/host_uplink.py:80	yes		NO
+VMWARE:HostSystem	vCommunity|Configuration|Packages:{package.name}|Package Name	property		properties/host/host_software_packages.py:17	yes		yes
+VMWARE:HostSystem	vCommunity|Configuration|Packages:{package.name}|Package Version	property		properties/host/host_software_packages.py:18	yes		yes
+VMWARE:HostSystem	vCommunity|Configuration|Packages:{package.name}|Acceptance Level	property		properties/host/host_software_packages.py:19	yes		yes
+VMWARE:HostSystem	vCommunity|Configuration|Packages:{package.name}|Maintenance Mode Required	property		properties/host/host_software_packages.py:20	yes		yes
+VMWARE:HostSystem	vCommunity|Configuration|Packages:{package.name}|Package Summary	property		properties/host/host_software_packages.py:21	yes		yes
+VMWARE:HostSystem	vCommunity|Configuration|Packages:{package.name}|Package Type	property		properties/host/host_software_packages.py:22	yes		yes
+VMWARE:HostSystem	vCommunity|Configuration|Packages:{package.name}|Package Vendor	property		properties/host/host_software_packages.py:23	yes		yes
+VMWARE:Datastore	vCommunity|Identifiers|Number of Extents	property		properties/datastore/collect_ds_identifiers_properties.py:25			yes
+VMWARE:Datastore	vCommunity|Identifiers|Extent:{extent_number}|ID	property		properties/datastore/collect_ds_identifiers_properties.py:31	yes		NO
+VMWARE:Datastore	vCommunity|Summary|MOID	property		properties/datastore/collect_ds_summary_properties.py:18			NO
+VMWARE:Datastore	vCommunity|Summary|Status	property		properties/datastore/collect_ds_summary_properties.py:36			NO
+VMWARE:Datastore	vCommunity|Summary|SIOC Enabled	property		properties/datastore/collect_ds_summary_properties.py:37			NO
+VMWARE:Datastore	vCommunity|Summary|SIOC Threshold	property		properties/datastore/collect_ds_summary_properties.py:38			NO
+VMWARE:Datastore	vCommunity|Summary|Block Size	property		properties/datastore/collect_ds_summary_properties.py:23			NO
+VMWARE:Datastore	vCommunity|Summary|Max Blocks	property		properties/datastore/collect_ds_summary_properties.py:27			NO
+VMWARE:Datastore	vCommunity|Summary|VMFS Upgradable	property		properties/datastore/collect_ds_summary_properties.py:31			NO
+VMWARE:VMwareAdapter Instance	vCommunity|Certificate|Status	property		properties/vcenter/certificate.py:107			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Certificate|SHA-256 Thumbprint	property		properties/vcenter/certificate.py:109			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Certificate|Previous SHA-256 Thumbprint	property		properties/vcenter/certificate.py:111			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Certificate|Last Changed	property		properties/vcenter/certificate.py:112			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Configuration|User Directory Timeout	property		properties/vcenter/collect_vcenter_properties.py:33			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Configuration|Enable MOB	property		properties/vcenter/collect_vcenter_properties.py:34			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Configuration|Database|Event retention (days)	property		properties/vcenter/collect_vcenter_properties.py:35			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Configuration|Database|Event Cleanup Enabled	property		properties/vcenter/collect_vcenter_properties.py:36			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Configuration|Database|Task retention (days)	property		properties/vcenter/collect_vcenter_properties.py:37			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Configuration|Database|Task Cleanup Enabled	property		properties/vcenter/collect_vcenter_properties.py:38			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Configuration|Runtime|vCenter Unique ID	property		properties/vcenter/collect_vcenter_properties.py:39			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Configuration|Runtime|vCenter managed address	property		properties/vcenter/collect_vcenter_properties.py:40			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Configuration|Database|Maximum Connections	property		properties/vcenter/collect_vcenter_properties.py:41			NO
+VMWARE:VMwareAdapter Instance	vCommunity|Configuration|Log Level	property		properties/vcenter/collect_vcenter_properties.py:42			yes
+VMWARE:VirtualMachine	vCommunity|Configuration|Share per vCPU	metric		properties/vm/vm_shares.py:68			yes
+VMWARE:VirtualMachine	vCommunity|Configuration|Share per MB of Memory	metric		properties/vm/vm_shares.py:68			yes
+VMWARE:VirtualMachine	vCommunity|Guest OS|Operating System|OS Name	property		properties/vm/vmOSInformation.py:46			yes
+VMWARE:VirtualMachine	vCommunity|Guest OS|Operating System|OS Version	property		properties/vm/vmOSInformation.py:47			yes
+VMWARE:VirtualMachine	vCommunity|Guest OS|Operating System|OS BuildNumber	property		properties/vm/vmOSInformation.py:48			yes
+VMWARE:VirtualMachine	vCommunity|Guest OS|Operating System|OS Architecture	property		properties/vm/vmOSInformation.py:49			yes
+VMWARE:VirtualMachine	vCommunity|Guest OS|Operating System|OS Last Boot Up Time	property		properties/vm/vmOSInformation.py:50			yes
+VMWARE:VirtualMachine	vCommunity|Guest OS|Operating System|OS Release ID	property		properties/vm/vmOSInformation.py:51			yes
+VMWARE:VirtualMachine	vCommunity|Guest OS|Services:{service.display_name}|Service Name	property		properties/vm/vmService.py:63	yes		yes
+VMWARE:VirtualMachine	vCommunity|Guest OS|Services:{service.display_name}|Service Status	property		properties/vm/vmService.py:64	yes		yes
+VMWARE:VirtualMachine	vCommunity|Guest OS|Services:{service.display_name}|Service Start Type	property		properties/vm/vmService.py:65	yes		yes
+VMWARE:VirtualMachine	vCommunity|Configuration|Advanced Parameters|{key}	property		properties/vm/vm_extra_config.py:21		yes	NO
+VMWARE:VirtualMachine	vCommunity|Configuration|NUMA|Hot Add Exposed	property		properties/vm/vm_configurations.py:88			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|CPU Allocation Share Level	property		properties/vm/vm_configurations.py:89			yes
+VMWARE:VirtualMachine	vCommunity|Configuration|Boot Options|Delay	property		properties/vm/vm_configurations.py:90			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Boot Options|Retry Delay	property		properties/vm/vm_configurations.py:91			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Boot Options|Retry Enabled	property		properties/vm/vm_configurations.py:92			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Boot Options|Enter BIOS Setup	property		properties/vm/vm_configurations.py:93			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Change Version	property		properties/vm/vm_configurations.py:94			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Firmware	property		properties/vm/vm_configurations.py:95			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Flags|Disk UUID Enabled	property		properties/vm/vm_configurations.py:96			yes
+VMWARE:VirtualMachine	vCommunity|Configuration|Latency Sensitivity Level	property		properties/vm/vm_configurations.py:97			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Reboot PowerOff	property		properties/vm/vm_configurations.py:98			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Hardware Upgrade|Status	property		properties/vm/vm_configurations.py:99			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Hardware Upgrade|Policy	property		properties/vm/vm_configurations.py:100			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Hardware Upgrade|Target Version	property		properties/vm/vm_configurations.py:101			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Op Notification Timeout	property		properties/vm/vm_configurations.py:102			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Memory Allocation Share Level	property		properties/vm/vm_configurations.py:103			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|Config Status	property		properties/vm/vm_configurations.py:104			NO
+VMWARE:VirtualMachine	vCommunity|Guest|State	property		properties/vm/vm_configurations.py:105			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Application Status	property		properties/vm/vm_configurations.py:106			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Kernel Crash State	property		properties/vm/vm_configurations.py:107			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Operation Ready	property		properties/vm/vm_configurations.py:108			yes
+VMWARE:VirtualMachine	vCommunity|Guest|State Change Support	property		properties/vm/vm_configurations.py:109			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Interactive Guest	property		properties/vm/vm_configurations.py:110			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Tools Sync Time	property		properties/vm/vm_configurations.py:111			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Tools Upgrade Policy	property		properties/vm/vm_configurations.py:112			yes
+VMWARE:VirtualMachine	vCommunity|Runtime|Consolidation Needed	property		properties/vm/vm_configurations.py:113			yes
+VMWARE:VirtualMachine	vCommunity|Runtime|DAS protection	property		properties/vm/vm_configurations.py:114			yes
+VMWARE:VirtualMachine	vCommunity|Runtime|Min Required EVC Mode Key	property		properties/vm/vm_configurations.py:115			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Customization Status	property		properties/vm/vm_configurations.py:116			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Heartbeat Status	property		properties/vm/vm_configurations.py:117			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Detailed Data|Build Number	property		properties/vm/vm_configurations.py:118			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Detailed Data|CPE String	property		properties/vm/vm_configurations.py:119			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Detailed Data|Distro Additional Version	property		properties/vm/vm_configurations.py:120			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Detailed Data|Distro Name	property		properties/vm/vm_configurations.py:121			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Detailed Data|Distro Version	property		properties/vm/vm_configurations.py:122			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Detailed Data|Kernel Version	property		properties/vm/vm_configurations.py:123			yes
+VMWARE:VirtualMachine	vCommunity|Guest|Detailed Data|Pretty Name	property		properties/vm/vm_configurations.py:124			yes
+VMWARE:VirtualMachine	vCommunity|Summary|VM Path Name	property		properties/vm/vm_configurations.py:125			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|SCSI Controllers|Count	metric		properties/vm/vm_disk.py:18			NO
+VMWARE:VirtualMachine	vCommunity|Configuration|SCSI Controllers:{bus_str}|Type	property		properties/vm/vm_disk.py:34	yes		NO
+VMWARE:VirtualMachine	vCommunity|Network|Network Adapters:{vnicLabel}|Type	property		properties/vm/vm_disk.py:53	yes		NO
+VMWARE:VirtualMachine	vCommunity|Network|Network Adapters:{vnicLabel}|Starts Connected	property		properties/vm/vm_disk.py:54	yes		yes
+VMWARE:VirtualMachine	vCommunity|Virtual Disk:{vdiskLabel}|Label	property		properties/vm/vm_disk.py:75	yes		yes
+VMWARE:VirtualMachine	vCommunity|Virtual Disk:{vdiskLabel}|Key	property		properties/vm/vm_disk.py:76	yes		yes
+VMWARE:VirtualMachine	vCommunity|Virtual Disk:{vdiskLabel}|Controller Key	property		properties/vm/vm_disk.py:77	yes		yes
+VMWARE:VirtualMachine	vCommunity|Virtual Disk:{vdiskLabel}|Eagerly Scrub	property		properties/vm/vm_disk.py:78	yes		yes
+VMWARE:VirtualMachine	vCommunity|Virtual Disk:{vdiskLabel}|Split	property		properties/vm/vm_disk.py:79	yes		yes
+VMWARE:VirtualMachine	vCommunity|Virtual Disk:{vdiskLabel}|Write Through	property		properties/vm/vm_disk.py:80	yes		yes
+VMWARE:VirtualMachine	vCommunity|Virtual Disk:{vdiskLabel}|Storage Allocation Share Level	property		properties/vm/vm_disk.py:81	yes		yes
+VMWARE:VirtualMachine	vCommunity|Options|{configPath}	property		properties/vm/vmConfig.py:16		yes	NO
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|vSphere HA|Host Monitoring	property		properties/cluster/ha_properties.py:37			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|vSphere HA|Response \ Host Isolation	property		properties/cluster/ha_properties.py:38			NO
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|vSphere HA|Response \ Default VM Restart Priority	property		properties/cluster/ha_properties.py:39			NO
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|vSphere HA|Response \ Datastore APD	property		properties/cluster/ha_properties.py:40			NO
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|vSphere HA|Response \ Datastore PDL	property		properties/cluster/ha_properties.py:41			NO
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|vSphere HA|VM Monitoring	property		properties/cluster/ha_properties.py:42			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|vSphere HA|Heartbeat Datastore	property		properties/cluster/ha_properties.py:43			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|vSphere HA|Failure Interval	property		properties/cluster/ha_properties.py:44			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|vSphere HA|Max Failure Window	property		properties/cluster/ha_properties.py:45			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|vSphere HA|Max Failures	property		properties/cluster/ha_properties.py:46			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|vSphere HA|Minimum Up Time	property		properties/cluster/ha_properties.py:47			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|DPM|Host Power Action Rate	property		properties/cluster/dpm_properties.py:17			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|EVC|Enabled	property		properties/cluster/evc_properties.py:21			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|EVC|Mode	property		properties/cluster/evc_properties.py:22			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|Distributed Resource Scheduler|Proactive DRS	property		properties/cluster/drs_properties.py:37			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|Distributed Resource Scheduler|Scale Descendants Shares	property		properties/cluster/drs_properties.py:38			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|Distributed Resource Scheduler|CPU Over-Commitment	property		properties/cluster/drs_properties.py:39			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|Distributed Resource Scheduler|Virtual Machine Automation Enabled	property		properties/cluster/drs_properties.py:40			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|Configuration Status	property		properties/cluster/cluster_configuration_properties.py:19			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|Number of Effective Hosts	metric		properties/cluster/cluster_configuration_properties.py:20			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|Overall Status	property		properties/cluster/cluster_configuration_properties.py:21			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Performance|Cluster Performance Score	metric	%	metrics/kpi_score.py:225 (via metrics.cluster.cluster_performance_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Cluster Risk Score	metric	%	metrics/kpi_score.py:225 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Consumption|Cluster Consumption Score	metric	%	metrics/kpi_score.py:225 (via metrics.cluster.cluster_consumption_metrics)			yes
+VMWARE:HostSystem	vCommunity|ESXi Performance|ESXi Performance Score	metric	%	metrics/kpi_score.py:225 (via metrics.host.esxi_performance_metrics)			yes
+VMWARE:VirtualMachine	vCommunity|VM Performance|VM Performance Score	metric	%	metrics/kpi_score.py:225 (via metrics.vm.vm_performance_metrics)			yes
+VMWARE:VirtualMachine	vCommunity|Guest OS Performance|Guest OS Performance Score	metric	%	metrics/kpi_score.py:225 (via metrics.vm.guest_os_performance_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Performance|Worst VM CPU Ready	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_performance_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Performance|Worst VM CPU Co-Stop	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_performance_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Performance|Worst VM Memory Latency	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_performance_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Performance|Worst VM Disk Latency	metric	ms	metrics/kpi_score.py:218 (via metrics.cluster.cluster_performance_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Performance|90th Percentile VM CPU Ready	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_performance_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Performance|90th Percentile VM CPU Co-Stop	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_performance_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Performance|90th Percentile VM Memory Latency	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_performance_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Performance|90th Percentile VM Disk Latency	metric	ms	metrics/kpi_score.py:218 (via metrics.cluster.cluster_performance_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Performance|Highest ESXi Bad Network Packets	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_performance_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Highest ESXi CPU Thread Utilization	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Worst ESXi CPU Imbalance	metric		metrics/kpi_score.py:218 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Highest ESXi Memory Consumed	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Worst ESXi Memory Ballooned	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Worst ESXi Memory Zip Swap	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Worst ESXi Memory Tiering Latency	metric	µs	metrics/kpi_score.py:218 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Highest ESXi CPU Reservation	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Highest ESXi Memory Reservation	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Highest ESXi CPU Overcommit Ratio	metric		metrics/kpi_score.py:218 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Highest ESXi Memory Overcommit Ratio	metric		metrics/kpi_score.py:218 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Highest CPU Monster VM to Host Ratio	metric		metrics/kpi_score.py:218 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Risk|Highest Memory Monster VM to Host Ratio	metric		metrics/kpi_score.py:218 (via metrics.cluster.cluster_risk_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Consumption|Cluster-wide ESXi CPU Thread Utilization	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_consumption_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Consumption|Cluster-wide ESXi Memory Consumed	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_consumption_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Consumption|Cluster Memory Tiering Consumption	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_consumption_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Consumption|Cluster-wide ESXi Memory Ballooned	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_consumption_metrics)			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Consumption|Cluster-wide ESXi Memory Zip Swap	metric	%	metrics/kpi_score.py:218 (via metrics.cluster.cluster_consumption_metrics)			yes
+VMWARE:HostSystem	vCommunity|ESXi Performance|Worst VM CPU Ready	metric	%	metrics/kpi_score.py:218 (via metrics.host.esxi_performance_metrics)			yes
+VMWARE:HostSystem	vCommunity|ESXi Performance|Worst VM CPU Co-Stop	metric	%	metrics/kpi_score.py:218 (via metrics.host.esxi_performance_metrics)			yes
+VMWARE:HostSystem	vCommunity|ESXi Performance|Worst VM Memory Latency	metric	%	metrics/kpi_score.py:218 (via metrics.host.esxi_performance_metrics)			yes
+VMWARE:HostSystem	vCommunity|ESXi Performance|Worst VM Disk Latency	metric	ms	metrics/kpi_score.py:218 (via metrics.host.esxi_performance_metrics)			yes
+VMWARE:HostSystem	vCommunity|ESXi Performance|90th Percentile VM CPU Ready	metric	%	metrics/kpi_score.py:218 (via metrics.host.esxi_performance_metrics)			yes
+VMWARE:HostSystem	vCommunity|ESXi Performance|90th Percentile VM CPU Co-Stop	metric	%	metrics/kpi_score.py:218 (via metrics.host.esxi_performance_metrics)			yes
+VMWARE:HostSystem	vCommunity|ESXi Performance|90th Percentile VM Memory Latency	metric	%	metrics/kpi_score.py:218 (via metrics.host.esxi_performance_metrics)			yes
+VMWARE:HostSystem	vCommunity|ESXi Performance|90th Percentile VM Disk Latency	metric	ms	metrics/kpi_score.py:218 (via metrics.host.esxi_performance_metrics)			yes
+VMWARE:HostSystem	vCommunity|ESXi Performance|ESXi Bad Network Packets	metric	%	metrics/kpi_score.py:218 (via metrics.host.esxi_performance_metrics)			yes
+VMWARE:VirtualMachine	vCommunity|VM Performance|Memory Zip Swap	metric	%	metrics/kpi_score.py:218 (via metrics.vm.vm_performance_metrics)			yes
+VMWARE:HostSystem	vCommunity|Availability|ESXi Host Operational Availability	metric	percent	metrics/host/host_availability.py:58			yes
+VMWARE:HostSystem	vCommunity|Network|Network Speed Degradation	metric	percent	metrics/host/host_network_speed.py:68			yes
+VMWARE:Datacenter	vCommunity|Network|Total Network Speed Degradation	metric		metrics/datacenter/datacenter_network_degradation.py:34			yes
+VMWARE:vSphere World	vCommunity|Number of Port Groups	metric		metrics/world/port_group_counts.py:39			yes
+VMWARE:vSphere World	vCommunity|Cluster Delta Close Count	metric		metrics/world/cluster_close_changes.py:102			yes
+VMWARE:vSphere World	vCommunity|Cluster Delta Open Count	metric		metrics/world/cluster_close_changes.py:103			yes
+VMWARE:vSphere World	vCommunity|Number of VM without Tools	metric		metrics/world/vm_tools_counts.py:60			yes
+VMWARE:vSphere World	vCommunity|Number of VMware Tools down	metric		metrics/world/vm_tools_counts.py:61			yes
+VMWARE:vSphere World	vCommunity|Worst 10 Percent Cluster Performance	metric	%	metrics/world/cluster_summary_metrics.py:94			yes
+VMWARE:vSphere World	vCommunity|Worst Cluster Performance	metric	%	metrics/world/cluster_summary_metrics.py:94			yes
+VMWARE:vSphere World	vCommunity|Worst 10 Percent Cluster Risk	metric	%	metrics/world/cluster_summary_metrics.py:94			yes
+VMWARE:vSphere World	vCommunity|Worst Cluster Risk	metric	%	metrics/world/cluster_summary_metrics.py:94			yes
+VMWARE:vSphere World	vCommunity|Highest 10 Percent Cluster Utilization	metric	%	metrics/world/cluster_summary_metrics.py:94			yes
+VMWARE:vSphere World	vCommunity|Highest Cluster Utilization	metric	%	metrics/world/cluster_summary_metrics.py:94			yes
+VMWARE:vSphere World	vCommunity|Availability|Worst Cluster Operational Availability	metric	%	metrics/world/availability_summary_metrics.py:47			yes
+VMWARE:vSphere World	vCommunity|Availability|ESXi Hosts Operational Availability	metric	%	metrics/world/availability_summary_metrics.py:47			yes
+VMWARE:vSphere World	vCommunity|Network|Total Network Speed Degradation	metric		metrics/world/vsphere_network_degradation.py:25			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Availability|Worst Cluster Operational Availability	metric	percent	metrics/vcenter/vcenter_availability.py:62			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Number of Port Groups	metric		metrics/vcenter/vcenter_port_groups.py:98			yes
+VMWARE:VirtualMachine	vCommunity|VM Guest OS KPI	metric	percent	metrics/vm/vm_guest_os_kpi.py:35			yes
+Container:Tier	vCommunity|Business Application|Tier Performance	metric	percent	metrics/container/business_app_performance.py:109			yes
+Container:BusinessService	vCommunity|Business Application|Business Application Performance	metric	percent	metrics/container/business_app_performance.py:138			yes
+Container:Enterprise	vCommunity|Business Application|Business Applications Performance	metric	percent	metrics/container/business_app_performance.py:148			yes
+VMWARE:ClusterComputeResource	vCommunity|Resource Pools|Number of Resource Pools	metric		metrics/cluster/resource_pool_counts.py:119			yes
+VMWARE:ClusterComputeResource	vCommunity|Resource Pools|Cascading Resource Pools	metric		metrics/cluster/resource_pool_counts.py:120			yes
+VMWARE:ClusterComputeResource	vCommunity|Cluster Configuration|Distributed Resource Scheduler|DRS Score	metric		metrics/cluster/drs_metrics.py:27			yes
+VMWARE:ClusterComputeResource	vCommunity|Availability|Cluster Operational Availability	metric	percent	metrics/cluster/cluster_availability.py:55			yes
+VMWARE:ClusterComputeResource	vCommunity|Periodic Cluster Check|Worst Cluster Performance	metric	%	metrics/cluster/periodic_cluster_check.py:362			yes
+VMWARE:ClusterComputeResource	vCommunity|Periodic Cluster Check|Worst Cluster Risk	metric	%	metrics/cluster/periodic_cluster_check.py:362			yes
+VMWARE:ClusterComputeResource	vCommunity|Periodic Cluster Check|Worst Cluster Consumption	metric	%	metrics/cluster/periodic_cluster_check.py:362			yes
+VMWARE:ClusterComputeResource	vCommunity|Periodic Cluster Check|Close for Business	metric		metrics/cluster/periodic_cluster_check.py:362			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Configuration|Patch Level	property		collectors/vcenter/collectvCenterData.py:59			yes
+vCommunity:VM Template	vCommunity|VM Template|Guest OS	property		collectors/library/collectTemplateData.py:54			yes
+vCommunity:VM Template	vCommunity|VM Template|Hardware Version	property		collectors/library/collectTemplateData.py:55			yes
+vCommunity:VM Template	vCommunity|VM Template|vCPUs	property		collectors/library/collectTemplateData.py:56			yes
+vCommunity:VM Template	vCommunity|VM Template|Memory (GB)	property		collectors/library/collectTemplateData.py:57			yes
+vCommunity:VM Template	vCommunity|VM Template|Datastore	property		collectors/library/collectTemplateData.py:58			yes
+vCommunity:VM Template	vCommunity|VM Template|VM Folder	property		collectors/library/collectTemplateData.py:59			yes
+vCommunity:VM Template	vCommunity|VM Template|Disk Used (GB)	metric		collectors/library/collectTemplateData.py:60			yes
+vCommunity:Library Item	vCommunity|Library Item|Type	property		collectors/library/collectLibraryData.py:138			yes
+vCommunity:Library Item	vCommunity|Library Item|Description	property		collectors/library/collectLibraryData.py:139			yes
+vCommunity:Library Item	vCommunity|Library Item|Version	property		collectors/library/collectLibraryData.py:140			yes
+vCommunity:Library Item	vCommunity|Library Item|Content Version	property		collectors/library/collectLibraryData.py:141			yes
+vCommunity:Library Item	vCommunity|Library Item|Stored Locally	property		collectors/library/collectLibraryData.py:142			yes
+vCommunity:Library Item	vCommunity|Library Item|Security Compliant	property		collectors/library/collectLibraryData.py:143			yes
+vCommunity:Library Item	vCommunity|Library Item|Certificate Verification	property		collectors/library/collectLibraryData.py:144			yes
+vCommunity:Library Item	vCommunity|Library Item|Last Modified	property		collectors/library/collectLibraryData.py:145			yes
+vCommunity:Library Item	vCommunity|Library Item|Last Sync	property		collectors/library/collectLibraryData.py:146			yes
+vCommunity:Library Item	vCommunity|Library Item|Source Item ID	property		collectors/library/collectLibraryData.py:147			yes
+vCommunity:Library Item	vCommunity|Library Item|Size (GB)	metric		collectors/library/collectLibraryData.py:148			yes
+vCommunity:Content Library	vCommunity|Content Library|Type	property		collectors/library/collectLibraryData.py:121			yes
+vCommunity:Content Library	vCommunity|Content Library|Subscription URL	property		collectors/library/collectLibraryData.py:122			yes
+vCommunity:Content Library	vCommunity|Content Library|Automatic Sync	property		collectors/library/collectLibraryData.py:123			yes
+vCommunity:Content Library	vCommunity|Content Library|State	property		collectors/library/collectLibraryData.py:124			yes
+vCommunity:Content Library	vCommunity|Content Library|Items	metric		collectors/library/collectLibraryData.py:125			yes
+vCommunity:Content Library	vCommunity|Content Library|Items Not Stored Locally	metric		collectors/library/collectLibraryData.py:126			yes
+vCommunity:Content Library	vCommunity|Content Library|Items Not Security Compliant	metric		collectors/library/collectLibraryData.py:127			yes
+vCommunity:Content Library	vCommunity|Content Library|Total Size (GB)	metric		collectors/library/collectLibraryData.py:128			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Collection Health|Warnings in Last Cycle	metric		utils/collection_health.py:58			yes
+VMWARE:VMwareAdapter Instance	vCommunity|Collection Health|First Warning	property		utils/collection_health.py:59			yes
