@@ -14,6 +14,11 @@ public interface VimReader {
     /** The service references of the current session, or null before a login. */
     ServiceRefs refs();
 
+    /** Counts the logins this client has made; a change means the session is a new one. */
+    default long generation() {
+        return 0;
+    }
+
     /** The vCenter's {@code about} of the current session, or null. */
     About about();
 

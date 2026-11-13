@@ -122,10 +122,12 @@ public final class ClusterCollector {
             o.propY(EVC + "Mode", null);
             return;
         }
-        String mode = Vals.nonBlank(Vals.str(summary, "currentEVCModeKey"));
-        // A summary that was read and names no mode means EVC is off: a reading, kept (Q2).
-        o.prop(EVC + "Enabled", mode != null ? "True" : "False");
-        o.propY(EVC + "Mode", mode);
+        String mode = Vals.str(summary, "currentEVCModeKey");
+        // A summary that was read and names no mode means EVC is off: a reading, kept (Q2). A mode
+        // that is spaces is a mode, as for the original (a non-empty string is true there).
+        boolean on = mode != null && !mode.isEmpty();
+        o.prop(EVC + "Enabled", on ? "True" : "False");
+        o.propY(EVC + "Mode", on ? mode : null);
     }
 
     private static void drsScore(ObjectOut o, XmlNode summary, boolean drsOn) {

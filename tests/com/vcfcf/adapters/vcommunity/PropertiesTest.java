@@ -115,6 +115,7 @@ public final class PropertiesTest {
         vc.installDate.put("imgmgr-1", "2025-01-02T03:04:05.123456Z");
         vc.packages.put("imgmgr-1", P2Fixtures.pkg("esx-base", "8.0.3-0.35", "bootbank", "VMware, Inc.",
                 "vmware_certified", "ESXi base", "true")
+                + P2Fixtures.pkg("pad-vib", " 1.0 ", "", "  Padded  ", "community", "", null)
                 + P2Fixtures.pkg("lsi-msgpt3", "1.0", "bootbank", "Broadcom", "vmware_certified", "x", "false"));
         vc.licenses = P2Fixtures.license("host-1", "VMware vSphere 8 Enterprise Plus", "AB12C-DE34F-GH56I-JK78L-MN90P",
                 "esx.enterprisePlus.cpuPackage", "2030-01-01T00:00:00Z")
@@ -166,9 +167,15 @@ public final class PropertiesTest {
     static final String VC = "vc-res";
 
     static void eq(Rig r, String rid, String key, Object want) {
-        Object got = r.p(0, rid, V + key);
-        if (got == null) got = r.st(0, rid, V + key);
+        eqAt(r, 0, rid, key, want);
+    }
+
+    /** Assert the value pushed in push {@code n}; the key counts as value-tested for the coverage table. */
+    static void eqAt(Rig r, int n, String rid, String key, Object want) {
+        Object got = r.p(n, rid, V + key);
+        if (got == null) got = r.st(n, rid, V + key);
         T.eq(want, got, rid + " " + key);
+        Coverage.asserted(rid, V + key);
     }
 
     static void none(Rig r, String rid, String key) {
@@ -180,7 +187,7 @@ public final class PropertiesTest {
         Rig r = new Rig(fake, vc);
         mapAll(r.ops, vc);
         files(r.ops, P2Fixtures.ADV_ITEM + ",Net.Bool,Net.Dbl,Net.Text,Missing.Setting",
-                P2Fixtures.PKG_ITEM + ",absent-vib", "disk.EnableUUID,tools.guest.desktop.autolock,missing.key",
+                P2Fixtures.PKG_ITEM + ",absent-vib,pad-vib", "disk.EnableUUID,tools.guest.desktop.autolock,missing.key",
                 "config.version,runtime.powerState");
         return r;
     }
@@ -189,6 +196,7 @@ public final class PropertiesTest {
         try (FakeVc fake = new FakeVc(FakeVc.happy())) {
             run("hosts", () -> hosts(fake));
             run("vms", () -> vms(fake));
+            run("virtual disks need a network adapter (upstream quirk Q2)", () -> disksNeedAnAdapter(fake));
             run("clusters", () -> clusters(fake));
             run("datastores and vCenter", () -> datastoresAndVcenter(fake));
             run("no sentinel, no null, no secret", () -> noSentinels(fake));
@@ -205,6 +213,11 @@ public final class PropertiesTest {
             run("deadline", () -> deadline(fake));
             run("paging and a large inventory", () -> paging(fake));
             run("license edge cases", () -> licenseEdges(fake));
+            run("blank strings are pushed as upstream pushes them", () -> blanks(fake));
+            run("tokens are released, a missing-set fault is a failed read, a stopped read stops", () -> tokensMissingStop(fake));
+            run("a VM Options entry that fails the page costs the entry", () -> optionFailsPage(fake));
+            run("license reads fall back to one call per host", () -> licensesPerHost(fake));
+            run("a host that left between the host reads", () -> hostLeaves(fake));
         }
         Coverage.scenario = "coverage";
         Coverage.verifyOrWrite();
@@ -259,7 +272,7 @@ public final class PropertiesTest {
             eq(r, H, "Storage Adapter:vmhba2|Type", "fc");
             eq(r, H, "Storage Adapter:vmhba64|Device", "vmhba64"); // device "null": last segment of the key
             eq(r, H, "Storage Adapter:vmhba64|Bus", "0");
-            none(r, H, "Storage Adapter:vmhba1|Model"); // blank model: nothing
+            eq(r, H, "Storage Adapter:vmhba1|Model", ""); // spaces are stripped to the empty string, and pushed, as upstream does (Q4)
             none(r, H, "Storage Adapter:vmhba1|PCI");
             none(r, H, "Storage Adapter:vmhba1|Type");
             eq(r, H, "Storage Adapter:vmhba1|Status", "unknown");
@@ -271,9 +284,9 @@ public final class PropertiesTest {
             eq(r, H, n0 + "Status", "Connected");
             eq(r, H, n0 + "PCI Vendor Name", "Intel Corporation");
             eq(r, H, n0 + "PCI Device Name", "Ethernet Controller");
-            eq(r, H, n0 + "PCI Vendor ID (VID)", "8086"); // -32634 on the wire, unsigned here (DV-33)
+            eq(r, H, n0 + "PCI Vendor ID (VID)", "-7f7a"); // -32634 on the wire: upstream formats the signed value (Q3)
             eq(r, H, n0 + "PCI Device ID (DID)", "1508");
-            eq(r, H, n0 + "PCI SubVendor ID (SVID)", "8086");
+            eq(r, H, n0 + "PCI SubVendor ID (SVID)", "-7f7a");
             eq(r, H, n0 + "MAC", "aa:bb:cc:00:00:01");
             eq(r, H, n0 + "Wake On Lan Supported", "True");
             eq(r, H, n0 + "PCI", "0000:3b:00.0");
@@ -297,7 +310,12 @@ public final class PropertiesTest {
             eq(r, H, pk + "Package Summary", "ESXi base");
             eq(r, H, pk + "Package Type", "bootbank");
             eq(r, H, pk + "Package Vendor", "VMware, Inc.");
-            T.eq(Double.valueOf(1.0), r.p(0, H, V + pk + "Maintenance Mode Required"), "the flag is a number");
+            eq(r, H, pk + "Maintenance Mode Required", Double.valueOf(1.0)); // the flag is a number
+            // package text is as sent, spaces and empty values included (upstream str()s nothing); a missing flag is no flag
+            eq(r, H, "Configuration|Packages:pad-vib|Package Version", " 1.0 ");
+            eq(r, H, "Configuration|Packages:pad-vib|Package Vendor", "  Padded  ");
+            eq(r, H, "Configuration|Packages:pad-vib|Package Type", "");
+            none(r, H, "Configuration|Packages:pad-vib|Maintenance Mode Required");
             none(r, H, "Configuration|Packages:lsi-msgpt3|Package Name"); // not on the list
             none(r, H, "Configuration|Packages:absent-vib|Package Name"); // not installed
             // licenses
@@ -352,8 +370,8 @@ public final class PropertiesTest {
             eq(r, VM, "Guest|Operation Ready", "True");
             eq(r, VM, "Guest|State Change Support", "True");
             eq(r, VM, "Guest|Interactive Guest", "False");
-            eq(r, VM, "Guest|Tools Sync Time", "False");
-            eq(r, VM, "Guest|Tools Upgrade Policy", "manual");
+            eq(r, VM, "Guest|Tools Sync Time", "None"); // Q1: upstream always sends the text None
+            eq(r, VM, "Guest|Tools Upgrade Policy", "None");
             eq(r, VM, "Runtime|Consolidation Needed", "False");
             eq(r, VM, "Runtime|DAS protection", "True");
             eq(r, VM, "Runtime|Min Required EVC Mode Key", "intel-skylake");
@@ -424,8 +442,25 @@ public final class PropertiesTest {
             eq(r, "res-vm-2", "Configuration|Config Status", "gray");
             eq(r, "res-vm-2", "Configuration|Op Notification Timeout", "0"); // a negative value read is 0, as the original
             eq(r, "res-vm-2", "Configuration|SCSI Controllers|Count", 0.0); // a returned empty device list
-            T.eq(3, r.ops.pushedProps.get(0).get("res-vm-2").size() + r.ops.pushedStats.get(0).get("res-vm-2").size(),
+            // what it returned (two properties, one count) and the two Tools keys upstream always sends (Q1)
+            T.eq(5, r.ops.pushedProps.get(0).get("res-vm-2").size() + r.ops.pushedStats.get(0).get("res-vm-2").size(),
                     "the sparse VM carries only what it returned");
+            eq(r, "res-vm-2", "Guest|Tools Sync Time", "None");
+        }
+    }
+
+    /** Q2: no network adapter, no Virtual Disk keys; the controllers are still published. */
+    static void disksNeedAnAdapter(FakeVc fake) throws Exception {
+        FakeVcenter vc = dataset();
+        vc.add(P2Fixtures.vmNoNic("vm-8", "appliance"));
+        try (Rig r = standard(fake, vc)) {
+            r.run();
+            eq(r, "res-vm-8", "Configuration|SCSI Controllers:0|Type", "VMware Paravirtual (PVSCSI)");
+            eq(r, "res-vm-8", "Configuration|SCSI Controllers|Count", 1.0);
+            for (String k : r.ops.pushedProps.get(0).get("res-vm-8").keySet()) {
+                T.check(!k.contains("Virtual Disk:"), "upstream sends no disk key for a VM with no adapter: " + k);
+            }
+            eq(r, VM, "Virtual Disk:Hard disk 1|Key", "2000"); // with an adapter they are there
         }
     }
 
@@ -575,7 +610,9 @@ public final class PropertiesTest {
                         n++;
                         T.check(p.getKey().startsWith(V), "every key is under vCommunity|: " + p.getKey());
                         T.check(p.getValue() instanceof String || p.getValue() instanceof Double, "typed: " + p.getKey());
-                        if (p.getValue() instanceof String && !p.getKey().contains("Collection Health")) {
+                        // Q1: the two Tools keys carry the text None because upstream's do (registered)
+                        boolean quirk = p.getKey().endsWith("|Tools Sync Time") || p.getKey().endsWith("|Tools Upgrade Policy");
+                        if (p.getValue() instanceof String && !p.getKey().contains("Collection Health") && !quirk) {
                             T.check(!SENTINELS.contains(p.getValue()), e.getKey() + " " + p.getKey() + " carries a placeholder: " + p.getValue());
                         }
                         T.check(!p.getKey().contains(":null|") && !p.getKey().contains(":None|")
@@ -780,17 +817,34 @@ public final class PropertiesTest {
         // entries that name paths the collector reads anyway, or hold a reference, an object or a date
         vc = dataset();
         try (Rig r = standard(fake, vc)) {
-            files(r.ops, "", "", "", "config.hardware.device,config.extraConfig,runtime.host,config.createDate,config.maxMksConnections,name");
+            files(r.ops, "", "", "", "config.hardware.device,config.extraConfig,runtime.host,config.createDate,config.maxMksConnections,name,"
+                    + "resourcePool,config.bytes,snapshot,config.hardware");
             r.run();
-            for (String k : new String[] {"config.hardware.device", "config.extraConfig", "runtime.host"}) {
-                none(r, VM, "Options|" + k); // a list, or a reference whose Python text is not reproduced
+            for (String k : new String[] {"config.hardware.device", "config.extraConfig"}) {
+                none(r, VM, "Options|" + k); // a list: its Python text is not reproduced
                 T.contains(r.log.all(), k, "reported: " + k);
             }
+            eq(r, VM, "Options|runtime.host", "'vim.HostSystem:host-1'"); // a reference, as pyVmomi prints it
             eq(r, VM, "Options|config.createDate", "2024-05-06 07:08:09+00:00");
             eq(r, VM, "Options|config.maxMksConnections", "40");
             eq(r, VM, "Options|name", "web01");
             eq(r, VM, "Virtual Disk:Hard disk 1|Key", "2000"); // the device list is still read for its keys
             eq(r, VM, "Configuration|SCSI Controllers|Count", 5.0);
+            // B3: a value nested far deeper than any tree is built costs only its own key
+            none(r, VM, "Options|snapshot");
+            none(r, VM, "Options|config.hardware");
+            none(r, VM, "Options|resourcePool"); // a reference of a type with no Python name here
+            T.contains(r.log.all(), "'snapshot'", "reported");
+            T.contains(r.log.all(), "'resourcePool'", "reported");
+            eq(r, VM, "Options|config.bytes", "b\"hi'\\x01\""); // bytes, as Python prints them
+            eq(r, VM, "Configuration|Firmware", "efi");
+            eq(r, "res-vm-2", "Configuration|Config Status", "gray");
+            T.eq("OK", r.health(0, "Collector:vm|Status"), "the VM read did not fail");
+            int asked = countAsking(r, "snapshot");
+            T.check(asked >= 1, "asked for once at least");
+            r.run();
+            T.eq(asked, countAsking(r, "snapshot"), "an entry found not to be a single value is dropped from every later read");
+            T.eq(0.0, r.health(1, "Collector:vm|Failures"), "and costs nothing after");
         }
         // a property this vCenter does not have (an older version): its keys are withheld, the VM is not lost
         vc = dataset();
@@ -818,6 +872,12 @@ public final class PropertiesTest {
             none(r, H, "Hardware|BIOS Vendor");
             eq(r, H, "Capability|Storage vMotion Supported", "True");
         }
+    }
+
+    static int countAsking(Rig r, String path) {
+        int n = 0;
+        for (FakeVc.Req q : r.reqs("RetrievePropertiesEx")) if (q.body.contains("<pathSet>" + path + "</pathSet>")) n++;
+        return n;
     }
 
     static void gating(FakeVc fake) throws Exception {
@@ -908,13 +968,19 @@ public final class PropertiesTest {
             r.run(); // cycle 2: it is new: the list is read again
             T.eq(2, listReads(r, "VirtualMachine"), "a new object justifies a read");
             r.ops.add("VirtualMachine", "res-vm-9", "vm-9", FakeVc.INSTANCE_UUID); // Ops learns of it
-            for (int i = 3; i <= 13; i++) r.run();
-            T.eq(2, listReads(r, "VirtualMachine"), "no read between: it is not new any more");
-            T.check(r.ops.pushedProps.size() == 13, "thirteen cycles");
-            r.run(); // cycle 14: twelve cycles since the read in cycle 2
-            T.eq(3, listReads(r, "VirtualMachine"), "read again after twelve cycles");
-            T.eq("gray", r.ops.pushedProps.get(13).get("res-vm-9").get(V + "Configuration|Config Status"),
-                    "and the VM is collected");
+            r.run(); // cycle 3: one cycle after a read that found nothing: not yet
+            T.eq(2, listReads(r, "VirtualMachine"), "a read that found nothing is followed by a wait");
+            T.check(r.ops.pushedProps.get(2).get("res-vm-9") == null, "so the VM has no keys yet");
+            r.run(); // cycle 4: two cycles after: read again, and the VM is there
+            T.eq(3, listReads(r, "VirtualMachine"), "read again two cycles later");
+            T.eq("gray", r.ops.pushedProps.get(3).get("res-vm-9").get(V + "Configuration|Config Status"),
+                    "and the VM is collected within a few cycles of Ops knowing it, not an hour");
+            // a VM that Ops never models costs a list read at 2, 4 and 8 cycles and then at the 12th cycle
+            vc.add(P2Fixtures.vmSparse("vm-10", "template-like"));
+            int before = listReads(r, "VirtualMachine");
+            for (int i = 5; i <= 28; i++) r.run();
+            int extra = listReads(r, "VirtualMachine") - before;
+            T.check(extra >= 2 && extra <= 7, "a persistent miss is read for now and then, not every cycle: " + extra);
         }
         // a failed list: the kind is held back, counted, read again next cycle
         vc = dataset();
@@ -984,22 +1050,22 @@ public final class PropertiesTest {
         FakeVcenter vc = dataset();
         try (Rig r = standard(fake, vc)) {
             r.run();
-            T.eq("Recorded", r.p(0, VC, V + CERT + "Status"), "first sight");
-            T.eq(T1, r.p(0, VC, V + CERT + "SHA-256 Thumbprint"), "the thumbprint");
+            eqAt(r, 0, VC, CERT + "Status", "Recorded"); // first sight
+            eqAt(r, 0, VC, CERT + "SHA-256 Thumbprint", T1); // the thumbprint
             T.check(r.p(0, VC, V + CERT + "Previous SHA-256 Thumbprint") == null, "no previous");
             T.eq(1, r.ops.posts.size(), "one read-back after the start");
             T.contains(r.ops.posts.get(0), "/api/resources/properties/latest/query", "to the properties query");
             T.contains(r.ops.posts.get(0), "\"vc-res\"", "of the vCenter object");
             T.contains(r.ops.posts.get(0), "vCommunity|Certificate|Last Changed", "for the two keys");
             r.run();
-            T.eq("Unchanged", r.p(1, VC, V + CERT + "Status"), "same certificate");
+            eqAt(r, 1, VC, CERT + "Status", "Unchanged"); // same certificate
             T.eq(1, r.ops.posts.size(), "the read-back is not repeated: the state is in memory");
             r.presented = T2;
             r.run();
-            T.eq("Changed", r.p(2, VC, V + CERT + "Status"), "a different certificate");
-            T.eq(T2, r.p(2, VC, V + CERT + "SHA-256 Thumbprint"), "the new thumbprint");
-            T.eq(T1, r.p(2, VC, V + CERT + "Previous SHA-256 Thumbprint"), "the one before");
-            T.eq("2023-11-14 22:13:20 UTC", r.p(2, VC, V + CERT + "Last Changed"), "when it was seen");
+            eqAt(r, 2, VC, CERT + "Status", "Changed"); // a different certificate
+            eqAt(r, 2, VC, CERT + "SHA-256 Thumbprint", T2); // the new thumbprint
+            eqAt(r, 2, VC, CERT + "Previous SHA-256 Thumbprint", T1); // the one before
+            eqAt(r, 2, VC, CERT + "Last Changed", "2023-11-14 22:13:20 UTC"); // when it was seen
             T.contains(r.log.all(), "The vCenter certificate has changed", "and said in the log");
             // 24 hours later it is Unchanged again, with no re-send of the change
             r.clock.addAndGet(23L * 3600 * 1000);
@@ -1007,7 +1073,7 @@ public final class PropertiesTest {
             T.check(r.p(3, VC, V + CERT + "Status") == null, "still Changed within 24 hours: nothing new to send");
             r.clock.addAndGet(2L * 3600 * 1000);
             r.run();
-            T.eq("Unchanged", r.p(4, VC, V + CERT + "Status"), "after 24 hours");
+            eqAt(r, 4, VC, CERT + "Status", "Unchanged"); // after 24 hours
             T.check(r.p(4, VC, V + CERT + "Previous SHA-256 Thumbprint") == null, "the change is not published again");
         }
         // a restart: the state comes back from the vCenter object
@@ -1015,21 +1081,21 @@ public final class PropertiesTest {
         try (Rig r = standard(fake, vc)) {
             r.ops.readBack = readBack(T1, null);
             r.run();
-            T.eq("Unchanged", r.p(0, VC, V + CERT + "Status"), "the recorded one is the presented one");
+            eqAt(r, 0, VC, CERT + "Status", "Unchanged"); // the recorded one is the presented one
         }
         vc = dataset();
         try (Rig r = standard(fake, vc)) {
             r.ops.readBack = readBack(T1, "2023-11-14 20:00:00 UTC"); // a change two hours before the clock
             r.run();
-            T.eq("Changed", r.p(0, VC, V + CERT + "Status"), "a change within 24 hours is still shown after a restart");
+            eqAt(r, 0, VC, CERT + "Status", "Changed"); // a change within 24 hours is still shown after a restart
             T.check(r.p(0, VC, V + CERT + "Previous SHA-256 Thumbprint") == null, "the same certificate is not a new change");
         }
         vc = dataset();
         try (Rig r = standard(fake, vc)) {
             r.ops.readBack = readBack(T2, null);
             r.run();
-            T.eq("Changed", r.p(0, VC, V + CERT + "Status"), "recorded differs from presented");
-            T.eq(T2, r.p(0, VC, V + CERT + "Previous SHA-256 Thumbprint"), "previous is the recorded one");
+            eqAt(r, 0, VC, CERT + "Status", "Changed"); // recorded differs from presented
+            eqAt(r, 0, VC, CERT + "Previous SHA-256 Thumbprint", T2); // previous is the recorded one
         }
         // a failed read-back must not read as a first sight (DV-23)
         vc = dataset();
@@ -1041,7 +1107,7 @@ public final class PropertiesTest {
             T.contains(firstFailure(r, 0), "F-CERT-READBACK", "named");
             r.ops.readBack = "{\"values\":[]}";
             r.run();
-            T.eq("Recorded", r.p(1, VC, V + CERT + "Status"), "read again next cycle: now a first sight");
+            eqAt(r, 1, VC, CERT + "Status", "Recorded"); // read again next cycle: now a first sight
         }
         // a malformed read-back is a failed one
         vc = dataset();
@@ -1070,9 +1136,9 @@ public final class PropertiesTest {
             r.run();
             r.ops.outcome = new PushOutcome(2, 1, 0, 0, 0, false);
             r.run();
-            T.eq("Recorded", r.p(1, VC, V + CERT + "Status"), "still a first sight: the first Recorded did not land");
+            eqAt(r, 1, VC, CERT + "Status", "Recorded"); // still a first sight: the first Recorded did not land
             r.run();
-            T.eq("Unchanged", r.p(2, VC, V + CERT + "Status"), "now recorded");
+            eqAt(r, 2, VC, CERT + "Status", "Unchanged"); // now recorded
         }
     }
 
@@ -1232,6 +1298,153 @@ public final class PropertiesTest {
             r.run();
             for (String k : r.ops.pushedProps.get(0).get(H).keySet()) T.check(!k.contains("Licensing:"), k);
             T.contains(firstFailure(r, 0), "F-SOAP-R-LIC", "named");
+        }
+    }
+
+    // ------------------------------------------------------------------ review pass (build 6)
+
+    /** Q4: a string that is present and blank is pushed as upstream pushes it, never replaced or dropped. */
+    static void blanks(FakeVc fake) throws Exception {
+        FakeVcenter vc = new FakeVcenter();
+        SoapFx.Obj h = new SoapFx.Obj("HostSystem", "host-20").name("blank");
+        h.put("runtime.connectionState", SoapFx.en("HostSystemConnectionState", "connected"));
+        h.put("summary.maxEVCModeKey", SoapFx.str(""));
+        h.put("config.network.pnic", SoapFx.arr("ArrayOfPhysicalNic", SoapFx.el("PhysicalNic",
+                SoapFx.e("device", "vmnic9") + SoapFx.e("driverVersion", "") + SoapFx.e("mac", " ") + SoapFx.e("pci", ""))));
+        h.put("config.storageDevice.hostBusAdapter", SoapFx.arr("ArrayOfHostHostBusAdapter",
+                SoapFx.el("HostHostBusAdapter", SoapFx.e("key", "k-vmhba5") + SoapFx.e("device", "vmhba5")
+                        + SoapFx.e("model", "") + SoapFx.e("status", "  ") + SoapFx.e("pci", " p "))));
+        vc.add(h);
+        vc.add(new SoapFx.Obj("VirtualMachine", "vm-20").name("v")
+                .put("guest.customizationInfo.customizationStatus", SoapFx.str("  "))
+                .put("guest.guestDetailedData", SoapFx.str("buildNumber='  ' distroName=''"))
+                .put("config.hardware.device", SoapFx.arr("ArrayOfVirtualDevice", SoapFx.typed("VirtualDevice", "VirtualVmxnet3",
+                        SoapFx.e("key", "4000") + SoapFx.el("deviceInfo", SoapFx.e("label", "  ")) + SoapFx.e("addressType", "")))));
+        vc.add(new SoapFx.Obj("VirtualMachine", "vm-21").name("w")
+                .put("guest.customizationInfo.customizationStatus", SoapFx.str("")));
+        vc.add(new SoapFx.Obj("ClusterComputeResource", "domain-c20").name("c")
+                .put("summary", SoapFx.obj("ClusterComputeResourceSummary", SoapFx.e("currentEVCModeKey", "  "))));
+        vc.patchLevel = "";
+        vc.licenses = P2Fixtures.license("host-20", "L", "", "", null);
+        try (Rig r = new Rig(fake, vc)) {
+            mapAll(r.ops, vc);
+            files(r.ops, "", "", "", "");
+            r.run();
+            String h20 = "res-host-20";
+            eq(r, h20, "Configuration|Max EVC", "");
+            eq(r, h20, "Network|Device:vmnic9|Driver Version", "");
+            eq(r, h20, "Network|Device:vmnic9|MAC", " ");
+            eq(r, h20, "Network|Device:vmnic9|PCI", "");
+            none(r, h20, "Storage Adapter:vmhba5|Model"); // an empty value is no value for upstream
+            eq(r, h20, "Storage Adapter:vmhba5|Status", ""); // spaces strip to the empty string
+            eq(r, h20, "Storage Adapter:vmhba5|PCI", "p");
+            eq(r, h20, "Licensing:L|License Key", "");
+            eq(r, h20, "Licensing:L|Edition Key", "");
+            eq(r, "res-vm-20", "Guest|Customization Status", "");
+            eq(r, "res-vm-20", "Guest|Detailed Data|Build Number", "");
+            none(r, "res-vm-20", "Guest|Detailed Data|Distro Name");
+            eq(r, "res-vm-20", "Network|Network Adapters:|Type", "");
+            none(r, "res-vm-21", "Guest|Customization Status");
+            eq(r, "res-domain-c20", "Cluster Configuration|EVC|Enabled", "True"); // a non-empty string is true
+            eq(r, "res-domain-c20", "Cluster Configuration|EVC|Mode", "  ");
+            eq(r, VC, "Configuration|Patch Level", "");
+        }
+    }
+
+    /** W5, W7: tokens are released, a missing-set fault is a failed read, a stopped read stops. */
+    static void tokensMissingStop(FakeVc fake) throws Exception {
+        // the probe over two or more VMs leaves a token; it is cancelled
+        FakeVcenter vc = dataset();
+        try (Rig r = standard(fake, vc)) {
+            vc.add(P2Fixtures.vmSparse("vm-30", "x"));
+            r.run();
+            T.check(r.count("CancelRetrievePropertiesEx") >= 1, "the probe's token is released");
+        }
+        // a property vCenter could not read is a failed read of those values
+        vc = dataset();
+        SoapFx.Obj host = vc.byType.get("HostSystem").get(0);
+        host.vals.remove("hardware.biosInfo.vendor");
+        host.missing("hardware.biosInfo.vendor");
+        try (Rig r = standard(fake, vc)) {
+            r.run();
+            none(r, H, "Hardware|BIOS Vendor");
+            eq(r, H, "Capability|Storage vMotion Supported", "True");
+            T.contains(firstFailure(r, 0), "F-SOAP-R-HO", "counted as a failed read");
+            T.contains(r.log.all(), "hardware.biosInfo.vendor (NoPermission)", "with what vCenter said");
+            T.eq("PARTIAL", r.health(0, "Collector:host|Status"), "partly collected");
+        }
+        // a read cut at the deadline pages no further and releases what it holds
+        vc = new FakeVcenter();
+        for (int i = 0; i < 150; i++) vc.add(vmLight(i));
+        vc.delayMs.put("RetrievePropertiesEx:VirtualMachine", 2500);
+        try (Rig r = new Rig(fake, vc)) {
+            mapAll(r.ops, vc);
+            files(r.ops, "", "", "", "");
+            CycleEngine.Result res = r.engine.run(r.clock.get() + 1000);
+            T.check(res.summary.deadlineHit, "deadline");
+            Thread.sleep(4000); // the abandoned read gets its first page, sees it was stopped, and stops
+            T.eq(0, r.count("ContinueRetrievePropertiesEx"), "no page after the deadline");
+            T.check(r.count("CancelRetrievePropertiesEx") >= 1, "the token it holds is released");
+            T.check(r.count("DestroyView") >= 1, "and the view");
+        }
+        // a failed page also releases its token
+        vc = dataset();
+        for (int i = 100; i < 160; i++) vc.add(P2Fixtures.vmSparse("vm-" + i, "bulk" + i));
+        vc.failContinueAt.put("VirtualMachine", 1);
+        try (Rig r = standard(fake, vc)) {
+            r.run();
+            T.check(r.count("CancelRetrievePropertiesEx") >= 1, "a failed page releases its token");
+        }
+    }
+
+    /** B3: an entry whose answer fails the VM page costs the entry, not the VM keys. */
+    static void optionFailsPage(FakeVc fake) throws Exception {
+        FakeVcenter vc = dataset();
+        vc.forcedPathMain.put("bigopt", new FakeVc.Resp(200, null, "<oops>"));
+        try (Rig r = standard(fake, vc)) {
+            files(r.ops, "", "", "", "config.version,bigopt");
+            r.run();
+            eq(r, VM, "Configuration|Firmware", "efi"); // every base VM key is there
+            eq(r, "res-vm-2", "Configuration|Config Status", "gray");
+            none(r, VM, "Options|config.version"); // the entries are off until the list changes
+            T.contains(r.log.all(), "reading the VMs again without them", "said");
+            T.contains(firstFailure(r, 0), "F-SOAP-R-VM", "the failed read is counted");
+            T.eq("PARTIAL", r.health(0, "Collector:vm|Status"), "partly collected");
+            int asked = countAsking(r, "bigopt");
+            r.run();
+            T.eq(asked, countAsking(r, "bigopt"), "and not asked for again");
+        }
+    }
+
+    /** W9: when the one call for every assignment fails, each host is asked alone. */
+    static void licensesPerHost(FakeVc fake) throws Exception {
+        FakeVcenter vc = dataset();
+        vc.licensesNeedEntity = true;
+        try (Rig r = standard(fake, vc)) {
+            r.run();
+            eq(r, H, "Licensing:VMware vSphere 8 Enterprise Plus|License Key", "*****-*****-*****-*****-MN90P");
+            eq(r, H, "Licensing:VMware vSAN|Edition Key", "vsan.std");
+            T.contains(firstFailure(r, 0), "F-SOAP-R-LIC", "the failed single call is counted");
+            T.check(r.count("QueryAssignedLicenses") >= 4, "one call, then one per connected host: " + r.count("QueryAssignedLicenses"));
+            for (FakeVc.Req q : r.reqs("QueryAssignedLicenses")) {
+                if (q.body.contains("<entityId>")) T.notContains(q.body, "host-3", "not for a host that is not connected");
+            }
+        }
+    }
+
+    /** N8: a host that left between the two host reads costs its own options, not every host's. */
+    static void hostLeaves(FakeVc fake) throws Exception {
+        FakeVcenter vc = dataset();
+        vc.forcedPath.put("config.option", FakeVc.fault("ManagedObjectNotFound", "the host is gone"));
+        try (Rig r = standard(fake, vc)) {
+            r.run();
+            int single = 0;
+            for (FakeVc.Req q : r.reqs("RetrievePropertiesEx")) {
+                if (q.body.contains("config.option") && q.body.split("<objectSet>").length == 2) single++;
+            }
+            T.check(single >= 2, "after the refusal each host is asked for alone: " + single);
+            eq(r, H, "Configuration|Config Status", "green"); // the rest of the host is untouched
+            T.contains(firstFailure(r, 0), "F-SOAP-R-HOO", "counted");
         }
     }
 }

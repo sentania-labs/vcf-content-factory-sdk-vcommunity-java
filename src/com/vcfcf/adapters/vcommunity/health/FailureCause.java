@@ -25,6 +25,11 @@ public final class FailureCause {
     public static final String DEADLINE = "F-DEADLINE";
     public static final String TLS_CONFIG = "F-TLS-CONFIG";
 
+    /** A collector that threw on one object, by its read id: a defect in this pak, not an answer of vCenter. */
+    public static String collect(String read) {
+        return "F-COLLECT-" + read;
+    }
+
     /** A vim25 read, by its read id ({@code R-CL}, {@code R-HO}, ...). */
     public static String soap(String read) {
         return "F-SOAP-" + read;

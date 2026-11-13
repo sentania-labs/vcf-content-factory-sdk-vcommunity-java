@@ -3,6 +3,7 @@ package com.vcfcf.adapters.vcommunity;
 import com.vcfcf.adapters.vcommunity.text.DetailedDataParser;
 import com.vcfcf.adapters.vcommunity.text.LicenseKeyMask;
 import com.vcfcf.adapters.vcommunity.text.PyText;
+import com.vcfcf.adapters.vcommunity.text.Quirks;
 import com.vcfcf.adapters.vcommunity.vim.XmlNode;
 
 import java.io.ByteArrayInputStream;
@@ -94,7 +95,13 @@ public final class PyTextTest {
         T.eq(null, PyText.scalar(val("<val xsi:type=\"ArrayOfString\"><string>a</string></val>")), "an array is not a scalar");
         T.eq(null, PyText.scalar(val("<val xsi:type=\"ArrayOfString\"/>")), "an empty array is not a scalar");
         T.eq(null, PyText.scalar(val("<val xsi:type=\"VirtualHardware\"><numCPU>1</numCPU></val>")), "an object");
-        T.eq(null, PyText.scalar(val("<val type=\"HostSystem\" xsi:type=\"ManagedObjectReference\">host-1</val>")), "a reference");
+        T.eq("'vim.HostSystem:host-1'", PyText.scalar(val("<val type=\"HostSystem\" xsi:type=\"ManagedObjectReference\">host-1</val>")), "a reference, as pyVmomi prints it");
+        T.eq("'vim.dvs.DistributedVirtualPortgroup:dvportgroup-5'", PyText.moRef("DistributedVirtualPortgroup", "dvportgroup-5"), "a sub-namespace type");
+        T.eq(null, PyText.scalar(val("<val type=\"SomethingNew\" xsi:type=\"ManagedObjectReference\">x-1</val>")), "a type with no Python name here");
+        T.eq("b'hi'", PyText.scalar(val("<val xsi:type=\"xsd:base64Binary\">aGk=</val>")), "bytes");
+        T.eq("b\"hi'\"", PyText.bytesRepr("aGkn"), "bytes holding a single quote");
+        T.eq("b'\\x00\\x01\\x02\\xff\\n\\\\'", PyText.bytesRepr("AAEC/wpc"), "escapes");
+        T.eq(null, PyText.bytesRepr("%%%"), "not base64");
         T.eq(null, PyText.scalar(val("<val xsi:type=\"xsd:boolean\">maybe</val>")), "text that does not match its type");
         T.eq(null, PyText.scalar(null), "no value");
         // a MoRef element's own type attribute is not its xsi:type
@@ -122,8 +129,8 @@ public final class PyTextTest {
         T.eq("*****", LicenseKeyMask.mask("ABCDE"), "five characters, no hyphen: all masked");
         T.eq("****", LicenseKeyMask.mask("ABCD"), "four characters: all masked");
         T.eq("**********ABCDE", LicenseKeyMask.mask("0123456789ABCDE"), "no hyphen keeps the last five");
-        T.eq(null, LicenseKeyMask.mask(""), "empty");
-        T.eq(null, LicenseKeyMask.mask("   "), "blank");
+        T.eq("", LicenseKeyMask.mask(""), "an empty key is pushed as empty (Q4)");
+        T.eq("***", LicenseKeyMask.mask("   "), "a blank key is masked like any short one");
         T.eq(null, LicenseKeyMask.mask(null), "none");
         String masked = LicenseKeyMask.mask("AB12C-DE34F-GH56I-JK78L-MN90P");
         T.check(!masked.contains("AB12C") && !masked.contains("JK78L"), "no earlier group survives");
@@ -137,8 +144,7 @@ public final class PyTextTest {
         T.check(!m.containsKey("c"), "an empty value is left out");
         T.eq("x", m.get("d"), "a value is cut at the first quote");
         T.eq("it", m.get("e"), "cut at the first quote");
-        T.eq("  ", DetailedDataParser.parse("k='  '").getOrDefault("k", "  "), "blank values are left out");
-        T.check(DetailedDataParser.parse("k='  '").isEmpty(), "blank values are left out");
+        T.eq("", DetailedDataParser.parse("k='  '").get("k"), "a value of spaces is stripped to the empty string, as upstream (Q4)");
         T.check(DetailedDataParser.parse(null).isEmpty(), "none");
         T.eq("b", DetailedDataParser.parse("k='a' k='b'").get("k"), "the last of a repeated name");
         T.eq("v", DetailedDataParser.parse("été='v'").get("été"), "a Unicode name, as Python's \\w");
@@ -147,12 +153,15 @@ public final class PyTextTest {
     }
 
     static void hex16() {
-        T.eq("8086", com.vcfcf.adapters.vcommunity.coll.HostCollectorAccess.hex16("-32634"), "negative short");
-        T.eq("1508", com.vcfcf.adapters.vcommunity.coll.HostCollectorAccess.hex16("5384"), "positive");
-        T.eq("0000", com.vcfcf.adapters.vcommunity.coll.HostCollectorAccess.hex16("0"), "zero");
-        T.eq("ffff", com.vcfcf.adapters.vcommunity.coll.HostCollectorAccess.hex16("-1"), "-1");
-        T.eq(null, com.vcfcf.adapters.vcommunity.coll.HostCollectorAccess.hex16("x"), "not a number");
-        T.eq(null, com.vcfcf.adapters.vcommunity.coll.HostCollectorAccess.hex16(null), "none");
+        // Q3: Python's f"{v:04x}" of the signed 16-bit id: a negative id keeps its sign, padded to the field width of 4
+        T.eq("-7f7a", Quirks.pciId("-32634"), "0x8086 as the wire sends it");
+        T.eq("1508", Quirks.pciId("5384"), "positive");
+        T.eq("0000", Quirks.pciId("0"), "zero");
+        T.eq("-001", Quirks.pciId("-1"), "-1");
+        T.eq("-8000", Quirks.pciId("-32768"), "the lowest");
+        T.eq("7fff", Quirks.pciId("32767"), "the highest");
+        T.eq(null, Quirks.pciId("x"), "not a number");
+        T.eq(null, Quirks.pciId(null), "none");
         T.done("pci id text");
     }
 }

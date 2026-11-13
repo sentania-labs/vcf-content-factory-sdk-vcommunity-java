@@ -26,6 +26,7 @@ public final class XmlNode {
     public final String name;
     private final Map<String, String> attributes = new HashMap<>();
     private String xsiType;
+    private boolean skipped;
     private final List<XmlNode> children = new ArrayList<>();
     private final StringBuilder text = new StringBuilder();
 
@@ -70,6 +71,11 @@ public final class XmlNode {
             for (int i = n.children.size() - 1; i >= 0; i--) todo.push(n.children.get(i));
         }
         return null;
+    }
+
+    /** True when {@link #readElement} left a child of this element out; it then is not a single value. */
+    public boolean hasSkipped() {
+        return skipped;
     }
 
     /** This element's own text, trimmed. */
@@ -141,6 +147,7 @@ public final class XmlNode {
                 String parentPath = paths.peek();
                 String rel = parentPath.isEmpty() ? r.getLocalName() : parentPath + "." + r.getLocalName();
                 if (prune != null && !prune.keepPath(rel)) {
+                    stack.peek().skipped = true;
                     skipElement(r);
                     continue;
                 }

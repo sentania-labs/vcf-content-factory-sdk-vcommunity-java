@@ -27,6 +27,10 @@ final class FakeVcenter implements FakeVc.Handler {
     final Map<String, FakeVc.Resp> forced = new HashMap<>();
     /** Per object type: answer a RetrievePropertiesEx of that type with this instead. */
     final Map<String, FakeVc.Resp> forcedType = new HashMap<>();
+    /** Like {@link #forcedPath} but only for a read of more than one object (not the one-object probe). */
+    final Map<String, FakeVc.Resp> forcedPathMain = new HashMap<>();
+    /** QueryAssignedLicenses with no entityId fails; with one it answers that entity's assignments. */
+    volatile boolean licensesNeedEntity;
     /** Answer a retrieve that asks for this path with this instead. */
     final Map<String, FakeVc.Resp> forcedPath = new HashMap<>();
     /** Per object type: fail the Nth continuation (1-based) of that type with a server fault. */
@@ -143,9 +147,21 @@ final class FakeVcenter implements FakeVc.Handler {
                 if (p == null) return serverFault("no packages for " + v);
                 return ok("<FetchSoftwarePackagesResponse xmlns=\"urn:vim25\">" + p + "</FetchSoftwarePackagesResponse>");
             }
-            case "QueryAssignedLicenses":
-                return ok("<QueryAssignedLicensesResponse xmlns=\"urn:vim25\">" + licenses
+            case "QueryAssignedLicenses": {
+                String entity = first(r.body, "<entityId>([^<]*)</entityId>");
+                if (licensesNeedEntity && entity == null) return serverFault("too many assignments");
+                String body = licenses;
+                if (entity != null) {
+                    StringBuilder b = new StringBuilder();
+                    Matcher m = Pattern.compile("<returnval>.*?</returnval>", Pattern.DOTALL).matcher(licenses);
+                    while (m.find()) {
+                        if (m.group().contains("<entityId>" + entity + "</entityId>")) b.append(m.group());
+                    }
+                    body = b.toString();
+                }
+                return ok("<QueryAssignedLicensesResponse xmlns=\"urn:vim25\">" + body
                         + "</QueryAssignedLicensesResponse>");
+            }
             case "QueryOptions":
                 return ok("<QueryOptionsResponse xmlns=\"urn:vim25\">" + options + "</QueryOptionsResponse>");
             default:
@@ -186,6 +202,11 @@ final class FakeVcenter implements FakeVc.Handler {
         }
         for (Map.Entry<String, FakeVc.Resp> fp : forcedPath.entrySet()) {
             if (asked.contains(fp.getKey())) return fp.getValue();
+        }
+        if (!body.contains("<maxObjects>1</maxObjects>")) {
+            for (Map.Entry<String, FakeVc.Resp> fp : forcedPathMain.entrySet()) {
+                if (asked.contains(fp.getKey())) return fp.getValue();
+            }
         }
         String type = first(body, "<propSet><type>(\\w+)</type>");
         FakeVc.Resp ft = forcedType.get(type);

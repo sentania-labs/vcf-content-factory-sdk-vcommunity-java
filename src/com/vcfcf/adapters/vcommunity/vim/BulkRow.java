@@ -17,6 +17,7 @@ public final class BulkRow {
     public final MoRef obj;
     private final Map<String, XmlNode> values = new HashMap<>();
     private final Set<String> missing = new HashSet<>();
+    private final Map<String, String> missingFault = new HashMap<>();
 
     BulkRow(MoRef obj) {
         this.obj = obj;
@@ -33,8 +34,14 @@ public final class BulkRow {
         values.put(path, val);
     }
 
-    void miss(String path) {
+    void miss(String path, String faultType) {
         missing.add(path);
+        if (faultType != null) missingFault.put(path, faultType);
+    }
+
+    /** What vCenter said went wrong reading a path of the missing set ({@code NoPermission}), or null. */
+    public String missingFault(String path) {
+        return missingFault.get(path);
     }
 
     /** The value element of a path, or null when it was not returned. */

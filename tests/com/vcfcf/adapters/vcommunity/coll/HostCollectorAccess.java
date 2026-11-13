@@ -1,11 +1,13 @@
 package com.vcfcf.adapters.vcommunity.coll;
 
-/** Test access to the package-private helpers of the collectors. */
+import com.vcfcf.adapters.vcommunity.text.Quirks;
+
+/** Test access to the PCI id text (kept for the old name). */
 public final class HostCollectorAccess {
 
     private HostCollectorAccess() {}
 
     public static String hex16(String v) {
-        return HostCollector.hex16(v);
+        return Quirks.pciId(v);
     }
 }

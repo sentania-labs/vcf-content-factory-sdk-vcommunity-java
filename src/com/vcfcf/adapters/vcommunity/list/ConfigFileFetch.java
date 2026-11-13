@@ -11,8 +11,9 @@ import java.io.IOException;
  * (VCF Operations 8.18.7 answers an XML error body, which the framework does not
  * read a code from) is asked for once more with {@code Accept: application/json},
  * so the store's error code (1501, no such file) and message reach the caller on
- * every line. The second answer is used only for its error; a file it returned
- * would not be what was asked for, so the first refusal stands.
+ * every line. Only a code is taken from the second answer (with its message), and it is
+ * reported under the first request's status; a file it returned, or an answer with no code,
+ * leaves the first refusal as it was.
  */
 public final class ConfigFileFetch {
 
@@ -26,7 +27,14 @@ public final class ConfigFileFetch {
             try {
                 ops.get(path, "application/json");
             } catch (OpsHttpException json) {
-                if (json.apiErrorCode() != null || !ErrorText.of(json.bodyExcerpt()).isEmpty()) throw json;
+                // Only the store's own error code is taken from the second look, and it is reported
+                // under the status of the request that was refused: what the second request got is
+                // not evidence about the first one beyond that code (a bare 404 there is not
+                // "the file is absent").
+                if (json.apiErrorCode() != null) {
+                    throw new OpsHttpException(first.getMessage(), first.status(), json.apiErrorCode(),
+                            json.bodyExcerpt());
+                }
             } catch (IOException ignored) {
                 // the second look is a courtesy; the first refusal stands
             }

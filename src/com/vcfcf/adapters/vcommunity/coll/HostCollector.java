@@ -2,6 +2,7 @@ package com.vcfcf.adapters.vcommunity.coll;
 
 import com.vcfcf.adapters.vcommunity.text.LicenseKeyMask;
 import com.vcfcf.adapters.vcommunity.text.PyText;
+import com.vcfcf.adapters.vcommunity.text.Quirks;
 import com.vcfcf.adapters.vcommunity.vim.BulkRow;
 import com.vcfcf.adapters.vcommunity.vim.PathSpec;
 import com.vcfcf.adapters.vcommunity.vim.RetrieveRequest;
@@ -120,7 +121,7 @@ public final class HostCollector {
         if (!isConnected(row)) return null;
         ObjectOut o = new ObjectOut(KIND, row.obj.value);
         o.propY(CONF + "Config Status", Vals.scalar(row, "configStatus"));
-        o.propY(CONF + "Max EVC", Vals.nonBlank(Vals.scalar(row, "summary.maxEVCModeKey")));
+        o.propY(CONF + "Max EVC", Quirks.text(Vals.scalar(row, "summary.maxEVCModeKey")));
         XmlNode dns = row.val("config.network.dnsConfig");
         o.propY(NET + "DHCP", Vals.bool(dns, "dhcp"));
         o.propY(NET + "Search Domain", searchDomain(dns));
@@ -191,10 +192,10 @@ public final class HostCollector {
             String p = Vals.P + "Storage Adapter:" + dev + "|";
             o.prop(p + "Device", dev);
             o.propY(p + "Bus", Vals.integer(h, "bus"));
-            o.propY(p + "Model", Vals.stripped(Vals.str(h, "model")));
-            o.propY(p + "PCI", Vals.stripped(Vals.str(h, "pci")));
-            o.propY(p + "Status", Vals.stripped(Vals.str(h, "status")));
-            o.propY(p + "Type", Vals.stripped(Vals.str(h, "storageProtocol")));
+            o.propY(p + "Model", Quirks.strippedIfTruthy(Vals.str(h, "model")));
+            o.propY(p + "PCI", Quirks.strippedIfTruthy(Vals.str(h, "pci")));
+            o.propY(p + "Status", Quirks.strippedIfTruthy(Vals.str(h, "status")));
+            o.propY(p + "Type", Quirks.strippedIfTruthy(Vals.str(h, "storageProtocol")));
         }
     }
 
@@ -216,30 +217,19 @@ public final class HostCollector {
             XmlNode pd = pciId == null || pciId.isEmpty() ? null : pci.get(pciId);
             boolean up = n.child("linkSpeed") != null;
             o.prop(p + "Device Name", dev);
-            o.prop(p + "Driver Version", Vals.nonBlank(Vals.str(n, "driverVersion")));
-            o.prop(p + "Firmware Version", Vals.nonBlank(Vals.str(n, "firmwareVersion")));
+            o.prop(p + "Driver Version", Quirks.text(Vals.str(n, "driverVersion")));
+            o.prop(p + "Firmware Version", Quirks.text(Vals.str(n, "firmwareVersion")));
             o.prop(p + "Status", up ? "Connected" : "Disconnected");
-            o.propY(p + "PCI Vendor Name", pd == null ? null : Vals.nonBlank(Vals.str(pd, "vendorName")));
-            o.propY(p + "PCI Device Name", pd == null ? null : Vals.nonBlank(Vals.str(pd, "deviceName")));
-            o.propY(p + "PCI Vendor ID (VID)", pd == null ? null : hex16(Vals.str(pd, "vendorId")));
-            o.propY(p + "PCI Device ID (DID)", pd == null ? null : hex16(Vals.str(pd, "deviceId")));
-            o.propY(p + "PCI SubVendor ID (SVID)", pd == null ? null : hex16(Vals.str(pd, "subVendorId")));
-            o.propY(p + "MAC", Vals.nonBlank(Vals.str(n, "mac")));
+            o.propY(p + "PCI Vendor Name", pd == null ? null : Quirks.text(Vals.str(pd, "vendorName")));
+            o.propY(p + "PCI Device Name", pd == null ? null : Quirks.text(Vals.str(pd, "deviceName")));
+            o.propY(p + "PCI Vendor ID (VID)", pd == null ? null : Quirks.pciId(Vals.str(pd, "vendorId")));
+            o.propY(p + "PCI Device ID (DID)", pd == null ? null : Quirks.pciId(Vals.str(pd, "deviceId")));
+            o.propY(p + "PCI SubVendor ID (SVID)", pd == null ? null : Quirks.pciId(Vals.str(pd, "subVendorId")));
+            o.propY(p + "MAC", Quirks.text(Vals.str(n, "mac")));
             o.propY(p + "Wake On Lan Supported", Vals.bool(n, "wakeOnLanSupported"));
-            o.propY(p + "PCI", Vals.nonBlank(pciId));
+            o.propY(p + "PCI", Quirks.text(pciId));
             String duplex = up ? Vals.bool(n.child("linkSpeed"), "duplex") : null;
             o.propY(p + "Duplex", duplex == null ? null : duplex.equals("True") ? "full-duplex" : "half-duplex");
-        }
-    }
-
-    /** A PCI id as four lowercase hex digits of its unsigned 16-bit value (DV-33); null when not a number. */
-    static String hex16(String signedShort) {
-        String t = PyText.integer(signedShort);
-        if (t == null) return null;
-        try {
-            return String.format("%04x", Long.parseLong(t) & 0xFFFF);
-        } catch (NumberFormatException e) {
-            return null;
         }
     }
 
@@ -248,14 +238,14 @@ public final class HostCollector {
         for (Pkg k : packages) {
             String p = CONF + "Packages:" + k.name + "|";
             o.prop(p + "Package Name", k.name);
-            o.prop(p + "Package Version", Vals.nonBlank(k.version));
-            o.prop(p + "Acceptance Level", Vals.nonBlank(k.acceptanceLevel));
+            o.prop(p + "Package Version", Quirks.text(k.version));
+            o.prop(p + "Acceptance Level", Quirks.text(k.acceptanceLevel));
             if (k.maintenanceModeRequired != null) {
                 o.numProp(p + "Maintenance Mode Required", k.maintenanceModeRequired ? 1.0 : 0.0);
             }
-            o.prop(p + "Package Summary", Vals.nonBlank(k.summary));
-            o.prop(p + "Package Type", Vals.nonBlank(k.type));
-            o.prop(p + "Package Vendor", Vals.nonBlank(k.vendor));
+            o.prop(p + "Package Summary", Quirks.text(k.summary));
+            o.prop(p + "Package Type", Quirks.text(k.type));
+            o.prop(p + "Package Vendor", Quirks.text(k.vendor));
         }
     }
 
@@ -268,14 +258,14 @@ public final class HostCollector {
     public static void addLicenses(ObjectOut o, List<Assignment> list, long nowMs) {
         if (list == null) return;
         for (Assignment a : list) {
-            if (a.name == null || a.name.isEmpty()) {
+            if (a.name == null) {
                 o.withhold(5); // no name, no instance to publish under (DV-13)
                 continue;
             }
             String p = Vals.P + "Licensing:" + a.name + "|";
             o.prop(p + "Name", a.name);
             o.propY(p + "License Key", LicenseKeyMask.mask(a.licenseKey));
-            o.propY(p + "Edition Key", Vals.nonBlank(a.editionKey));
+            o.propY(p + "Edition Key", Quirks.text(a.editionKey));
             if (a.expiration == null) continue; // perpetual or evaluation: nothing to publish
             o.prop(p + "License Expiration Date", PyText.dateTime(a.expiration));
             Instant exp = PyText.instant(a.expiration);

@@ -209,7 +209,7 @@ public final class PyText {
      */
     public static String scalar(XmlNode val) {
         if (val == null) return null;
-        if (!val.children().isEmpty()) return null;
+        if (!val.children().isEmpty() || val.hasSkipped()) return null;
         String type = val.xsiType();
         if (type != null && type.startsWith("ArrayOf")) return null;
         String text = val.text();
@@ -219,10 +219,70 @@ public final class PyText {
             case "int": case "long": case "short": case "byte": return integer(text);
             case "double": case "float": return floating(text);
             case "dateTime": return dateTime(text);
-            // pyVmomi's text for an object reference is not one this port reproduces
-            case "ManagedObjectReference": return null;
+            case "ManagedObjectReference": return moRef(val.attr("type"), text);
+            case "base64Binary": return bytesRepr(text);
             default: return val.rawText();
         }
+    }
+
+    /** Managed object types whose pyVmomi class lives in a sub-namespace. */
+    private static final java.util.Map<String, String> VIM_NAMES = new java.util.HashMap<>();
+
+    /** Managed object types whose pyVmomi name is {@code vim.<Type>}; any other type is not reproduced. */
+    private static final java.util.Set<String> PLAIN = new java.util.HashSet<>(java.util.Arrays.asList(
+            "HostSystem", "VirtualMachine", "ResourcePool", "VirtualApp", "Folder", "Datacenter",
+            "ClusterComputeResource", "ComputeResource", "Datastore", "StoragePod", "Network",
+            "OpaqueNetwork", "DistributedVirtualSwitch"));
+
+    static {
+        VIM_NAMES.put("DistributedVirtualPortgroup", "vim.dvs.DistributedVirtualPortgroup");
+        VIM_NAMES.put("VmwareDistributedVirtualSwitch", "vim.dvs.VmwareDistributedVirtualSwitch");
+    }
+
+    /**
+     * pyVmomi's {@code str()} of a managed object, quotes included: {@code 'vim.HostSystem:host-12'}.
+     * Null for a type this table does not know (its Python class name is not derivable from the wire).
+     */
+    public static String moRef(String type, String id) {
+        if (type == null || id == null || id.isEmpty()) return null;
+        String name = VIM_NAMES.get(type);
+        if (name == null && PLAIN.contains(type)) name = "vim." + type;
+        return name == null ? null : "'" + name + ":" + id + "'";
+    }
+
+    /** Python {@code str(bytes)} of base64 text: {@code b'...'} with Python's escapes; null when not base64. */
+    public static String bytesRepr(String base64) {
+        byte[] b;
+        try {
+            b = java.util.Base64.getDecoder().decode(base64.replaceAll("\\s+", ""));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+        boolean sq = false;
+        boolean dq = false;
+        for (byte x : b) {
+            if (x == '\'') sq = true;
+            if (x == '"') dq = true;
+        }
+        char quote = sq && !dq ? '"' : '\'';
+        StringBuilder r = new StringBuilder("b").append(quote);
+        for (byte x : b) {
+            int c = x & 0xff;
+            if (c == quote || c == '\\') {
+                r.append('\\').append((char) c);
+            } else if (c == '\t') {
+                r.append("\\t");
+            } else if (c == '\n') {
+                r.append("\\n");
+            } else if (c == '\r') {
+                r.append("\\r");
+            } else if (c < 0x20 || c >= 0x7f) {
+                r.append(String.format("\\x%02x", c));
+            } else {
+                r.append((char) c);
+            }
+        }
+        return r.append(quote).toString();
     }
 
     /** {@code xsd:string} keeps its text as sent; this is the one place that decides. */

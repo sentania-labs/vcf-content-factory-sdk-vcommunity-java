@@ -100,6 +100,31 @@ public final class ConfigFileErrorTest {
         T.notContains(e.problem, "it said", "nothing to say, so no clause");
         T.notContains(e.problem, "<", "no markup");
 
+        // W11: a bare 404 on the second look is no evidence that the file is absent, and clears nothing
+        Line four = new Line();
+        four.forStar = new OpsHttpException("x", 400, null, XML_PROLOG_ONLY);
+        four.forJson = new OpsHttpException("x", 404, null, "{\"message\":\"Not found\"}");
+        Map<ListKind, String> files = new EnumMap<>(ListKind.class);
+        files.put(ListKind.ESXI_SETTINGS, "esx");
+        CheckListStore keep = new CheckListStore(null);
+        Line good = new Line();
+        keep.refresh(files, p -> ConfigFileFetch.fetch(good.api(), p)); // the list "a" is now the last good one
+        e = keep.refresh(files, p -> ConfigFileFetch.fetch(four.api(), p)).get(ListKind.ESXI_SETTINGS);
+        T.eq(Outcome.FETCH_FAILED, e.outcome, "a 404 on the second look does not make the file absent");
+        T.check(e.lastGood && e.items.contains("a"), "and the last good list stays in force");
+        T.contains(e.problem, "HTTP 400", "the status is the refused request's, not the second one's");
+
+        // markup is never quoted, whatever carries it
+        Line html = new Line();
+        html.forStar = new OpsHttpException("x", 400, null, "\uFEFF<html><body>Bad Request</body></html>");
+        e = read(html);
+        T.notContains(e.problem, "<", "no markup from an HTML body, BOM first");
+        T.notContains(e.problem, "it said", "nothing to say");
+        Line jsonTag = new Line();
+        jsonTag.forStar = new OpsHttpException("x", 400, null, "{\"message\":\"<b>bold</b> text\"}");
+        e = read(jsonTag);
+        T.notContains(e.problem, "<", "no markup from a JSON message");
+
         // a message in an attribute, and a non-client error is not retried
         Line attr = new Line();
         attr.forStar = new OpsHttpException("x", 400, null, "<e message=\"in an attribute\"/>");

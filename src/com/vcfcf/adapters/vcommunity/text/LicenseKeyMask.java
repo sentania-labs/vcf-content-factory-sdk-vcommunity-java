@@ -13,8 +13,8 @@ public final class LicenseKeyMask {
     /** @return the masked key, or null when there is no key to mask */
     public static String mask(String key) {
         if (key == null) return null;
-        String k = key.trim();
-        if (k.isEmpty()) return null;
+        String k = key;
+        if (k.isEmpty()) return Quirks.text(""); // a key that is the empty string is pushed as such (Q4)
         int last = k.lastIndexOf('-');
         StringBuilder b = new StringBuilder(k.length());
         if (last >= 0) {

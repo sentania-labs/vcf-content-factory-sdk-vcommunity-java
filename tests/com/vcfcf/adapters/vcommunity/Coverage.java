@@ -40,6 +40,15 @@ final class Coverage {
         return null;
     }
 
+    /** Kind to key to the first test that asserted the value pushed for it (not only that it was pushed). */
+    static final Map<String, Map<String, String>> checked = new LinkedHashMap<>();
+
+    /** A test compared the value of this key on this resource with what upstream gives. */
+    static synchronized void asserted(String rid, String key) {
+        String kind = kindOf(rid);
+        if (kind != null) checked.computeIfAbsent(kind, k -> new LinkedHashMap<>()).putIfAbsent(key, scenario);
+    }
+
     /** Record everything the Suite API fake saw pushed. */
     static synchronized void record(P2Ops ops) {
         for (Map<String, Map<String, Object>> push : ops.pushedProps) {
@@ -165,7 +174,8 @@ final class Coverage {
             String reason = notDone(r.n);
             String test = null;
             Pattern p = pattern(r.key);
-            Map<String, String> seenKind = seen.get(r.kind);
+            // a P2 row needs a test that compared its value; a shape that was only pushed does not count
+            Map<String, String> seenKind = phase(r.n).equals("P2") ? checked.get(r.kind) : seen.get(r.kind);
             if (seenKind != null) {
                 for (Map.Entry<String, String> e : seenKind.entrySet()) {
                     if (p.matcher(e.getKey()).matches()) {
@@ -179,7 +189,7 @@ final class Coverage {
                 b.append("R").append(r.n).append('\t').append(r.key).append('\t').append(r.kind)
                         .append("\tno\t\t").append(reason).append('\t').append(phase(r.n)).append('\n');
             } else if (test == null) {
-                problems.add("R" + r.n + " " + r.key + " (" + r.kind + ") is in phase P2 but no test pushed it");
+                problems.add("R" + r.n + " " + r.key + " (" + r.kind + ") is in phase P2 but no test compared its value");
             } else {
                 yes++;
                 String n = note(r.n);

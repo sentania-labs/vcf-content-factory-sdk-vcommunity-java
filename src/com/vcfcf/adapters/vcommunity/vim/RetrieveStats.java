@@ -6,6 +6,8 @@ import java.util.List;
 
 /** What one paged read cost, for the log and the heap tests. */
 public final class RetrieveStats {
+    /** The continuation token the server still holds for this read, or null; released when the read ends. */
+    String openToken;
     public int pages;
     public int rows;
     public long bytes;

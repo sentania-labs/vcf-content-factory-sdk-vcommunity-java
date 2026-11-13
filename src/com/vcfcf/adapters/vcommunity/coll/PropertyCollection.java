@@ -130,7 +130,7 @@ public final class PropertyCollection {
     public Result run(Input in) throws InterruptedException {
         Result res = new Result();
         if (in.vim == null || in.vim.refs() == null) return res;
-        newSession(in.about);
+        newSession(in.about, in.vim.generation());
         final List<String> advSettings = items(in, ListKind.ESXI_SETTINGS);
         final List<String> pkgList = items(in, ListKind.ESXI_PACKAGES);
         final List<String> vmParams = items(in, ListKind.VM_PARAMS);
@@ -156,6 +156,7 @@ public final class PropertyCollection {
                 OpsResourceMap m = await(e.getValue(), in, res, C_VCENTER, "the " + e.getKey() + " map");
                 if (m != null) {
                     maps.put(e.getKey(), in.vcid, in.cycle, m);
+                    maps.scheduledRead(e.getKey());
                     log.info("Ops " + m);
                 } else {
                     maps.failed(e.getKey());
@@ -176,8 +177,14 @@ public final class PropertyCollection {
             Map<String, String> settings = await(fOpt, in, res, C_VCENTER, "the vCenter settings read");
 
             if (host != null) {
+                if (lic == null && !res.deadlineHit && clock.getAsLong() < in.deadlineMs) {
+                    List<String> morefs = new ArrayList<>();
+                    for (ObjectOut o : host.objects) morefs.add(o.moref);
+                    lic = licensesPerHost(in, morefs);
+                }
                 for (ObjectOut o : host.objects) {
-                    if (lic != null) HostCollector.addLicenses(o, lic.get(o.moref), in.startMs);
+                    // a host with no entry has no read to show: nothing is sent for it
+                    if (lic != null && lic.containsKey(o.moref)) HostCollector.addLicenses(o, lic.get(o.moref), in.startMs);
                 }
             }
             boolean measured = true;
@@ -198,7 +205,14 @@ public final class PropertyCollection {
         return res;
     }
 
-    private void newSession(About about) {
+    private long sessionGen;
+
+    private void newSession(About about, long generation) {
+        if (generation != sessionGen) {
+            // a new login: ask vCenter again which VM Options entries it accepts (5.5)
+            sessionGen = generation;
+            optionsFor = null;
+        }
         String key = about == null ? "" : about.instanceUuid + "|" + about.version + "|" + about.build;
         if (!key.equals(sessionKey)) {
             sessionKey = key;
@@ -270,22 +284,38 @@ public final class PropertyCollection {
 
     // ------------------------------------------------------------------ the reads
 
+    /** How a read's objects fared: how many collected, how many threw. */
+    static final class Tally {
+        int ok;
+        int bad;
+    }
+
     /**
      * One object's collector, isolated: an unexpected failure on one object is counted as a
-     * failed read of that object and the read goes on with the next (design 4.1, "each task
-     * isolated"); it never fails the type.
+     * failed read of that object ({@code F-COLLECT-<read>}, apart from a vCenter fault) and the
+     * read goes on with the next; one object never fails its type. The caller treats a read in
+     * which every object threw as a failed one ({@link #allFailed}).
      *
      * @return the object's keys, or null when it failed or has none
      */
     static ObjectOut guarded(java.util.function.Function<BulkRow, ObjectOut> f, BulkRow row, Failures failures,
-            String collector, String read) {
+            String collector, String read, Tally tally) {
         try {
-            return f.apply(row);
+            ObjectOut o = f.apply(row);
+            tally.ok++;
+            return o;
         } catch (RuntimeException e) {
-            failures.add(collector, FailureCause.soap(read), row.obj.value, 0, "collecting object " + row.obj.value
-                    + " failed unexpectedly (" + e.getClass().getSimpleName() + "); its keys are not sent");
+            tally.bad++;
+            failures.add(collector, FailureCause.collect(read), row.obj.value, 1, "collecting object "
+                    + row.obj.value + " failed unexpectedly (" + e.getClass().getSimpleName()
+                    + "); its keys are not sent");
             return null;
         }
+    }
+
+    /** Every object of the read threw: a defect of the collector, not of the objects; the type failed. */
+    static boolean allFailed(Tally t) {
+        return t.bad > 0 && t.ok == 0;
     }
 
     private List<ObjectOut> clusters(Input in) {
@@ -299,21 +329,51 @@ public final class PropertyCollection {
     private List<ObjectOut> simpleRead(Input in, String collector, RetrieveRequest req,
             java.util.function.Function<BulkRow, ObjectOut> f) {
         List<ObjectOut> out = new ArrayList<>();
+        Tally tally = new Tally();
         RetrieveStats st = read(in, collector, req, row -> {
-            ObjectOut o = guarded(f, row, in.failures, collector, req.label);
+            ObjectOut o = guarded(f, row, in.failures, collector, req.label, tally);
             if (o != null) out.add(o);
         });
-        return st == null ? null : out;
+        return st == null || allFailed(tally) ? null : out;
+    }
+
+    /** True when this cycle's work must stop: the deadline passed or the worker was interrupted. */
+    private boolean stopNow(Input in) {
+        return Thread.currentThread().isInterrupted() || clock.getAsLong() >= in.deadlineMs;
+    }
+
+    /** The reader every read goes through: it stops at the cycle deadline or an interrupt. */
+    private PropertyReader reader(Input in) {
+        return new PropertyReader(in.vim, PropertyReader.MAX_PAGE_BYTES,
+                () -> Thread.currentThread().isInterrupted() || clock.getAsLong() >= in.deadlineMs, log);
     }
 
     /** One paged read with its failure and its refused paths accounted; null when it failed. */
     private RetrieveStats read(Input in, String collector, RetrieveRequest req,
             com.vcfcf.adapters.vcommunity.vim.RowSink sink) {
+        return read(in, collector, req, sink, null);
+    }
+
+    /** @param faultOut when not null, receives the fault class of a failed read */
+    private RetrieveStats read(Input in, String collector, RetrieveRequest req,
+            com.vcfcf.adapters.vcommunity.vim.RowSink sink, String[] faultOut) {
         Set<String> known = invalidPaths.computeIfAbsent(req.label, k -> ConcurrentHashMap.newKeySet());
-        VimResult<RetrieveStats> r = new PropertyReader(in.vim).retrieve(req, known, sink);
+        int[] missed = new int[1];
+        String[] firstMissing = new String[1];
+        VimResult<RetrieveStats> r = reader(in).retrieve(req, known, row -> {
+            if (!row.missing().isEmpty()) {
+                if (missed[0]++ == 0) {
+                    String p = row.missing().iterator().next();
+                    firstMissing[0] = p + (row.missingFault(p) == null ? "" : " (" + row.missingFault(p) + ")");
+                }
+            }
+            sink.row(row);
+        });
         if (!r.isOk()) {
-            in.failures.add(collector, FailureCause.soap(req.label), req.type, 0, req.label
-                    + " (" + req.type + ") failed: " + r.message());
+            if (faultOut != null) faultOut[0] = r.faultClass();
+            in.failures.add(collector, "Stopped".equals(r.faultClass()) ? FailureCause.DEADLINE
+                    : FailureCause.soap(req.label), req.type, 0, req.label + " (" + req.type + ") failed: "
+                    + r.message());
             return null;
         }
         RetrieveStats st = r.value();
@@ -322,6 +382,13 @@ public final class PropertyCollection {
             in.failures.add(collector, FailureCause.SOAP_INVALID_PROPERTY, req.type + ":" + p, 0,
                     "vCenter does not know the " + req.type + " property '" + p
                     + "'; the keys that need it are not sent");
+        }
+        if (missed[0] > 0) {
+            // vCenter could not read a property of an object it has (a permission, a fault): that is a
+            // failed read of those values, not an unset property, which it simply leaves out (5.1 rule 1)
+            in.failures.add(collector, FailureCause.soap(req.label), req.type + ":missing", 0, req.label
+                    + ": vCenter could not read " + firstMissing[0] + " of " + missed[0]
+                    + " object(s); those keys are not sent");
         }
         log.info(req.label + " " + st);
         return st;
@@ -337,8 +404,9 @@ public final class PropertyCollection {
         Map<String, ObjectOut> byMoref = new LinkedHashMap<>();
         Map<String, MoRef> imageMgr = new HashMap<>();
         List<MoRef> refs = new ArrayList<>();
+        Tally tally = new Tally();
         RetrieveStats st = read(in, C_HOST, HostCollector.request(), row -> {
-            ObjectOut o = guarded(HostCollector::collectRow, row, in.failures, C_HOST, HostCollector.READ);
+            ObjectOut o = guarded(HostCollector::collectRow, row, in.failures, C_HOST, HostCollector.READ, tally);
             if (o == null) return;
             byMoref.put(row.obj.value, o);
             refs.add(row.obj);
@@ -348,7 +416,7 @@ public final class PropertyCollection {
                         ? "HostImageConfigManager" : im.attr("type"), im.text()));
             }
         });
-        if (st == null) return null;
+        if (st == null || allFailed(tally)) return null;
         Map<String, Map<String, String>> options = hostOptions(in, refs, advSettings);
         Map<String, String> installDate = new ConcurrentHashMap<>();
         Map<String, List<HostCollector.Pkg>> packages = new ConcurrentHashMap<>();
@@ -374,7 +442,7 @@ public final class PropertyCollection {
         wanted.add(HostCollector.ATS_HEARTBEAT);
         wanted.add(HostCollector.ATS_LOCKING);
         Map<String, Map<String, String>> out = new HashMap<>();
-        RetrieveStats st = read(in, C_HOST, HostCollector.optionsRequest(hosts, wanted), row -> {
+        com.vcfcf.adapters.vcommunity.vim.RowSink sink = row -> {
             Map<String, String> m = new HashMap<>();
             for (XmlNode opt : Vals.items(row.val("config.option"))) {
                 String k = opt.childText("key");
@@ -382,7 +450,19 @@ public final class PropertyCollection {
                 if (k != null && v != null) m.put(k, v);
             }
             out.put(row.obj.value, m);
-        });
+        };
+        String[] fault = new String[1];
+        RetrieveStats st = read(in, C_HOST, HostCollector.optionsRequest(hosts, wanted), sink, fault);
+        if (st == null && "ManagedObjectNotFound".equals(fault[0])) {
+            // a host left the vCenter between the two reads and vCenter refused the whole list: ask for
+            // each host alone, so only the host that went is without its options
+            out.clear();
+            st = new RetrieveStats();
+            for (MoRef h : hosts) {
+                if (stopNow(in)) break;
+                read(in, C_HOST, HostCollector.optionsRequest(Collections.singletonList(h), wanted), sink);
+            }
+        }
         if (st == null) return null;
         for (MoRef h : hosts) {
             if (!out.containsKey(h.value)) {
@@ -402,9 +482,10 @@ public final class PropertyCollection {
             List<Future<?>> fs = new ArrayList<>();
             for (Map.Entry<String, MoRef> e : imageMgr.entrySet()) {
                 fs.add(sub.submit(() -> {
+                    if (stopNow(in)) return; // an abandoned cycle makes no more calls
                     String iso = installDate(in, e.getKey(), e.getValue());
                     if (iso != null) installDate.put(e.getKey(), iso);
-                    if (!wanted.isEmpty()) {
+                    if (!wanted.isEmpty() && !stopNow(in)) {
                         List<HostCollector.Pkg> p = packages(in, e.getKey(), e.getValue(), wanted);
                         if (p != null) packages.put(e.getKey(), p);
                     }
@@ -455,9 +536,9 @@ public final class PropertyCollection {
                     String name = n.childText("name");
                     if (name == null || !wanted.contains(name)) return;
                     String mm = PyText.bool(n.childText("maintenanceModeRequired"));
-                    out.add(new HostCollector.Pkg(name, n.childText("version"),
-                            n.childText("acceptanceLevel"), mm == null ? null : mm.equals("True"),
-                            n.rawChildText("summary"), n.childText("type"), n.childText("vendor")));
+                    out.add(new HostCollector.Pkg(name, n.rawChildText("version"),
+                            n.rawChildText("acceptanceLevel"), mm == null ? null : mm.equals("True"),
+                            n.rawChildText("summary"), n.rawChildText("type"), n.rawChildText("vendor")));
                 }));
         if (!r.isOk()) {
             in.failures.add(C_HOST, FailureCause.HOST_PACKAGES, host, 1,
@@ -469,7 +550,11 @@ public final class PropertyCollection {
 
     // ---- licenses
 
-    private Map<String, List<HostCollector.Assignment>> licenses(Input in) {
+    /** The most bytes the one call for every assignment may answer: feature lists make each large. */
+    static final long LICENSES_MAX_BYTES = 256L * 1024 * 1024;
+
+    /** The license assignment manager, or null (the failure is counted). */
+    private MoRef assignmentManager(Input in) {
         MoRef lm = in.vim.refs().licenseManager;
         if (lm == null) {
             in.failures.add(C_HOST, FailureCause.soap("R-LIC"), "LicenseManager", 0,
@@ -477,7 +562,7 @@ public final class PropertyCollection {
             return null;
         }
         MoRef[] am = new MoRef[1];
-        VimResult<RetrieveStats> pr = new PropertyReader(in.vim).retrieve(
+        VimResult<RetrieveStats> pr = reader(in).retrieve(
                 new RetrieveRequest("R-LIC", "LicenseManager", 1, Collections.singletonList(lm))
                         .path("licenseAssignmentManager"), Collections.<String>emptySet(), row -> {
                             XmlNode v = row.val("licenseAssignmentManager");
@@ -492,32 +577,98 @@ public final class PropertyCollection {
                     + (pr.isOk() ? "" : ": " + pr.message()));
             return null;
         }
+        return am[0];
+    }
+
+    private static final PathSpec LICENSE_SPEC = PathSpec.keeping("entityId", "assignedLicense.licenseKey",
+            "assignedLicense.editionKey", "assignedLicense.name", "assignedLicense.properties");
+
+    /** Add the assignments of one answer; the check of the deadline is per item, so a huge answer stops. */
+    private void readAssignments(javax.xml.stream.XMLStreamReader rd, Input in,
+            Map<String, List<HostCollector.Assignment>> out) throws javax.xml.stream.XMLStreamException {
+        Returnvals.forEach(rd, LICENSE_SPEC, n -> {
+            if (Thread.currentThread().isInterrupted() || clock.getAsLong() >= in.deadlineMs) {
+                throw new IllegalStateException("stopped");
+            }
+            String entity = n.childText("entityId");
+            XmlNode al = n.child("assignedLicense");
+            if (entity == null || al == null) return;
+            String expiration = null;
+            for (XmlNode p : al.children()) {
+                if ("properties".equals(p.name) && "expirationDate".equals(p.childText("key"))) {
+                    XmlNode v = p.child("value");
+                    expiration = v == null ? null : v.text();
+                    break;
+                }
+            }
+            out.computeIfAbsent(entity, k -> new ArrayList<>()).add(new HostCollector.Assignment(
+                    al.rawChildText("name"), al.rawChildText("licenseKey"),
+                    al.rawChildText("editionKey"), expiration));
+        });
+    }
+
+    /** Every assignment in one call; null when it failed (the caller then asks per host). */
+    private Map<String, List<HostCollector.Assignment>> licenses(Input in) {
+        MoRef am = assignmentManager(in);
+        if (am == null) return null;
         Map<String, List<HostCollector.Assignment>> out = new HashMap<>();
-        PathSpec spec = PathSpec.keeping("entityId", "assignedLicense.licenseKey",
-                "assignedLicense.editionKey", "assignedLicense.name", "assignedLicense.properties");
         VimResult<Long> r = in.vim.stream("<QueryAssignedLicenses xmlns=\"urn:vim25\"><_this type=\""
-                + xml(am[0].type) + "\">" + xml(am[0].value) + "</_this></QueryAssignedLicenses>",
-                "QueryAssignedLicenses", VimSoapClient.READ_TIMEOUT_MS, PACKAGES_MAX_BYTES,
-                rd -> Returnvals.forEach(rd, spec, n -> {
-                    String entity = n.childText("entityId");
-                    XmlNode al = n.child("assignedLicense");
-                    if (entity == null || al == null) return;
-                    String expiration = null;
-                    for (XmlNode p : al.children()) {
-                        if ("properties".equals(p.name) && "expirationDate".equals(p.childText("key"))) {
-                            XmlNode v = p.child("value");
-                            expiration = v == null ? null : v.text();
-                            break;
-                        }
-                    }
-                    out.computeIfAbsent(entity, k -> new ArrayList<>()).add(new HostCollector.Assignment(
-                            al.rawChildText("name"), al.childText("licenseKey"),
-                            al.childText("editionKey"), expiration));
-                }));
+                + xml(am.type) + "\">" + xml(am.value) + "</_this></QueryAssignedLicenses>",
+                "QueryAssignedLicenses", VimSoapClient.READ_TIMEOUT_MS, LICENSES_MAX_BYTES,
+                rd -> readAssignments(rd, in, out));
         if (!r.isOk()) {
             in.failures.add(C_HOST, FailureCause.soap("R-LIC"), "QueryAssignedLicenses", 0,
-                    "R-LIC: the license assignments could not be read: " + r.message());
+                    "R-LIC: the license assignments could not be read in one call: " + r.message());
             return null;
+        }
+        return out;
+    }
+
+    /**
+     * The fallback when the one call fails (a vCenter with so many assignments that the answer is over its
+     * cap or its time): one call per host, so the hosts it can read still get their licensing.
+     * A host whose call fails gets none and is counted. Null when the manager cannot be found.
+     */
+    private Map<String, List<HostCollector.Assignment>> licensesPerHost(Input in, List<String> hosts) {
+        MoRef am = assignmentManager(in);
+        if (am == null) return null;
+        Map<String, List<HostCollector.Assignment>> out = new ConcurrentHashMap<>();
+        ExecutorService sub = Executors.newFixedThreadPool(HOST_POOL, named("vcommunity-lic"));
+        try {
+            List<Future<?>> fs = new ArrayList<>();
+            for (String h : hosts) {
+                fs.add(sub.submit(() -> {
+                    if (Thread.currentThread().isInterrupted() || clock.getAsLong() >= in.deadlineMs) return;
+                    Map<String, List<HostCollector.Assignment>> one = new HashMap<>();
+                    VimResult<Long> r = in.vim.stream("<QueryAssignedLicenses xmlns=\"urn:vim25\"><_this type=\""
+                            + xml(am.type) + "\">" + xml(am.value) + "</_this><entityId>" + xml(h)
+                            + "</entityId></QueryAssignedLicenses>", "QueryAssignedLicenses", CALL_MS,
+                            PACKAGES_MAX_BYTES, rd -> readAssignments(rd, in, one));
+                    if (!r.isOk()) {
+                        in.failures.add(C_HOST, FailureCause.soap("R-LIC"), h, 0,
+                                "R-LIC: the license assignments of the host could not be read: " + r.message());
+                        return;
+                    }
+                    List<HostCollector.Assignment> l = one.get(h);
+                    out.put(h, l == null ? new ArrayList<>() : l);
+                }));
+            }
+            for (Future<?> f : fs) {
+                try {
+                    f.get(Math.max(1, in.deadlineMs - clock.getAsLong()), TimeUnit.MILLISECONDS);
+                } catch (TimeoutException e) {
+                    f.cancel(true);
+                    break;
+                } catch (ExecutionException e) {
+                    in.failures.add(C_HOST, FailureCause.soap("TASK"), "license call", 0,
+                            "a license call failed unexpectedly");
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        } finally {
+            sub.shutdownNow();
         }
         return out;
     }
@@ -556,23 +707,50 @@ public final class PropertyCollection {
         List<String> accepted = acceptedOptions(in, vmOptions);
         Set<String> nonScalar = ConcurrentHashMap.newKeySet();
         List<ObjectOut> out = new ArrayList<>();
-        RetrieveRequest req = VmCollector.request(!vmParams.isEmpty(), new HashSet<>(vmParams), accepted);
-        RetrieveStats st = read(in, C_VM, req, row -> {
-            ObjectOut o = guarded(rw -> VmCollector.collect(rw, vmParams, accepted, nonScalar), row,
-                    in.failures, C_VM, VmCollector.READ);
-            if (o != null) out.add(o);
-        });
-        if (st == null) return null;
+        Tally tally = new Tally();
+        String[] fault = new String[1];
+        RetrieveStats st = readVms(in, vmParams, accepted, nonScalar, out, tally, fault);
+        if (st == null && !accepted.isEmpty() && ("TooLarge".equals(fault[0]) || "Parse".equals(fault[0]))) {
+            // An entry whose value is huge or deeply nested (a whole config, a snapshot tree) can fail the
+            // page. The base VM keys are never lost to an Options entry (5.5 rule 3): read again without
+            // the entries and keep them off until the list or the session changes.
+            suspendOptions();
+            log.warn("The VM read failed with VM Options entries in it (" + fault[0] + "); reading the VMs "
+                    + "again without them. The entries " + accepted + " are off until the list is changed");
+            out.clear();
+            nonScalar.clear();
+            tally = new Tally();
+            accepted = Collections.emptyList();
+            st = readVms(in, vmParams, accepted, nonScalar, out, tally, fault);
+        }
+        if (st == null || allFailed(tally)) return null;
         for (String p : st.droppedPaths()) {
             if (accepted.contains(p)) forgetOption(p);
         }
         for (String p : nonScalar) {
+            // read as a value of one element, so one that is an object or a list cost nothing to find;
+            // it is left out of every later read
+            forgetOption(p);
             if (reportedOptions.add("scalar:" + p)) {
-                log.warn("VM Options entry '" + p + "' is not a single value (an object or a list); "
-                        + "its text cannot be reproduced, so it is skipped");
+                log.warn("VM Options entry '" + p + "' is not a single value this port can reproduce (an "
+                        + "object, a list, or a reference of a type it has no Python name for); it is skipped");
             }
         }
         return out;
+    }
+
+    private RetrieveStats readVms(Input in, List<String> vmParams, List<String> accepted, Set<String> nonScalar,
+            List<ObjectOut> out, Tally tally, String[] fault) {
+        RetrieveRequest req = VmCollector.request(!vmParams.isEmpty(), new HashSet<>(vmParams), accepted);
+        return read(in, C_VM, req, row -> {
+            ObjectOut o = guarded(rw -> VmCollector.collect(rw, vmParams, accepted, nonScalar), row,
+                    in.failures, C_VM, VmCollector.READ, tally);
+            if (o != null) out.add(o);
+        }, fault);
+    }
+
+    private synchronized void suspendOptions() {
+        optionsAccepted = Collections.emptyList();
     }
 
     private synchronized void forgetOption(String path) {
@@ -590,8 +768,8 @@ public final class PropertyCollection {
         String key = String.join("\n", wanted);
         if (key.equals(optionsFor)) return optionsAccepted;
         RetrieveRequest probe = new RetrieveRequest("R-VM-PROBE", VmCollector.KIND, 1, null).firstPageOnly();
-        for (String p : wanted) probe.path(p);
-        VimResult<RetrieveStats> r = new PropertyReader(in.vim).retrieve(probe,
+        for (String p : wanted) probe.path(p, PathSpec.shallow());
+        VimResult<RetrieveStats> r = reader(in).retrieve(probe,
                 Collections.<String>emptySet(), row -> { });
         if (!r.isOk()) {
             in.failures.add(C_VM, FailureCause.soap("R-VM-PROBE"), "VM Options", 0,
@@ -648,7 +826,7 @@ public final class PropertyCollection {
             for (ObjectOut o : unresolved) {
                 if (!before.contains(o.moref) && !map.ambiguous().contains(o.moref)) anyNew = true;
             }
-            if (maps.missJustifiesRead(kind, in.cycle, anyNew)) {
+            if (!stopNow(in) && maps.missJustifiesRead(kind, in.cycle, anyNew)) {
                 try {
                     OpsResourceMap fresh = OpsResourceMap.load(in.ops, in.vcid, kind);
                     maps.put(kind, in.vcid, in.cycle, fresh);
@@ -661,6 +839,7 @@ public final class PropertyCollection {
                         else write(in, rid, o);
                     }
                     unresolved = still;
+                    maps.missRead(kind, !still.isEmpty());
                 } catch (IOException | RuntimeException e) {
                     maps.failed(kind);
                     in.failures.add(collector, FailureCause.opsMap(kind), kind, 0, "the VCF "
@@ -701,7 +880,7 @@ public final class PropertyCollection {
             return;
         }
         write(in, id, VCenterCollector.collect(settings, in.about));
-        if (!cert.isKnown()) {
+        if (!cert.isKnown() && !stopNow(in)) {
             try {
                 cert.readBack(in.ops, id);
             } catch (IOException | RuntimeException e) {

@@ -36,6 +36,7 @@ final class SoapFx {
     static String dbl(String v) { return "<val xsi:type=\"xsd:double\">" + v + "</val>"; }
     static String date(String v) { return "<val xsi:type=\"xsd:dateTime\">" + v + "</val>"; }
     static String en(String type, String v) { return "<val xsi:type=\"" + type + "\">" + esc(v) + "</val>"; }
+    static String b64(String v) { return "<val xsi:type=\"xsd:base64Binary\">" + v + "</val>"; }
     static String moref(String type, String v) {
         return "<val type=\"" + type + "\" xsi:type=\"ManagedObjectReference\">" + esc(v) + "</val>";
     }

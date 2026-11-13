@@ -1,10 +1,13 @@
 package com.vcfcf.adapters.vcommunity.vim;
 
+import com.vcfcf.adapters.vcommunity.Log;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -33,6 +36,8 @@ public final class PropertyReader {
 
     private final VimReader vim;
     private final long maxPageBytes;
+    private final BooleanSupplier stop;
+    private final Log log;
 
     public PropertyReader(VimReader vim) {
         this(vim, MAX_PAGE_BYTES);
@@ -40,8 +45,29 @@ public final class PropertyReader {
 
     /** @param maxPageBytes the most bytes one page may answer */
     public PropertyReader(VimReader vim, long maxPageBytes) {
+        this(vim, maxPageBytes, () -> false, null);
+    }
+
+    /**
+     * @param stop true when the read must go no further (the cycle deadline passed, the thread was
+     *             interrupted): checked before every page and after every object; the read then
+     *             releases its continuation token and its view and fails with fault class {@code Stopped}
+     * @param log  where a view or token that could not be released is said (INFO); may be null
+     */
+    public PropertyReader(VimReader vim, long maxPageBytes, BooleanSupplier stop, Log log) {
         this.vim = vim;
         this.maxPageBytes = maxPageBytes;
+        this.stop = stop;
+        this.log = log == null ? Log.NONE : log;
+    }
+
+    /** Thrown inside a page to end it when {@link #stop} says so. */
+    private static final class Stopped extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        Stopped() {
+            super("stopped", null, false, false);
+        }
     }
 
     /**
@@ -79,18 +105,24 @@ public final class PropertyReader {
                 view = v.value();
             }
             for (int attempt = 0; ; attempt++) {
+                if (stop.getAsBoolean()) return stopped(stats);
                 VimResult<String> first = page(refs, buildRetrieve(refs, req, view, paths), "RetrievePropertiesEx",
                         paths, sink, stats);
                 if (first.isOk()) {
-                    String token = req.isFirstPageOnly() ? null : first.value();
+                    String token = first.value();
+                    if (req.isFirstPageOnly()) return VimResult.ok(stats, stats.bytes); // the token is released below
                     while (token != null) {
+                        if (stop.getAsBoolean()) return stopped(stats);
                         VimResult<String> next = page(refs, buildContinue(refs, token),
                                 "ContinueRetrievePropertiesEx", paths, sink, stats);
-                        if (!next.isOk()) return fail(next, stats);
+                        if (!next.isOk()) {
+                            return stop.getAsBoolean() ? stopped(stats) : fail(next, stats);
+                        }
                         token = next.value();
                     }
                     return VimResult.ok(stats, stats.bytes);
                 }
+                if (stop.getAsBoolean()) return stopped(stats);
                 String bad = first.invalidPropertyPath();
                 if ("InvalidProperty".equals(first.faultClass()) && bad != null
                         && paths.containsKey(bad) && attempt < MAX_DROPS && stats.rows == 0) {
@@ -101,7 +133,32 @@ public final class PropertyReader {
                 return fail(first, stats);
             }
         } finally {
+            // a read that ends with the server still holding its result set (a probe of one page, a failed
+            // or stopped page) releases it; one that read to the end holds nothing
+            if (stats.openToken != null) cancel(refs, stats.openToken);
             if (view != null) destroy(view, stats);
+        }
+    }
+
+    private static VimResult<RetrieveStats> stopped(RetrieveStats stats) {
+        return VimResult.fault("Stopped", "the read was stopped before it finished (the cycle deadline "
+                + "passed or the cycle was ended)", null, stats.bytes, null);
+    }
+
+    /** Release the server's result set; best effort, said at INFO when it fails. */
+    private void cancel(ServiceRefs refs, String token) {
+        try {
+            VimResult<XmlNode> r = vim.call("<CancelRetrievePropertiesEx xmlns=\"urn:vim25\"><_this type=\""
+                    + VimSoapClient.xml(refs.propertyCollector.type) + "\">"
+                    + VimSoapClient.xml(refs.propertyCollector.value) + "</_this><token>"
+                    + VimSoapClient.xml(token) + "</token></CancelRetrievePropertiesEx>",
+                    "CancelRetrievePropertiesEx", SHORT_READ_MS);
+            if (!r.isOk()) {
+                log.info("A property collector result set could not be released (" + r.faultClass()
+                        + "); it expires with the session");
+            }
+        } catch (RuntimeException ignored) {
+            // it expires with the session
         }
     }
 
@@ -126,10 +183,11 @@ public final class PropertyReader {
         }
         stats.pages++;
         stats.bytes += r.value();
+        stats.openToken = token[0];
         return VimResult.ok(token[0], r.value());
     }
 
-    private static void readPage(XMLStreamReader r, Map<String, PathSpec> paths, RowSink sink,
+    private void readPage(XMLStreamReader r, Map<String, PathSpec> paths, RowSink sink,
             RetrieveStats stats, String[] token) throws XMLStreamException {
         java.util.ArrayDeque<String> open = new java.util.ArrayDeque<>();
         while (r.hasNext()) {
@@ -140,12 +198,14 @@ public final class PropertyReader {
                 if ("returnval".equals(parent) && "token".equals(n)) {
                     String t = r.getElementText().trim();
                     token[0] = t.isEmpty() ? null : t;
+                    stats.openToken = token[0];
                     continue;
                 }
                 if ("returnval".equals(parent) && "objects".equals(n)) {
                     BulkRow row = readObject(r, paths, stats);
                     stats.rows++;
                     sink.row(row);
+                    if (stop.getAsBoolean()) throw new Stopped();
                     continue;
                 }
                 open.push(n);
@@ -161,7 +221,7 @@ public final class PropertyReader {
         MoRef obj = null;
         int[] nodes = new int[1];
         Map<String, XmlNode> vals = new LinkedHashMap<>();
-        List<String> miss = new ArrayList<>();
+        List<String[]> miss = new ArrayList<>();
         while (r.hasNext()) {
             int ev = r.next();
             if (ev == XMLStreamConstants.END_ELEMENT) break;
@@ -176,14 +236,26 @@ public final class PropertyReader {
                     readPropSet(r, paths, nodes, vals);
                     break;
                 case "missingSet": {
-                    while (r.hasNext()) {
+                    // path, then a fault whose inner element's xsi:type names what went wrong
+                    String path = null;
+                    String faultType = null;
+                    int depth = 1;
+                    while (depth > 0 && r.hasNext()) {
                         int e2 = r.next();
-                        if (e2 == XMLStreamConstants.END_ELEMENT) break;
                         if (e2 == XMLStreamConstants.START_ELEMENT) {
-                            if ("path".equals(r.getLocalName())) miss.add(r.getElementText().trim());
-                            else XmlNode.skipElement(r);
+                            depth++;
+                            if ("path".equals(r.getLocalName())) {
+                                path = r.getElementText().trim();
+                                depth--;
+                            } else if ("fault".equals(r.getLocalName())) {
+                                String t = r.getAttributeValue("http://www.w3.org/2001/XMLSchema-instance", "type");
+                                if (t != null && !t.equals("LocalizedMethodFault")) faultType = t;
+                            }
+                        } else if (e2 == XMLStreamConstants.END_ELEMENT) {
+                            depth--;
                         }
                     }
+                    if (path != null) miss.add(new String[] {path, faultType});
                     break;
                 }
                 default:
@@ -193,7 +265,7 @@ public final class PropertyReader {
         if (obj == null) throw new XMLStreamException("an object with no reference");
         BulkRow row = new BulkRow(obj);
         for (Map.Entry<String, XmlNode> e : vals.entrySet()) row.put(e.getKey(), e.getValue());
-        for (String m : miss) row.miss(m);
+        for (String[] m : miss) row.miss(m[0], m[1]);
         stats.totalNodes += nodes[0];
         if (nodes[0] > stats.maxRowNodes) stats.maxRowNodes = nodes[0];
         return row;
@@ -245,9 +317,13 @@ public final class PropertyReader {
     private void destroy(MoRef view, RetrieveStats stats) {
         try {
             stats.calls++;
-            vim.call("<DestroyView xmlns=\"urn:vim25\"><_this type=\"" + VimSoapClient.xml(view.type)
-                    + "\">" + VimSoapClient.xml(view.value) + "</_this></DestroyView>",
-                    "DestroyView", SHORT_READ_MS);
+            VimResult<XmlNode> r = vim.call("<DestroyView xmlns=\"urn:vim25\"><_this type=\""
+                    + VimSoapClient.xml(view.type) + "\">" + VimSoapClient.xml(view.value)
+                    + "</_this></DestroyView>", "DestroyView", SHORT_READ_MS);
+            if (!r.isOk()) {
+                log.info("A container view could not be released (" + r.faultClass()
+                        + "); it expires with the session");
+            }
         } catch (RuntimeException ignored) {
             // an unreleased view expires with the session
         }

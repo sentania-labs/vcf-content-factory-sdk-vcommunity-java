@@ -105,7 +105,7 @@ final class P2Fixtures {
 
     // ------------------------------------------------------------------ hosts
 
-    private static String nic(String dev, String pci, boolean up, boolean full, String driver, String fw,
+    static String nic(String dev, String pci, boolean up, boolean full, String driver, String fw,
             String mac, Boolean wol) {
         return el("PhysicalNic", e("key", "key-vim.host.PhysicalNic-" + dev) + e("device", dev)
                 + (pci == null ? "" : e("pci", pci)) + e("driver", "nmlx5_core")
@@ -116,7 +116,7 @@ final class P2Fixtures {
                 + (mac == null ? "" : e("mac", mac)));
     }
 
-    private static String pci(String id, long vid, long did, long svid, String vendor, String device) {
+    static String pci(String id, long vid, long did, long svid, String vendor, String device) {
         return el("HostPciDevice", e("id", id) + e("classId", "512") + e("vendorId", String.valueOf(vid))
                 + e("subVendorId", String.valueOf(svid)) + (vendor == null ? "" : e("vendorName", vendor))
                 + e("deviceId", String.valueOf(did)) + (device == null ? "" : e("deviceName", device)));
@@ -299,7 +299,22 @@ final class P2Fixtures {
         v.put("config.cpuAffinity.affinitySet", arr("ArrayOfInt", e("int", "0") + e("int", "1")));
         v.put("config.createDate", SoapFx.date("2024-05-06T07:08:09Z"));
         v.put("runtime.host", SoapFx.moref("HostSystem", "host-1"));
+        v.put("resourcePool", SoapFx.moref("SomethingNew", "rp-1")); // a type with no Python name here
+        v.put("config.bytes", SoapFx.b64("aGknAQ==")); // the bytes h i ' 0x01
+        // a value nested far deeper than any tree is built (a snapshot tree, a backing chain)
+        StringBuilder deep = new StringBuilder();
+        for (int i = 0; i < 45; i++) deep.append("<childSnapshotList>");
+        for (int i = 0; i < 45; i++) deep.append("</childSnapshotList>");
+        v.put("snapshot", SoapFx.obj("VirtualMachineSnapshotInfo", deep.toString()));
         return v;
+    }
+
+    /** A VM with a disk and a controller and no network adapter (an isolated appliance). */
+    static Obj vmNoNic(String moid, String name) {
+        return new Obj("VirtualMachine", moid).name(name)
+                .put("config.hardware.device", arr("ArrayOfVirtualDevice",
+                        scsi("ParaVirtualSCSIController", 1000, 0, "SCSI controller 0")
+                        + vdisk(2000, 1000, "Hard disk 1", flat(false, false, false), "normal")));
     }
 
     /** A powered-off VM that returns only its configuration status; the rest is unset. */

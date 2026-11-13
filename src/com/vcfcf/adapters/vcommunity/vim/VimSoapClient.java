@@ -108,6 +108,11 @@ public final class VimSoapClient implements VimSession, VimReader {
     }
 
     @Override
+    public long generation() {
+        return generation;
+    }
+
+    @Override
     public ServiceRefs refs() {
         return refs;
     }
@@ -189,7 +194,7 @@ public final class VimSoapClient implements VimSession, VimReader {
         About a = ab == null ? new About(null, null, null, null, null, null)
                 : new About(ab.childText("instanceUuid"), ab.childText("fullName"),
                         ab.childText("version"), ab.childText("apiVersion"),
-                        ab.childText("build"), ab.childText("patchLevel"));
+                        ab.childText("build"), ab.rawChildText("patchLevel"));
         MoRef smRef = new MoRef(sm.attr("type") == null ? "SessionManager" : sm.attr("type"),
                 sm.text());
 

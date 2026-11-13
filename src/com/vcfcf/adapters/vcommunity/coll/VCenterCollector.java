@@ -1,6 +1,7 @@
 package com.vcfcf.adapters.vcommunity.coll;
 
 import com.vcfcf.adapters.vcommunity.text.PyText;
+import com.vcfcf.adapters.vcommunity.text.Quirks;
 import com.vcfcf.adapters.vcommunity.vim.About;
 import com.vcfcf.adapters.vcommunity.vim.XmlNode;
 
@@ -62,7 +63,7 @@ public final class VCenterCollector {
             o.propY(e.getValue(), settings == null ? null : settings.get(e.getKey()));
         }
         String patch = about == null ? null : about.patchLevel;
-        o.propY(Vals.P + "Configuration|Patch Level", patch == null || patch.trim().isEmpty() ? null : patch);
+        o.propY(Vals.P + "Configuration|Patch Level", Quirks.text(patch));
         return o;
     }
 }

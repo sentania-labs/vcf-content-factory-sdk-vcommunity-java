@@ -27,6 +27,7 @@ public final class OpsMapCache {
         String vcid;
         long loadedCycle = Long.MIN_VALUE / 2;
         boolean retry;
+        int missBackoff = 1;
         Set<String> lastSeen = Collections.emptySet();
     }
 
@@ -58,6 +59,11 @@ public final class OpsMapCache {
         s.retry = false;
     }
 
+    /** A scheduled read starts the wait for a miss over. */
+    public synchronized void scheduledRead(String kind) {
+        slot(kind).missBackoff = 1;
+    }
+
     /** A read failed: keep what there is and read again next cycle. */
     public synchronized void failed(String kind) {
         slot(kind).retry = true;
@@ -69,13 +75,22 @@ public final class OpsMapCache {
     }
 
     /**
-     * Whether an object missing from the map justifies reading it again: at
-     * least a cycle interval has passed since the last read, or the object was
-     * not there the cycle before either (a new object, not a persistent miss).
+     * Whether objects the map does not know justify reading it again. A new object (not seen the cycle
+     * before) is read for at once, since the vCenter adapter may already have it; one that is still
+     * missing is read for again after 2, 4, 8 and then every 12 cycles at most, so a VM the vCenter
+     * adapter discovers a few minutes late gets its keys within a cycle or two, and one it never
+     * models (a template it skips) costs a list read only every 12th cycle.
      */
     public synchronized boolean missJustifiesRead(String kind, long cycle, boolean anyNew) {
         Slot s = slot(kind);
-        return s.loadedCycle != cycle && (anyNew || cycle - s.loadedCycle >= REFRESH_EVERY);
+        if (anyNew) s.missBackoff = 1;
+        return s.loadedCycle != cycle && cycle - s.loadedCycle >= s.missBackoff;
+    }
+
+    /** After a read made for a miss: the next one waits longer if objects are still missing. */
+    public synchronized void missRead(String kind, boolean stillMissing) {
+        Slot s = slot(kind);
+        s.missBackoff = stillMissing ? Math.min(REFRESH_EVERY, s.missBackoff * 2) : 1;
     }
 
     /** Swap the set of MoRefs seen this cycle for the next cycle's comparison; returns the previous. */

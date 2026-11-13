@@ -20,7 +20,7 @@ final class ErrorText {
 
     static String of(String excerpt) {
         if (excerpt == null) return "";
-        String t = excerpt.trim();
+        String t = excerpt.replace("\uFEFF", "").trim();
         if (t.isEmpty()) return "";
         String m;
         if (t.startsWith("{")) {
@@ -30,7 +30,10 @@ final class ErrorText {
         } else {
             m = t;
         }
-        return m == null ? "" : m.replaceAll("\\p{Cntrl}+", " ").trim();
+        if (m == null) return "";
+        m = m.replaceAll("\\p{Cntrl}+", " ").trim();
+        // a message that holds markup (an HTML error page, a tag in a JSON text) is not quoted
+        return m.indexOf('<') >= 0 || m.indexOf('>') >= 0 ? "" : m;
     }
 
     private static String json(String t) {

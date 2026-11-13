@@ -31,6 +31,15 @@ public final class PathSpec implements XmlNode.Prune {
         this.array = array;
     }
 
+    /**
+     * Keep the value element and its text only: descendants are skipped as they stream past (the
+     * element is then marked {@link XmlNode#hasSkipped}). For a path that is wanted only when it is a
+     * single value, so one that turns out to be an object or a list costs no tree and no depth.
+     */
+    public static PathSpec shallow() {
+        return new PathSpec(Collections.<String>emptySet(), null);
+    }
+
     /** Keep the whole value. */
     public static PathSpec all() {
         return ALL;

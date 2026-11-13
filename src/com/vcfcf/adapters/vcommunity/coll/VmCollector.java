@@ -2,6 +2,7 @@ package com.vcfcf.adapters.vcommunity.coll;
 
 import com.vcfcf.adapters.vcommunity.text.DetailedDataParser;
 import com.vcfcf.adapters.vcommunity.text.PyText;
+import com.vcfcf.adapters.vcommunity.text.Quirks;
 import com.vcfcf.adapters.vcommunity.vim.BulkRow;
 import com.vcfcf.adapters.vcommunity.vim.PathSpec;
 import com.vcfcf.adapters.vcommunity.vim.RetrieveRequest;
@@ -42,6 +43,12 @@ public final class VmCollector {
             "VirtualEthernetCard", "VirtualE1000", "VirtualE1000e", "VirtualPCNet32", "VirtualVmxnet",
             "VirtualVmxnet2", "VirtualVmxnet3", "VirtualVmxnet3Vrdma", "VirtualSriovEthernetCard"));
 
+    /**
+     * Q1 (R105, R106): see {@link Quirks#TOOLS_ALWAYS_NONE}. While it holds, the two paths are neither read
+     * nor sent; when it is switched off they are read from these paths and sent as read.
+     */
+    static final String[] TOOLS_PATHS = {"config.tools.syncTimeWithHost", "config.tools.toolsUpgradePolicy"};
+
     /** The paths every VM read asks for, with their keys' rows in the key map. */
     static final String[] SCALARS = {
         "config.numaInfo.vnumaOnCpuHotaddExposed", "config.cpuAllocation.shares.level",
@@ -55,7 +62,6 @@ public final class VmCollector {
         "config.memoryAllocation.shares.level", "configStatus",
         "guest.guestState", "guest.appState", "guest.guestKernelCrashed", "guest.guestOperationsReady",
         "guest.guestStateChangeSupported", "guest.interactiveGuestOperationsReady",
-        "config.tools.syncTimeWithHost", "config.tools.toolsUpgradePolicy",
         "runtime.consolidationNeeded", "runtime.dasVmProtection.dasProtected",
         "runtime.minRequiredEVCModeKey", "guest.customizationInfo.customizationStatus",
         "summary.quickStats.guestHeartbeatStatus", "guest.guestDetailedData", "summary.config.vmPathName"};
@@ -69,6 +75,9 @@ public final class VmCollector {
             List<String> optionPaths) {
         RetrieveRequest r = new RetrieveRequest(READ, KIND, PAGE, null);
         for (String p : SCALARS) r.path(p);
+        if (!Quirks.TOOLS_ALWAYS_NONE) {
+            for (String p : TOOLS_PATHS) r.path(p);
+        }
         r.path(DEVICES, PathSpec.keepingInElements("key", "deviceInfo.label", "controllerKey", "busNumber",
                 "scsiCtlrUnitNumber", "addressType", "macAddress", "connectable.startConnected",
                 "backing.eagerlyScrub", "backing.split", "backing.writeThrough", "shares.level"));
@@ -77,7 +86,7 @@ public final class VmCollector {
         }
         // an entry that names a path already read keeps that path's pruning
         for (String p : optionPaths) {
-            if (!r.paths().containsKey(p)) r.path(p);
+            if (!r.paths().containsKey(p)) r.path(p, PathSpec.shallow());
         }
         return r;
     }
@@ -114,8 +123,7 @@ public final class VmCollector {
         yv(o, row, V + "Guest|Operation Ready", "guest.guestOperationsReady");
         yv(o, row, V + "Guest|State Change Support", "guest.guestStateChangeSupported");
         yv(o, row, V + "Guest|Interactive Guest", "guest.interactiveGuestOperationsReady");
-        yv(o, row, V + "Guest|Tools Sync Time", "config.tools.syncTimeWithHost");
-        yv(o, row, V + "Guest|Tools Upgrade Policy", "config.tools.toolsUpgradePolicy");
+        tools(o, row);
         yv(o, row, V + "Runtime|Consolidation Needed", "runtime.consolidationNeeded");
         yv(o, row, V + "Runtime|DAS protection", "runtime.dasVmProtection.dasProtected");
         yv(o, row, V + "Runtime|Min Required EVC Mode Key", "runtime.minRequiredEVCModeKey");
@@ -129,6 +137,21 @@ public final class VmCollector {
         return o;
     }
 
+    /**
+     * Q1: upstream looks the Tools settings up under a path it never asked for, so it sends the text
+     * {@code None} for both on every VM. That is a placeholder where a value exists; it is reproduced
+     * here only, and the correct read is the else branch.
+     */
+    private static void tools(ObjectOut o, BulkRow row) {
+        if (Quirks.TOOLS_ALWAYS_NONE) {
+            o.prop(V + "Guest|Tools Sync Time", "None");
+            o.prop(V + "Guest|Tools Upgrade Policy", "None");
+        } else {
+            yv(o, row, V + "Guest|Tools Sync Time", TOOLS_PATHS[0]);
+            yv(o, row, V + "Guest|Tools Upgrade Policy", TOOLS_PATHS[1]);
+        }
+    }
+
     /** A flagged scalar key: its value, or none (and counted). */
     private static void yv(ObjectOut o, BulkRow row, String key, String path) {
         o.propY(key, Vals.scalar(row, path));
@@ -139,14 +162,13 @@ public final class VmCollector {
         String t = PyText.integer(v);
         if (t == null) return null;
         BigInteger n = new BigInteger(t);
-        return n.signum() < 0 ? "0" : n.toString();
+        // Q5: -1 means "no timeout"; upstream sends 0 for it
+        return n.signum() < 0 && Quirks.NEGATIVE_OP_TIMEOUT_IS_ZERO ? "0" : n.toString();
     }
 
     static String customization(String v) {
-        if (v == null) return null;
-        String t = PyText.strip(v);
-        if (t.isEmpty()) return null;
-        return t.replace("TOOLSDEPLOYPKG_", "");
+        String t = Quirks.strippedIfTruthy(v);
+        return t == null ? null : t.replace("TOOLSDEPLOYPKG_", "");
     }
 
     private static void detailed(ObjectOut o, String text) {
@@ -155,7 +177,7 @@ public final class VmCollector {
             {"distroVersion", "Distro Version"}, {"kernelVersion", "Kernel Version"},
             {"prettyName", "Pretty Name"}};
         Map<String, String> m = DetailedDataParser.parse(text);
-        for (String[] f : fields) o.propY(V + "Guest|Detailed Data|" + f[1], m.get(f[0]));
+        for (String[] f : fields) o.propY(V + "Guest|Detailed Data|" + f[1], Quirks.text(m.get(f[0])));
     }
 
     private static void devices(ObjectOut o, XmlNode list) {
@@ -164,6 +186,8 @@ public final class VmCollector {
             return;
         }
         int scsi = 0;
+        int vnics = 0;
+        List<XmlNode> disks = new java.util.ArrayList<>();
         for (XmlNode d : Vals.items(list)) {
             String type = localType(d);
             if (isScsi(d, type)) {
@@ -175,10 +199,16 @@ public final class VmCollector {
                     o.prop(V + "Configuration|SCSI Controllers:" + bus + "|Type", controllerType(type));
                 }
             } else if (isEthernet(d, type)) {
+                vnics++;
                 nic(o, d);
             } else if ("VirtualDisk".equals(type)) {
-                disk(o, d);
+                disks.add(d);
             }
+        }
+        // Q2 (R124-R130): upstream stops before the disks when the VM has no network adapter, so such
+        // a VM gets no Virtual Disk key. Correct would be to publish them whatever the adapters are.
+        if (!Quirks.DISKS_NEED_A_VNIC || vnics > 0) {
+            for (XmlNode d : disks) disk(o, d);
         }
         o.stat(V + "Configuration|SCSI Controllers|Count", scsi);
     }
@@ -211,13 +241,14 @@ public final class VmCollector {
     }
 
     private static void nic(ObjectOut o, XmlNode d) {
-        String label = Vals.stripped(Vals.str(d, "deviceInfo.label"));
+        String raw = Vals.str(d, "deviceInfo.label");
+        String label = raw == null ? null : PyText.strip(raw); // the label is stripped; a blank one stays blank (Q4)
         if (label == null) {
             o.withhold(2); // a card with no label has no instance name to publish under (DV-57)
             return;
         }
         String p = V + "Network|Network Adapters:" + label + "|";
-        o.propY(p + "Type", Vals.nonBlank(Vals.str(d, "addressType")));
+        o.propY(p + "Type", Quirks.text(Vals.str(d, "addressType")));
         o.propY(p + "Starts Connected", Vals.bool(d, "connectable.startConnected"));
     }
 
@@ -234,7 +265,7 @@ public final class VmCollector {
         o.propY(p + "Eagerly Scrub", Vals.bool(d, "backing.eagerlyScrub"));
         o.propY(p + "Split", Vals.bool(d, "backing.split"));
         o.propY(p + "Write Through", Vals.bool(d, "backing.writeThrough"));
-        o.propY(p + "Storage Allocation Share Level", Vals.nonBlank(Vals.str(d, "shares.level")));
+        o.propY(p + "Storage Allocation Share Level", Quirks.text(Vals.str(d, "shares.level")));
     }
 
     private static void extra(ObjectOut o, XmlNode extra, List<String> keys) {
