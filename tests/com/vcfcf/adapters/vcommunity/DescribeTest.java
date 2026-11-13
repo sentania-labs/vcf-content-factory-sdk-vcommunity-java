@@ -304,9 +304,31 @@ public final class DescribeTest {
             }
             T.eq(wantAttrs.get(e.getKey()), got, e.getKey() + " attributes (key and kind) equal rows of the key map");
         }
-        T.check(!root.getElementsByTagName("TraversalSpecKind").getClass().getName().isEmpty()
-                && root.getElementsByTagName("TraversalSpecKind").getLength() == 0, "no traversal yet");
+        traversal(root);
         T.done("describe: collector and own kinds equal the key map");
+    }
+
+    /** The one traversal spec: rooted at Content Library, reaching Library Item, nothing else (design 2.3). */
+    static void traversal(Element root) {
+        org.w3c.dom.NodeList specs = root.getElementsByTagName("TraversalSpecKind");
+        T.eq(1, specs.getLength(), "one traversal spec");
+        Element spec = (Element) specs.item(0);
+        T.eq("vCommunity Content Libraries", spec.getAttribute("name"), "its name");
+        T.eq("vcfcf_vcommunity", spec.getAttribute("rootAdapterKind"), "rooted in this pak");
+        T.eq("Content Library", spec.getAttribute("rootResourceKind"),
+                "rooted at Content Library: the collector and the adapter instance have no children, so a first hop from them never matches");
+        T.eq("GENERIC_RELATION", spec.getAttribute("filterType"), "filter type");
+        List<Element> paths = kids(spec, "ResourcePath");
+        T.eq(1, paths.size(), "one path");
+        T.eq("vcfcf_vcommunity::Content Library||vcfcf_vcommunity::Library Item::child", paths.get(0).getAttribute("path"),
+                "the path starts at the root kind itself and reaches its items as children");
+        // every kind the path names is declared here, with the same key
+        Set<String> declared = new HashSet<>();
+        for (Element k : kids(kids(root, "ResourceKinds").get(0), "ResourceKind")) declared.add(k.getAttribute("key"));
+        for (String hop : paths.get(0).getAttribute("path").split("\\|\\|")) {
+            String kind = hop.substring(hop.indexOf("::") + 2).replace("::child", "");
+            T.check(declared.contains(kind), "the path names a declared kind: " + kind);
+        }
     }
 
     static void nameKeys(Document doc) {

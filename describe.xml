@@ -15,7 +15,9 @@
       optional Windows user and password for guest checks);
     - vCommunityCollector, the per-account object the collection cycle runs for;
     - three own object kinds (Content Library, Library Item, VM Template) with
-      the same keys as the original pack, filled in a later phase.
+      the same keys as the original pack;
+    - one traversal spec, "vCommunity Content Libraries": Content Library >
+      Library Item, the only relationship the pak writes.
 
   Account form. A field with no identType is in the main form and part of the
   account's identity; identType 2 is not identity and lands under Advanced
@@ -26,8 +28,12 @@
   Choices ("enum") are stored as the value text. The cluster check period is
   stored zero padded (01 ... 24) so the form sorts it as numbers.
 
-  No TraversalSpecKind yet: Content Library > Library Item arrives with the
-  phase that collects libraries.
+  The traversal spec roots at Content Library itself, as VMWARE roots
+  "vSphere Hosts and Clusters" at "vSphere World" (a path starts at the root
+  kind, no ::child). Content Library is the root of its own tree: a library has
+  no parent in this pak (the original writes none), and a spec rooted at the
+  adapter instance or at vCommunityCollector would never reach it, because
+  neither has a child. VM Template has no relationship and no spec.
 -->
 <AdapterKind xmlns="http://schemas.vmware.com/vcops/schema"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -180,6 +186,18 @@
 		</ResourceKind>
 
 	</ResourceKinds>
+
+	<TraversalSpecKinds>
+		<TraversalSpecKind name="vCommunity Content Libraries"
+		                   nameKey="90"
+		                   rootAdapterKind="vcfcf_vcommunity"
+		                   rootResourceKind="Content Library"
+		                   filterType="GENERIC_RELATION"
+		                   usedFor="ALL">
+			<!-- Content Library > Library Item (the library is the parent: design 3.4) -->
+			<ResourcePath path="vcfcf_vcommunity::Content Library||vcfcf_vcommunity::Library Item::child"/>
+		</TraversalSpecKind>
+	</TraversalSpecKinds>
 
 	<LicenseConfig enabled="false"/>
 
