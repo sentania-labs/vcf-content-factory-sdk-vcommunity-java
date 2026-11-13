@@ -270,6 +270,24 @@ public final class PropertyCollection {
 
     // ------------------------------------------------------------------ the reads
 
+    /**
+     * One object's collector, isolated: an unexpected failure on one object is counted as a
+     * failed read of that object and the read goes on with the next (design 4.1, "each task
+     * isolated"); it never fails the type.
+     *
+     * @return the object's keys, or null when it failed or has none
+     */
+    static ObjectOut guarded(java.util.function.Function<BulkRow, ObjectOut> f, BulkRow row, Failures failures,
+            String collector, String read) {
+        try {
+            return f.apply(row);
+        } catch (RuntimeException e) {
+            failures.add(collector, FailureCause.soap(read), row.obj.value, 0, "collecting object " + row.obj.value
+                    + " failed unexpectedly (" + e.getClass().getSimpleName() + "); its keys are not sent");
+            return null;
+        }
+    }
+
     private List<ObjectOut> clusters(Input in) {
         return simpleRead(in, C_CLUSTER, ClusterCollector.request(), ClusterCollector::collect);
     }
@@ -281,7 +299,10 @@ public final class PropertyCollection {
     private List<ObjectOut> simpleRead(Input in, String collector, RetrieveRequest req,
             java.util.function.Function<BulkRow, ObjectOut> f) {
         List<ObjectOut> out = new ArrayList<>();
-        RetrieveStats st = read(in, collector, req, row -> out.add(f.apply(row)));
+        RetrieveStats st = read(in, collector, req, row -> {
+            ObjectOut o = guarded(f, row, in.failures, collector, req.label);
+            if (o != null) out.add(o);
+        });
         return st == null ? null : out;
     }
 
@@ -317,7 +338,7 @@ public final class PropertyCollection {
         Map<String, MoRef> imageMgr = new HashMap<>();
         List<MoRef> refs = new ArrayList<>();
         RetrieveStats st = read(in, C_HOST, HostCollector.request(), row -> {
-            ObjectOut o = HostCollector.collectRow(row);
+            ObjectOut o = guarded(HostCollector::collectRow, row, in.failures, C_HOST, HostCollector.READ);
             if (o == null) return;
             byMoref.put(row.obj.value, o);
             refs.add(row.obj);
@@ -536,8 +557,11 @@ public final class PropertyCollection {
         Set<String> nonScalar = ConcurrentHashMap.newKeySet();
         List<ObjectOut> out = new ArrayList<>();
         RetrieveRequest req = VmCollector.request(!vmParams.isEmpty(), new HashSet<>(vmParams), accepted);
-        RetrieveStats st = read(in, C_VM, req, row -> out.add(VmCollector.collect(row, vmParams,
-                accepted, nonScalar)));
+        RetrieveStats st = read(in, C_VM, req, row -> {
+            ObjectOut o = guarded(rw -> VmCollector.collect(rw, vmParams, accepted, nonScalar), row,
+                    in.failures, C_VM, VmCollector.READ);
+            if (o != null) out.add(o);
+        });
         if (st == null) return null;
         for (String p : st.droppedPaths()) {
             if (accepted.contains(p)) forgetOption(p);

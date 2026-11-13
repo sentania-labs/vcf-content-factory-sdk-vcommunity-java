@@ -57,6 +57,7 @@ public final class LastPushed {
     public Selection select(Map<String, Map<String, Object>> all, long cycleNo) {
         Selection sel = new Selection();
         boolean full = cycleNo % refreshEvery == 0;
+        if (full) prune(all);
         for (Map.Entry<String, Map<String, Object>> r : all.entrySet()) {
             Map<String, Long> known = hashes.get(r.getKey());
             for (Map.Entry<String, Object> p : r.getValue().entrySet()) {
@@ -72,6 +73,25 @@ public final class LastPushed {
             }
         }
         return sel;
+    }
+
+    /**
+     * On a full refresh, forget what is no longer there: a resource that has left, and a key
+     * a resource no longer has. Without it the table would grow with every object that ever
+     * existed. What was forgotten in error (a read that failed this cycle) is sent again.
+     */
+    private void prune(Map<String, Map<String, Object>> current) {
+        hashes.keySet().retainAll(current.keySet());
+        for (Map.Entry<String, Map<String, Long>> e : hashes.entrySet()) {
+            e.getValue().keySet().retainAll(current.get(e.getKey()).keySet());
+        }
+    }
+
+    /** How many values are remembered (for tests and the heap budget). */
+    public int tracked() {
+        int n = 0;
+        for (Map<String, Long> m : hashes.values()) n += m.size();
+        return n;
     }
 
     /** Forget everything (the next cycle sends all). */

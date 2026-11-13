@@ -150,6 +150,15 @@ public final class OpsTest {
         // a restart sends everything
         T.eq(3, new LastPushed(12).select(all, 7).toSend().values().stream().mapToInt(Map::size).sum(), "cold start");
         // an empty value is a change from a value
+        // a full refresh forgets resources and keys that are gone, so the table does not grow without bound
+        LastPushed lp3 = new LastPushed(3);
+        LastPushed.Selection a = lp3.select(props("r1", "a", "1", "r1", "b", "2", "r2", "a", "1", "r3", "a", "1"), 1);
+        a.commit();
+        T.eq(4, lp3.tracked(), "four values remembered");
+        lp3.select(props("r1", "a", "1"), 2).commit();
+        T.eq(4, lp3.tracked(), "nothing is forgotten between full refreshes");
+        lp3.select(props("r1", "a", "1"), 3).commit();
+        T.eq(1, lp3.tracked(), "a full refresh forgets the resources and keys that are gone");
         LastPushed lp2 = new LastPushed(12);
         lp2.select(props("r", "k", "x"), 1).commit();
         T.eq(1, lp2.select(props("r", "k", ""), 2).toSend().size(), "'' differs from 'x'");
