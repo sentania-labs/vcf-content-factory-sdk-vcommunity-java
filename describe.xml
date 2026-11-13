@@ -59,59 +59,59 @@
 			<ResourceIdentifier key="vm_configuration_config_file" nameKey="12" type="string" required="false" dispOrder="5" default="vm_options"/>
 			<ResourceIdentifier key="port" nameKey="13" type="integer" required="true" dispOrder="6" default="443" identType="2"/>
 			<ResourceIdentifier key="vcenter_tls_validation" nameKey="14" type="string" required="false" dispOrder="7" default="Trust on First Use" identType="2" enum="true">
-				<enum value="Trust on First Use" displayOrder="1"/>
-				<enum value="Enabled" displayOrder="2"/>
-				<enum value="Pinned" displayOrder="3"/>
+				<enum value="Trust on First Use"/>
+				<enum value="Enabled"/>
+				<enum value="Pinned"/>
 			</ResourceIdentifier>
 			<ResourceIdentifier key="vcenter_thumbprint" nameKey="15" type="string" required="false" dispOrder="8" identType="2"/>
 			<ResourceIdentifier key="cluster_check_period_hours" nameKey="16" type="string" required="false" dispOrder="9" default="24" identType="2" enum="true">
-				<enum value="01" displayOrder="1"/>
-				<enum value="02" displayOrder="2"/>
-				<enum value="04" displayOrder="3"/>
-				<enum value="06" displayOrder="4"/>
-				<enum value="08" displayOrder="5"/>
-				<enum value="12" displayOrder="6"/>
-				<enum value="24" displayOrder="7"/>
+				<enum value="01" nameKey="17"/>
+				<enum value="02" nameKey="18"/>
+				<enum value="04" nameKey="19"/>
+				<enum value="06" nameKey="20"/>
+				<enum value="08" nameKey="21"/>
+				<enum value="12" nameKey="22"/>
+				<enum value="24" nameKey="23"/>
 			</ResourceIdentifier>
-			<ResourceIdentifier key="periodic_cluster_check_time" nameKey="17" type="string" required="false" dispOrder="10" default="00:00" identType="2"/>
-			<ResourceIdentifier key="cluster_check_worst_percent" nameKey="18" type="integer" required="false" dispOrder="11" default="5" identType="2"/>
-			<ResourceIdentifier key="monster_vm_cpu_percent_of_cores" nameKey="19" type="integer" required="false" dispOrder="12" default="50" identType="2"/>
-			<ResourceIdentifier key="monster_vm_memory_percent_of_dram" nameKey="20" type="integer" required="false" dispOrder="13" default="40" identType="2"/>
-			<ResourceIdentifier key="monster_vm_memory_min_gb" nameKey="21" type="integer" required="false" dispOrder="14" default="256" identType="2"/>
-			<ResourceIdentifier key="win_service_config_file" nameKey="22" type="string" required="false" dispOrder="15" default="windows_service_list" identType="2"/>
-			<ResourceIdentifier key="win_event_config_file" nameKey="23" type="string" required="false" dispOrder="16" default="windows_event_list" identType="2"/>
-			<ResourceIdentifier key="serviceMonitoring" nameKey="24" type="string" required="false" dispOrder="17" default="Disabled" identType="2" enum="true">
-				<enum value="Enabled" displayOrder="1"/>
-				<enum value="Disabled" displayOrder="2"/>
+			<ResourceIdentifier key="periodic_cluster_check_time" nameKey="24" type="string" required="false" dispOrder="10" default="00:00" identType="2"/>
+			<ResourceIdentifier key="cluster_check_worst_percent" nameKey="25" type="integer" required="false" dispOrder="11" default="5" identType="2"/>
+			<ResourceIdentifier key="monster_vm_cpu_percent_of_cores" nameKey="26" type="integer" required="false" dispOrder="12" default="50" identType="2"/>
+			<ResourceIdentifier key="monster_vm_memory_percent_of_dram" nameKey="27" type="integer" required="false" dispOrder="13" default="40" identType="2"/>
+			<ResourceIdentifier key="monster_vm_memory_min_gb" nameKey="28" type="integer" required="false" dispOrder="14" default="256" identType="2"/>
+			<ResourceIdentifier key="win_service_config_file" nameKey="29" type="string" required="false" dispOrder="15" default="windows_service_list" identType="2"/>
+			<ResourceIdentifier key="win_event_config_file" nameKey="30" type="string" required="false" dispOrder="16" default="windows_event_list" identType="2"/>
+			<ResourceIdentifier key="serviceMonitoring" nameKey="31" type="string" required="false" dispOrder="17" default="Disabled" identType="2" enum="true">
+				<enum value="Enabled"/>
+				<enum value="Disabled"/>
 			</ResourceIdentifier>
-			<ResourceIdentifier key="guest_tls_validation" nameKey="25" type="string" required="false" dispOrder="18" default="Pinned" identType="2" enum="true">
-				<enum value="Pinned" displayOrder="1"/>
-				<enum value="Strict" displayOrder="2"/>
-				<enum value="Disabled" displayOrder="3"/>
+			<ResourceIdentifier key="guest_tls_validation" nameKey="32" type="string" required="false" dispOrder="18" default="Pinned" identType="2" enum="true">
+				<enum value="Pinned"/>
+				<enum value="Strict"/>
+				<enum value="Disabled"/>
 			</ResourceIdentifier>
-			<ResourceIdentifier key="winEventMonitoring" nameKey="26" type="string" required="false" dispOrder="19" default="Disabled" identType="2" enum="true">
-				<enum value="Enabled" displayOrder="1"/>
-				<enum value="Disabled" displayOrder="2"/>
+			<ResourceIdentifier key="winEventMonitoring" nameKey="33" type="string" required="false" dispOrder="19" default="Disabled" identType="2" enum="true">
+				<enum value="Enabled"/>
+				<enum value="Disabled"/>
 			</ResourceIdentifier>
 
 			<!-- Self metrics of the pak, pushed on the adapter instance every cycle. A
 			     figure that was not measured is not sent (a failed push does not say how
 			     many series it carried). guest_vms_done and guest_vms_pending belong to the
 			     guest phase and stay empty until it exists. -->
-			<ResourceGroup key="Collection" nameKey="27" instanced="false">
-				<ResourceAttribute key="cycle_seconds" nameKey="28" dataType="float" isProperty="false" defaultMonitored="true" unit="sec"/>
-				<ResourceAttribute key="reads_failed" nameKey="29" dataType="float" isProperty="false" defaultMonitored="true"/>
-				<ResourceAttribute key="values_withheld" nameKey="30" dataType="float" isProperty="false" defaultMonitored="true"/>
-				<ResourceAttribute key="objects_unmatched" nameKey="31" dataType="float" isProperty="false" defaultMonitored="true"/>
-				<ResourceAttribute key="checklist_entries_skipped" nameKey="32" dataType="float" isProperty="false" defaultMonitored="true"/>
-				<ResourceAttribute key="series_pushed" nameKey="33" dataType="float" isProperty="false" defaultMonitored="true"/>
-				<ResourceAttribute key="properties_pushed" nameKey="34" dataType="float" isProperty="false" defaultMonitored="true"/>
-				<ResourceAttribute key="push_batches_failed" nameKey="35" dataType="float" isProperty="false" defaultMonitored="true"/>
-				<ResourceAttribute key="deadline_hit" nameKey="36" dataType="float" isProperty="false" defaultMonitored="true"/>
-				<ResourceAttribute key="vcenter_object_resolved" nameKey="37" dataType="float" isProperty="false" defaultMonitored="true"/>
-				<ResourceAttribute key="guest_vms_done" nameKey="38" dataType="float" isProperty="false" defaultMonitored="true"/>
-				<ResourceAttribute key="guest_vms_pending" nameKey="39" dataType="float" isProperty="false" defaultMonitored="true"/>
-				<ResourceAttribute key="last_error" nameKey="40" dataType="string" isProperty="true"/>
+			<ResourceGroup key="Collection" nameKey="34" instanced="false">
+				<ResourceAttribute key="cycle_seconds" nameKey="35" dataType="float" isProperty="false" defaultMonitored="true" unit="sec"/>
+				<ResourceAttribute key="reads_failed" nameKey="36" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="values_withheld" nameKey="37" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="objects_unmatched" nameKey="38" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="checklist_entries_skipped" nameKey="39" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="series_pushed" nameKey="40" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="properties_pushed" nameKey="41" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="push_batches_failed" nameKey="42" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="deadline_hit" nameKey="43" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="vcenter_object_resolved" nameKey="44" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="guest_vms_done" nameKey="45" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="guest_vms_pending" nameKey="46" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="last_error" nameKey="47" dataType="string" isProperty="true"/>
 			</ResourceGroup>
 		</ResourceKind>
 
@@ -120,61 +120,61 @@
 		     comma, as stored, trimmed only), known without a login, so the object exists
 		     while the vCenter is unreachable and the account can show DOWN. No metrics:
 		     the self metrics stay on the adapter instance. -->
-		<ResourceKind key="vCommunityCollector" nameKey="41" type="1">
-			<ResourceIdentifier key="vcenter" nameKey="42" type="string" required="true" dispOrder="1"/>
-			<ResourceIdentifier key="config_files" nameKey="43" type="string" required="true" dispOrder="2"/>
+		<ResourceKind key="vCommunityCollector" nameKey="48" type="1">
+			<ResourceIdentifier key="vcenter" nameKey="49" type="string" required="true" dispOrder="1"/>
+			<ResourceIdentifier key="config_files" nameKey="50" type="string" required="true" dispOrder="2"/>
 		</ResourceKind>
 
 		<!-- Content Library: one per library of the vCenter. Keys as the original pack (rows 245-252 of the key map); filled in the library phase. -->
-		<ResourceKind key="Content Library" nameKey="44" type="1">
-			<ResourceIdentifier key="Library ID" nameKey="45" type="string" required="true" dispOrder="1"/>
-			<ResourceGroup key="vCommunity" nameKey="46" instanced="false">
-				<ResourceGroup key="Content Library" nameKey="47" instanced="false">
-					<ResourceAttribute key="Type" nameKey="48" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Subscription URL" nameKey="49" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Automatic Sync" nameKey="50" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="State" nameKey="51" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Items" nameKey="52" dataType="float" isProperty="false" defaultMonitored="true"/>
-					<ResourceAttribute key="Items Not Stored Locally" nameKey="53" dataType="float" isProperty="false" defaultMonitored="true"/>
-					<ResourceAttribute key="Items Not Security Compliant" nameKey="54" dataType="float" isProperty="false" defaultMonitored="true"/>
-					<ResourceAttribute key="Total Size (GB)" nameKey="55" dataType="float" isProperty="false" defaultMonitored="true"/>
+		<ResourceKind key="Content Library" nameKey="51" type="1">
+			<ResourceIdentifier key="Library ID" nameKey="52" type="string" required="true" dispOrder="1"/>
+			<ResourceGroup key="vCommunity" nameKey="53" instanced="false">
+				<ResourceGroup key="Content Library" nameKey="54" instanced="false">
+					<ResourceAttribute key="Type" nameKey="55" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Subscription URL" nameKey="56" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Automatic Sync" nameKey="57" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="State" nameKey="58" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Items" nameKey="59" dataType="float" isProperty="false" defaultMonitored="true"/>
+					<ResourceAttribute key="Items Not Stored Locally" nameKey="60" dataType="float" isProperty="false" defaultMonitored="true"/>
+					<ResourceAttribute key="Items Not Security Compliant" nameKey="61" dataType="float" isProperty="false" defaultMonitored="true"/>
+					<ResourceAttribute key="Total Size (GB)" nameKey="62" dataType="float" isProperty="false" defaultMonitored="true"/>
 				</ResourceGroup>
 			</ResourceGroup>
 		</ResourceKind>
 
 		<!-- Library Item: one per item of every library (rows 234-244). -->
-		<ResourceKind key="Library Item" nameKey="56" type="1">
-			<ResourceIdentifier key="Item ID" nameKey="57" type="string" required="true" dispOrder="1"/>
-			<ResourceGroup key="vCommunity" nameKey="58" instanced="false">
-				<ResourceGroup key="Library Item" nameKey="59" instanced="false">
-					<ResourceAttribute key="Type" nameKey="60" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Description" nameKey="61" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Version" nameKey="62" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Content Version" nameKey="63" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Stored Locally" nameKey="64" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Security Compliant" nameKey="65" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Certificate Verification" nameKey="66" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Last Modified" nameKey="67" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Last Sync" nameKey="68" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Source Item ID" nameKey="69" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Size (GB)" nameKey="70" dataType="float" isProperty="false" defaultMonitored="true"/>
+		<ResourceKind key="Library Item" nameKey="63" type="1">
+			<ResourceIdentifier key="Item ID" nameKey="64" type="string" required="true" dispOrder="1"/>
+			<ResourceGroup key="vCommunity" nameKey="65" instanced="false">
+				<ResourceGroup key="Library Item" nameKey="66" instanced="false">
+					<ResourceAttribute key="Type" nameKey="67" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Description" nameKey="68" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Version" nameKey="69" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Content Version" nameKey="70" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Stored Locally" nameKey="71" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Security Compliant" nameKey="72" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Certificate Verification" nameKey="73" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Last Modified" nameKey="74" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Last Sync" nameKey="75" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Source Item ID" nameKey="76" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Size (GB)" nameKey="77" dataType="float" isProperty="false" defaultMonitored="true"/>
 				</ResourceGroup>
 			</ResourceGroup>
 		</ResourceKind>
 
 		<!-- VM Template: one per VM that is a template in the vCenter (rows 227-233). -->
-		<ResourceKind key="VM Template" nameKey="71" type="1">
-			<ResourceIdentifier key="VMEntityObjectID" nameKey="72" type="string" required="true" dispOrder="1"/>
-			<ResourceIdentifier key="VMEntityVCID" nameKey="73" type="string" required="true" dispOrder="2"/>
-			<ResourceGroup key="vCommunity" nameKey="74" instanced="false">
-				<ResourceGroup key="VM Template" nameKey="75" instanced="false">
-					<ResourceAttribute key="Guest OS" nameKey="76" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Hardware Version" nameKey="77" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="vCPUs" nameKey="78" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Memory (GB)" nameKey="79" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Datastore" nameKey="80" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="VM Folder" nameKey="81" dataType="string" isProperty="true"/>
-					<ResourceAttribute key="Disk Used (GB)" nameKey="82" dataType="float" isProperty="false" defaultMonitored="true"/>
+		<ResourceKind key="VM Template" nameKey="78" type="1">
+			<ResourceIdentifier key="VMEntityObjectID" nameKey="79" type="string" required="true" dispOrder="1"/>
+			<ResourceIdentifier key="VMEntityVCID" nameKey="80" type="string" required="true" dispOrder="2"/>
+			<ResourceGroup key="vCommunity" nameKey="81" instanced="false">
+				<ResourceGroup key="VM Template" nameKey="82" instanced="false">
+					<ResourceAttribute key="Guest OS" nameKey="83" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Hardware Version" nameKey="84" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="vCPUs" nameKey="85" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Memory (GB)" nameKey="86" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Datastore" nameKey="87" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="VM Folder" nameKey="88" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Disk Used (GB)" nameKey="89" dataType="float" isProperty="false" defaultMonitored="true"/>
 				</ResourceGroup>
 			</ResourceGroup>
 		</ResourceKind>

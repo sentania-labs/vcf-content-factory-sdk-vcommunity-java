@@ -3,7 +3,33 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
-## 1.0.0.1 (Unreleased)
+## 1.0.0.2 (Unreleased)
+
+- fix(adapter): the session cookie is found whatever the case of the
+  `Set-Cookie` header (a proxy in front of the vCenter may send it lower case);
+  before, every cycle failed and left an authenticated session behind.
+- fix(adapter): a count that was not measured is not sent: check-list entries
+  skipped (unless every file read was parsed), objects not matched (unless the
+  vCenter object lookup completed), on the adapter instance and on the vCenter
+  object.
+- fix(adapter): the period choices carry their labels (`01 hour` ... `24 hours`),
+  every account field has a description, and the Trust on First Use text says
+  plainly that credentials are sent before any certificate check; enums carry no
+  `displayOrder` (not in the schema).
+- fix(adapter): SOAP answers built into a tree are capped at 1 MiB and 32
+  levels; redirects are not followed; a page of resources with no total is not
+  taken for the whole list; a Unicode host is converted to punycode for the name
+  check.
+- fix(adapter): a skipped check-list entry is a reported problem, not a failed
+  read; a file name is refused only when it is a path or a query; no runtime
+  exception in the vCenter object lookup can end the cycle; a clean Test
+  Connection logs at INFO.
+- test: lower case headers, the real certificate name check in Enabled mode,
+  oversized and deep answers, every unmeasured-count path.
+- docs: the design copy is corrected (own-kind units, self-metric transport) and
+  deviations DV-61 to DV-66 are registered; `docs/reviews/p1-skeleton-review.md`.
+
+## 1.0.0.1
 
 - feat(adapter): phase 1, skeleton and configuration parity. The adapter kind
   is `vcfcf_vcommunity`. describe.xml declares the 19 account fields and the
@@ -24,8 +50,7 @@ One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
   read sends nothing and is counted; no value is ever sent that was not read.
 - feat(adapter): Test Connection reports the login, the certificate
   thumbprint, whether the Suite API answers, and each check-list file's outcome
-  and item count (in the collector log at WARN; the platform shows no text for
-  a passing test).
+  and item count (in the adapter log).
 - feat(adapter): check-list files: secure parse, per-list validation (VM option
   paths, Windows service names, the event list structure), last good list kept
   on a read or parse failure, an absent file empties its list.

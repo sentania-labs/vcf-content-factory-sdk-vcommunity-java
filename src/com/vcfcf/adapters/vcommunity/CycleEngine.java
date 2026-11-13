@@ -147,7 +147,7 @@ public final class CycleEngine {
 
         // A2: the certificate probe
         String presented = null;
-        ThumbprintProbe.Result pr = probe.probe(cfg.host, cfg.port, PROBE_TIMEOUT_MS);
+        ThumbprintProbe.Result pr = probe.probe(cfg.asciiHost(), cfg.port, PROBE_TIMEOUT_MS);
         if (pr.ok()) {
             presented = pr.thumbprint();
         } else {
@@ -166,8 +166,15 @@ public final class CycleEngine {
                     "the local VCF Operations Suite API is not available to this instance");
             s.collectorStatus.put(COLLECTOR_CHECK_LISTS, Status.FAILED);
         } else {
-            lists = store.refresh(cfg.filesInUse(), path -> ops.get(path, "*/*"));
-            accountLists(lists, failures, s);
+            try {
+                lists = store.refresh(cfg.filesInUse(), path -> ops.get(path, "*/*"));
+                accountLists(lists, failures, s);
+            } catch (RuntimeException e) {
+                lists = new EnumMap<>(ListKind.class);
+                failures.add(COLLECTOR_CHECK_LISTS, FailureCause.checklist("all"), "check-lists", 0,
+                        "reading the check-list files failed: " + e.getClass().getSimpleName());
+                s.collectorStatus.put(COLLECTOR_CHECK_LISTS, Status.FAILED);
+            }
         }
 
         // A4: the vCenter's own object
@@ -235,22 +242,42 @@ public final class CycleEngine {
         }
     }
 
+    /**
+     * Count what the check-list files gave. A file that could not be read or
+     * parsed, or is absent, is a failed read; an entry skipped inside a file
+     * that was read is a reported problem, not a failed read (the list is in
+     * force). The skipped count is sent only when every file read this cycle
+     * was parsed, otherwise it is unknown.
+     */
     private void accountLists(Map<ListKind, CheckListStore.Entry> lists, Failures failures,
             CollectionHealth.Summary s) {
-        int problems = 0;
         int read = 0;
+        int failed = 0;
+        int inForce = 0;
+        int skipped = 0;
+        boolean measured = true;
+        boolean anySkipped = false;
         for (CheckListStore.Entry e : lists.values()) {
             if (e.outcome == CheckListStore.Outcome.NOT_CONFIGURED) continue;
             read++;
-            s.checklistSkipped += e.skipped.size();
-            if (e.problem != null) {
-                problems++;
-                failures.add(COLLECTOR_CHECK_LISTS, FailureCause.checklist(e.kind.id), e.fileName,
-                        0, e.problem);
+            if (e.outcome == CheckListStore.Outcome.OK) {
+                inForce++;
+                skipped += e.skipped.size();
+                if (!e.skipped.isEmpty()) {
+                    anySkipped = true;
+                    log.warn(FailureCause.checklist(e.kind.id) + ": " + e.problem);
+                }
+                continue;
             }
+            failed++;
+            if (e.lastGood) inForce++;
+            if (e.outcome != CheckListStore.Outcome.ABSENT) measured = false;
+            failures.add(COLLECTOR_CHECK_LISTS, FailureCause.checklist(e.kind.id), e.fileName, 0,
+                    e.problem);
         }
-        s.collectorStatus.put(COLLECTOR_CHECK_LISTS, problems == 0 ? Status.OK
-                : problems >= read ? Status.FAILED : Status.PARTIAL);
+        if (read > 0 && measured) s.checklistSkipped = skipped;
+        s.collectorStatus.put(COLLECTOR_CHECK_LISTS, failed == 0 && !anySkipped ? Status.OK
+                : failed >= read && inForce == 0 ? Status.FAILED : Status.PARTIAL);
     }
 
     /** The resource id of the vCenter's own object: cached, read again every 12th cycle. */
@@ -258,17 +285,21 @@ public final class CycleEngine {
             throws InterruptedException {
         boolean known = vcenterId != null && vcid.equals(vcenterIdFor);
         boolean due = !known || cycleNo - vcenterIdCycle >= REFRESH_EVERY;
-        if (!due) return vcenterId;
+        if (!due) {
+            s.objectsUnmatched = 0; // matched on an earlier cycle and still in the cache
+            return vcenterId;
+        }
         try {
             OpsResourceMap.VcenterObject o = OpsResourceMap.findVcenterObject(ops, vcid);
             if (o.resolved()) {
+                s.objectsUnmatched = 0;
                 vcenterId = o.resourceId();
                 vcenterIdFor = vcid;
                 vcenterIdCycle = cycleNo;
                 return vcenterId;
             }
             vcenterId = null;
-            s.objectsUnmatched = 1;
+            s.objectsUnmatched = 1; // the lookup completed and found no single match
             log.warn(o.matches() == 0
                     ? "No VCF Operations object of kind VMwareAdapter Instance carries this "
                             + "vCenter's instance UUID; the vCenter keys are held back"
@@ -276,7 +307,7 @@ public final class CycleEngine {
                             + "this vCenter's instance UUID (a duplicate vCenter account?); the "
                             + "vCenter keys are held back");
             return null;
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             failures.add(COLLECTOR_VCENTER, FailureCause.opsMap("VMwareAdapter Instance"),
                     "VMwareAdapter Instance", 0, "reading the vCenter's object from VCF "
                     + "Operations failed: " + e.getClass().getSimpleName()

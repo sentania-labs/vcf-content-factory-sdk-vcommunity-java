@@ -33,6 +33,12 @@ public final class ConnectionTester {
     /** What the test found, one line per item, in order. */
     public static final class Report {
         public final List<String> lines = new ArrayList<>();
+        private boolean attention;
+
+        /** True when something in the report needs the admin's attention. */
+        public boolean needsAttention() {
+            return attention;
+        }
 
         /** The lines as one text. */
         public String text() {
@@ -56,17 +62,20 @@ public final class ConnectionTester {
         About about = session.value();
         r.lines.add("Logged in to " + (about == null ? "the vCenter" : about.describe()));
         if (about == null || about.instanceUuid == null || about.instanceUuid.trim().isEmpty()) {
+            r.attention = true;
             r.lines.add("WARNING: the vCenter did not report an instance UUID, so its objects "
                     + "cannot be matched in VCF Operations");
         }
 
-        ThumbprintProbe.Result pr = probe.probe(cfg.host, cfg.port, 10_000);
+        ThumbprintProbe.Result pr = probe.probe(cfg.asciiHost(), cfg.port, 10_000);
+        if (!pr.ok()) r.attention = true;
         r.lines.add("vCenter TLS Validation: " + cfg.tlsMode.label + "; "
                 + (pr.ok() ? "the certificate's SHA-256 thumbprint is " + pr.thumbprint()
                         : "the certificate thumbprint could not be read (" + pr.failure() + ")"));
 
         boolean suite = false;
         if (ops == null) {
+            r.attention = true;
             r.lines.add("WARNING: the VCF Operations Suite API is not available to this instance");
         } else {
             try {
@@ -76,6 +85,7 @@ public final class ConnectionTester {
             } catch (InterruptedException e) {
                 throw e;
             } catch (IOException | RuntimeException e) {
+                r.attention = true;
                 r.lines.add("WARNING: the VCF Operations Suite API did not answer from where this "
                         + "test ran (" + e.getClass().getSimpleName() + "); collection pushes "
                         + "through it");
@@ -87,8 +97,10 @@ public final class ConnectionTester {
                     path -> ops.get(path, "*/*"));
             for (CheckListStore.Entry e : entries.values()) {
                 r.lines.add(e.summary());
+                if (!e.ok() && e.outcome != CheckListStore.Outcome.NOT_CONFIGURED) r.attention = true;
             }
         } else {
+            r.attention = true;
             r.lines.add("Check-list files were not read (the Suite API did not answer)");
         }
         return r;

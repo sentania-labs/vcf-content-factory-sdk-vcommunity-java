@@ -151,8 +151,8 @@ public final class CheckListStore {
             if (isAbsent(e)) {
                 forget(kind, name);
                 return new Entry(kind, name, Outcome.ABSENT, new ArrayList<>(), null, false,
-                        new ArrayList<>(), "Configuration file '" + name + ".xml' was not found "
-                        + "in VCF Operations. Nothing is collected from it until it exists.", 0, 0);
+                        new ArrayList<>(), "Configuration file '" + name + ".xml' does not exist in "
+                        + "VCF Operations, so its list is empty.", 0, 0);
             }
             return failed(kind, name, Outcome.FETCH_FAILED, "VCF Operations answered HTTP "
                     + e.status() + (e.apiErrorCode() == null ? "" : " (error " + e.apiErrorCode() + ")"));
@@ -213,10 +213,9 @@ public final class CheckListStore {
         List<String> keptItems = lastGoodItems.get(k);
         String keptRaw = lastGoodRaw.get(k);
         boolean kept = kind.isEventList() ? keptRaw != null : keptItems != null;
-        String what = outcome == Outcome.PARSE_FAILED ? "is not usable" : "could not be read from "
-                + "VCF Operations";
+        String what = outcome == Outcome.PARSE_FAILED ? "is not usable" : "could not be fetched";
         String problem = "Configuration file '" + name + ".xml' " + what + " (" + reason + "). "
-                + (kept ? "The last good list stays in use." : "Nothing is collected from it yet.");
+                + (kept ? "The last good list stays in use." : "No list is in use for it yet.");
         int[] counts = lastGoodCounts.get(k);
         return new Entry(kind, name, outcome,
                 kept && !kind.isEventList() ? new ArrayList<>(keptItems) : new ArrayList<>(),
@@ -245,15 +244,16 @@ public final class CheckListStore {
         }
     }
 
-    /** A file name without a path, extension, query or control character. */
+    /**
+     * A file name and not a path or a query: no slash, backslash, question mark
+     * or control character, and not {@code .} or {@code ..} on their own. Other
+     * characters are fine, the name is percent-encoded when it is sent.
+     */
     static boolean isPlainName(String name) {
-        if (name.length() > 200 || name.equals(".") || name.contains("..")) return false;
+        if (name.length() > 200 || name.equals(".") || name.equals("..")) return false;
         for (int i = 0; i < name.length(); i++) {
             char c = name.charAt(i);
-            if (Character.isISOControl(c) || c == '/' || c == '\\' || c == '?' || c == '#'
-                    || c == '%' || c == '&') {
-                return false;
-            }
+            if (Character.isISOControl(c) || c == '/' || c == '\\' || c == '?') return false;
         }
         return true;
     }

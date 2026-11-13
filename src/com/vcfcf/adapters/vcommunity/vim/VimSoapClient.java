@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
 import javax.xml.stream.XMLStreamException;
 
@@ -37,7 +38,12 @@ public final class VimSoapClient implements VimSession {
     public static final int READ_TIMEOUT_MS = 120_000;
     /** The cheap calls (keepalive, login) wait this long for an answer. */
     public static final int SHORT_READ_TIMEOUT_MS = 30_000;
-    public static final long MAX_RESPONSE_BYTES = 16L * 1024 * 1024;
+    /**
+     * The most bytes of an answer read into a tree ({@link XmlNode}): service
+     * content, a keepalive, a fault. The bulk reads of later phases stream and
+     * set their own, larger cap.
+     */
+    public static final long MAX_RESPONSE_BYTES = 1024L * 1024;
     private static final int MAX_FAULT_BYTES = 1024 * 1024;
     private static final int LOGOUT_TIMEOUT_MS = 5_000;
 
@@ -306,6 +312,7 @@ public final class VimSoapClient implements VimSession {
         CappedInputStream body = null;
         try {
             conn.setRequestMethod("POST");
+            conn.setInstanceFollowRedirects(false); // never carry the session cookie elsewhere
             conn.setDoOutput(true);
             conn.setConnectTimeout(connectTimeoutMs);
             conn.setReadTimeout(readTimeoutMs);
@@ -317,8 +324,7 @@ public final class VimSoapClient implements VimSession {
                 os.write(envelope.getBytes(StandardCharsets.UTF_8));
             }
             int code = conn.getResponseCode();
-            if (cookieOut != null) cookieOut.value = sessionCookie(conn.getHeaderFields()
-                    .get("Set-Cookie"));
+            if (cookieOut != null) cookieOut.value = sessionCookie(conn.getHeaderFields());
             if (code >= 200 && code < 300) {
                 InputStream is = conn.getInputStream();
                 if (is == null) {
@@ -362,12 +368,20 @@ public final class VimSoapClient implements VimSession {
         return null;
     }
 
-    static String sessionCookie(List<String> setCookies) {
-        if (setCookies == null) return null;
-        for (String h : setCookies) {
-            if (h != null && h.startsWith("vmware_soap_session")) {
-                int semi = h.indexOf(';');
-                return semi < 0 ? h : h.substring(0, semi);
+    /**
+     * The session cookie ({@code name=value}) from the response headers. Header
+     * names are matched ignoring case: a proxy in front of the vCenter may send
+     * {@code set-cookie}, and {@code getHeaderFields()} keeps the case it got.
+     */
+    public static String sessionCookie(Map<String, List<String>> headers) {
+        if (headers == null) return null;
+        for (Map.Entry<String, List<String>> e : headers.entrySet()) {
+            if (e.getKey() == null || !"set-cookie".equalsIgnoreCase(e.getKey())) continue;
+            for (String h : e.getValue()) {
+                if (h != null && h.startsWith("vmware_soap_session")) {
+                    int semi = h.indexOf(';');
+                    return semi < 0 ? h : h.substring(0, semi);
+                }
             }
         }
         return null;

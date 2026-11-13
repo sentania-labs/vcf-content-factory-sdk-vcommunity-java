@@ -143,7 +143,13 @@ public final class CheckListTest {
         final List<String> paths = new ArrayList<>();
 
         void put(String name, Object answer) {
-            answers.put("/api/configurations/files?path=SolutionConfig/" + name + ".xml", answer);
+            String enc;
+            try {
+                enc = java.net.URLEncoder.encode(name, "UTF-8").replace("+", "%20");
+            } catch (java.io.UnsupportedEncodingException e) {
+                throw new IllegalStateException(e);
+            }
+            answers.put("/api/configurations/files?path=SolutionConfig/" + enc + ".xml", answer);
         }
 
         @Override
@@ -200,7 +206,7 @@ public final class CheckListTest {
         e = store.refresh(one(ListKind.ESXI_SETTINGS, "esx"), f).get(ListKind.ESXI_SETTINGS);
         T.eq(Outcome.ABSENT, e.outcome, "404 is absent");
         T.check(e.items.isEmpty() && !e.lastGood, "list cleared");
-        T.contains(e.problem, "was not found", "problem");
+        T.contains(e.problem, "does not exist", "problem");
 
         f.put("esx", "<L>x</L>");
         store.refresh(one(ListKind.ESXI_SETTINGS, "esx"), f);
@@ -220,7 +226,7 @@ public final class CheckListTest {
         e = fresh.refresh(one(ListKind.ESXI_SETTINGS, "esx"), f).get(ListKind.ESXI_SETTINGS);
         T.eq(Outcome.FETCH_FAILED, e.outcome, "cold fetch failure");
         T.check(e.items.isEmpty() && !e.lastGood, "empty");
-        T.contains(e.problem, "Nothing is collected from it yet", "says nothing is in force");
+        T.contains(e.problem, "No list is in use for it yet", "says nothing is in force");
         T.notContains(e.problem, "down", "the exception text is not copied into the problem");
 
         // a blank file is a valid empty list (parity); a blank name reads nothing; a path-like name reads nothing
@@ -232,12 +238,20 @@ public final class CheckListTest {
         T.eq(Outcome.NOT_CONFIGURED, e.outcome, "blank name");
         e = store.refresh(one(ListKind.VM_PARAMS, "   "), f).get(ListKind.VM_PARAMS);
         T.eq(Outcome.NOT_CONFIGURED, e.outcome, "blank name (spaces)");
-        for (String evil : new String[] {"../x", "a/b", "a\\b", "x?y=1", "x#y", "%2e%2e", "a&b", "a\nb"}) {
+        for (String evil : new String[] {"../x", "a/b", "a\\b", "x?y=1", "..", ".", "a\nb"}) {
             e = store.refresh(one(ListKind.VM_PARAMS, evil), f).get(ListKind.VM_PARAMS);
             T.eq(Outcome.INVALID_NAME, e.outcome, "refused name " + evil.replace("\n", "\\n"));
             T.check(e.problem != null && e.problem.contains("not a plain file name"), "problem for " + evil);
         }
         T.eq(reads, f.paths.size(), "none of those reached the store");
+        // what is not a path or a query is a plain name; it is encoded when sent
+        for (String fine : new String[] {"a&b", "x#y", "%2e%2e", "a..b", "50%", "a b"}) {
+            f.put(fine, "<L>q</L>");
+            e = store.refresh(one(ListKind.VM_PARAMS, fine), f).get(ListKind.VM_PARAMS);
+            T.eq(Outcome.OK, e.outcome, "plain name " + fine);
+        }
+        T.contains(f.paths.get(f.paths.size() - 3), "SolutionConfig/a..b.xml", "dots inside a name are kept");
+        T.contains(f.paths.get(f.paths.size() - 2), "SolutionConfig/50%25.xml", "percent is encoded");
 
         // the path is encoded
         f.put("my list", "<L>a</L>");

@@ -39,6 +39,7 @@ public final class EngineTest {
         final Map<String, Object> files = new HashMap<>(); // name -> body | Exception
         String vcenterRows = OpsTest.page(1, OpsTest.row("vc-res-1", null, VCID));
         IOException resourceFailure;
+        RuntimeException resourceRuntime;
         IOException versionFailure;
         PushOutcome outcome = new PushOutcome(2, 1, 0, 0, 0, false);
         final List<Map<String, Map<String, String>>> pushedProps = new ArrayList<>();
@@ -55,6 +56,7 @@ public final class EngineTest {
             }
             if (path.startsWith("/api/resources?")) {
                 if (resourceFailure != null) throw resourceFailure;
+                if (resourceRuntime != null) throw resourceRuntime;
                 return path.endsWith("page=0") ? vcenterRows : OpsTest.page(0);
             }
             if (path.startsWith("/api/configurations/files?path=SolutionConfig/")) {
@@ -204,6 +206,8 @@ public final class EngineTest {
         T.contains(res.lastErrorProperty(), "F-LOGIN", "last error names the cause id");
         T.notContains(res.lastErrorProperty(), "password=", "no secret");
         T.check(!m.containsKey("Collection|series_pushed"), "nothing pushed, nothing claimed");
+        T.check(!m.containsKey("Collection|objects_unmatched"), "the lookup never ran: no count");
+        T.check(!m.containsKey("Collection|checklist_entries_skipped"), "the lists were never read: no count");
         // an unreachable vCenter keeps its cause so the adapter can map DOWN
         Throwable cause = new java.net.ConnectException("refused");
         r.vim.next = VimResult.fault("Transport", "the vCenter refused or did not accept the connection", null, 0, cause);
@@ -238,6 +242,26 @@ public final class EngineTest {
         T.check(nu.failure == null, "ok");
         T.eq(0, noUuid.ops.pushes(), "no UUID, no push");
         T.eq(0.0, nu.metrics().get("Collection|vcenter_object_resolved"), "not resolved");
+        // a failed lookup is a failed read, not an unmatched object, and nothing in the stage can end the cycle
+        Rig lf = new Rig(cfg());
+        lf.ops.resourceFailure = new java.net.SocketTimeoutException("slow");
+        CycleEngine.Result lr = lf.run();
+        T.check(lr.failure == null, "cycle survives");
+        T.check(!lr.metrics().containsKey("Collection|objects_unmatched"), "a failed lookup measured nothing");
+        T.contains(lr.lastErrorProperty(), "F-OPS-MAP-VMwareAdapter Instance", "counted as a failed read");
+        Rig bug = new Rig(cfg());
+        bug.ops.resourceFailure = new IOException("x") { };
+        CycleEngine.Result br = bug.run();
+        T.check(br.failure == null, "ok");
+        Rig rt = new Rig(cfg());
+        rt.ops.vcenterRows = "{ not json";
+        T.check(rt.run().failure == null, "a malformed answer does not end the cycle");
+        Rig rx = new Rig(cfg());
+        rx.ops.resourceRuntime = new IllegalStateException("bug");
+        CycleEngine.Result xr = rx.run();
+        T.check(xr.failure == null, "a runtime exception in the lookup does not end the cycle");
+        T.contains(xr.lastErrorProperty(), "F-OPS-MAP", "counted");
+        T.check(!xr.metrics().containsKey("Collection|objects_unmatched"), "unmeasured");
         T.done("engine: the vCenter object is matched by UUID or the keys are held back and counted");
     }
 
@@ -248,6 +272,8 @@ public final class EngineTest {
         T.contains(res.lastErrorProperty(), "F-CHECKLIST", "says check lists could not be read");
         T.eq(0.0, res.metrics().get("Collection|vcenter_object_resolved"), "not resolved");
         T.check(res.lists.isEmpty(), "no lists read");
+        T.check(!res.metrics().containsKey("Collection|objects_unmatched"), "no lookup, no count");
+        T.check(!res.metrics().containsKey("Collection|checklist_entries_skipped"), "no lists, no count");
         T.done("engine: no Suite API client is reported, not hidden");
     }
 
@@ -258,9 +284,9 @@ public final class EngineTest {
         CycleEngine.Result res = r.run();
         Map<String, Double> m = res.metrics();
         T.eq(2.0, m.get("Collection|checklist_entries_skipped"), "two entries skipped");
-        T.eq(2.0, m.get("Collection|reads_failed"), "two files with a problem");
+        T.eq(1.0, m.get("Collection|reads_failed"), "only the absent file is a failed read; skipped entries are not");
         T.eq("PARTIAL", r.ops.pushedProps.get(0).get("vc-res-1").get(HEALTH + "Collector:check_lists|Status"), "partial");
-        T.eq(2.0, r.ops.pushedStats.get(0).get("vc-res-1").get(HEALTH + "Collector:check_lists|Failures"), "failures");
+        T.eq(1.0, r.ops.pushedStats.get(0).get("vc-res-1").get(HEALTH + "Collector:check_lists|Failures"), "failures");
         T.eq(2.0, r.ops.pushedStats.get(0).get("vc-res-1").get(HEALTH + "Check-List Entries Skipped"), "skipped on the vCenter");
         T.check(r.warns.count() >= 2, "the problems were warned about");
         T.eq(2, res.summary.warnings, "warnings counted: one line per cause");
@@ -270,6 +296,39 @@ public final class EngineTest {
         CycleEngine.Result none = all.run();
         T.eq("FAILED", all.ops.pushedProps.get(0).get("vc-res-1").get(HEALTH + "Collector:check_lists|Status"), "every file failed");
         T.eq(4.0, none.metrics().get("Collection|reads_failed"), "four failed reads");
+        T.eq(0.0, none.metrics().get("Collection|checklist_entries_skipped"), "absent files hold no entries: a measured zero");
+
+        // a skipped entry alone is not a failed read and does not make the stage FAILED
+        Rig only = new Rig(cfg());
+        only.ops.files.put("vm_options", "<L>bad path</L>");
+        CycleEngine.Result os = only.run();
+        T.eq(0.0, os.metrics().get("Collection|reads_failed"), "no failed read");
+        T.eq(1.0, os.metrics().get("Collection|checklist_entries_skipped"), "one skipped");
+        T.eq("PARTIAL", only.ops.pushedProps.get(0).get("vc-res-1").get(HEALTH + "Collector:check_lists|Status"), "partial, not FAILED");
+
+        // files that could not be read leave the skipped count unknown, and nothing is sent for it
+        Rig down = new Rig(cfg());
+        for (String k : new String[] {"esxi_advanced_system_settings", "esxi_packages", "vm_advanced_parameters", "vm_options"}) {
+            down.ops.files.put(k, new java.net.SocketTimeoutException("slow"));
+        }
+        CycleEngine.Result dr = down.run();
+        T.eq(4.0, dr.metrics().get("Collection|reads_failed"), "four failed reads");
+        T.check(!dr.metrics().containsKey("Collection|checklist_entries_skipped"), "unknown, not 0 (self)");
+        T.check(!down.ops.pushedStats.get(0).get("vc-res-1").containsKey(HEALTH + "Check-List Entries Skipped"), "unknown, not 0 (vCenter)");
+        T.eq("FAILED", down.ops.pushedProps.get(0).get("vc-res-1").get(HEALTH + "Collector:check_lists|Status"), "nothing in force: FAILED");
+        // with last good lists in force it is PARTIAL
+        down.ops.files.put("esxi_advanced_system_settings", "<L>a</L>");
+        down.ops.files.put("esxi_packages", "<L>a</L>");
+        down.ops.files.put("vm_advanced_parameters", "<L>a</L>");
+        down.ops.files.put("vm_options", "<L>a</L>");
+        down.clock.addAndGet(300_000);
+        down.run();
+        for (String k : new String[] {"esxi_advanced_system_settings", "esxi_packages", "vm_advanced_parameters", "vm_options"}) {
+            down.ops.files.put(k, new java.net.SocketTimeoutException("slow"));
+        }
+        down.clock.addAndGet(300_000);
+        down.run();
+        T.eq("PARTIAL", down.ops.pushedProps.get(2).get("vc-res-1").getOrDefault(HEALTH + "Collector:check_lists|Status", "unchanged"), "last good in force: PARTIAL, not FAILED");
         T.done("engine: check-list problems are counted and the entries skipped are reported");
     }
 
@@ -315,6 +374,8 @@ public final class EngineTest {
         T.eq(1.0, res.metrics().get("Collection|deadline_hit"), "deadline hit");
         T.check(res.lists.isEmpty(), "nothing read after the deadline");
         T.contains(res.lastErrorProperty(), "F-DEADLINE", "named");
+        T.check(!res.metrics().containsKey("Collection|objects_unmatched"), "deadline: no lookup, no count");
+        T.check(!res.metrics().containsKey("Collection|checklist_entries_skipped"), "deadline: no lists, no count");
         T.eq(0, r.ops.paths.size(), "nothing asked of the Suite API");
         T.done("engine: the deadline stops new work and says so");
     }
@@ -350,6 +411,11 @@ public final class EngineTest {
         T.contains(text, "VM Options 'vm_options': OK, 1 item(s), 1 skipped", "skipped entries");
         T.contains(text, "VM Advanced Parameters 'vm_advanced_parameters': ABSENT", "absent file");
         T.notContains(text, "svc", "no account detail beyond what is needed");
+        T.check(rep.needsAttention(), "a missing file and a skipped entry need attention");
+        Rig clean = new Rig(c);
+        ConnectionTester.Report ok = ConnectionTester.run(c, clean.vim, (h, p, t) -> ThumbprintProbe.Result.found("cd".repeat(32)),
+                clean.ops, new CheckListStore(clean.log));
+        T.check(!ok.needsAttention(), "a clean report is not a warning: " + ok.text());
 
         // a login failure fails the test and keeps the cause
         Rig bad = new Rig(c);

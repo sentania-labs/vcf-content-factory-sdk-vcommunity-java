@@ -23,6 +23,42 @@ public final class OpsTest {
         lastPushed();
         resourceMap();
         vcenterObject();
+        noPageInfo();
+    }
+
+    static String bare(String... rows) {
+        return "{\"resourceList\":[" + String.join(",", rows) + "]}";
+    }
+
+    /** Without a total, only a short page is known to be the last. */
+    static void noPageInfo() throws Exception {
+        FakeOps small = new FakeOps();
+        small.pages.add(bare(row("a", "m1", "VC-A"), row("b", "m2", "VC-A")));
+        T.eq(2, OpsResourceMap.load(small, "VC-A", "HostSystem").size(), "a short page with no total is the whole list");
+        T.eq(1, small.paths.size(), "one read");
+
+        FakeOps full = new FakeOps();
+        String[] rows = new String[OpsResourceMap.PAGE_SIZE];
+        for (int i = 0; i < rows.length; i++) rows[i] = row("id" + i, "m" + i, "VC-A");
+        full.pages.add(bare(rows));
+        full.pages.add(bare(row("last", "mlast", "VC-A")));
+        OpsResourceMap m = OpsResourceMap.load(full, "VC-A", "HostSystem");
+        T.eq(OpsResourceMap.PAGE_SIZE + 1, m.size(), "a full page with no total is followed by another read");
+        T.eq(2, full.paths.size(), "two reads");
+        T.eq("last", m.resourceId("mlast"), "the row on the second page");
+
+        FakeOps endless = new FakeOps();
+        for (int i = 0; i < OpsResourceMap.MAX_PAGES + 2; i++) endless.pages.add(bare(rows));
+        try {
+            OpsResourceMap.load(endless, "VC-A", "HostSystem");
+            throw new AssertionError("an endless list was accepted");
+        } catch (IOException e) {
+            T.contains(e.getMessage(), "longer than", "fails loudly");
+        }
+        FakeOps vc = new FakeOps();
+        vc.pages.add(bare(row("v1", null, "VC-A")));
+        T.check(OpsResourceMap.findVcenterObject(vc, "VC-A").resolved(), "vCenter object with no total");
+        T.done("a page with no total is not assumed to be the whole list");
     }
 
     static void json() {

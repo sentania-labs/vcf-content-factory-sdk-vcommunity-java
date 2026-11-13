@@ -120,9 +120,9 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
             // Never the password, the Windows password, a token or a session. // REDACT-SECRET
             logInfo("VCommunityAdapter configured: " + cfg + " suiteApi=" + (sas != null));
             if (cfg.tlsMode == VCommunityConfig.TlsMode.TRUST_ON_FIRST_USE) {
-                logInfo("vCenter TLS Validation is Trust on First Use: the vCenter certificate is "
-                        + "not checked before the user name and password are sent. Use Pinned "
-                        + "or Enabled on a network that is not fully trusted.");
+                logInfo("vCenter TLS Validation is Trust on First Use: this account sends its "
+                        + "credentials to whatever answers, before any certificate check. On a "
+                        + "network that is not fully trusted, set Pinned or Enabled.");
             }
         } catch (IllegalArgumentException e) {
             this.configError = e.getMessage();
@@ -221,9 +221,11 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
                 ConnectionTester.Report report = ConnectionTester.run(c, vim,
                         ThumbprintProbe.TLS, sas == null ? null : new OpsPort(sas),
                         new CheckListStore(log));
-                // Test Connection INFO does not reach a log under the pak's package entry, and
-                // the platform shows no text for a passing test: WARN is what is readable.
-                logWarn("Test Connection OK: " + report.text());
+                String line = "Test Connection OK: " + report.text();
+                // Whether INFO from a Test Connection reaches a log under the package entry
+                // is unverified (live experiment); anything the admin must act on is WARN.
+                if (report.needsAttention()) logWarn(line);
+                else logInfo(line);
             } finally {
                 vim.close();
                 if (sas != null) {

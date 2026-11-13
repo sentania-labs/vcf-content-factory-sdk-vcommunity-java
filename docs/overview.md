@@ -79,11 +79,15 @@ pushes nothing onto the vCenter's objects.
 ## Known Limitations
 
 - No `vCommunity|` key is collected in this build.
-- Trust on First Use sends the user name and password before the certificate is
-  checked, as the original pack did. Use Pinned or Enabled on a network that is
-  not fully trusted.
-- The platform shows no text for a passing Test Connection. The summary of what
-  the test found (login, certificate thumbprint, Suite API, each check-list file
-  with its outcome and item count) is written to the collector log at WARN, where
-  it can be found; a failing test shows its message in the dialog.
+- Trust on First Use sends the credentials before any certificate check, as the
+  original pack did, and in this build it stores and compares nothing (change
+  reporting arrives with the vCenter collector phase). Use Pinned or Enabled on a
+  network that is not fully trusted.
+- Test Connection: the pak writes a summary line (login, certificate
+  thumbprint, Suite API, each check-list file with its outcome and item count)
+  to the adapter log, at INFO, or WARN when something needs attention. Whether
+  the dialog can show text for a passing test is **unverified**; the first
+  install on 9.0.2 should try a success-path message and record what the dialog
+  shows. Likewise whether the INFO line reaches a log under the pak's logging
+  entry.
 - Not yet proven on a live instance: see the phase 1 exit proof in the design.

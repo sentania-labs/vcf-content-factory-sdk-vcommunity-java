@@ -35,7 +35,7 @@ The account's **vCenter TLS Validation** (Advanced Settings) has three modes.
 
 | Mode | What it does |
 |------|--------------|
-| Trust on First Use (default) | Accepts any certificate and any name. The user name and password are sent before anything is checked. The certificate's thumbprint is read every cycle so a change can be watched. |
+| Trust on First Use (default) | Accepts any certificate and any name. The account's credentials go to whatever answers, before any certificate check. This build reads the presented thumbprint every cycle but stores and compares nothing: recording it and reporting a change (the Certificate keys) arrives with the vCenter collector phase. |
 | Enabled | Uses the collector's own trust, including certificates accepted in Validate Connection, and checks that the certificate names the host entered. Enter the host by a name on the certificate. |
 | Pinned | Compares the SHA-256 (64 hex digits) or SHA-512 (128) thumbprint of the vCenter's certificate with **vCenter Thumbprint (SHA-256)**, during the handshake and before any credential is sent. The chain and the name are not checked. |
 
@@ -106,8 +106,14 @@ asks whether the Suite API answers and reads each check-list file in use. A
 failed login (including a wrong pin) fails the test and the dialog shows why.
 A Suite API that does not answer, or a check-list file that is missing,
 unreadable or invalid, does not fail the test: the test can run on another node
-than collection does, and a bad file is a reported problem, never fatal. What
-the test found is written to the collector log at WARN, one line.
+than collection does, and a bad file is a reported problem, never fatal.
+
+The test writes one line to the adapter log with what it found (the login, the
+thumbprint, the Suite API, each file with its outcome and item count): at INFO
+when all is well, at WARN when something needs attention. Whether the dialog
+can show a message for a passing test, and whether the INFO line reaches a log
+under the pak's logging setup, are **not yet verified**: they are experiments
+for the first install on 9.0.2.
 
 ## Troubleshooting
 

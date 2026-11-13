@@ -83,6 +83,20 @@ public final class HealthTest {
         s.warnings = 0;
         s.cycleSeconds = 1.25;
         PushSet ps = new PushSet(null);
+        // counts that were not measured are not sent
+        CollectionHealth.vcenterKeys(ps, "vc-0", s);
+        T.check(!ps.stats().get("vc-0").containsKey("vCommunity|Collection Health|Check-List Entries Skipped"), "skipped not measured");
+        T.check(!ps.stats().get("vc-0").containsKey("vCommunity|Collection Health|Objects Not Matched"), "unmatched not measured");
+        T.check(!CollectionHealth.selfMetrics(s).containsKey("Collection|checklist_entries_skipped"), "self: skipped not measured");
+        T.check(!CollectionHealth.selfMetrics(s).containsKey("Collection|objects_unmatched"), "self: unmatched not measured");
+        s.checklistSkipped = 0;
+        s.objectsUnmatched = 0;
+        PushSet ps0 = new PushSet(null);
+        CollectionHealth.vcenterKeys(ps0, "vc-0", s);
+        T.eq(0.0, ps0.stats().get("vc-0").get("vCommunity|Collection Health|Check-List Entries Skipped"), "a measured zero is sent");
+        T.eq(0.0, CollectionHealth.selfMetrics(s).get("Collection|objects_unmatched"), "a measured zero is sent (self)");
+        s.checklistSkipped = null;
+        s.objectsUnmatched = null;
         CollectionHealth.vcenterKeys(ps, "vc-1", s);
         String p = "vCommunity|Collection Health|";
         T.eq(new TreeSet<>(Arrays.asList(p + "First Warning", p + "First Failure")),
@@ -90,8 +104,7 @@ public final class HealthTest {
         T.eq("None in the last cycle", ps.properties().get("vc-1").get(p + "First Warning"), "none text");
         T.eq("None in the last cycle", ps.properties().get("vc-1").get(p + "First Failure"), "none text");
         T.eq(new TreeSet<>(Arrays.asList(p + "Warnings in Last Cycle", p + "Reads Failed in Last Cycle",
-                p + "Values Withheld in Last Cycle", p + "Check-List Entries Skipped", p + "Objects Not Matched",
-                p + "Cycle Seconds")), new TreeSet<>(ps.stats().get("vc-1").keySet()), "stat keys");
+                p + "Values Withheld in Last Cycle", p + "Cycle Seconds")), new TreeSet<>(ps.stats().get("vc-1").keySet()), "stat keys");
         T.eq(0.0, ps.stats().get("vc-1").get(p + "Warnings in Last Cycle"), "a count of zero is a count");
         T.eq(1.25, ps.stats().get("vc-1").get(p + "Cycle Seconds"), "seconds");
 
@@ -114,6 +127,7 @@ public final class HealthTest {
         // self metrics: an unmeasured figure is absent, never zero
         Map<String, Double> m = CollectionHealth.selfMetrics(new CollectionHealth.Summary());
         T.check(!m.containsKey("Collection|series_pushed"), "series_pushed not measured");
+        T.check(!m.containsKey("Collection|objects_unmatched") && !m.containsKey("Collection|checklist_entries_skipped"), "counts of stages that did not run");
         T.check(!m.containsKey("Collection|properties_pushed"), "properties_pushed not measured");
         T.check(!m.containsKey("Collection|guest_vms_done"), "guest progress not measured");
         T.eq(0.0, m.get("Collection|deadline_hit"), "deadline not hit");

@@ -37,6 +37,20 @@ public final class ConfigTest {
         filesAndIdentity();
         redaction();
         certificateCheckUrl();
+        idn();
+    }
+
+    static void idn() {
+        VCommunityConfig u = parse(fields("host", "b\u00fccher.example", "port", "8443"));
+        T.eq("xn--bcher-kva.example", u.asciiHost(), "Unicode host in punycode");
+        T.eq("xn--bcher-kva.example:8443", u.dialledHost(), "the name check gets the punycode form");
+        T.eq("xn--bcher-kva.example:8443", u.hostPort(), "and so does the URL");
+        T.eq("vc.example.test", parse(fields()).asciiHost(), "ASCII is unchanged");
+        T.eq("fe80::1", parse(fields("host", "fe80::1")).asciiHost(), "IPv6 literal is unchanged");
+        T.eq("https://xn--bcher-kva.example:443", VCommunityConfig.certificateCheckUrl(
+                fields("host", "b\u00fccher.example", "vcenter_tls_validation", "Enabled")::get), "review URL");
+        T.eq("bad..name\u00fc", parse(fields("host", "bad..name\u00fc")).asciiHost(), "an unusable name is left as entered");
+        T.done("config IDN host");
     }
 
     static void defaults() {

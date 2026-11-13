@@ -14,11 +14,15 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 /**
- * A small element tree for the short SOAP answers (service content, a fault,
+ * A small element tree, at most {@value #MAX_DEPTH} levels deep, for the short SOAP answers (service content, a fault,
  * a keepalive). Read by local name; a missing element is {@code null}, never
  * an exception. Bulk answers are not read through this: they stream.
  */
 public final class XmlNode {
+
+    /** Elements nested deeper than this are refused; a service answer is a few levels deep. */
+    public static final int MAX_DEPTH = 32;
+
     public final String name;
     private final Map<String, String> attributes = new HashMap<>();
     private final List<XmlNode> children = new ArrayList<>();
@@ -46,12 +50,17 @@ public final class XmlNode {
         return c == null ? null : c.text();
     }
 
-    /** The first element with this local name, depth first, this node included, or null. */
+    /**
+     * The first element with this local name, depth first, this node included,
+     * or null. Iterative, so the tree's depth cannot overflow the stack.
+     */
     public XmlNode find(String localName) {
-        if (name.equals(localName)) return this;
-        for (XmlNode c : children) {
-            XmlNode f = c.find(localName);
-            if (f != null) return f;
+        Deque<XmlNode> todo = new ArrayDeque<>();
+        todo.push(this);
+        while (!todo.isEmpty()) {
+            XmlNode n = todo.pop();
+            if (n.name.equals(localName)) return n;
+            for (int i = n.children.size() - 1; i >= 0; i--) todo.push(n.children.get(i));
         }
         return null;
     }
@@ -82,6 +91,9 @@ public final class XmlNode {
                     XmlNode n = new XmlNode(r.getLocalName());
                     for (int i = 0; i < r.getAttributeCount(); i++) {
                         n.attributes.put(r.getAttributeLocalName(i), r.getAttributeValue(i));
+                    }
+                    if (stack.size() >= MAX_DEPTH) {
+                        throw new XMLStreamException("elements nested deeper than " + MAX_DEPTH);
                     }
                     if (stack.isEmpty()) {
                         root = n;

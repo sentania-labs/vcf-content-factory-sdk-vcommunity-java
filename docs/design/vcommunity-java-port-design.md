@@ -172,7 +172,7 @@ is not known for Tier 2 describe; ship the values as upstream's keys.
 
 | Kind key | Display | Identifiers (all `required="true"`, part of uniqueness) | Attributes |
 |---|---|---|---|
-| `Content Library` | Content Library | `Library ID` | R245-R252, declared under groups `vCommunity` > `Content Library`, units from the TSV `unit_declared_in_definition` column (`GB` for Total Size) |
+| `Content Library` | Content Library | `Library ID` | R245-R252, declared under groups `vCommunity` > `Content Library`, with no unit: the TSV's `unit_declared_in_definition` column is blank for all 26 own keys (upstream ships none; the size keys carry `(GB)` in their name). *Corrected after the P1 review; the first draft said `GB` for Total Size.* |
 | `Library Item` | Library Item | `Item ID` | R234-R244 |
 | `VM Template` | VM Template | `VMEntityObjectID`, `VMEntityVCID` | R227-R233 |
 | `vCommunityCollector` | VCF Content Factory vCommunity Collector | `vcenter` (the `host` field, trimmed only), `config_files` (the four identifying file-name fields joined with `,` exactly as stored, trimmed only) | none |
@@ -196,8 +196,10 @@ border). Until `tooling` adds them, the three kinds use `default`.
 
 ### 2.4 Self and health metrics on the adapter instance (declared, `Collection|*`)
 
-Pushed through the Suite API onto the adapter instance resource every cycle (vsanperf pattern), so they land
-even when the vCenter object cannot be resolved.
+Delivered in the collect result onto the adapter instance resource every cycle (`pushMetric` and
+`pushStringProperty` on the resource `rediscover` hands over, the vsanperf pattern, which reads back on 9.0.2), so
+they land even when the vCenter object cannot be resolved. *Corrected after the P1 review; the first draft said
+"through the Suite API".* A figure that was not measured is not sent (see DV-63).
 
 | Key | Type | Unit | Meaning |
 |---|---|---|---|
@@ -745,8 +747,14 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-58 | (only if Q3 is accepted) disconnected hosts keep their last Availability | Availability published for every host of the vCenter | issue 86 | World availability includes disconnected hosts |
 | DV-59 | (only if T3 has not landed) `Maintenance Mode Required` numeric property | withheld until T3 | no string into a numeric history | key absent until the framework sends numeric properties |
 | DV-60 | a check-list item with a line break is used verbatim (always invalid) | skipped and reported | report honestly | operator told to add commas |
+| DV-61 | port parsed with `int()`, any integer accepted | port must be 1 to 65535, else the account fails naming the field | a port outside the range cannot connect | clearer message for `0` or `70000` |
+| DV-62 | a check-list file name is used as typed (a blank field requests `SolutionConfig/.xml`) | a blank field reads no file (no failure); a name that is a path or a query (slash, backslash, `?`, control character, `.` or `..` alone) is refused and reported; any other name is percent-encoded | the name goes into a URL | no request for a blank field; a path-like name is reported, not sent |
+| DV-63 | counts published as 0 when their stage did not run | a count whose input was not measured is not sent: `Check-List Entries Skipped` unless every file read was parsed or absent, `Objects Not Matched` unless the vCenter object lookup completed, series and property counts unless the push was clean | report honestly (5.1) | those keys are absent in a cycle that could not measure them |
+| DV-64 | (not in upstream) | a check-list entry skipped inside a file that was read is a reported problem (WARN, counted in the skipped total), not a failed read; the file's `check_lists` status is PARTIAL, FAILED only when every file failed and none is in force | the list is in force | `reads_failed` counts files, not entries |
+| DV-65 | host used as entered | a Unicode host name is converted to its punycode form for the certificate name check, the URL and the probe | the name check wants the ASCII form | Unicode names work in Enabled mode |
+| DV-66 | SOAP answers read whole | answers built into a tree are capped at 1 MiB and 32 levels; redirects are not followed | bound memory and keep the session cookie from leaving | an oversized or deeply nested answer fails the call |
 
-60 rows (DV-55, DV-58 and DV-59 are conditional).
+66 rows (DV-55, DV-58 and DV-59 are conditional).
 
 ---
 

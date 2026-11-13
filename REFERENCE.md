@@ -48,7 +48,7 @@ Main form = part of the account identity; Advanced = under Advanced Settings (`i
 
 ## Self metrics (on the adapter instance)
 
-Pushed every cycle. A figure that could not be measured is not sent.
+Pushed every cycle. A figure that could not be measured is not sent: `Collection|checklist_entries_skipped` only when every check-list file read was parsed (or absent), `Collection|objects_unmatched` only when the vCenter object lookup completed, `Collection|series_pushed` and `Collection|properties_pushed` only when the push was clean.
 
 | Key | Label | Type | Unit |
 |---|---|---|---|
@@ -70,7 +70,7 @@ Pushed every cycle. A figure that could not be measured is not sent.
 
 ## Collection Health keys (pushed onto the vCenter's own VMWARE object)
 
-Not declared here (another adapter's kind). Pushed when the vCenter object is matched by its instance UUID.
+Not declared here (another adapter's kind). Pushed when the vCenter object is matched by its instance UUID. `Check-List Entries Skipped` and `Objects Not Matched` follow the same only-when-measured rule as their `Collection|` twins.
 
 | Key | Type |
 |---|---|

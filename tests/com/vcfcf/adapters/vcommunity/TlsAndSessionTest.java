@@ -38,7 +38,11 @@ public final class TlsAndSessionTest {
             pinnedRight(vc);
             pinnedWrong(vc);
             enabledRefusesUntrusted(vc);
+            lowercaseCookieHeader(vc);
         }
+        enabledNameCheck();
+        oversizedAndRedirect();
+        deepXml();
         sessionLifecycle();
         loginFailures();
         unreachable();
@@ -93,10 +97,10 @@ public final class TlsAndSessionTest {
         try (VimSoapClient c = client(vc, pinned(wrong), "svc", "very-secret-pw", log)) {
             VimResult<About> r = c.ensureSession();
             T.check(!r.isOk(), "a wrong pin fails");
-            T.contains(r.message(), "does not match the vCenter Thumbprint", "text names the field");
+            T.contains(r.message(), "differs from the vCenter Thumbprint", "text names the field");
             T.contains(r.message(), Thumbprints.of(vc.cert, 256), "text carries the presented thumbprint");
             T.contains(r.message(), "Pinned", "text names the mode");
-            T.check(r.message().startsWith("The certificate vCenter presented"), "text is the pin message as is");
+            T.check(r.message().startsWith("vCenter presented a certificate other than the pinned one"), "text is the pin message as is");
             T.notContains(r.message(), "very-secret-pw", "message");
             T.check(r.cause() instanceof PinMismatchException || r.cause() != null, "cause kept");
             T.check(!Reachability.isUnreachable(r.cause()), "a wrong pin is not 'unreachable'");
@@ -130,6 +134,117 @@ public final class TlsAndSessionTest {
         T.check(!tofu().checksName(), "TOFU does not");
         T.check(!pinned("a".repeat(64)).checksName(), "Pinned does not");
         T.done("Enabled refuses an untrusted certificate");
+    }
+
+    /** A proxy in front of the vCenter may send "set-cookie"; the session must still be kept. */
+    static void lowercaseCookieHeader(FakeVc vc) throws Exception {
+        vc.lowercaseHeaders = true;
+        try (VimSoapClient c = client(vc, tofu(), "svc", "pw", new T.RecLog())) {
+            T.check(c.ensureSession().isOk(), "login with lower case headers");
+            T.check(c.hasSession(), "the cookie was found");
+            int before = vc.seen("CurrentTime").size();
+            T.check(c.ensureSession().isOk(), "keepalive");
+            FakeVc.Req ka = vc.seen("CurrentTime").get(before);
+            T.contains(ka.cookie, "vmware_soap_session", "the keepalive carries the cookie that came in lower case");
+        }
+        T.eq(1, vc.seen("Logout").size() > 0 ? 1 : 0, "the session was logged out (not leaked)");
+        vc.lowercaseHeaders = false;
+        java.util.Map<String, java.util.List<String>> h = new java.util.LinkedHashMap<>();
+        h.put(null, java.util.Arrays.asList("HTTP/1.1 200 OK"));
+        h.put("SET-COOKIE", java.util.Arrays.asList("other=1", "vmware_soap_session=\"abc\"; Path=/"));
+        T.eq("vmware_soap_session=\"abc\"", VimSoapClient.sessionCookie(h), "any case, among several cookies");
+        T.check(VimSoapClient.sessionCookie(null) == null, "no headers");
+        T.check(VimSoapClient.sessionCookie(new java.util.HashMap<>()) == null, "no cookie");
+        T.done("session cookie is found whatever the header case");
+    }
+
+    /** The real certificate name check (JDK endpoint identification), not a stub. */
+    static void enabledNameCheck() throws Exception {
+        // the certificate names "localhost" only: dialling it by that name passes, the IP does not
+        try (FakeVc vc = new FakeVc(FakeVc.happy(), "dns:localhost")) {
+            VcenterTls tls = VcenterTls.create(TlsMode.ENABLED, "", vc.trustingContext(), nameChecking());
+            try (VimSoapClient ok = new VimSoapClient("localhost:" + vc.port(), "u", "p", tls, new T.RecLog(), 5000, 10000, 10000)) {
+                VimResult<About> r = ok.ensureSession();
+                T.check(r.isOk(), "a trusted certificate that names the host is accepted: " + r.message());
+            }
+            int before = vc.requests.size();
+            try (VimSoapClient bad = new VimSoapClient("127.0.0.1:" + vc.port(), "u", "p", tls, new T.RecLog(), 5000, 10000, 10000)) {
+                VimResult<About> r = bad.ensureSession();
+                T.check(!r.isOk(), "a trusted certificate that does not name the host is refused");
+                boolean name = false;
+                for (Throwable t = r.cause(); t != null; t = t.getCause()) {
+                    if (t instanceof java.security.cert.CertificateException) name = true;
+                }
+                T.check(name, "the failure is a certificate failure");
+            }
+            T.eq(before, vc.requests.size(), "nothing sent to a server whose name does not match");
+        }
+        T.done("Enabled checks the certificate name for real");
+    }
+
+    /** A name check through JSSE endpoint identification: the real thing, what the framework adds on the platform. */
+    static VcenterTls.Securer nameChecking() {
+        return (conn, factory) -> {
+            conn.setSSLSocketFactory(new javax.net.ssl.SSLSocketFactory() {
+                private java.net.Socket id(java.net.Socket s) {
+                    javax.net.ssl.SSLSocket ss = (javax.net.ssl.SSLSocket) s;
+                    javax.net.ssl.SSLParameters p = ss.getSSLParameters();
+                    p.setEndpointIdentificationAlgorithm("HTTPS");
+                    ss.setSSLParameters(p);
+                    return s;
+                }
+                @Override public String[] getDefaultCipherSuites() { return factory.getDefaultCipherSuites(); }
+                @Override public String[] getSupportedCipherSuites() { return factory.getSupportedCipherSuites(); }
+                @Override public java.net.Socket createSocket(java.net.Socket s, String h, int p, boolean a) throws java.io.IOException { return id(factory.createSocket(s, h, p, a)); }
+                @Override public java.net.Socket createSocket(String h, int p) throws java.io.IOException { return id(factory.createSocket(h, p)); }
+                @Override public java.net.Socket createSocket(String h, int p, java.net.InetAddress la, int lp) throws java.io.IOException { return id(factory.createSocket(h, p, la, lp)); }
+                @Override public java.net.Socket createSocket(java.net.InetAddress h, int p) throws java.io.IOException { return id(factory.createSocket(h, p)); }
+                @Override public java.net.Socket createSocket(java.net.InetAddress h, int p, java.net.InetAddress la, int lp) throws java.io.IOException { return id(factory.createSocket(h, p, la, lp)); }
+            });
+            conn.setHostnameVerifier((h, s) -> true);
+        };
+    }
+
+    static void oversizedAndRedirect() throws Exception {
+        // an answer over the tree cap is refused, never read whole
+        try (FakeVc vc = new FakeVc(r -> new FakeVc.Resp(200, null, FakeVc.envelope("<x>" + "a".repeat(1_200_000) + "</x>")))) {
+            try (VimSoapClient c = client(vc, tofu(), "svc", "pw", new T.RecLog())) {
+                VimResult<About> r = c.ensureSession();
+                T.check(!r.isOk(), "an oversized answer fails");
+                T.contains(r.message(), "more than " + VimSoapClient.MAX_RESPONSE_BYTES + " bytes", "says why");
+            }
+        }
+        T.check(VimSoapClient.MAX_RESPONSE_BYTES <= 2 * 1024 * 1024, "tree answers are capped near 1 MiB");
+        // a redirect is not followed (the cookie never leaves for another URL)
+        try (FakeVc vc = new FakeVc(r -> new FakeVc.Resp(302, null, ""))) {
+            try (VimSoapClient c = client(vc, tofu(), "svc", "pw", new T.RecLog())) {
+                VimResult<About> r = c.ensureSession();
+                T.check(!r.isOk(), "a redirect is a failure");
+                T.eq(1, vc.requests.size(), "followed nowhere");
+            }
+        }
+        T.done("oversized answers and redirects are refused");
+    }
+
+    static void deepXml() throws Exception {
+        StringBuilder deep = new StringBuilder();
+        for (int i = 0; i < 100; i++) deep.append("<a>");
+        for (int i = 0; i < 100; i++) deep.append("</a>");
+        try {
+            com.vcfcf.adapters.vcommunity.vim.XmlNode.parse(new java.io.ByteArrayInputStream(deep.toString().getBytes("UTF-8")));
+            throw new AssertionError("deep XML accepted");
+        } catch (javax.xml.stream.XMLStreamException e) {
+            T.contains(e.getMessage(), "nested deeper", "refused");
+        }
+        StringBuilder ok = new StringBuilder();
+        for (int i = 0; i < 30; i++) ok.append("<a>");
+        ok.append("<leaf>x</leaf>");
+        for (int i = 0; i < 30; i++) ok.append("</a>");
+        com.vcfcf.adapters.vcommunity.vim.XmlNode n = com.vcfcf.adapters.vcommunity.vim.XmlNode.parse(
+                new java.io.ByteArrayInputStream(ok.toString().getBytes("UTF-8")));
+        T.eq("x", n.find("leaf").text(), "30 levels are fine, find is iterative");
+        T.check(n.find("missing") == null, "missing element is null");
+        T.done("XML depth is bounded");
     }
 
     static void sessionLifecycle() throws Exception {

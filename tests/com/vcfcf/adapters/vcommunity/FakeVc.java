@@ -73,6 +73,8 @@ final class FakeVc implements AutoCloseable {
     final AtomicInteger connections = new AtomicInteger();
     private volatile Handler handler;
     private volatile boolean running = true;
+    /** Send header names in lower case, as a proxy in front of the vCenter may. */
+    volatile boolean lowercaseHeaders;
 
     static String envelope(String inner) {
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><soapenv:Envelope "
@@ -122,12 +124,17 @@ final class FakeVc implements AutoCloseable {
     }
 
     FakeVc(Handler h) throws Exception {
+        this(h, "dns:localhost,ip:127.0.0.1");
+    }
+
+    /** @param san the certificate's subject alternative names, in keytool's {@code -ext san=} form */
+    FakeVc(Handler h, String san) throws Exception {
         this.handler = h;
         this.dir = Files.createTempDirectory("fakevc");
         char[] pw = randomPassword();
         File ks = dir.resolve("ks.p12").toFile();
         run(javaTool("keytool"), "-genkeypair", "-alias", "fake", "-keyalg", "RSA", "-keysize", "2048",
-                "-validity", "2", "-dname", "CN=localhost", "-ext", "san=dns:localhost,ip:127.0.0.1",
+                "-validity", "2", "-dname", "CN=localhost", "-ext", "san=" + san,
                 "-storetype", "PKCS12", "-keystore", ks.getPath(), "-storepass", new String(pw),
                 "-keypass", new String(pw));
         KeyStore store = KeyStore.getInstance("PKCS12");
@@ -229,10 +236,10 @@ final class FakeVc implements AutoCloseable {
                 Resp resp = handler.handle(r);
                 byte[] rb = resp.body.getBytes(StandardCharsets.UTF_8);
                 StringBuilder head = new StringBuilder();
-                head.append("HTTP/1.1 ").append(resp.status).append(resp.status == 200 ? " OK" : " Internal Server Error").append("\r\n");
-                head.append("Content-Type: text/xml; charset=utf-8\r\n");
-                head.append("Content-Length: ").append(rb.length).append("\r\n");
-                if (resp.setCookie != null) head.append("Set-Cookie: ").append(resp.setCookie).append("\r\n");
+                head.append("HTTP/1.1 ").append(resp.status).append(resp.status == 200 ? " OK" : " Other").append("\r\n");
+                head.append(hdr("Content-Type")).append(": text/xml; charset=utf-8\r\n");
+                head.append(hdr("Content-Length")).append(": ").append(rb.length).append("\r\n");
+                if (resp.setCookie != null) head.append(hdr("Set-Cookie")).append(": ").append(resp.setCookie).append("\r\n");
                 head.append("\r\n");
                 out.write(head.toString().getBytes(StandardCharsets.UTF_8));
                 out.write(rb);
@@ -241,6 +248,23 @@ final class FakeVc implements AutoCloseable {
         } catch (IOException | RuntimeException e) {
             // the client hung up or the handshake was refused: nothing to serve
         }
+    }
+
+    private String hdr(String name) {
+        return lowercaseHeaders ? name.toLowerCase() : name;
+    }
+
+    /** A TLS context that trusts this server's certificate, for tests of the real name check. */
+    javax.net.ssl.SSLContext trustingContext() throws Exception {
+        KeyStore ts = KeyStore.getInstance("PKCS12");
+        ts.load(null, null);
+        ts.setCertificateEntry("fake", cert);
+        javax.net.ssl.TrustManagerFactory tmf = javax.net.ssl.TrustManagerFactory
+                .getInstance(javax.net.ssl.TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(ts);
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        ctx.init(null, tmf.getTrustManagers(), null);
+        return ctx;
     }
 
     private static String readLine(InputStream in) throws IOException {

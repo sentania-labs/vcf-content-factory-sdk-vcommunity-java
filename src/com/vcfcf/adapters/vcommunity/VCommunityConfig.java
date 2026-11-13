@@ -11,8 +11,9 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * The adapter instance's 19 fields and four credential fields, parsed once
- * per cycle. SDK-free: the adapter hands in a field reader, tests hand in a
+ * The adapter instance's 19 fields and four credential fields, parsed when
+ * the adapter is configured (an edit of the account configures it again).
+ * SDK-free: the adapter hands in a field reader, tests hand in a
  * map. Defaults, fallbacks and warnings follow the configuration contract of
  * the original pack (design section 2.1) so an account behaves the same.
  *
@@ -324,14 +325,27 @@ public final class VCommunityConfig {
         return String.join(",", fileIdentity());
     }
 
-    /** {@code host:port} with a bracketed IPv6 literal, for URLs. */
-    public String hostPort() {
-        return urlHost(host) + ":" + port;
+    /**
+     * The host as it is dialled: a Unicode name in its punycode ({@code xn--})
+     * form, anything else as entered. The certificate name check wants this form.
+     */
+    public String asciiHost() {
+        if (host.indexOf(':') >= 0 || host.chars().allMatch(c -> c < 128)) return host;
+        try {
+            return java.net.IDN.toASCII(host);
+        } catch (IllegalArgumentException e) {
+            return host; // unusable: the name check then refuses every handshake
+        }
     }
 
-    /** The host as the account entered it (for the name check), with the port when not 443. */
+    /** {@code host:port} with a bracketed IPv6 literal, for URLs. */
+    public String hostPort() {
+        return urlHost(asciiHost()) + ":" + port;
+    }
+
+    /** The host for the certificate name check, with the port when not 443. */
     public String dialledHost() {
-        return port == DEFAULT_PORT ? host : urlHost(host) + ":" + port;
+        return port == DEFAULT_PORT ? asciiHost() : urlHost(asciiHost()) + ":" + port;
     }
 
     /**
@@ -345,7 +359,11 @@ public final class VCommunityConfig {
             TlsMode mode = TlsMode.parse(field.apply(F_TLS_MODE));
             String host = trimToNull(field.apply(F_HOST));
             if (mode != TlsMode.ENABLED || host == null) return null;
-            return "https://" + urlHost(host) + ":" + parsePort(field.apply(F_PORT));
+            String ascii = host;
+            if (host.indexOf(':') < 0 && !host.chars().allMatch(c -> c < 128)) {
+                ascii = java.net.IDN.toASCII(host);
+            }
+            return "https://" + urlHost(ascii) + ":" + parsePort(field.apply(F_PORT));
         } catch (RuntimeException e) {
             return null;
         }

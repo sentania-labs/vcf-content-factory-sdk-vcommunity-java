@@ -74,13 +74,20 @@ public final class DescribeTest {
     };
 
     static Map<Integer, String> labels = new HashMap<>();
+    static Map<Integer, String> descriptions = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         Properties p = new Properties();
         try (InputStream in = new FileInputStream("resources/resources.properties")) {
             p.load(new java.io.InputStreamReader(in, StandardCharsets.UTF_8));
         }
-        for (String k : p.stringPropertyNames()) labels.put(Integer.valueOf(k), p.getProperty(k));
+        for (String k : p.stringPropertyNames()) {
+            if (k.endsWith(".description")) {
+                descriptions.put(Integer.valueOf(k.substring(0, k.length() - ".description".length())), p.getProperty(k));
+            } else {
+                labels.put(Integer.valueOf(k), p.getProperty(k));
+            }
+        }
 
         DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
         f.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
@@ -167,10 +174,23 @@ public final class DescribeTest {
                 T.eq(want.enums.length, enums.size(), at + " choice count");
                 for (int j = 0; j < want.enums.length; j++) {
                     T.eq(want.enums[j], enums.get(j).getAttribute("value"), at + " choice " + j);
-                    T.eq(String.valueOf(j + 1), enums.get(j).getAttribute("displayOrder"), at + " choice order");
+                    T.check(!enums.get(j).hasAttribute("displayOrder"), at + " choice has no displayOrder (not in the schema)");
+                    if (want.key.equals("cluster_check_period_hours")) {
+                        String v = want.enums[j];
+                        T.eq(v + (v.equals("01") ? " hour" : " hours"), label(enums.get(j)), at + " choice label");
+                    } else {
+                        T.check(!enums.get(j).hasAttribute("nameKey"), at + " choice shows its value");
+                    }
                 }
                 // the default is one of the choices
                 T.check(Arrays.asList(want.enums).contains(want.dflt), at + " default is a choice");
+            }
+            // every field has a description in our own words; the TLS one warns about credentials
+            String desc = descriptions.get(Integer.valueOf(got.getAttribute("nameKey")));
+            T.check(desc != null && desc.length() > 30, at + " has a description");
+            if (want.key.equals("vcenter_tls_validation")) {
+                T.contains(desc, "before any certificate check", "TLS description warns that credentials go first");
+                T.contains(desc, "WARNING", "plain warning");
             }
             // an advanced field must have a default or be optional, or it stays in the main form
             if (want.advanced) T.check(!want.required || want.dflt != null, at + " lands under Advanced Settings");
@@ -230,6 +250,8 @@ public final class DescribeTest {
         CollectionHealth.Summary s = new CollectionHealth.Summary();
         s.seriesPushed = 1;
         s.propertiesPushed = 1;
+        s.checklistSkipped = 0;
+        s.objectsUnmatched = 0;
         return s;
     }
 
@@ -298,7 +320,7 @@ public final class DescribeTest {
                 used.add(k);
             }
         }
-        // each ResourceKind / field / attribute has its own key; groups may repeat text but not keys
+        for (Integer d : descriptions.keySet()) T.check(used.contains(d), "description for an unused nameKey " + d);
         Set<Integer> unused = new TreeSet<>(labels.keySet());
         unused.removeAll(used);
         T.check(unused.isEmpty(), "labels nothing refers to: " + unused);

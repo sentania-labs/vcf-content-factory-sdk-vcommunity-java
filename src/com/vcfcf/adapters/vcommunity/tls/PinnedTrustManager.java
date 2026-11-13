@@ -9,10 +9,11 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.X509ExtendedTrustManager;
 
 /**
- * Trusts exactly one certificate: the server's leaf, when its SHA-256 (a
- * 64 digit pin) or SHA-512 (128 digits) digest equals the pin. Chain, expiry
- * and name are not checked: the thumbprint is the identity (design 2.5). The
- * comparison runs during the handshake, before any credential is sent.
+ * Accepts exactly one certificate: the server's leaf, when its SHA-256 (a 64
+ * digit pin) or SHA-512 (128 digit pin) digest equals the pin. The chain, the
+ * dates and the name are not looked at; the pin alone decides (design 2.5). It
+ * runs during the handshake, so a mismatch ends the connection before the
+ * first request.
  */
 public final class PinnedTrustManager extends X509ExtendedTrustManager {
 

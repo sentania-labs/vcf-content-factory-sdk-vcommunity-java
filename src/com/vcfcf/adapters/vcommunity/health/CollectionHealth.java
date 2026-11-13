@@ -35,8 +35,10 @@ public final class CollectionHealth {
         public String firstWarning;
         public int readsFailed;
         public int valuesWithheld;
-        public int checklistSkipped;
-        public int objectsUnmatched;
+        /** Null unless every check-list file read this cycle was parsed (else the count is unknown). */
+        public Integer checklistSkipped;
+        /** Null unless the lookup of the vCenter object completed (0 matched, 1 not). */
+        public Integer objectsUnmatched;
         public double cycleSeconds;
         public String firstFailure;
         /** Null when the push was not clean (the count is unknown). */
@@ -59,8 +61,12 @@ public final class CollectionHealth {
                 s.firstWarning == null ? NONE : s.firstWarning);
         ps.stat(vcenterResourceId, PREFIX + "Reads Failed in Last Cycle", s.readsFailed);
         ps.stat(vcenterResourceId, PREFIX + "Values Withheld in Last Cycle", s.valuesWithheld);
-        ps.stat(vcenterResourceId, PREFIX + "Check-List Entries Skipped", s.checklistSkipped);
-        ps.stat(vcenterResourceId, PREFIX + "Objects Not Matched", s.objectsUnmatched);
+        if (s.checklistSkipped != null) {
+            ps.stat(vcenterResourceId, PREFIX + "Check-List Entries Skipped", s.checklistSkipped);
+        }
+        if (s.objectsUnmatched != null) {
+            ps.stat(vcenterResourceId, PREFIX + "Objects Not Matched", s.objectsUnmatched);
+        }
         ps.stat(vcenterResourceId, PREFIX + "Cycle Seconds", s.cycleSeconds);
         ps.prop(vcenterResourceId, PREFIX + "First Failure",
                 s.firstFailure == null ? NONE : s.firstFailure);
@@ -82,8 +88,12 @@ public final class CollectionHealth {
         m.put("Collection|cycle_seconds", s.cycleSeconds);
         m.put("Collection|reads_failed", (double) s.readsFailed);
         m.put("Collection|values_withheld", (double) s.valuesWithheld);
-        m.put("Collection|objects_unmatched", (double) s.objectsUnmatched);
-        m.put("Collection|checklist_entries_skipped", (double) s.checklistSkipped);
+        if (s.objectsUnmatched != null) {
+            m.put("Collection|objects_unmatched", (double) s.objectsUnmatched);
+        }
+        if (s.checklistSkipped != null) {
+            m.put("Collection|checklist_entries_skipped", (double) s.checklistSkipped);
+        }
         if (s.seriesPushed != null) m.put("Collection|series_pushed", (double) s.seriesPushed);
         if (s.propertiesPushed != null) {
             m.put("Collection|properties_pushed", (double) s.propertiesPushed);

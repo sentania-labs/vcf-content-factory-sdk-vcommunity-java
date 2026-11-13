@@ -100,7 +100,11 @@ public final class OpsResourceMap {
     /** The request path of one page of {@code kind}. */
     public static String path(String kind, int page) {
         return "/api/resources?adapterKind=VMWARE&resourceKind=" + encode(kind) + "&pageSize="
-                + ("VirtualMachine".equals(kind) ? VM_PAGE_SIZE : PAGE_SIZE) + "&page=" + page;
+                + pageSize(kind) + "&page=" + page;
+    }
+
+    private static int pageSize(String kind) {
+        return "VirtualMachine".equals(kind) ? VM_PAGE_SIZE : PAGE_SIZE;
     }
 
     private static String encode(String s) {
@@ -154,7 +158,12 @@ public final class OpsResourceMap {
                 rows++;
                 visit.accept(new Row(r));
             }
-            if (total == null) break; // no pageInfo: one page is the whole list
+            if (total == null) {
+                // No total: only a page shorter than the page size is known to be the last.
+                // A full page is followed by another read; an empty one ends the list.
+                if (n < pageSize(kind)) break;
+                continue;
+            }
             if (rows >= total) break;
             if (n == 0) {
                 throw new IOException(kind + " list ended after " + rows + " of "
