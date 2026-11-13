@@ -1,5 +1,6 @@
 package com.vcfcf.adapters.vcommunity;
 
+import com.vcfcf.adapters.vcommunity.coll.PropertyCollection;
 import com.vcfcf.adapters.vcommunity.health.CollectionHealth;
 import com.vcfcf.adapters.vcommunity.health.CollectionHealth.Status;
 import com.vcfcf.adapters.vcommunity.health.FailureCause;
@@ -14,6 +15,7 @@ import com.vcfcf.adapters.vcommunity.ops.PushOutcome;
 import com.vcfcf.adapters.vcommunity.ops.PushSet;
 import com.vcfcf.adapters.vcommunity.tls.ThumbprintProbe;
 import com.vcfcf.adapters.vcommunity.vim.About;
+import com.vcfcf.adapters.vcommunity.vim.VimReader;
 import com.vcfcf.adapters.vcommunity.vim.VimResult;
 import com.vcfcf.adapters.vcommunity.vim.VimSession;
 
@@ -31,6 +33,8 @@ import java.util.Map;
  *   A2 probe     the certificate thumbprint the vCenter presents
  *   A3 lists     the check-list files, only those in use
  *   A4 binding   the vCenter's own object in VCF Operations, by VCID
+ *   B  reads     the property keys of clusters, hosts, virtual machines, datastores
+ *                and the vCenter itself ({@link PropertyCollection}, phase P2)
  *   E  health    the Collection Health keys on that object; the self metrics
  * </pre>
  *
@@ -94,6 +98,7 @@ public final class CycleEngine {
     private final Log log;
     private final Clock clock;
     private final LastPushed lastPushed = new LastPushed(REFRESH_EVERY);
+    private final PropertyCollection properties;
 
     private long cycleNo;
     private String vcenterId;
@@ -114,6 +119,7 @@ public final class CycleEngine {
         this.warns = warns;
         this.log = warns;
         this.clock = clock;
+        this.properties = new PropertyCollection(warns, clock::now);
     }
 
     /**
@@ -183,33 +189,81 @@ public final class CycleEngine {
             vcId = resolveVcenterObject(vcid, failures, s);
         }
         s.vcenterResolved = vcId != null;
-        return finish(t0, s, failures, null, null, about, presented, lists, vcId);
+
+        // B: the property keys of the vCenter's objects
+        PushSet ps = new PushSet(log);
+        PropertyCollection.Result p2 = null;
+        VimReader reader = vim.reader();
+        if (reader != null) {
+            if (s.deadlineHit || clock.now() >= deadlineMs) {
+                s.deadlineHit = true;
+                skipProperties(s, Status.NOT_RUN);
+            } else if (vcid == null || ops == null) {
+                if (vcid != null) {
+                    failures.add(COLLECTOR_VCENTER, FailureCause.opsMap("all"), "VCF Operations", 0,
+                            "the local VCF Operations Suite API is not available; no property is sent");
+                } else {
+                    failures.add(COLLECTOR_VCENTER, FailureCause.opsMap("all"), "vCenter UUID", 0,
+                            "the vCenter instance UUID is unknown; its objects cannot be matched");
+                }
+                skipProperties(s, Status.SKIPPED);
+            } else {
+                PropertyCollection.Input in = new PropertyCollection.Input();
+                in.vim = reader;
+                in.ops = ops;
+                in.about = about;
+                in.vcid = vcid;
+                in.vcenterResourceId = vcId;
+                in.lists = lists;
+                in.presentedThumbprint = presented;
+                in.cycle = cycleNo;
+                in.startMs = t0;
+                in.deadlineMs = deadlineMs;
+                in.ps = ps;
+                in.failures = failures;
+                p2 = properties.run(in);
+                s.collectorStatus.putAll(p2.status);
+                if (p2.deadlineHit) s.deadlineHit = true;
+                // the count is whole only when the vCenter lookup and every kind's read and map completed
+                s.objectsUnmatched = s.objectsUnmatched == null || p2.unmatched == null ? null
+                        : Integer.valueOf(s.objectsUnmatched + p2.unmatched);
+            }
+        }
+        return finish(t0, s, failures, null, null, about, presented, lists, vcId, ps, p2);
+    }
+
+    private static void skipProperties(CollectionHealth.Summary s, Status st) {
+        for (String c : new String[] {PropertyCollection.C_CLUSTER, PropertyCollection.C_HOST,
+            PropertyCollection.C_VM, PropertyCollection.C_DATASTORE, PropertyCollection.C_VCENTER}) {
+            s.collectorStatus.put(c, st);
+        }
     }
 
     private Result finish(long t0, CollectionHealth.Summary s, Failures failures, String failure,
             Throwable cause, About about, String presented, Map<ListKind, CheckListStore.Entry> lists)
             throws InterruptedException {
-        return finish(t0, s, failures, failure, cause, about, presented, lists, null);
+        return finish(t0, s, failures, failure, cause, about, presented, lists, null,
+                new PushSet(log), null);
     }
 
     private Result finish(long t0, CollectionHealth.Summary s, Failures failures, String failure,
             Throwable cause, About about, String presented,
-            Map<ListKind, CheckListStore.Entry> lists, String vcId)
-            throws InterruptedException {
+            Map<ListKind, CheckListStore.Entry> lists, String vcId, PushSet ps,
+            PropertyCollection.Result p2) throws InterruptedException {
         failures.logSummary(log);
         // E: the health keys on the vCenter object, then the figures that depend on the push
         PushOutcome outcome = PushOutcome.NOTHING;
         boolean attempted = false;
         LastPushed.Selection selection = null;
-        PushSet ps = new PushSet(log);
-        if (vcId != null && ops != null && failure == null) {
+        if (ops != null && failure == null && (vcId != null || !ps.isEmpty())) {
             fill(s, failures, t0);
-            CollectionHealth.vcenterKeys(ps, vcId, s);
+            if (vcId != null) CollectionHealth.vcenterKeys(ps, vcId, s);
             selection = lastPushed.select(ps.properties(), cycleNo);
             attempted = true;
             outcome = ops.pushBatch(selection.toSend(), ps.stats(), t0);
             if (outcome.isClean()) {
                 selection.commit();
+                if (p2 != null) p2.commit();
             } else {
                 int n = Math.max(1, outcome.batchesFailed);
                 warns.addExternal(n, "the health push to VCF Operations was not clean: " + outcome);
