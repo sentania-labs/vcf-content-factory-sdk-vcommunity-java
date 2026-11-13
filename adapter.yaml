@@ -1,29 +1,44 @@
-# adapter.yaml — pak metadata for the example/template adapter.
+# adapter.yaml: pak metadata for VCF Content Factory vCommunity.
 #
-# Field conventions match the production adapters (compliance, unifi):
-#   adapter_kind  snake_case kind; MUST equal the AdapterKind key in describe.xml
-#                 and ADAPTER_KIND in your *Adapter.java.
-#   entry_class   fully-qualified adapter class.
-#   name          display name; prose prefix "VCF Content Factory" (no brackets).
-#   version       semantic version of the pak.
-#   build_number  bump on every build; CHANGELOG.md gets a matching one-liner.
-#   tier          2 for Java SDK adapters.
-#   released      false while authoring; the official release is the .pak CI
-#                 builds on a v* git tag.
+#   adapter_kind  MUST equal the AdapterKind key in describe.xml and
+#                 ADAPTER_KIND in VCommunityAdapter.java.
+#   build_number  bump on every build; CHANGELOG.md gets a matching line.
+#   released      false while authoring; the official release is the .pak
+#                 CI builds on a v* git tag. Dev builds stamp 0.0.0.<build>.
 #
-# For a pak that bundles dashboards/views, add a bundled_content: block and
-# co-locate the YAML in this repo under views/ and dashboards/ (paths resolve
-# relative to this file).
-adapter_kind: example_adapter
-entry_class: com.vcfcf.adapters.example.ExampleAdapter
-name: VCF Content Factory Example Adapter
+# Design: docs/design/vcommunity-java-port-design.md (identity in section 1).
+adapter_kind: vcfcf_vcommunity
+entry_class: com.vcfcf.adapters.vcommunity.VCommunityAdapter
+name: VCF Content Factory vCommunity
 description: >
-  Minimal framework-v2 Tier 2 SDK adapter skeleton. Discovers one
-  ExampleResource kind under a World traversal anchor via collect-path
-  discovery, and pushes one metric and one property per resource. Copy this
-  repo and replace the example resource kinds, endpoints, and metric keys with
-  your target system.
-version: 0.1.0
-build_number: 3
+  Java port of the vCommunity management pack. Reads a vCenter over vim25 and
+  pushes the vCommunity| keys onto the vCenter adapter's own objects through
+  the VCF Operations Suite API, and adds three objects of its own (content
+  libraries, library items and VM templates). Port of vCommunity by Onur
+  Yuzseven (github.com/vmbro/VCF-Operations-vCommunity) as continued by
+  e1-rahabok (github.com/e1-rahabok/VCF-vCommunity-Adapter) 0.8.1.
+  This build is the first phase: the account, vCenter TLS modes, session,
+  Test Connection and collection health. No vCommunity key is collected yet.
+version: 1.0.0
+build_number: 1
 tier: 2
 released: false
+
+vendor: "VCF Content Factory"
+eula_file: LICENSE
+
+# The pak's content keeps the original pack's names; none carries a prefix.
+content_naming: unprefixed
+# Bundled content (a later phase) targets the vCenter adapter's own kinds and
+# the Container kinds, where the keys are stitched, not objects of this kind.
+content_foreign_adapter_kinds: [VMWARE, Container]
+
+# Where the keys land. Documentation only: the groups are the exact prefixes.
+# Phase 1 pushes only the Collection Health keys; the rest are listed so the
+# document matches the design and is filled in as the collectors arrive.
+stitch_targets:
+  - adapter_kind: VMWARE
+    resource_kind: VMwareAdapter Instance
+    identity: "VMEntityVCID (the vCenter's about.instanceUuid); exactly one object must carry it, otherwise the keys are held back and counted"
+    key_groups:
+      - "vCommunity|Collection Health|*"
