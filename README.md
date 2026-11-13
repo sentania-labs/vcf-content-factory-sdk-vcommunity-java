@@ -1,76 +1,66 @@
-# VCF Content Factory — SDK adapter template
+# VCF Content Factory vCommunity
 
-A minimal, fully-wired skeleton for a **Tier 2 Java SDK management-pack adapter**
-for VCF Operations, built and released independently of the VCF Content Factory.
+A Java port of the vCommunity management pack for VCF Operations. The pak reads
+a vCenter over vim25 and pushes the `vCommunity|` keys onto the vCenter
+adapter's own objects through the VCF Operations Suite API, and adds three
+object kinds of its own (content libraries, library items and VM templates).
+It is a clean reimplementation: the key tree, the account fields and the
+check-list files follow the original pack, the code is new and MIT licensed.
 
-This template tracks the current framework v2 idioms used by the production
-adapters (`compliance`, `unifi`). The example adapter discovers one
-`ExampleResource` kind under a `World` traversal anchor and pushes one metric and
-one property per resource — replace the resource kinds, endpoints, and metric
-keys with your target system, keeping the SHAPE.
+Adapter kind `vcfcf_vcommunity`; distinct from the original Python pack's kind,
+so the two are never an upgrade of each other (see `docs/installing.md`).
+
+## Status
+
+Phase 1 of the port: the account (the 19 fields and credential of the original
+pack), the three vCenter TLS modes, the vim25 session, Test Connection, the
+collection cycle skeleton with its Collection Health keys and self metrics.
+**No `vCommunity|` key is collected yet**; each later phase adds collectors.
+The design is in `docs/design/` (start with `vcommunity-java-port-design.md`).
 
 ## Documentation
 
-Every SDK pak ships a standard docset under [`docs/`](docs/README.md):
-a generated inventory-tree diagram (kinds + identifying keys), plus
-hand-curated `overview.md` and `installing.md` prose pages. The two prose
-pages are scaffolded once by `docs-gen` and then curated — in this template
-they carry placeholder guidance telling you what to write when you
-instantiate a pak. Regenerate the derived files (diagram, inventory tree,
-`docs/README.md`) on every build; never hand-edit them.
+`docs/README.md` indexes the docset: `overview.md`, `installing.md` (the account
+fields, TLS modes, Test Connection) and the generated inventory tree.
+`REFERENCE.md` lists the account, the self metrics and the own kinds' keys.
+`NOTICE` credits the original authors.
 
 ## What's here
 
 ```
-adapter.yaml                              # name, version, build_number, adapter_kind, entry_class
-describe.xml                              # adapter descriptor (ResourceKinds, metrics, credentials)
-resources/resources.properties            # nameKey -> display strings
-icons/icons.yaml                          # ResourceKind -> icon mapping (optional)
-src/com/vcfcf/adapters/example/           # adapter Java source
-  ExampleAdapter.java                     #   the adapter (heavily commented — read this first)
-  ExampleApiClient.java                   #   thin REST client
-  ExampleConfig.java                      #   typed config POJO (validated host/port, redacted toString)
-  ExampleFailures.java                    #   unreachable (DOWN) vs failed (ERROR), cause-chain walk
-  ExampleValues.java                      #   numeric-or-absent check behind metricIfPresent
-  CycleCache.java                         #   one snapshot per collection cycle
-  ItemIndex.java                          #   id index; throws when a non-empty list has no ids
-  BoundedBody.java                        #   response body handler with an 8 MB cap
-tests/com/vcfcf/adapters/example/         # plain-main tests for the helpers above (no SDK jar)
-.github/workflows/build-pak-on-tag.yml    # CI: tag v* -> build .pak -> attach to Release
-.github/workflows/pak-tests.yml           # reusable CI: JDK 17 + 25 test matrix, no secrets, no SDK jar
-.github/workflows/tests.yml               # CI: every push and PR -> calls pak-tests.yml (@main in paks)
-ci/run_java_tests.sh                      # runs every tests/**/*Test.java, no SDK jar needed
-CHANGELOG.md                              # one line per build
+adapter.yaml                         # pak metadata (kind, entry class, naming, stitch targets)
+describe.xml                         # account fields, credential, own kinds, self metrics
+resources/resources.properties       # nameKey -> display strings
+icons/icons.yaml                     # kind -> icon map
+src/com/vcfcf/adapters/vcommunity/   # adapter source
+  VCommunityAdapter.java             #   lifecycle, Test Connection, discovery (SDK side)
+  OpsPort.java                       #   Suite API port (SDK side)
+  VCommunityConfig.java              #   the 19 fields, defaults, fallbacks (SDK-free)
+  CycleEngine.java                   #   one cycle: session, probe, lists, binding, health
+  ConnectionTester.java              #   Test Connection logic
+  vim/                               #   raw SOAP session, no JAX-WS and no vim25.jar
+  tls/                               #   trust on first use, platform trust, pin; probe
+  ops/                               #   resource identity, push set, push on change
+  list/                              #   check-list files: parse, validate, store
+  health/                            #   failure accounting, warning count, health keys
+  json/                              #   small JSON reader and writer
+tests/com/vcfcf/adapters/vcommunity/ # plain-main tests, no SDK jar needed
+docs/design/                         # the approved design, the collection map, key tables
+.github/workflows/                   # tests on push; release build on a v* tag
+ci/run_java_tests.sh                 # runs every tests/**/*Test.java
 ```
 
-There is **no `lib/` of bundled jars** (C2 pak shape — see below).
+Everything outside `VCommunityAdapter` and `OpsPort` has no import from the VCF
+Operations SDK or the framework jar, so the tests run on a bare JDK:
 
-## Instantiating a new pak
+```sh
+ci/run_java_tests.sh
+```
 
-1. **Create the repo from this template.** Click **Use this template** to create
-   `sentania-labs/vcf-content-factory-sdk-<name>`.
-2. **Register it in the factory.** Add one line to the factory's
-   `context/managed_paks.md` registry so `scripts/bootstrap_managed_paks.sh`
-   clones it into the gitignored `content/sdk-adapters/<name>/` working tree.
-3. **Rename the skeleton.** Pick your `adapter_kind` (snake_case) and apply it
-   consistently across:
-   - `adapter.yaml` — `adapter_kind`, `entry_class`, `name`, `description`;
-   - `describe.xml` — the `AdapterKind` key, the type-7 instance `ResourceKind`
-     key, credential/resource kinds, identifiers, groups, attributes;
-   - `resources/resources.properties` — the display strings;
-   - `icons/icons.yaml` — the resource-kind icon map;
-   - the Java package/class names and the `ADAPTER_KIND` constant.
-4. **Build out collection.** Replace the example HTTP calls and per-resource
-   collect logic. Keep the load-bearing idioms documented at the top of
-   `ExampleAdapter.java` — especially **collect-path discovery** (mandatory on
-   VCF Ops 9.0.2, which never calls `onDiscover()`), `componentLogger(Class)`,
-   cooperative cancellation, and loud-failure (no sentinel for an unreadable
-   value).
+The tests make a throwaway TLS certificate with the JDK's `keytool` at run time;
+no key or certificate is stored in the repository.
 
-**Tests on every push and PR.** `sdk-validation.yml` verifies the release workflow’s pinned buildkit, runs `validate-sdk` without the private SDK jar, and tests the defect gate and real pak-compare exit statuses. Full framework/adapter compilation, deploy-key access, checksum handover, provenance and release upload are proved only by a tag build. The defect registry is pinned by `DEFECT_REGISTRY_COMMIT` in the release workflow; review and update that pin before releasing when the factory registry changes.
-
-A new pak inherits the test workflow by keeping `.github/workflows/tests.yml` as created: it calls this template's `pak-tests.yml@main`, which runs `ci/run_java_tests.sh` (every `tests/**/*Test.java`) on JDK 17 and 25 (pass `test-script:`, `pre-check:` or `java-versions:` under `with:` to customize).
-A pak instantiated from the template also carries a copy of `pak-tests.yml` that it never runs (only the template calls its local copy); the pak may delete it.
+There is **no `lib/` of bundled jars** (see "C2 pak shape" below).
 
 ## Local dev build (preview)
 
@@ -84,18 +74,18 @@ supply it from a 9.0.2 appliance (JDK 17 or newer is needed to read it):
 #   (check its sha256 and rename it as described in the build instructions below)
 
 # Either pass it explicitly:
-python3 -m vcfcf_managementpacks build-sdk content/sdk-adapters/<name> \
+python3 -m vcfcf_managementpacks build-sdk content/sdk-adapters/vcommunity-java \
   --sdk-jar /path/to/vrops-adapters-sdk-9.0.2.0.25137845.jar -o dist
 
 # ...or set it once in the environment:
 export VCFCF_SDK_JAR=/path/to/vrops-adapters-sdk-9.0.2.0.25137845.jar
-python3 -m vcfcf_managementpacks build-sdk content/sdk-adapters/<name> -o dist
+python3 -m vcfcf_managementpacks build-sdk content/sdk-adapters/vcommunity-java -o dist
 ```
 
 Validate first (the cheap loop — exhaust this before building a pak):
 
 ```sh
-python3 -m vcfcf_managementpacks validate-sdk content/sdk-adapters/<name>
+python3 -m vcfcf_managementpacks validate-sdk content/sdk-adapters/vcommunity-java
 ```
 
 The framework jar (`vcfcf-adapter-base.jar`) is provided by the builder; you do
@@ -246,7 +236,7 @@ PRIVATE half as an Environment secret named `SDK_RUNTIME_SSH_KEY` in
 `sdk-release` **before** pushing a release tag. See the workflow header for the
 runner/JDK/buildkit knobs. Configure required reviewers on `sdk-release` and
 protect `v*` tags with repository rulesets before releasing. Those GitHub
-settings are managed separately from this template.
+settings are managed separately from this repository.
 
 ## C2 pak shape — no bundled jars
 
@@ -268,4 +258,4 @@ For an adapter that ships dashboards/views, add a `bundled_content:` block to
 
 ## License
 
-MIT, see `LICENSE`. Repos instantiated from this template inherit the file; keep or replace it as the pak's own license.
+MIT, see `LICENSE`. `NOTICE` credits the authors of the original pack, whose design this port follows.

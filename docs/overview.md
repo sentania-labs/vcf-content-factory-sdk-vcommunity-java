@@ -1,83 +1,89 @@
-# Overview — VCF Content Factory Example Adapter
-
-> **TEMPLATE** — this is the curated prose page of the standard SDK docset.
-> It is generated once as a scaffold and then hand-curated; the generator
-> never overwrites it again. When you instantiate a pak, **replace the
-> placeholder prose below** with real content for your target system. The
-> guidance in each section tells you what to write. Keep the section
-> structure — it matches the curated overviews shipped by the production
-> adapters (`compliance`, `synology`, `unifi`).
+# Overview: VCF Content Factory vCommunity
 
 ## What's in the Pack
 
-> Describe, in a sentence or two: what system this pack monitors, how the
-> adapter reaches it (which API / protocol / port), and what an operator
-> gets in VCF Operations. Keep it factual — no marketing.
+VCF Content Factory vCommunity is a Java port of the vCommunity management
+pack. It reads a vCenter over the vim25 SOAP API (and, in a later phase, the
+vSphere Automation REST API for content libraries) and pushes the `vCommunity|`
+keys onto the objects the vCenter adapter already has in VCF Operations: hosts,
+clusters, virtual machines, datastores, datacenters, the vCenter object and the
+vSphere World. It also creates three object kinds of its own.
 
-VCF Content Factory Example Adapter is a Tier 2 (Java SDK) management pack
-skeleton. It discovers one `ExampleResource` kind under a `World` traversal
-anchor via collect-path discovery and pushes one metric and one property
-per resource. Replace this paragraph — and the resource kinds, endpoints,
-and metric keys it describes — with your target system.
+This build is the first phase of the port. It provides the account, the vCenter
+TLS modes, the session, Test Connection and the collection cycle with its
+health keys. It collects no `vCommunity|` key yet.
 
 ### Resource kinds
 
-> List the resource kinds this pack owns, with their keys and a one-line
-> purpose each. The table below is a worked example; regenerate
-> `inventory-tree.md` for the authoritative kinds + identifying keys.
-
 | Kind | Key | What it represents |
 |------|-----|--------------------|
-| Example World | `World` | Aggregation root (singleton per instance). |
-| Example Resource | `ExampleResource` | The one example object kind — replace with yours. |
+| VCF Content Factory vCommunity Collector | `vCommunityCollector` | One per account. The collection cycle runs for it, so an unreachable vCenter shows the account as down. Carries no metrics. |
+| Content Library | `Content Library` | A content library of the vCenter (later phase). |
+| Library Item | `Library Item` | An item of a content library (later phase). |
+| VM Template | `VM Template` | A VM that is a template in the vCenter (later phase). |
 
 ### Metrics scope
 
-> Summarize the metric/property surface (a count and the highlights).
-> Point to `REFERENCE.md` for the authoritative, generated list — do not
-> hand-maintain the full table here.
+The own kinds declare the same keys as the original pack (26 keys). The keys
+pushed onto the vCenter adapter's objects cannot be declared here: a pak cannot
+declare keys on another adapter's kinds, and a pushed key carries no label or
+unit of its own. `REFERENCE.md` lists what is declared; `adapter.yaml`
+(`stitch_targets`) lists where keys land.
 
-See `REFERENCE.md` for the authoritative metric and property list.
+In this build the adapter pushes only its own health figures:
+
+- on the pak's adapter instance, the `Collection|` self metrics (cycle time,
+  failed reads, values withheld, objects not matched, check-list entries
+  skipped, push counts, whether the deadline was hit, whether the vCenter object
+  was matched) and `Collection|last_error`;
+- on the vCenter's own object, the `vCommunity|Collection Health|` keys.
 
 ## Cross-Adapter Behavior
 
-> If your adapter stitches onto resources owned by another adapter,
-> document it here. Otherwise delete this section. Be specific about:
-> the foreign adapter kind and resource kind, how you resolve the foreign
-> resource (identity key — never a guessed MOID), the transport (ambient
-> Suite API), and the failure posture (skip-and-WARN when the Suite API is
-> unavailable; collection never fails over an optional cross-link).
->
-> Worked examples from the production adapters:
-> - **compliance** — ARIA_OPS-style push onto VMWARE HostSystem (by MOID)
->   and the vCenter object (by `VCURL` / `VMEntityVCID`), over the ambient
->   Suite API.
-> - **synology** — informational cross-link making iSCSI LUNs / NFS exports
->   children of the VMWARE Datastore they back, resolved by path identity.
-> - **unifi** — optional LLDP cross-link attaching switch ports to the
->   VMWARE HostSystem on the other end of the link.
+The pak pushes onto objects owned by the vCenter adapter (VMWARE) through the
+local VCF Operations Suite API. An object is found by the vCenter's instance
+UUID plus the object's MoRef, never by name: a MoRef such as `host-12` exists in
+every vCenter, and names can repeat. A MoRef carried by two objects of the same
+vCenter matches neither, and the object is counted as not matched.
 
-The example adapter has no cross-adapter stitching.
+The vCenter's own object (kind `VMwareAdapter Instance`) is the one object of
+that kind whose `VMEntityVCID` equals the vCenter's instance UUID. If none, or
+more than one, carries it, the keys for that object are held back and counted
+(`Collection|objects_unmatched`), and the log says which.
+
+If the Suite API client is not available to the instance, the cycle says so and
+pushes nothing onto the vCenter's objects.
 
 ## Notable Behaviors
 
-> Call out behaviors an operator should understand before relying on the
-> pack. At minimum, document the load-bearing framework idioms this pack
-> inherits:
->
-> - **Unreadable is never flattered.** A value the adapter could not read
->   is surfaced as ERROR / no-data, never published as a `0.0` or sentinel
->   that masquerades as healthy. This is the cardinal correctness rule.
-> - **Secrets are redacted** from all logs and error messages
->   (session tokens, passwords, credential-bearing URLs).
-> - **Fresh-instance discovery works on VCF Ops 9.0.2.** The adapter
->   enumerates on the collect path (`discoverOnCollect()`), so a freshly
->   created instance populates on its first collection cycle rather than
->   waiting on an `onDiscover()` the platform may never call.
+- **A failed read sends nothing.** A value that could not be read is never
+  replaced by a zero, `False`, `Unknown` or any other placeholder; it is counted
+  in `Collection|reads_failed` and `Collection|values_withheld`, and the first
+  cause is in `Collection|last_error`. A figure the cycle could not measure (for
+  example the number of series sent when a push failed) is not sent either.
+- **The cycle always reports.** A failed login fails the cycle and the account
+  shows an error, or down when the vCenter cannot be reached; the self metrics
+  still land.
+- **Check-list files.** Six XML files in the VCF Operations configuration-file
+  store name what to collect. A bad entry is skipped and reported; a file that
+  cannot be read this cycle leaves the last good list in force; a file that does
+  not exist empties its list. The Windows service and event files are read only
+  when their monitoring switch is on.
+- **vCenter TLS.** Three modes, set on the account: Trust on First Use (the
+  default; connects whatever the certificate), Enabled (the collector's trust,
+  with the certificate name checked), Pinned (the vCenter thumbprint). See
+  `installing.md`.
+- **Secrets stay out of logs and messages.** The vCenter and Windows passwords,
+  session ids and tokens are never written to a log line or an error message.
 
 ## Known Limitations
 
-> List real gaps, caveats, and out-of-scope items (e.g. read-only, no
-> remediation; features that require an optional API or component).
-
-- This is a skeleton, not a working integration.
+- No `vCommunity|` key is collected in this build.
+- Trust on First Use sends the user name and password before the certificate is
+  checked, as the original pack did. Use Pinned or Enabled on a network that is
+  not fully trusted.
+- The platform shows no text for a passing Test Connection. The summary of what
+  the test found (login, certificate thumbprint, Suite API, each check-list file
+  with its outcome and item count) is written to the collector log at WARN, where
+  it can be found; a failing test shows its message in the dialog.
+- Not yet proven on a live instance: see the phase 1 exit proof in the design.
