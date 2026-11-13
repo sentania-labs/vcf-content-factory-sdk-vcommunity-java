@@ -13,6 +13,11 @@ public interface VimSession extends AutoCloseable {
     @Override
     void close();
 
+    /** What the property collectors read through; null for a session that cannot read (a test double). */
+    default VimReader reader() {
+        return null;
+    }
+
     /** {@link #close()}, saying why in the log ({@code reconfigure}, {@code stop}). */
     default void close(String reason) {
         close();

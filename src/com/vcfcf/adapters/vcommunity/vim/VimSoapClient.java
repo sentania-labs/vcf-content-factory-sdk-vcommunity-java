@@ -33,7 +33,7 @@ import javax.xml.stream.XMLStreamException;
  * synchronized; {@link #call} may run from many threads once a session
  * exists.
  */
-public final class VimSoapClient implements VimSession {
+public final class VimSoapClient implements VimSession, VimReader {
 
     /** The protocol default connect timeout (design 4.1). */
     public static final int CONNECT_TIMEOUT_MS = 10_000;
@@ -61,6 +61,7 @@ public final class VimSoapClient implements VimSession {
     private volatile String cookie;
     private volatile MoRef sessionManager;
     private volatile About about;
+    private volatile ServiceRefs refs;
     private volatile boolean closed;
     private volatile String loginFailure;
     /** Counts successful logins, so a call can tell whether another thread already logged in again. */
@@ -101,8 +102,19 @@ public final class VimSoapClient implements VimSession {
     }
 
     /** The about of the current session, or null. */
+    @Override
     public About about() {
         return about;
+    }
+
+    @Override
+    public ServiceRefs refs() {
+        return refs;
+    }
+
+    @Override
+    public VimReader reader() {
+        return this;
     }
 
     /**
@@ -210,6 +222,7 @@ public final class VimSoapClient implements VimSession {
         loginFailure = null;
         this.sessionManager = smRef;
         this.about = a;
+        this.refs = ServiceRefs.from(rv);
         this.cookie = newCookie.value;
         this.generation++;
         if (closed) { // closed while this login was in flight: log it straight out
@@ -234,9 +247,23 @@ public final class VimSoapClient implements VimSession {
      * {@code _this}; the answer is the element tree of the SOAP body.
      */
     public VimResult<XmlNode> call(String bodyXml, String operation) {
+        return call(bodyXml, operation, readMs);
+    }
+
+    @Override
+    public VimResult<XmlNode> call(String bodyXml, String operation, int readTimeoutMs) {
         int gen = generation;
-        VimResult<XmlNode> r = rawCall(bodyXml, operation, true, readMs);
+        VimResult<XmlNode> r = rawCall(bodyXml, operation, true, readTimeoutMs);
         if (r.isOk() || !"NotAuthenticated".equals(r.faultClass())) return r;
+        VimResult<Void> again = reloginIfNeeded(gen, operation);
+        if (!again.isOk()) {
+            return VimResult.fault(again.faultClass(), again.message(), null, 0, again.cause());
+        }
+        return rawCall(bodyXml, operation, true, readTimeoutMs);
+    }
+
+    /** After a NotAuthenticated answer: log in again unless another thread already did. */
+    private VimResult<Void> reloginIfNeeded(int gen, String operation) {
         synchronized (this) {
             if (closed) return VimResult.fault("Closed", CLOSED, null, 0, null);
             if (loginFailure != null) {
@@ -253,7 +280,96 @@ public final class VimSoapClient implements VimSession {
                 }
             }
         }
-        return rawCall(bodyXml, operation, true, readMs);
+        return VimResult.ok(null, 0);
+    }
+
+    @Override
+    public VimResult<Long> stream(String bodyXml, String operation, int readTimeoutMs, long maxBytes,
+            StreamHandler handler) {
+        int gen = generation;
+        VimResult<Long> r = streamOnceSafe(bodyXml, operation, readTimeoutMs, maxBytes, handler);
+        if (r.isOk() || !"NotAuthenticated".equals(r.faultClass())) return r;
+        VimResult<Void> again = reloginIfNeeded(gen, operation);
+        if (!again.isOk()) {
+            return VimResult.fault(again.faultClass(), again.message(), null, 0, again.cause());
+        }
+        return streamOnceSafe(bodyXml, operation, readTimeoutMs, maxBytes, handler);
+    }
+
+    private VimResult<Long> streamOnceSafe(String bodyXml, String operation, int readTimeoutMs,
+            long maxBytes, StreamHandler handler) {
+        try {
+            return streamOnce(bodyXml, operation, readTimeoutMs, maxBytes, handler);
+        } catch (PinMismatchWrapper e) {
+            return VimResult.fault("Transport", e.getMessage(), null, 0, e.getCause());
+        } catch (IOException e) {
+            String tlsText = TlsFailure.explain(e, tls.mode());
+            return VimResult.fault("Transport", tlsText != null ? tlsText : describe(e), null, 0, e);
+        } catch (RuntimeException e) {
+            return VimResult.fault("Transport", operation + " failed: "
+                    + e.getClass().getSimpleName(), null, 0, e);
+        }
+    }
+
+    private VimResult<Long> streamOnce(String bodyXml, String operation, int readTimeoutMs,
+            long maxBytes, StreamHandler handler) throws IOException {
+        tls.clearPinMismatch();
+        HttpURLConnection conn;
+        try {
+            conn = open(bodyXml, operation, true, connectMs, readTimeoutMs, null);
+        } catch (IOException | RuntimeException e) {
+            rethrowPin(e);
+            throw e;
+        }
+        CappedInputStream body = null;
+        javax.xml.stream.XMLStreamReader reader = null;
+        try {
+            int code = conn.getResponseCode();
+            if (code >= 200 && code < 300) {
+                InputStream is = conn.getInputStream();
+                if (is == null) {
+                    return VimResult.fault("Parse", operation + " returned no body", null, 0, null);
+                }
+                body = new CappedInputStream(is, maxBytes);
+                try {
+                    reader = XmlNode.reader(body);
+                    handler.handle(reader);
+                } catch (XMLStreamException e) {
+                    conn.disconnect();
+                    if (body.exceeded) {
+                        return VimResult.fault("TooLarge", operation + " answered more than "
+                                + maxBytes + " bytes; not read", null, body.read, null);
+                    }
+                    return VimResult.fault("Parse", operation + " answered something that is not "
+                            + "well-formed XML or not the expected shape", null, body.read, null);
+                } finally {
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (XMLStreamException ignored) {
+                            // nothing to release
+                        }
+                    }
+                }
+                long n = body.read;
+                body.close();
+                return VimResult.ok(n, n);
+            }
+            String fault = readCapped(conn.getErrorStream(), MAX_FAULT_BYTES);
+            VimResult<XmlNode> f = faultResult(operation, code, fault);
+            return VimResult.fault(f.faultClass(), f.message(), f.invalidPropertyPath(), f.bytes(), null);
+        } catch (IOException | RuntimeException e) {
+            conn.disconnect();
+            if (body != null && body.exceeded) {
+                return VimResult.fault("TooLarge", operation + " answered more than " + maxBytes
+                        + " bytes; not read", null, body.read, null);
+            }
+            PinMismatchException recorded = tls.takePinMismatch();
+            PinMismatchException pm = TlsFailure.findPin(e);
+            if (pm == null) pm = recorded;
+            if (pm != null) throw new PinMismatchWrapper(pm);
+            throw e;
+        }
     }
 
     /** Log out (bounded wait) and refuse every later call. Never throws. */
@@ -318,6 +434,7 @@ public final class VimSoapClient implements VimSession {
         cookie = null;
         sessionManager = null;
         about = null;
+        refs = null;
     }
 
     // ------------------------------------------------------------------ transport
@@ -356,19 +473,18 @@ public final class VimSoapClient implements VimSession {
         }
     }
 
-    private VimResult<XmlNode> postOnce(String bodyXml, String operation, boolean authenticated,
+    /** Opens the connection and sends the request; the caller reads the answer. */
+    private HttpURLConnection open(String bodyXml, String operation, boolean authenticated,
             int connectTimeoutMs, int readTimeoutMs, Holder<String> cookieOut) throws IOException {
         String envelope = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                 + "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" "
                 + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
                 + "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soapenv:Body>"
                 + bodyXml + "</soapenv:Body></soapenv:Envelope>";
-        tls.clearPinMismatch();
         HttpURLConnection conn = (HttpURLConnection) java.net.URI.create(url).toURL().openConnection();
         if (conn instanceof HttpsURLConnection) {
             tls.secure((HttpsURLConnection) conn);
         }
-        CappedInputStream body = null;
         try {
             conn.setRequestMethod("POST");
             conn.setInstanceFollowRedirects(false); // never carry the session cookie elsewhere
@@ -382,6 +498,33 @@ public final class VimSoapClient implements VimSession {
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(envelope.getBytes(StandardCharsets.UTF_8));
             }
+            return conn;
+        } catch (IOException | RuntimeException e) {
+            conn.disconnect();
+            throw e;
+        }
+    }
+
+    /** A pin mismatch hidden under another exception is thrown as its own clean message. */
+    private void rethrowPin(Exception e) throws IOException {
+        PinMismatchException recorded = tls.takePinMismatch();
+        PinMismatchException pm = TlsFailure.findPin(e);
+        if (pm == null) pm = recorded;
+        if (pm != null) throw new PinMismatchWrapper(pm);
+    }
+
+    private VimResult<XmlNode> postOnce(String bodyXml, String operation, boolean authenticated,
+            int connectTimeoutMs, int readTimeoutMs, Holder<String> cookieOut) throws IOException {
+        tls.clearPinMismatch();
+        HttpURLConnection conn;
+        try {
+            conn = open(bodyXml, operation, authenticated, connectTimeoutMs, readTimeoutMs, cookieOut);
+        } catch (IOException | RuntimeException e) {
+            rethrowPin(e);
+            throw e;
+        }
+        CappedInputStream body = null;
+        try {
             int code = conn.getResponseCode();
             if (cookieOut != null) cookieOut.value = sessionCookie(conn.getHeaderFields());
             if (code >= 200 && code < 300) {
