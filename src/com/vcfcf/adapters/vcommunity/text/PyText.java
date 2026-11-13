@@ -225,6 +225,24 @@ public final class PyText {
         }
     }
 
+    /**
+     * {@code str(value)} of a value read from a JSON answer: a string as it is, a boolean as
+     * {@code True} / {@code False}, a number as Python writes it (a whole one without a fraction).
+     * Null for JSON null and for an object or a list, whose Python text is not reproduced; the
+     * caller reads null as "not there" and withholds.
+     */
+    public static String json(Object v) {
+        if (v == null) return null;
+        if (v instanceof String) return (String) v;
+        if (v instanceof Boolean) return ((Boolean) v) ? "True" : "False";
+        if (v instanceof Double) {
+            double d = (Double) v;
+            if (d == Math.rint(d) && Math.abs(d) < 1e15) return Long.toString((long) d);
+            return repr(d);
+        }
+        return null;
+    }
+
     /** Managed object types whose pyVmomi class lives in a sub-namespace. */
     private static final java.util.Map<String, String> VIM_NAMES = new java.util.HashMap<>();
 

@@ -9,6 +9,9 @@ package com.vcfcf.adapters.vcommunity.text;
  *
  * <p>Q1 and Q2 are read where they apply ({@code VmCollector.QUIRK_*} points here); Q6, the
  * detailed-data cut, lives in {@link DetailedDataParser#CUT_AT_FIRST_QUOTE}.
+ *
+ * <p>{@link #ABSENT_OWN_TEXT_IS_EMPTY} (Q8) is the one quirk that stands against an owner answer
+ * (DV-17, "report honestly"): it is on for the match, and one edit turns it off.
  */
 public final class Quirks {
 
@@ -28,6 +31,31 @@ public final class Quirks {
 
     /** Q5, R96: a negative VM operation notification timeout (-1, none) is published as 0. */
     public static final boolean NEGATIVE_OP_TIMEOUT_IS_ZERO = true;
+
+    /**
+     * Q8, R227-R232, R234-R243 and R245-R248, the text keys of the three own kinds: upstream sends
+     * {@code ""} when a library, an item or a template does not have the field (a local library has
+     * no subscription URL, none of its items has a last sync time or a source item; a template
+     * with no parent folder has an empty folder name), where a returned empty string is the same
+     * text. {@code true}: the empty text, as upstream (the live Python baseline shows it on every
+     * object: 2 of the 4 library properties and 2 of the 10 item properties). {@code false}:
+     * nothing is sent for a field that was not returned (DV-17, the owner's "a missing read sends
+     * nothing" answer). Only the text keys: a figure that was not returned is never sent as the
+     * zero upstream sends (vCPUs, Memory, sizes, counts: DV-11, DV-18), and a value that a failed
+     * read left unknown is never sent as anything.
+     */
+    public static final boolean ABSENT_OWN_TEXT_IS_EMPTY = true;
+
+    /** The text of an own-kind property: the value as returned, or per {@link #ABSENT_OWN_TEXT_IS_EMPTY} when it was not. */
+    public static String ownText(String raw) {
+        return ownText(raw, ABSENT_OWN_TEXT_IS_EMPTY);
+    }
+
+    /** {@link #ownText(String)} with the switch given, so a test can show both settings. */
+    public static String ownText(String raw, boolean absentIsEmpty) {
+        if (raw == null) return absentIsEmpty ? "" : null;
+        return text(raw);
+    }
 
     /** Q4: {@code str(x)} of a string that was returned; null only for "not returned". */
     public static String text(String raw) {

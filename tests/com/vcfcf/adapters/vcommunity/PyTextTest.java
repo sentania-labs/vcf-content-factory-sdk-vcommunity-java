@@ -2,6 +2,7 @@ package com.vcfcf.adapters.vcommunity;
 
 import com.vcfcf.adapters.vcommunity.text.DetailedDataParser;
 import com.vcfcf.adapters.vcommunity.text.LicenseKeyMask;
+import com.vcfcf.adapters.vcommunity.text.PyRound;
 import com.vcfcf.adapters.vcommunity.text.PyText;
 import com.vcfcf.adapters.vcommunity.text.Quirks;
 import com.vcfcf.adapters.vcommunity.vim.XmlNode;
@@ -23,6 +24,39 @@ public final class PyTextTest {
         licenseMask();
         detailedData();
         hex16();
+        pyRound();
+        jsonText();
+    }
+
+    /** Python's round(x, 2) of a float, and how a library's byte count becomes GiB. */
+    static void pyRound() {
+        T.eq(2.67, PyRound.round2(2.675), "2.675 is a hair below: 2.67, as Python");
+        T.eq(0.12, PyRound.round2(0.125), "an exact tie goes to the even digit: 0.12");
+        T.eq(0.38, PyRound.round2(0.375), "an exact tie goes to the even digit: 0.38");
+        T.eq(2.12, PyRound.round2(2.125), "2.125");
+        T.eq(1.0, PyRound.round2(1.005), "1.005 is below the tie: 1.0");
+        T.eq(2.0, PyRound.round2(2.0), "a whole number");
+        T.eq(0.0, PyRound.round2(0.0), "zero");
+        T.eq(162.58, PyRound.round2(162.5799999), "a library total");
+        T.eq(2.07, PyRound.gib(2222558126.0), "bytes to GiB");
+        T.eq(0.0, PyRound.gib(0), "nothing");
+        T.eq(2.0, PyRound.gib(2.0 * 1024 * 1024 * 1024), "two GiB");
+        T.check(Double.isNaN(PyRound.round2(Double.NaN)), "NaN comes back as it is, for the caller to refuse");
+        T.done("py round");
+    }
+
+    /** str() of a value out of a JSON answer, as the original's _text. */
+    static void jsonText() {
+        T.eq("True", PyText.json(Boolean.TRUE), "true");
+        T.eq("False", PyText.json(Boolean.FALSE), "false");
+        T.eq("ovf", PyText.json("ovf"), "a string");
+        T.eq("", PyText.json(""), "an empty string stays empty");
+        T.eq("46", PyText.json(46.0), "a whole number");
+        T.eq("1.5", PyText.json(1.5), "a fraction");
+        T.eq(null, PyText.json(null), "null is not there");
+        T.eq(null, PyText.json(new java.util.ArrayList<Object>()), "a list is not reproduced");
+        T.eq(null, PyText.json(new java.util.HashMap<String, Object>()), "an object is not reproduced");
+        T.done("json text");
     }
 
     static void booleans() {
