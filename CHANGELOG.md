@@ -3,13 +3,32 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.15 (Unreleased)
+
+Review of build 14 (`docs/reviews/p6-content-review.md`).
+
+- fix(adapter): B1 the six "Object Summary Page for ..." dashboards no longer carry `summary_for`; the pak has no
+  `content/dashboards/dashboards.properties`, as the source pak; `docs/installing.md` says no Summary page is bound.
+- fix(adapter): W1 the Collection Warnings recommendation names the Java adapter's keys and log (`First Warning`, `Collector:<name>|Causes`,
+  `Collection|failure_causes`, `VCommunityAdapter_<id>.log`).
+- fix(adapter): W2 the co-install and migration warning in `docs/installing.md` states the outcomes of shared ids, a safe order from the
+  original pack, and that every statement is inferred from measured behavior of the source pack; W5 the real floor (8.18.7) is stated, the
+  manifest says 8.0.0 (factory builder constant); W6 the license-name limit of "ESXi Host License Expiring" is documented (design Q17).
+- fix(adapter): W3 the 101 views keep the ids of the corrected upstream build (pull request 92); the docs no longer say they are new ids
+  (design DV-106). W7 the duplicate symptom id and the name kept are recorded in the design (10.1a).
+- fix(adapter): W4 the pak's `eula.txt` is now `EULA.txt`: the notice (source name and version, PolyForm Noncommercial 1.0.0, terms URL,
+  the source's Required Notice line, content terms pending the owner) followed by the MIT text; the same notice is in `NOTICE` and `docs/NOTICE.md`.
+- fix(adapter): check-list file headers: the `$(` exclusion of service names, a restart forgets the last good event list, the 9.0.2 hedge on the
+  forced-upgrade statement.
+- docs: the dashboards comparison states the content floor honestly and where the note lives; the build is `0.0.0.15`.
+
 ## 1.0.0.14 (Unreleased)
 
 Phase P6: content (design section 10).
 
 - feat(adapter): the content ships in the pak: 170 views, 52 dashboards, 16 reports, 2 super metrics, 10 symptoms, 4 alerts and 1
   recommendation, converted from the source pack's content files by the factory's offline importer (`docs/design/inputs/import-report/`).
-  101 views are re-authored (new ids, new descriptions), nine of them retitled (`docs/design/inputs/view_rename.tsv`); 19 views that only
+  101 views began as edited copies of built-in views and carry new descriptions (their ids are those of the corrected upstream build, pull request 92, kept as they are), nine of them retitled (`docs/design/inputs/view_rename.tsv`); 19 views that only
   renamed a built-in view are not shipped and are referenced by the built-in's id. Names are unprefixed.
 - feat(adapter): `adapter.yaml` `bundled_content`; `content_foreign_adapter_kinds` is `[VMWARE]` (all 10 symptoms and 4 alerts are on VMWARE
   objects; Container, VMSP and APPLICATIONDISCOVERY are named only by views and dashboards, which the builder does not check against it).

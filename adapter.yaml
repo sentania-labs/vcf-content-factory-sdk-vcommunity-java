@@ -28,12 +28,14 @@ description: >
   pack (views, dashboards, reports, super metrics, symptoms, alerts and a
   recommendation) and the six check-list files.
 version: 1.0.0
-build_number: 14
+build_number: 15
 tier: 2
 released: false
 
 vendor: "VCF Content Factory"
-eula_file: LICENSE
+# The pak's eula.txt: NOTICE (source, license and terms of the bundled content) followed by the
+# MIT text of LICENSE. Keep it equal to NOTICE + LICENSE when either changes.
+eula_file: EULA.txt
 
 # The pak's content keeps the original pack's names; none carries a prefix.
 content_naming: unprefixed
