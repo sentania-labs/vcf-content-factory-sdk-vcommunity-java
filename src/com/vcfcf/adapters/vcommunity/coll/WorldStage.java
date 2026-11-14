@@ -10,6 +10,7 @@ import com.vcfcf.adapters.vcommunity.kpi.StatKeys;
 import com.vcfcf.adapters.vcommunity.ops.OpsReads;
 import com.vcfcf.adapters.vcommunity.ops.UnscopedIds;
 import com.vcfcf.adapters.vcommunity.text.PyRound;
+import com.vcfcf.adapters.vcommunity.text.Quirks;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,6 +64,20 @@ final class WorldStage {
         return m.allIds();
     }
 
+    /**
+     * {@link DerivedContext#account}, and a failed read marks the three lists the roll-ups read for a new read next
+     * cycle: a list that still names an object that has gone is a likely reason for a batch to fail (DV-87).
+     */
+    private boolean ok(OpsReads.Report r, String collector, String cause, String what) {
+        boolean good = x.account(r, collector, cause, what);
+        if (!good) {
+            x.in.markStale.accept("ClusterComputeResource");
+            x.in.markStale.accept("HostSystem");
+            x.in.markStale.accept("VirtualMachine");
+        }
+        return good;
+    }
+
     void run() throws InterruptedException {
         List<String> worlds = ids(VMWARE, "vSphere World", true);
         if (worlds == null) return;
@@ -108,7 +123,7 @@ final class WorldStage {
         Map<String, Map<String, Double>> stored = new LinkedHashMap<>();
         OpsReads.Report r = x.reads.latestStats(clusters, StatKeys.CLUSTER_SCORES, OpsReads.STALE_MS, x.now(),
                 stored::put);
-        if (!x.account(r, c, FailureCause.opsStats("world-clusters"), "the stored cluster scores")) {
+        if (!ok(r, c, FailureCause.opsStats("world-clusters"), "the stored cluster scores")) {
             x.withheld(6);
             return;
         }
@@ -150,7 +165,7 @@ final class WorldStage {
                     Double v = s.get(key);
                     if (v != null) out.add(v);
                 });
-        return x.account(r, c, FailureCause.opsStats(set), what) ? out : null;
+        return ok(r, c, FailureCause.opsStats(set), what) ? out : null;
     }
 
     private void availabilitySummary(String world, List<String> clusters, List<String> hosts)
@@ -175,29 +190,34 @@ final class WorldStage {
 
     // ------------------------------------------------------------------ network
 
+    /**
+     * R211: the hosts whose stored speed is below 100 %. As upstream does it, any host the answer names counts
+     * the figure as measured, even when its stored value is too old to use (it is then not below 100, so the count
+     * is 0); only an answer that names no host at all publishes nothing (Q16, {@link Quirks#STALE_HOST_VALUE_COUNTS_AS_ZERO}).
+     */
     private void networkCount(String world, List<String> hosts) throws InterruptedException {
         if (hosts == null) {
             x.withheld(1);
             return;
         }
-        int[] answered = new int[1];
-        List<Double> values = new ArrayList<>();
+        int[] named = new int[1];
+        int[] usable = new int[1];
+        int[] below = new int[1];
         OpsReads.Report r = x.reads.latestStats(hosts, Collections.singletonList(StatKeys.HOST_NETWORK_SPEED),
                 OpsReads.STALE_MS, x.now(), (id, s) -> {
-                    // a host that has no stored value may or may not be named in the answer: only a value counts
+                    named[0]++;
                     Double v = s.get(StatKeys.HOST_NETWORK_SPEED);
-                    if (v != null) answered[0]++;
-                    values.add(v);
+                    if (v != null) usable[0]++;
+                    if (NetworkSpeed.degraded(v)) below[0]++;
                 });
-        if (!x.account(r, c, FailureCause.opsStats("world-network"), "the stored host network speeds")) {
+        if (!ok(r, c, FailureCause.opsStats("world-network"), "the stored host network speeds")) {
             x.withheld(1);
             return;
         }
-        // nothing stored yet: no count rather than a false 0
-        if (answered[0] == 0) return;
-        int n = 0;
-        for (Double v : values) if (NetworkSpeed.degraded(v)) n++;
-        x.stat(world, StatKeys.DC_NETWORK_SPEED, n);
+        int measured = Quirks.STALE_HOST_VALUE_COUNTS_AS_ZERO ? named[0] : usable[0];
+        // no host has anything stored yet: no figure at all, not a zero
+        if (measured == 0) return;
+        x.stat(world, StatKeys.DC_NETWORK_SPEED, below[0]);
     }
 
     // ------------------------------------------------------------------ Cluster Delta
@@ -207,7 +227,7 @@ final class WorldStage {
         Map<String, Map<String, Double>> own = new HashMap<>();
         OpsReads.Report wr = x.reads.latestTimestamps(Collections.singletonList(world), StatKeys.DELTA_PUBLISHED,
                 own::put);
-        if (!x.account(wr, c, FailureCause.opsStats("world-delta"), "when the Cluster Delta counts were last stored")) {
+        if (!ok(wr, c, FailureCause.opsStats("world-delta"), "when the Cluster Delta counts were last stored")) {
             x.withheld(2);
             return;
         }
@@ -215,7 +235,7 @@ final class WorldStage {
         for (Double t : own.getOrDefault(world, Collections.<String, Double>emptyMap()).values()) {
             if (t != null && t > published) published = t;
         }
-        // stored for this window already: their time is at or after its end
+        // these counts already carry a sample from this window (stamped at or after its end)
         if (published >= w.endMs) return;
         if (clusters == null) {
             x.withheld(2);
@@ -226,13 +246,13 @@ final class WorldStage {
         keys.addAll(StatKeys.CLUSTER_SCORES);
         Map<String, Map<String, Double>> latest = new HashMap<>();
         OpsReads.Report cr = x.reads.latestTimestamps(clusters, keys, latest::put);
-        if (!x.account(cr, c, FailureCause.opsStats("world-delta"), "when the cluster checks were last stored")) {
+        if (!ok(cr, c, FailureCause.opsStats("world-delta"), "when the cluster checks were last stored")) {
             x.withheld(2);
             return;
         }
-        // wait for the Periodic Cluster Check: a cluster still due would be missing from the counts
+        // hold off while any cluster is still to be checked: the counts would otherwise leave it out
         for (String id : clusters) {
-            if (w.isDue(latest.getOrDefault(id, Collections.<String, Double>emptyMap()))) return;
+            if (w.awaitsCheck(latest.getOrDefault(id, Collections.<String, Double>emptyMap()))) return;
         }
         List<String> close = Collections.singletonList(StatKeys.CLOSE_FOR_BUSINESS);
         Map<String, Double> previous = new HashMap<>();
@@ -241,14 +261,14 @@ final class WorldStage {
                 (id, s) -> last(previous, id, s));
         OpsReads.Report nr = x.reads.history(clusters, close, w.endMs, x.now(), PeriodicCheck.CLUSTERS_PER_REQUEST,
                 (id, s) -> last(current, id, s));
-        boolean ok = x.account(pr, c, FailureCause.OPS_HISTORY, "the Close for Business history of the last window");
-        ok &= x.account(nr, c, FailureCause.OPS_HISTORY, "the Close for Business history since the window ended");
-        if (!ok) {
-            // a partial count would be wrong: try again next cycle
+        boolean both = ok(pr, c, FailureCause.OPS_HISTORY, "the Close for Business history of the last window");
+        both &= ok(nr, c, FailureCause.OPS_HISTORY, "the Close for Business history since the window ended");
+        if (!both) {
+            // a count from part of the history would be wrong, so none is sent and the next cycle tries again
             x.withheld(2);
             return;
         }
-        int[] t = PeriodicCheck.transitions(previous, current);
+        int[] t = PeriodicCheck.flips(previous, current);
         x.stat(world, StatKeys.DELTA_CLOSE, t[0]);
         x.stat(world, StatKeys.DELTA_OPEN, t[1]);
         x.log.info("Cluster Delta counts for the window to " + new java.util.Date(w.endMs).toInstant() + ": "
@@ -273,7 +293,7 @@ final class WorldStage {
                     Double v = s.get(StatKeys.PORT_GROUPS);
                     if (v != null) sum[0] += v;
                 });
-        if (!x.account(r, c, FailureCause.opsStats("world-port-groups"), "the stored port group counts")) {
+        if (!ok(r, c, FailureCause.opsStats("world-port-groups"), "the stored port group counts")) {
             x.withheld(1);
             return;
         }
@@ -299,9 +319,7 @@ final class WorldStage {
                 n[1]++;
             }
         });
-        if (!x.account(r, c, FailureCause.opsProps("world-tools"), "the VMware Tools properties of every VM")) {
-            // the list may name a VM that is gone: read it again next cycle
-            x.in.markStale.accept("VirtualMachine");
+        if (!ok(r, c, FailureCause.opsProps("world-tools"), "the VMware Tools properties of every VM")) {
             x.withheld(2);
             return;
         }

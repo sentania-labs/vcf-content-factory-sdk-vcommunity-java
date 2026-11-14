@@ -1,6 +1,7 @@
 package com.vcfcf.adapters.vcommunity.ops;
 
 import com.vcfcf.adapters.vcommunity.json.Json;
+import com.vcfcf.adapters.vcommunity.json.JsonPull;
 import com.vcfcf.adapters.vcommunity.kpi.StatKeys;
 import com.vcfcf.adapters.vcommunity.text.Quirks;
 
@@ -30,11 +31,19 @@ public final class OpsReads {
 
     /** Resources one request asks for. Bounded so the answer of one request stays a few megabytes. */
     public static final int BATCH = 500;
+    /**
+     * Hosts one statistics request asks for. A host answers a series for every CPU thread and every NIC as well as
+     * the keys asked for (a 128-thread host is hundreds of series), so a host batch is a tenth of a VM batch.
+     */
+    public static final int HOST_BATCH = 50;
     /** The 5-minute interval of one stored sample. */
     public static final int CYCLE_MINUTES = 5;
     /** A latest statistic older than two cycles is no data; a configuration count keeps 15 minutes. */
     public static final long STALE_MS = 2L * CYCLE_MINUTES * 60_000L;
     public static final long CONFIGURATION_STALE_MS = 15L * 60_000L;
+
+    /** Related objects asked for in one answer; a list longer than this is refused, not cut. */
+    public static final int RELATIONS_PER_PAGE = 1000;
 
     public static final String LATEST_STATS = "/api/resources/stats/latest/query";
     public static final String STATS_QUERY = "/api/resources/stats/query";
@@ -176,13 +185,129 @@ public final class OpsReads {
 
     // ------------------------------------------------------------------ statistics
 
-    private static Object statList(Object resource) {
-        Object sl = Json.get(resource, "stat-list");
-        if (sl == null || (sl instanceof Map && ((Map<?, ?>) sl).isEmpty())) sl = Json.get(resource, "stats");
-        return sl;
+    /** One statistic of one resource as the answer holds it: its key, the times and the samples (a Double, a numeric String or null). */
+    private static final class Stat {
+        String key;
+        double[] ts = new double[0];
+        Object[] data = new Object[0];
     }
 
-    private static double number(Object o) throws IOException {
+    private interface Resources {
+        void resource(String id, List<Stat> stats);
+    }
+
+    private interface Wanted {
+        boolean test(String key);
+    }
+
+    private static JsonPull.Token want(JsonPull p, JsonPull.Token expected) {
+        JsonPull.Token t = p.next();
+        if (t != expected) throw new IllegalArgumentException("the answer is not the expected JSON (" + t + ")");
+        return t;
+    }
+
+    /**
+     * Read a statistics answer as a stream: for each resource it names, the statistics whose key the test accepts. The
+     * statistics it does not want (a platform answers every instance of a key it is asked for, per CPU thread, disk
+     * and NIC) are read past and dropped, so memory is the text and one statistic. Nothing is handed to the sink
+     * before the whole text has been read.
+     */
+    private static void readStats(String body, Wanted wanted, Resources sink) {
+        JsonPull p = new JsonPull(body);
+        Map<String, List<Stat>> byId = new LinkedHashMap<>();
+        want(p, JsonPull.Token.BEGIN_OBJECT);
+        for (JsonPull.Token t = p.next(); t != JsonPull.Token.END_OBJECT; t = p.next()) {
+            if (t != JsonPull.Token.NAME) throw new IllegalArgumentException("a name expected");
+            JsonPull.Token v = p.next();
+            if (!"values".equals(p.text())) {
+                p.skip(v);
+                continue;
+            }
+            if (v == JsonPull.Token.NULL) continue;
+            if (v != JsonPull.Token.BEGIN_ARRAY) throw new IllegalArgumentException("values is not a list");
+            for (JsonPull.Token r = p.next(); r != JsonPull.Token.END_ARRAY; r = p.next()) {
+                if (r != JsonPull.Token.BEGIN_OBJECT) {
+                    p.skip(r);
+                    continue;
+                }
+                resource(p, wanted, byId);
+            }
+        }
+        if (p.next() != JsonPull.Token.END) throw new IllegalArgumentException("text after the answer");
+        for (Map.Entry<String, List<Stat>> e : byId.entrySet()) sink.resource(e.getKey(), e.getValue());
+    }
+
+    private static void resource(JsonPull p, Wanted wanted, Map<String, List<Stat>> byId) {
+        String id = null;
+        List<Stat> stats = new ArrayList<>();
+        for (JsonPull.Token t = p.next(); t != JsonPull.Token.END_OBJECT; t = p.next()) {
+            String name = p.text();
+            JsonPull.Token v = p.next();
+            if ("resourceId".equals(name) && v == JsonPull.Token.STRING) {
+                id = p.text();
+            } else if (("stat-list".equals(name) || "stats".equals(name)) && v == JsonPull.Token.BEGIN_OBJECT) {
+                for (JsonPull.Token n = p.next(); n != JsonPull.Token.END_OBJECT; n = p.next()) {
+                    JsonPull.Token lv = p.next();
+                    if (!"stat".equals(p.text()) || lv != JsonPull.Token.BEGIN_ARRAY) {
+                        p.skip(lv);
+                        continue;
+                    }
+                    for (JsonPull.Token st = p.next(); st != JsonPull.Token.END_ARRAY; st = p.next()) {
+                        if (st != JsonPull.Token.BEGIN_OBJECT) {
+                            p.skip(st);
+                            continue;
+                        }
+                        Stat one = oneStat(p);
+                        if (one.key != null && wanted.test(one.key)) stats.add(one);
+                    }
+                }
+            } else {
+                p.skip(v);
+            }
+        }
+        if (id != null) byId.computeIfAbsent(id, k -> new ArrayList<>()).addAll(stats);
+    }
+
+    private static Stat oneStat(JsonPull p) {
+        Stat s = new Stat();
+        for (JsonPull.Token t = p.next(); t != JsonPull.Token.END_OBJECT; t = p.next()) {
+            String name = p.text();
+            JsonPull.Token v = p.next();
+            if ("statKey".equals(name) && v == JsonPull.Token.BEGIN_OBJECT) {
+                for (JsonPull.Token n = p.next(); n != JsonPull.Token.END_OBJECT; n = p.next()) {
+                    String f = p.text();
+                    JsonPull.Token fv = p.next();
+                    if ("key".equals(f) && fv == JsonPull.Token.STRING) s.key = p.text();
+                    else p.skip(fv);
+                }
+            } else if ("timestamps".equals(name) && v == JsonPull.Token.BEGIN_ARRAY) {
+                List<Object> l = list(p);
+                s.ts = new double[l.size()];
+                for (int i = 0; i < s.ts.length; i++) s.ts[i] = sampleNumber(l.get(i));
+            } else if ("data".equals(name) && v == JsonPull.Token.BEGIN_ARRAY) {
+                s.data = list(p).toArray();
+            } else {
+                p.skip(v);
+            }
+        }
+        return s;
+    }
+
+    /** The elements of the array just opened: a Double, a String, or null for a JSON null (a nested value is refused). */
+    private static List<Object> list(JsonPull p) {
+        List<Object> l = new ArrayList<>(2);
+        for (JsonPull.Token t = p.next(); t != JsonPull.Token.END_ARRAY; t = p.next()) {
+            switch (t) {
+                case NUMBER: l.add(p.number()); break;
+                case STRING: l.add(p.text()); break;
+                case NULL: l.add(null); break;
+                default: throw new IllegalArgumentException("a sample that is not a number");
+            }
+        }
+        return l;
+    }
+
+    private static double sampleNumber(Object o) {
         if (o instanceof Double) return (Double) o;
         if (o instanceof String) {
             try {
@@ -191,25 +316,28 @@ public final class OpsReads {
                 // fall through
             }
         }
-        throw new IOException("a statistic sample is not a number");
+        throw new IllegalArgumentException("a statistic sample is not a number");
     }
 
-    /** The samples of one statistic that are not older than {@code oldestMs} (all when negative). */
-    private static List<Double> samples(Object stat, double oldestMs, boolean filter) throws IOException {
-        List<Object> data = Json.list(Json.get(stat, "data"));
-        if (data.isEmpty()) return Collections.emptyList();
-        List<Object> ts = Json.list(Json.get(stat, "timestamps"));
-        List<Double> out = new ArrayList<>(Math.min(data.size(), 8));
-        // the age filter applies only when there is one timestamp per sample, as in the original
-        boolean byTime = filter && ts.size() == data.size();
-        for (int i = 0; i < data.size(); i++) {
-            if (byTime) {
-                Double t = Json.num(ts.get(i));
-                if (t == null || t < oldestMs) continue;
-            }
-            out.add(number(data.get(i)));
+    /** The samples of one statistic that are not older than {@code oldestMs} (all when the filter is off). */
+    private static List<Double> samples(Stat st, double oldestMs, boolean filter) {
+        if (st.data.length == 0) return Collections.emptyList();
+        List<Double> out = new ArrayList<>(Math.min(st.data.length, 8));
+        // the age filter applies only when there is one time per sample
+        boolean byTime = filter && st.ts.length == st.data.length;
+        for (int i = 0; i < st.data.length; i++) {
+            if (byTime && st.ts[i] < oldestMs) continue;
+            out.add(sampleNumber(st.data[i]));
         }
         return out;
+    }
+
+    private String postText(String path, String body) throws IOException, InterruptedException {
+        return ops.post(path, body);
+    }
+
+    private static String statBody(List<String> ids, List<String> keys) {
+        return "{\"resourceId\":" + idList(ids) + ",\"statKey\":" + strList(keys) + "}";
     }
 
     /**
@@ -221,27 +349,28 @@ public final class OpsReads {
      */
     public Report latestStats(List<String> ids, List<String> keys, long maxAgeMs, long nowMs, StatSink sink)
             throws InterruptedException {
+        return latestStats(ids, keys, maxAgeMs, nowMs, BATCH, sink);
+    }
+
+    /** {@link #latestStats(List, List, long, long, StatSink)} with the number of resources a request asks for given. */
+    public Report latestStats(List<String> ids, List<String> keys, long maxAgeMs, long nowMs, int perRequest,
+            StatSink sink) throws InterruptedException {
         final Set<String> wanted = new HashSet<>(keys);
         final double oldest = maxAgeMs < 0 ? Double.NEGATIVE_INFINITY : nowMs - maxAgeMs;
-        return batched(ids, BATCH, part -> {
-            Object root = post(LATEST_STATS, "{\"resourceId\":" + idList(part) + ",\"statKey\":" + strList(keys) + "}");
+        return batched(ids, perRequest, part -> {
             Map<String, Map<String, Double>> got = new LinkedHashMap<>();
-            for (Object res : Json.list(Json.get(root, "values"))) {
-                String id = Json.str(Json.get(res, "resourceId"));
-                if (id == null) continue;
+            readStats(postText(LATEST_STATS, statBody(part, keys)), wanted::contains, (id, stats) -> {
                 Map<String, Double> m = got.computeIfAbsent(id, k -> new LinkedHashMap<>());
-                for (Object stat : Json.list(Json.get(statList(res), "stat"))) {
-                    String key = Json.str(Json.get(Json.get(stat, "statKey"), "key"));
-                    if (key == null || !wanted.contains(key)) continue;
-                    List<Double> s = samples(stat, oldest, maxAgeMs >= 0);
+                for (Stat st : stats) {
+                    List<Double> s = samples(st, oldest, maxAgeMs >= 0);
                     if (s.isEmpty()) continue;
                     double v = s.get(s.size() - 1);
-                    if (!sentinelIsValue && v == -1.0 && !StatKeys.SIGNED.contains(key)) {
+                    if (!sentinelIsValue && v == -1.0 && !StatKeys.SIGNED.contains(st.key)) {
                         continue; // a "no sample" marker, not a reading
                     }
-                    m.put(key, v);
+                    m.put(st.key, v);
                 }
-            }
+            });
             for (Map.Entry<String, Map<String, Double>> e : got.entrySet()) sink.resource(e.getKey(), e.getValue());
         });
     }
@@ -259,29 +388,27 @@ public final class OpsReads {
     /**
      * The latest value of each instance of the requested statistics ({@code net:vmnic0|speed} for
      * {@code net|speed}), the statistic with no instance left out. {@code sink} gets only the resources
-     * that have at least one instance statistic, as the original does.
+     * that have at least one instance statistic.
      */
     public Report latestInstanceStats(List<String> ids, List<String> keys, long nowMs, InstanceSink sink)
             throws InterruptedException {
         final Set<String> wanted = new HashSet<>(keys);
         final double oldest = nowMs - STALE_MS;
-        return batched(ids, BATCH, part -> {
-            Object root = post(LATEST_STATS, "{\"resourceId\":" + idList(part) + ",\"statKey\":" + strList(keys) + "}");
+        return batched(ids, HOST_BATCH, part -> {
             Map<String, Map<String, Map<String, Double>>> got = new LinkedHashMap<>();
-            for (Object res : Json.list(Json.get(root, "values"))) {
-                String id = Json.str(Json.get(res, "resourceId"));
-                if (id == null) continue;
-                for (Object stat : Json.list(Json.get(statList(res), "stat"))) {
-                    String key = Json.str(Json.get(Json.get(stat, "statKey"), "key"));
-                    String[] split = key == null ? null : splitInstance(key);
-                    if (split == null || !wanted.contains(split[1])) continue;
-                    List<Double> s = samples(stat, oldest, true);
+            readStats(postText(LATEST_STATS, statBody(part, keys)), k -> {
+                String[] split = splitInstance(k);
+                return split != null && wanted.contains(split[1]);
+            }, (id, stats) -> {
+                for (Stat st : stats) {
+                    String[] split = splitInstance(st.key);
+                    List<Double> s = samples(st, oldest, true);
                     if (s.isEmpty()) continue;
                     got.computeIfAbsent(id, k -> new LinkedHashMap<>())
                             .computeIfAbsent(split[1], k -> new LinkedHashMap<>())
                             .put(split[0], s.get(s.size() - 1));
                 }
-            }
+            });
             for (Map.Entry<String, Map<String, Map<String, Double>>> e : got.entrySet()) {
                 sink.resource(e.getKey(), e.getValue());
             }
@@ -293,22 +420,16 @@ public final class OpsReads {
             throws InterruptedException {
         final Set<String> wanted = new HashSet<>(keys);
         return batched(ids, BATCH, part -> {
-            Object root = post(LATEST_STATS, "{\"resourceId\":" + idList(part) + ",\"statKey\":" + strList(keys) + "}");
             Map<String, Map<String, Double>> got = new LinkedHashMap<>();
-            for (Object res : Json.list(Json.get(root, "values"))) {
-                String id = Json.str(Json.get(res, "resourceId"));
-                if (id == null) continue;
+            readStats(postText(LATEST_STATS, statBody(part, keys)), wanted::contains, (id, stats) -> {
                 Map<String, Double> m = got.computeIfAbsent(id, k -> new LinkedHashMap<>());
-                for (Object stat : Json.list(Json.get(statList(res), "stat"))) {
-                    String key = Json.str(Json.get(Json.get(stat, "statKey"), "key"));
-                    if (key == null || !wanted.contains(key)) continue;
-                    List<Object> ts = Json.list(Json.get(stat, "timestamps"));
-                    if (ts.isEmpty()) continue;
+                for (Stat st : stats) {
+                    if (st.ts.length == 0) continue;
                     double max = Double.NEGATIVE_INFINITY;
-                    for (Object t : ts) max = Math.max(max, number(t));
-                    m.put(key, max);
+                    for (double t : st.ts) max = Math.max(max, t);
+                    m.put(st.key, max);
                 }
-            }
+            });
             for (Map.Entry<String, Map<String, Double>> e : got.entrySet()) sink.resource(e.getKey(), e.getValue());
         });
     }
@@ -326,19 +447,14 @@ public final class OpsReads {
             String body = "{\"resourceId\":" + idList(part) + ",\"statKey\":" + strList(keys) + ",\"begin\":"
                     + beginMs + ",\"end\":" + endMs + ",\"rollUpType\":\"AVG\",\"intervalType\":\"MINUTES\","
                     + "\"intervalQuantifier\":" + CYCLE_MINUTES + "}";
-            Object root = post(STATS_QUERY, body);
             Map<String, Map<String, List<Double>>> got = new LinkedHashMap<>();
-            for (Object res : Json.list(Json.get(root, "values"))) {
-                String id = Json.str(Json.get(res, "resourceId"));
-                if (id == null) continue;
+            readStats(postText(STATS_QUERY, body), wanted::contains, (id, stats) -> {
                 Map<String, List<Double>> m = got.computeIfAbsent(id, k -> new LinkedHashMap<>());
-                for (Object stat : Json.list(Json.get(statList(res), "stat"))) {
-                    String key = Json.str(Json.get(Json.get(stat, "statKey"), "key"));
-                    if (key == null || !wanted.contains(key)) continue;
-                    List<Double> s = samples(stat, 0, false);
-                    if (!s.isEmpty()) m.put(key, s);
+                for (Stat st : stats) {
+                    List<Double> s = samples(st, 0, false);
+                    if (!s.isEmpty()) m.put(st.key, s);
                 }
-            }
+            });
             for (Map.Entry<String, Map<String, List<Double>>> e : got.entrySet()) sink.resource(e.getKey(), e.getValue());
         });
     }
@@ -378,7 +494,8 @@ public final class OpsReads {
      *                     partial list is never read as the whole
      */
     public List<Related> related(String id, String type) throws IOException, InterruptedException {
-        String answer = ops.get("/api/resources/" + id + "/relationships?relationshipType=" + type, null);
+        String answer = ops.get("/api/resources/" + id + "/relationships?relationshipType=" + type
+                + "&pageSize=" + RELATIONS_PER_PAGE, null);
         Object root;
         try {
             root = Json.parse(answer);
