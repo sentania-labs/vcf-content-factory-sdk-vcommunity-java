@@ -618,8 +618,8 @@ public final class VimSoapClient implements VimSession, VimReader {
         if (text != null && !text.isEmpty()) {
             msg += ": " + (text.length() > 200 ? text.substring(0, 200) + "..." : text);
         }
-        return VimResult.fault(faultClass, msg, path, faultBody == null ? 0 : faultBody.length(),
-                null);
+        return VimResult.<XmlNode>fault(faultClass, msg, path, faultBody == null ? 0 : faultBody.length(), null)
+                .withDetail(text);
     }
 
     /** A transport failure as one credential-free line. */

@@ -107,6 +107,13 @@ public final class ConnectionTester {
         if (pr.ok()) r.lines.add(tlsLine);
         else r.flag(tlsLine);
 
+        if ((cfg.serviceMonitoring || cfg.eventMonitoring) && com.vcfcf.adapters.vcommunity.guest.GuestPlan.REQUIRE_CHECKED_VCENTER_TLS
+                && cfg.tlsMode == VCommunityConfig.TlsMode.TRUST_ON_FIRST_USE) {
+            r.flag("WARNING: guest monitoring is enabled but will not run: vCenter TLS Validation is Trust on First "
+                    + "Use, and the Windows account would be sent to a vCenter whose certificate is not checked. Set "
+                    + "it to Enabled or Pinned (with the vCenter Thumbprint) to use guest monitoring");
+        }
+
         boolean suite = false;
         if (ops == null) {
             // Not a warning: during a test the account is not configured, so the Suite API client

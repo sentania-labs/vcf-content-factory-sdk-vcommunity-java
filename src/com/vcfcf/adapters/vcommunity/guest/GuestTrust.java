@@ -80,8 +80,31 @@ public final class GuestTrust {
      *        as vCenter gives it); a host that is missing or has none is refused in Pinned and Strict
      */
     public GuestTrust(GuestTlsMode mode, Map<String, String> thumbprints) {
+        this(mode, thumbprints, true, GuestTrust::sha1Available);
+    }
+
+    /**
+     * @param hostsRead false when this cycle's host read did not finish: a missing thumbprint is then not known, not absent
+     * @param sha1 whether this JVM has a SHA-1 digest (a FIPS provider may not); asked once, before any connection
+     */
+    public GuestTrust(GuestTlsMode mode, Map<String, String> thumbprints, boolean hostsRead,
+            java.util.function.BooleanSupplier sha1) {
         this.mode = mode;
         this.thumbprints = new HashMap<>(thumbprints);
+        this.hostsRead = hostsRead;
+        this.sha1 = sha1;
+    }
+
+    private final boolean hostsRead;
+    private final java.util.function.BooleanSupplier sha1;
+
+    public static boolean sha1Available() {
+        try {
+            java.security.MessageDigest.getInstance("SHA-1");
+            return true;
+        } catch (java.security.NoSuchAlgorithmException e) {
+            return false;
+        }
     }
 
     public GuestTlsMode mode() {
@@ -102,10 +125,18 @@ public final class GuestTrust {
             return new Channel(trustAll(), null, null);
         }
         String pin = hostMoref == null ? null : normalise(thumbprints.get(hostMoref));
+        if (pin == null && !hostsRead) {
+            return new Channel(null, null, "this collection's read of the ESXi hosts did not finish, so the thumbprint "
+                    + "of the host this VM runs on is not known and the file transfer is not made");
+        }
         if (pin == null) {
             return new Channel(null, null, "vCenter records no usable certificate thumbprint for the ESXi host "
                     + "this VM runs on, so the file transfer is not made (Guest File Transfer TLS Validation: "
                     + mode.label + ")");
+        }
+        if (pin.length() == 40 && !sha1.getAsBoolean()) {
+            return new Channel(null, null, "the thumbprint vCenter records for the ESXi host is a SHA-1 digest and this "
+                    + "JVM has no SHA-1 (a FIPS provider?), so the host cannot be checked and the file transfer is not made");
         }
         Channel c = channels.get(pin);
         if (c == null) {

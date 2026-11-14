@@ -36,7 +36,7 @@ public final class WindowsEvents {
 
     /** {@code [WindowsEvent-<Level> <Event>]}, the whole text safe to carry. */
     public static String message(String level, String event) {
-        String l = GuestText.eventText(level == null ? "" : level, 40).replace('\n', ' ').replace('\t', ' ');
+        String l = GuestText.lineText(level == null ? "" : level, 40).replace('\n', ' ').replace('\t', ' ');
         String e = GuestText.eventText(event == null ? "" : event, GuestText.MAX_EVENT);
         return "[WindowsEvent-" + l + " " + e + "]";
     }

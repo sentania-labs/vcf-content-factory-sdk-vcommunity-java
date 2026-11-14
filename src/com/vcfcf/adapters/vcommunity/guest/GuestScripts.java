@@ -15,7 +15,8 @@ import java.util.Base64;
  * <p>What each reproduces of the original (key map rows, design 8.3): the operating system script gives the six
  * values of R72 to R77; the services script gives {@code Name}, {@code DisplayName}, {@code Status} and
  * {@code StartType} of every listed service that exists (R78 to R80); the events script gives the newest event
- * of the last five minutes for each listed log and event id (the text of the published event).
+ * of the look-back window (five minutes, or the time since the VM was last read) for each listed log and event id (the text
+ * of the published event), and names the queries it could not run.
  */
 public final class GuestScripts {
 
@@ -96,10 +97,12 @@ public final class GuestScripts {
             "Save-Csv $found 'Name','DisplayName','Status','StartType'");
 
     private static final String EVENTS_BODY = String.join("\n",
-            "$since = (Get-Date).AddMinutes(-5)",
+            "$since = (Get-Date).AddMinutes(-$WindowMinutes)",
             "$tab = [char]9",
             "$found = @()",
+            "$position = 0",
             "foreach ($line in (Get-Content -LiteralPath $InputFile -Encoding UTF8)) {",
+            "    $position++",
             "    $parts = $line -split $tab",
             "    if ($parts.Count -ne 2) { continue }",
             "    $log = $parts[0]",
@@ -108,17 +111,18 @@ public final class GuestScripts {
             "        $record = Get-WinEvent -FilterHashtable @{ LogName = $log; Id = [int]$id; StartTime = $since } -MaxEvents 1 -ErrorAction Stop",
             "    } catch {",
             "        if ($_.FullyQualifiedErrorId -notlike 'NoMatchingEventsFound*') {",
-            "            Write-Host ('query failed: ' + $log + ' ' + $id + ': ' + $_.Exception.Message)",
+            "            $found += [PSCustomObject]@{ Level = ''; LevelNumber = ''; Event = ''; Failed = $position }",
             "        }",
             "        continue",
             "    }",
             "    $found += [PSCustomObject]@{",
             "        Level = $record.LevelDisplayName",
             "        LevelNumber = $record.Level",
-            "        Event = '[Timestamp=' + $record.TimeCreated + '] [Category=' + $log + '] [EventID=' + $id + '] [Source=' + $record.ProviderName + '] [Message=' + $record.Message + ']'",
+            "        Event = '[Timestamp=' + $record.TimeCreated + '] [Category=' + $record.LogName + '] [EventID=' + $id + '] [Source=' + $record.ProviderName + '] [Message=' + $record.Message + ']'",
+            "        Failed = ''",
             "    }",
             "}",
-            "Save-Csv $found 'Level','LevelNumber','Event'");
+            "Save-Csv $found 'Level','LevelNumber','Event','Failed'");
 
     /**
      * The program text with its two paths bound ({@code inputPath} is null for a program that reads no file); ends the
@@ -126,14 +130,22 @@ public final class GuestScripts {
      * left out is told from a program that wrote nothing.
      */
     public static String program(Kind kind, String inputPath, String outputPath) {
-        return "$InputFile = " + (inputPath == null ? "$null" : literal(inputPath)) + "\n$OutputFile = " + literal(outputPath) + "\n" + PRELUDE
+        return program(kind, inputPath, outputPath, DEFAULT_WINDOW_MINUTES);
+    }
+
+    /** How far back the events program looks when nothing says more: the original's five minutes. */
+    public static final int DEFAULT_WINDOW_MINUTES = 5;
+
+    /** As {@link #program(Kind, String, String)}; the events program looks back {@code windowMinutes}. */
+    public static String program(Kind kind, String inputPath, String outputPath, int windowMinutes) {
+        return "$WindowMinutes = " + Math.max(1, Math.min(windowMinutes, 24 * 60)) + "\n$InputFile = " + (inputPath == null ? "$null" : literal(inputPath)) + "\n$OutputFile = " + literal(outputPath) + "\n" + PRELUDE
                 + "\ntry {\n" + kind.body + "\nexit 0\n} catch {\nexit 2\n}\n";
     }
 
     /** The arguments of the process: the program as Base64 of its UTF-16LE text. No secret is in them. */
     public static String arguments(String program) {
         String encoded = Base64.getEncoder().encodeToString(program.getBytes(StandardCharsets.UTF_16LE));
-        return "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand " + encoded;
+        return "-NoLogo -NoProfile -NonInteractive -EncodedCommand " + encoded;
     }
 
     static String literal(String path) {

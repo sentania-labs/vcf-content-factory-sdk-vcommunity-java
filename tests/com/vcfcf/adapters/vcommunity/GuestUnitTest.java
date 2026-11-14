@@ -52,7 +52,7 @@ public final class GuestUnitTest {
         T.eq("Microsoft Windows Server 2019 Datacenter", o.rows.get(0).get("OS Name"), "name");
         T.eq("11/12/2026 08:15:00", o.rows.get(0).get("OS Last Boot Up Time"), "the date as ConvertTo-Csv writes it");
         GuestRows.Parsed<GuestRows.Service> sv = GuestRows.services(GuestCsv.parse(
-                java.nio.file.Files.readAllBytes(dir.resolve("services.csv"))));
+                java.nio.file.Files.readAllBytes(dir.resolve("services.csv"))), req("bits", "w32time"));
         T.eq(2, sv.rows.size(), "two services");
         T.eq("Display of BITS, \"q\"", sv.rows.get(0).displayName, "a comma and quotes in a display name");
         GuestRows.Parsed<GuestRows.EventRow> ev = GuestRows.events(GuestCsv.parse(
@@ -62,13 +62,19 @@ public final class GuestUnitTest {
         T.contains(ev.rows.get(0).event, "line1\r\nline2 \"quoted\", comma  \u00fc \u65e5\u672c\u8a9e]", "a line break, quotes and non-ASCII in a message");
         T.eq(com.vcfcf.adapters.vcommunity.ops.OpsEvent.Severity.IMMEDIATE,
                 WindowsEvents.severity(ev.rows.get(0).levelNumber, ev.rows.get(0).level), "severity");
-        T.contains(WindowsEvents.message(ev.rows.get(0).level, ev.rows.get(0).event), "line1\nline2 \"quoted\"", "CRLF in the message is one LF");
+        T.contains(WindowsEvents.message(ev.rows.get(0).level, ev.rows.get(0).event), "line1\r\nline2 \"quoted\"", "the message as written (W2)");
+        T.contains(ev.rows.get(0).event, "[Category=System]", "the record's own log name, though the list says 'system' (W1)");
+        T.eq(Arrays.asList(2), ev.failedQueries, "the query of Security failed (B3): its place in the list");
         // none found: the header alone, which is a reading and not a program that wrote nothing
         GuestCsv.Table none = GuestCsv.parse(java.nio.file.Files.readAllBytes(dir.resolve("services-none-found.csv")));
-        T.eq(0, GuestRows.services(none).rows.size(), "header only: no service found");
+        T.eq(0, GuestRows.services(none, req("bits")).rows.size(), "header only: no service found");
         GuestCsv.Table noEvents = GuestCsv.parse(java.nio.file.Files.readAllBytes(dir.resolve("events-none-found.csv")));
         T.eq(0, GuestRows.events(noEvents).rows.size(), "header only: no event in the window");
         T.done("guest units: the output of the programs themselves");
+    }
+
+    static java.util.Set<String> req(String... names) {
+        return new java.util.HashSet<>(Arrays.asList(names));
     }
 
     static void csv() throws Exception {
@@ -82,7 +88,12 @@ public final class GuestUnitTest {
         T.eq(null, GuestCsv.parse(b("\uFEFF \r\n")), "only a BOM and a blank");
         T.eq(2, GuestCsv.parse(b("A,B\nx,y\n")).header.size(), "LF only");
         T.eq(1, GuestCsv.parse(b("A\rx\r")).rows.size(), "a lone CR ends a row");
-        T.eq(1, GuestCsv.parse(b("A,B\r\nx,y")).rows.size(), "no final line break");
+        try {
+            GuestCsv.parse(b("A,B\r\nx,y"));
+            throw new AssertionError("a last row with no line break was accepted");
+        } catch (GuestCsv.CsvException e) {
+            T.contains(e.getMessage(), "middle of a row", "an output cut short is refused (W3)");
+        }
         for (String bad : new String[] {"A\r\n\"ZZQ", "A\r\n\"ZZQ\"y\r\n", "A\r\nZZQ\"y\r\n", "A,B\r\n\"ZZQ\"\""}) {
             try {
                 GuestCsv.parse(b(bad));
@@ -110,17 +121,17 @@ public final class GuestUnitTest {
 
     static void rows() throws Exception {
         GuestCsv.Table t = GuestCsv.parse(b("Name,DisplayName,Status,StartType\r\na,A,Running,Auto\r\nb,B,,\r\n"));
-        GuestRows.Parsed<GuestRows.Service> p = GuestRows.services(t);
+        GuestRows.Parsed<GuestRows.Service> p = GuestRows.services(t, req("a", "b"));
         T.eq(2, p.rows.size(), "two rows");
         // an empty cell is the empty text, as the original sends it (Q4); the seam turns that off
         T.eq(com.vcfcf.adapters.vcommunity.text.Quirks.BLANK_STRINGS_PUSHED ? "" : null, p.rows.get(1).status, "an empty cell");
         T.eq(com.vcfcf.adapters.vcommunity.text.Quirks.BLANK_STRINGS_PUSHED ? "" : null, p.rows.get(1).startType, "an empty cell");
-        T.throwsNothing(() -> GuestRows.services(GuestCsv.parse(b("Name,DisplayName,Status\r\na,,c\r\n"))), "blank display name");
-        T.eq(0, GuestRows.services(GuestCsv.parse(b("Name,DisplayName,Status\r\na,,c\r\n"))).rows.size(),
+        T.throwsNothing(() -> GuestRows.services(GuestCsv.parse(b("Name,DisplayName,Status\r\na,,c\r\n")), req("a")), "blank display name");
+        T.eq(0, GuestRows.services(GuestCsv.parse(b("Name,DisplayName,Status\r\na,,c\r\n")), req("a")).rows.size(),
                 "a blank display name cannot be an instance of a key");
         // the same display name twice: both rows come out, the later one overwrites in the push set (as the original)
         GuestRows.Parsed<GuestRows.Service> dup = GuestRows.services(GuestCsv.parse(
-                b("Name,DisplayName,Status\r\na,Same,Running\r\nb,Same,Stopped\r\n")));
+                b("Name,DisplayName,Status\r\na,Same,Running\r\nb,Same,Stopped\r\n")), req("a", "b"));
         T.eq(2, dup.rows.size(), "duplicates are kept in order");
         // the operating system: the last valid row wins
         GuestRows.Parsed<java.util.Map<String, String>> os = GuestRows.operatingSystem(GuestCsv.parse(b(
@@ -149,10 +160,15 @@ public final class GuestUnitTest {
         T.check(!GuestText.isSafeInstance("a|b"), "a separator would start a new level of the key");
         T.check(!GuestText.isSafeInstance("   "), "blank");
         T.check(GuestText.isSafeInstance("Name: with colon"), "a colon is part of a name");
-        T.eq("a\nb\tc", GuestText.eventText("a\r\nb\tc", 100), "CRLF is one LF");
-        T.eq("ab", GuestText.eventText("a\u0000\u001bb", 100), "controls dropped");
+        // an event's text keeps what the guest wrote (W2); only NUL, overrides and a lone surrogate go
+        T.eq("a\r\nb\tc\u001b\u2028", GuestText.eventText("a\r\nb\tc\u001b\u2028", 100), "event text is kept as written");
+        T.eq("ab", GuestText.eventText("a\u0000\u202e\ud800b", 100), "NUL, a bidi override and a lone surrogate are dropped");
         T.eq("abc...", GuestText.eventText("abcdef", 3), "cut with an ellipsis");
         T.eq("a...", GuestText.eventText("a\ud83d\ude80", 2), "never half a pair");
+        // text for a log line or a failure is one clean line
+        T.eq("a\nb\tc", GuestText.lineText("a\r\nb\tc", 100), "CRLF is one LF");
+        T.eq("ab", GuestText.lineText("a\u0000\u001bb", 100), "controls dropped");
+        T.eq("abc...", GuestText.lineText("abcdef", 3), "cut with an ellipsis");
         T.done("guest units: what text may become a value, an instance, an event");
     }
 
@@ -207,7 +223,8 @@ public final class GuestUnitTest {
             // refused
         }
         String args = GuestScripts.arguments(p);
-        T.check(args.startsWith("-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand "), "switches");
+        T.check(args.startsWith("-NoLogo -NoProfile -NonInteractive -EncodedCommand "), "switches (no execution policy: a command is not a script file)");
+        T.notContains(args, "ExecutionPolicy", "nothing that looks like a policy bypass");
         String b64 = args.substring(args.lastIndexOf(' ') + 1);
         T.eq(p, new String(Base64.getDecoder().decode(b64), StandardCharsets.UTF_16LE), "UTF-16LE base64 round trip");
         for (GuestScripts.Kind k : GuestScripts.Kind.values()) {
@@ -220,12 +237,21 @@ public final class GuestUnitTest {
     }
 
     static void plan() throws Exception {
-        VCommunityConfig on = cfg("serviceMonitoring", "Enabled", "winEventMonitoring", "Disabled");
+        VCommunityConfig on = cfg("serviceMonitoring", "Enabled", "winEventMonitoring", "Disabled", "vcenter_tls_validation", "Enabled");
         T.eq(GuestPlan.Off.SWITCHED_OFF, GuestPlan.of(cfg(), new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off,
                 "both switches off: no guest operation");
         T.eq(GuestPlan.Off.NO_CREDENTIAL, GuestPlan.of(on, new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off,
                 "enabled with no account");
-        T.eq(GuestPlan.Off.BAD_TLS_MODE, GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled", "guest_tls_validation", "Sometimes"),
+        // W5: the Windows account is not sent to a vCenter whose certificate is not checked
+        T.eq(GuestPlan.Off.VCENTER_TLS, GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled", "vcenter_tls_validation",
+                "Trust on First Use"), new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off,
+                "Trust on First Use: guest monitoring does not run");
+        T.eq(GuestPlan.Off.VCENTER_TLS, GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled"),
+                new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off, "the default mode is that one");
+        T.eq(null, GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled", "vcenter_tls_validation", "Enabled"),
+                new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off, "Enabled runs");
+        T.eq(GuestPlan.Off.BAD_TLS_MODE, GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled", "guest_tls_validation", "Sometimes",
+                "vcenter_tls_validation", "Enabled"),
                 new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off, "a mode that is not one of the three");
         GuestPlan ok = GuestPlan.create(true, Arrays.asList("BITS", "bad'name", "a$(x)", "W32Time"), true,
                 "<Events><Log Name=\"System\"><EventID>1</EventID><EventID>2</EventID></Log><Log Name=\"A&#9;B\"><EventID>3</EventID></Log></Events>");

@@ -48,6 +48,12 @@ final class GuestFx implements FakeVc.Handler, AutoCloseable {
         boolean failDelete;
         /** A fault text that repeats the account and the password, as a careless server might. */
         boolean echoSecrets;
+        /** Characters of filler before the echoed password, to make it straddle the cut of a fault text. */
+        int echoPad;
+        /** The host the VM runs on now (a RetrievePropertiesEx of its runtime.host answers it), or null. */
+        String currentHost;
+        /** The port of the ESXi host the transfer URLs name, or 0 for this fake's own. */
+        int urlPort;
         /** A file transfer URL for the output that names this host (or "*"), instead of the fake ESXi host. */
         String urlHost;
         /** Fail every upload with this HTTP status instead of storing it. */
@@ -190,6 +196,16 @@ final class GuestFx implements FakeVc.Handler, AutoCloseable {
                             + "xsi:type=\"ManagedObjectReference\">guestProcessManager</val></propSet>"
                             + "</objects></returnval></RetrievePropertiesExResponse>");
                 }
+                if (r.body.contains("<type>VirtualMachine</type>") && r.body.contains("<pathSet>runtime.host</pathSet>")) {
+                    Matcher mo = Pattern.compile("<obj type=\"VirtualMachine\">([^<]*)</obj>").matcher(r.body);
+                    Guest g = mo.find() ? guests.get(mo.group(1)) : null;
+                    if (g != null && g.currentHost != null) {
+                        return ok("<RetrievePropertiesExResponse xmlns=\"urn:vim25\"><returnval><objects>"
+                                + "<obj type=\"VirtualMachine\">" + mo.group(1) + "</obj><propSet><name>runtime.host</name>"
+                                + "<val type=\"HostSystem\" xsi:type=\"ManagedObjectReference\">" + g.currentHost
+                                + "</val></propSet></objects></returnval></RetrievePropertiesExResponse>");
+                    }
+                }
                 return inner.handle(r);
             case "CreateTemporaryDirectoryInGuest":
             case "CreateTemporaryFileInGuest":
@@ -221,7 +237,7 @@ final class GuestFx implements FakeVc.Handler, AutoCloseable {
         Matcher mp = PASS.matcher(r.body);
         String user = mu.find() ? unesc(mu.group(1)) : "";
         String pass = mp.find() ? unesc(mp.group(1)) : "";
-        String echo = g.echoSecrets ? " (account " + user + ", password " + pass + ")" : "";
+        String echo = g.echoSecrets ? " (account " + user + ", " + "z".repeat(g.echoPad) + "password " + pass + ")" : "";
         if (g.fault != null) return FakeVc.fault(g.fault, "guest operation refused" + echo);
         if (!g.user.equals(user) || !g.pass.equals(pass)) {
             return FakeVc.fault("InvalidGuestLogin", "Failed to authenticate with the guest operating system "
@@ -354,7 +370,7 @@ final class GuestFx implements FakeVc.Handler, AutoCloseable {
 
     private String url(Guest g, String token) {
         String host = g.urlHost != null ? g.urlHost : "127.0.0.1";
-        return "https://" + host + ":" + esxi.port() + "/guestFile?id=" + token + "&token=secret-ticket-" + token;
+        return "https://" + host + ":" + (g.urlPort != 0 ? g.urlPort : esxi.port()) + "/guestFile?id=" + token + "&token=secret-ticket-" + token;
     }
 
     private static String decode(String args) {
@@ -365,7 +381,7 @@ final class GuestFx implements FakeVc.Handler, AutoCloseable {
 
     // ------------------------------------------------------------------ ESXi side
 
-    private FakeVc.Resp transfer(FakeVc.Req r) {
+    FakeVc.Resp transfer(FakeVc.Req r) {
         Matcher m = Pattern.compile("id=([a-z0-9]+)").matcher(r.path);
         String[] t = m.find() ? tickets.get(m.group(1)) : null;
         if (t == null || !t[0].equals(r.method)) return new FakeVc.Resp(404, null, "");

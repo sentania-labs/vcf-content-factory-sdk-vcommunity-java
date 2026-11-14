@@ -24,7 +24,7 @@ import java.util.Map;
  */
 public final class EventMemory {
 
-    public static final long TTL_MS = 30 * 60 * 1000L;
+    public static final long TTL_MS = 2 * 60 * 60 * 1000L;
     public static final int CAPACITY = 50_000;
 
     private final long ttlMs;

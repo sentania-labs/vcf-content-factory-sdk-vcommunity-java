@@ -11,7 +11,7 @@ public final class GuestFailure {
         this.step = step;
         this.script = script;
         // one short line, whatever the text held: nothing a guest or a fault wrote can start another log line
-        this.message = GuestText.eventText(message == null ? "" : message, 300).replace('\n', ' ').replace('\t', ' ');
+        this.message = GuestText.lineText(message == null ? "" : message, 300).replace('\n', ' ').replace('\t', ' ');
     }
 
     @Override

@@ -34,8 +34,8 @@ public final class HttpsGuestHttp implements GuestHttp {
     }
 
     @Override
-    public Response put(String url, byte[] body, GuestTrust.Channel channel) throws IOException {
-        HttpsURLConnection c = open(url, channel, "PUT");
+    public Response put(String url, byte[] body, GuestTrust.Channel channel, int readTimeoutMs) throws IOException {
+        HttpsURLConnection c = open(url, channel, "PUT", readTimeoutMs);
         try {
             c.setDoOutput(true);
             c.setFixedLengthStreamingMode(body.length);
@@ -55,8 +55,9 @@ public final class HttpsGuestHttp implements GuestHttp {
     }
 
     @Override
-    public Response get(String url, GuestTrust.Channel channel, long maxBytes) throws IOException {
-        HttpsURLConnection c = open(url, channel, "GET");
+    public Response get(String url, GuestTrust.Channel channel, long maxBytes, int readTimeoutMs)
+            throws IOException {
+        HttpsURLConnection c = open(url, channel, "GET", readTimeoutMs);
         try {
             connect(c, channel);
             int code = c.getResponseCode();
@@ -83,7 +84,8 @@ public final class HttpsGuestHttp implements GuestHttp {
         }
     }
 
-    private HttpsURLConnection open(String url, GuestTrust.Channel channel, String method) throws IOException {
+    private HttpsURLConnection open(String url, GuestTrust.Channel channel, String method, int readTimeoutMs)
+            throws IOException {
         if (channel.socketFactory() == null) {
             throw new GuestTlsException(channel.refusal());
         }
@@ -92,7 +94,7 @@ public final class HttpsGuestHttp implements GuestHttp {
         c.setHostnameVerifier(ANY_NAME); // the thumbprint is the identity, not the name
         c.setInstanceFollowRedirects(false);
         c.setConnectTimeout(connectMs);
-        c.setReadTimeout(readMs);
+        c.setReadTimeout(Math.max(1, Math.min(readMs, readTimeoutMs)));
         c.setUseCaches(false);
         c.setRequestMethod(method);
         c.setRequestProperty("Connection", "close");
@@ -121,7 +123,7 @@ public final class HttpsGuestHttp implements GuestHttp {
     /** The failure as a credential-free, URL-free IOException. */
     private static IOException described(IOException e, GuestTrust.Channel channel) {
         String tls = channel.explain(e);
-        if (tls != null) return new GuestTlsException(tls);
+        if (tls != null) return new GuestTlsException(tls, true);
         if (e instanceof SocketTimeoutException) return new SocketTimeoutException("the ESXi host did not answer in time");
         return new IOException("the transfer to the ESXi host failed (" + e.getClass().getSimpleName() + ")");
     }

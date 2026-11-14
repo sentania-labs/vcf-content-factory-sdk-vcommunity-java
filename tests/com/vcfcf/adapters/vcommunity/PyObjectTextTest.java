@@ -27,6 +27,19 @@ public final class PyObjectTextTest {
                 + "<lastInstallInfo><counter>" + counter + "</counter></lastInstallInfo></val>";
     }
 
+    /**
+     * The text a VM of the third live differential (build 11) holds on the Python side, exactly: the last field of the printed
+     * object is written {@code fault = } and its closing brace follows one space later, so two spaces. (The Java side of that
+     * dump held one space; the formatter has two, and the pak of that build was checked to have them, so what is lost is lost
+     * after the push: see the design, note L1.)
+     */
+    static final String PYTHON_DUMP_ADFS1 = "(vim.vm.ToolsConfigInfo) { dynamicType = , dynamicProperty = (vmodl.DynamicProperty) [], "
+            + "toolsVersion = 0, toolsInstallType = 'guestToolsTypeUnknown', afterPowerOn = true, afterResume = true, "
+            + "beforeGuestStandby = true, beforeGuestShutdown = true, beforeGuestReboot = , toolsUpgradePolicy = 'manual', "
+            + "pendingCustomization = , customizationKeyId = , syncTimeWithHostAllowed = true, syncTimeWithHost = false, "
+            + "lastInstallInfo = (vim.vm.ToolsConfigInfo.ToolsLastInstallInfo) { dynamicType = , "
+            + "dynamicProperty = (vmodl.DynamicProperty) [], counter = 1, fault =  } }";
+
     public static void main(String[] args) throws Exception {
         // the value the baseline stores for 11 of its VMs
         T.eq("(vim.vm.ToolsConfigInfo) { dynamicType = , dynamicProperty = (vmodl.DynamicProperty) [], toolsVersion = 13312, "
@@ -42,6 +55,10 @@ public final class PyObjectTextTest {
         T.contains(noInstall, "toolsVersion = 2147483647, toolsInstallType = , afterPowerOn", "an unset install type is empty");
         T.contains(PyObjectText.of("config.tools", val(tools("13312", "guestToolsTypeOpenVMTools", "true", "41", ""))),
                 "syncTimeWithHost = true, lastInstallInfo", "sync on");
+        // the exact string of the fresh Python dump (L1), byte for byte, with its two spaces before the closing brace
+        T.eq(PYTHON_DUMP_ADFS1, PyObjectText.of("config.tools", val(tools("0", "guestToolsTypeUnknown", "false", "1", ""))),
+                "the tools configuration, as the third live dump stores it");
+        T.check(PYTHON_DUMP_ADFS1.endsWith("fault =  } }"), "two spaces after fault =");
         // a field the printed form does not know: not reproduced, never guessed
         T.check(PyObjectText.of("config.tools", val(tools("1", "x", "false", "0", "<customizationKeyId><id>k</id></customizationKeyId>"))) == null,
                 "a key provider is not reproduced");

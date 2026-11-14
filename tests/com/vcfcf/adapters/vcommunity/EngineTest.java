@@ -472,6 +472,18 @@ public final class EngineTest {
                 clean.ops, new CheckListStore(clean.log));
         T.check(!ok.needsAttention(), "a clean report is not a warning: " + ok.text());
 
+        // W5: guest monitoring over a vCenter connection that is not checked is said, and is a warning
+        VCommunityConfig guestOn = cfg("serviceMonitoring", "Enabled");
+        Rig gr = new Rig(guestOn);
+        ConnectionTester.Report gp = ConnectionTester.run(guestOn, gr.vim, (h, p, t) -> ThumbprintProbe.Result.found("cd".repeat(32)),
+                gr.ops, new CheckListStore(gr.log));
+        T.contains(gp.text(), "guest monitoring is enabled but will not run", "said in the test");
+        T.contains(String.join("|", gp.attentionLines()), "Trust on First Use", "as a warning");
+        VCommunityConfig guestOk = cfg("serviceMonitoring", "Enabled", "vcenter_tls_validation", "Enabled");
+        Rig gk = new Rig(guestOk);
+        T.notContains(ConnectionTester.run(guestOk, gk.vim, (h, p, t) -> ThumbprintProbe.Result.found("cd".repeat(32)), gk.ops,
+                new CheckListStore(gk.log)).text(), "will not run", "nothing to say when the connection is checked");
+
         // a login failure fails the test and keeps the cause
         Rig bad = new Rig(c);
         Throwable cause = new java.net.ConnectException("x");

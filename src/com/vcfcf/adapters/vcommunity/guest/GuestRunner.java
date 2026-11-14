@@ -58,6 +58,10 @@ public final class GuestRunner {
         public String hostMoref;
         public String hostName;
         public GuestPlan plan;
+        /** How far back the events program looks, in minutes. */
+        public int eventWindowMinutes = GuestScripts.DEFAULT_WINDOW_MINUTES;
+        /** The inventory name of a host from its MoRef value (used when the VM has moved), or null. */
+        public java.util.function.Function<String, String> hostNameOf;
         /** Directories an earlier run could not remove from this guest (a guest that was unreachable then). */
         public List<String> leftover = new ArrayList<>();
     }
@@ -76,6 +80,12 @@ public final class GuestRunner {
         public int scriptsTried;
         /** Directories that could not be removed from the guest, to be tried again at the next run on this VM. */
         public final List<String> leftBehind = new ArrayList<>();
+        /** True once a call with the account was accepted by the guest's logon (the account is good on this VM). */
+        public boolean loggedOn;
+        /** True when the events program ended with its output read (so the window it covered is known to be done). */
+        public boolean eventsOk;
+        /** Set by a transfer that was refused for a certificate other than the recorded one (for the moved-VM retry). */
+        boolean mismatch;
         /** The first failure that makes every other script of this VM pointless (account, tools, certificate). */
         public GuestStep fatal;
 
@@ -88,7 +98,9 @@ public final class GuestRunner {
         }
     }
 
-    private static final Pattern DIRECTORY = Pattern.compile("C:\\\\Windows\\\\Temp\\\\VCFOperationsvCommunity-[A-Za-z0-9._-]{1,64}-(OSInfo|Services|EventLog)-TEMP");
+    private static final Pattern DIRECTORY = Pattern.compile(
+            "C:\\\\Windows\\\\Temp\\\\VCFOperationsvCommunity-[A-Za-z0-9._-]{1,64}-(OSInfo|Services|EventLog)-TEMP",
+            Pattern.CASE_INSENSITIVE);
 
     private final GuestOpsClient ops;
     private final GuestHttp http;
@@ -118,25 +130,38 @@ public final class GuestRunner {
     public Outcome run(Job job, long stopMs) throws InterruptedException {
         Outcome o = new Outcome();
         GuestPlan plan = job.plan;
-        removeLeftovers(job, o);
-        if (plan.services && o.fatal == null) script(GuestScripts.Kind.SERVICES, job, plan.serviceFile(), o, stopMs);
-        if (plan.operatingSystem && o.fatal == null) script(GuestScripts.Kind.OS, job, null, o, stopMs);
-        if (plan.events && o.fatal == null) script(GuestScripts.Kind.EVENTS, job, plan.eventFile(), o, stopMs);
+        ops.limitTo(stopMs);
+        try {
+            removeLeftovers(job, o);
+            if (plan.services && o.fatal == null) script(GuestScripts.Kind.SERVICES, job, plan.serviceFile(), o, stopMs);
+            if (plan.operatingSystem && o.fatal == null) script(GuestScripts.Kind.OS, job, null, o, stopMs);
+            if (plan.events && o.fatal == null) script(GuestScripts.Kind.EVENTS, job, plan.eventFile(), o, stopMs);
+        } finally {
+            ops.limitTo(0);
+        }
         return o;
     }
 
     /** Try again to remove what an earlier run left in this guest. */
     private void removeLeftovers(Job job, Outcome o) throws InterruptedException {
+        boolean stopped = false;
         for (String d : job.leftover) {
             if (!DIRECTORY.matcher(d).matches()) continue; // never delete a path of any other form
+            if (stopped) {
+                o.leftBehind.add(d); // not tried this time (the guest refused us); still there
+                continue;
+            }
             if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
             VimResult<Void> r = ops.deleteDirectory(job.vm, d);
-            if (r.isOk() || "FileNotFound".equals(r.faultClass())) continue;
+            if (r.isOk() || "FileNotFound".equals(r.faultClass())) {
+                o.loggedOn = true;
+                continue;
+            }
             o.leftBehind.add(d);
             GuestStep why = GuestOpsClient.classify(r, GuestStep.CLEANUP);
             o.fail(why, "cleanup", "a directory an earlier run left in the guest "
                     + "could not be removed: " + r.message());
-            if (o.fatal != null) return;
+            if (o.fatal != null) stopped = true;
         }
     }
 
@@ -160,6 +185,7 @@ public final class GuestRunner {
                         + "made: " + d.message());
                 return;
             }
+            o.loggedOn = true;
             if (!DIRECTORY.matcher(d.value()).matches()) {
                 o.fail(GuestStep.DIRECTORY, which, "the guest named a temporary directory this port does not use; "
                         + "nothing was run and the directory was left alone");
@@ -177,7 +203,7 @@ public final class GuestRunner {
 
             if (!time(stopMs, o, which)) return;
             VimResult<Long> p = ops.startProgram(job.vm, GuestScripts.POWERSHELL,
-                    GuestScripts.arguments(GuestScripts.program(kind, in, out)), GuestScripts.TEMP_PARENT);
+                    GuestScripts.arguments(GuestScripts.program(kind, in, out, job.eventWindowMinutes)), GuestScripts.TEMP_PARENT);
             if (!p.isOk()) {
                 o.fail(GuestOpsClient.classify(p, GuestStep.START), which, "the program could not be started: "
                         + p.message());
@@ -219,7 +245,7 @@ public final class GuestRunner {
             return null;
         }
         String p = f.value();
-        String leaf = p.startsWith(dir + "\\") ? p.substring(dir.length() + 1) : null;
+        String leaf = p.regionMatches(true, 0, dir + "\\", 0, dir.length() + 1) ? p.substring(dir.length() + 1) : null;
         if (leaf == null || !leaf.matches("[A-Za-z0-9._-]{1,64}")) {
             o.fail(GuestStep.DIRECTORY, which, "the guest named a file this port does not use; nothing was sent to it");
             return null;
@@ -230,13 +256,18 @@ public final class GuestRunner {
     private boolean upload(Job job, String path, byte[] bytes, Outcome o, String which, long stopMs)
             throws InterruptedException {
         if (!time(stopMs, o, which)) return false;
-        VimResult<String> u = ops.initiateFileTransferToGuest(job.vm, path, bytes.length);
-        if (!u.isOk()) {
-            o.fail(GuestOpsClient.classify(u, GuestStep.UPLOAD), which, "the file could not be sent to the guest: "
-                    + u.message());
-            return false;
+        GuestHttp.Response r = null;
+        for (int attempt = 0; attempt < 2; attempt++) {
+            VimResult<String> u = ops.initiateFileTransferToGuest(job.vm, path, bytes.length);
+            if (!u.isOk()) {
+                o.fail(GuestOpsClient.classify(u, GuestStep.UPLOAD), which, "the file could not be sent to the guest: "
+                        + u.message());
+                return false;
+            }
+            r = transfer(job, u.value(), bytes, 0, GuestStep.UPLOAD, o, which, stopMs);
+            if (r == null && retryOnMovedVm(job, o, attempt)) continue;
+            break;
         }
-        GuestHttp.Response r = transfer(job, u.value(), bytes, 0, GuestStep.UPLOAD, o, which);
         if (r == null) return false;
         if (r.status != 200 && r.status != 201) {
             o.fail(GuestStep.UPLOAD, which, "the ESXi host answered HTTP " + r.status + " to the file transfer");
@@ -267,9 +298,25 @@ public final class GuestRunner {
         return true;
     }
 
+    /**
+     * After a refusal for a host certificate other than the recorded one: when the VM has moved to another host since the
+     * cycle read it (a vMotion), it is asked about again on the new host, once. The refusal is then not recorded.
+     */
+    private boolean retryOnMovedVm(Job job, Outcome o, int attempt) {
+        if (attempt > 0 || !o.mismatch) return false;
+        o.mismatch = false;
+        String now = ops.currentHost(job.vm);
+        if (now == null || now.equals(job.hostMoref)) return false;
+        job.hostMoref = now;
+        job.hostName = job.hostNameOf == null ? null : job.hostNameOf.apply(now);
+        o.failures.remove(o.failures.size() - 1);
+        if (o.fatal == GuestStep.TLS) o.fatal = null;
+        return true;
+    }
+
     /** One HTTPS transfer: null (with the failure recorded) when it was refused or failed. */
     private GuestHttp.Response transfer(Job job, String url, byte[] put, long maxGet, GuestStep dflt, Outcome o,
-            String which) {
+            String which, long stopMs) {
         String checked;
         try {
             checked = TransferUrl.check(url, job.hostName);
@@ -282,9 +329,12 @@ public final class GuestRunner {
             o.fail(GuestStep.TLS, which, ch.refusal());
             return null;
         }
+        // the transfer is given no more time than this VM has left
+        int left = (int) Math.max(1_000, Math.min(Integer.MAX_VALUE, stopMs - clock.getAsLong()));
         try {
-            return put != null ? http.put(checked, put, ch) : http.get(checked, ch, maxGet);
+            return put != null ? http.put(checked, put, ch, left) : http.get(checked, ch, maxGet, left);
         } catch (GuestTlsException e) {
+            o.mismatch = e.isMismatch();
             o.fail(GuestStep.TLS, which, e.getMessage());
         } catch (SocketTimeoutException e) {
             o.fail(GuestStep.TIMEOUT, which, "the ESXi host did not answer the file transfer in time");
@@ -336,18 +386,23 @@ public final class GuestRunner {
 
     private byte[] download(Job job, String path, Outcome o, String which, long stopMs) throws InterruptedException {
         if (!time(stopMs, o, which)) return null;
-        VimResult<GuestOpsClient.Transfer> t = ops.initiateFileTransferFromGuest(job.vm, path);
-        if (!t.isOk()) {
-            o.fail(GuestOpsClient.classify(t, GuestStep.DOWNLOAD), which, "the output could not be read back: "
-                    + t.message());
-            return null;
+        GuestHttp.Response r = null;
+        for (int attempt = 0; attempt < 2; attempt++) {
+            VimResult<GuestOpsClient.Transfer> t = ops.initiateFileTransferFromGuest(job.vm, path);
+            if (!t.isOk()) {
+                o.fail(GuestOpsClient.classify(t, GuestStep.DOWNLOAD), which, "the output could not be read back: "
+                        + t.message());
+                return null;
+            }
+            if (t.value().size > limits.maxOutput) {
+                o.fail(GuestStep.TOOLARGE, which, "the output is " + t.value().size + " bytes, over the limit of "
+                        + limits.maxOutput);
+                return null;
+            }
+            r = transfer(job, t.value().url, null, limits.maxOutput, GuestStep.DOWNLOAD, o, which, stopMs);
+            if (r == null && retryOnMovedVm(job, o, attempt)) continue;
+            break;
         }
-        if (t.value().size > limits.maxOutput) {
-            o.fail(GuestStep.TOOLARGE, which, "the output is " + t.value().size + " bytes, over the limit of "
-                    + limits.maxOutput);
-            return null;
-        }
-        GuestHttp.Response r = transfer(job, t.value().url, null, limits.maxOutput, GuestStep.DOWNLOAD, o, which);
         if (r == null) return null;
         if (r.tooLarge) {
             o.fail(GuestStep.TOOLARGE, which, "the output is over the limit of " + limits.maxOutput + " bytes");
@@ -387,7 +442,9 @@ public final class GuestRunner {
                     break;
                 }
                 case SERVICES: {
-                    GuestRows.Parsed<GuestRows.Service> p = GuestRows.services(t);
+                    java.util.Set<String> asked = new java.util.HashSet<>();
+                    for (String n : job.plan.serviceNames) asked.add(n.toLowerCase(java.util.Locale.ROOT));
+                    GuestRows.Parsed<GuestRows.Service> p = GuestRows.services(t, asked);
                     o.services.addAll(p.rows);
                     skipped(o, which, p.skipped);
                     break;
@@ -396,14 +453,18 @@ public final class GuestRunner {
                     GuestRows.Parsed<GuestRows.EventRow> p = GuestRows.events(t);
                     long now = clock.getAsLong();
                     int n = 0;
+                    // each query gives at most one record, so no more events than queries can be true
+                    int most = Math.min(WindowsEvents.MAX_PER_VM, job.plan.queries.size());
                     for (GuestRows.EventRow r : p.rows) {
-                        if (n++ >= WindowsEvents.MAX_PER_VM) {
+                        if (n++ >= most) {
                             o.eventsOver++;
                             continue;
                         }
                         o.events.add(WindowsEvents.of(job.resourceId, r, now));
                     }
                     skipped(o, which, p.skipped);
+                    queryFailures(job, o, p.failedQueries);
+                    o.eventsOk = true;
                     break;
                 }
             }
@@ -412,6 +473,23 @@ public final class GuestRunner {
             return;
         }
         o.scriptsOk++;
+    }
+
+    /** The event queries the guest could not run, named by the log of each entry of our own list. */
+    private static void queryFailures(Job job, Outcome o, List<Integer> positions) {
+        if (positions.isEmpty()) return;
+        StringBuilder names = new StringBuilder();
+        int shown = 0;
+        for (Integer pos : positions) {
+            if (pos < 1 || pos > job.plan.queries.size()) continue;
+            if (shown++ < 5) {
+                if (names.length() > 0) names.append(", ");
+                names.append(job.plan.queries.get(pos - 1).log);
+            }
+        }
+        o.fail(GuestStep.QUERY, "events", positions.size() + " event query(ies) could not be run in the guest (a log the "
+                + "account may not read, or one that is not there): " + names + (shown > 5 ? ", ..." : "")
+                + ". The events that were found are sent.");
     }
 
     private static void skipped(Outcome o, String which, int n) {

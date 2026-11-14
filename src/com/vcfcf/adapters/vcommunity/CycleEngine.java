@@ -156,6 +156,8 @@ public final class CycleEngine {
     private GuestRunner.Limits guestLimits = new GuestRunner.Limits();
 
     private boolean warnedGuestTls;
+    private final com.vcfcf.adapters.vcommunity.guest.EventMemory configEventMemory =
+            new com.vcfcf.adapters.vcommunity.guest.EventMemory();
     private long cycleNo;
     private String vcenterId;
     private String vcenterIdFor;
@@ -343,6 +345,7 @@ public final class CycleEngine {
                     d.ps = ps;
                     d.failures = failures;
                     DerivedPhase.Result dr = derived.run(d);
+                    p2.alsoOnCleanPush(dr::commit);
                     for (Map.Entry<String, Status> e : dr.status.entrySet()) {
                         // a collector the deadline kept from running stays "not run", whatever it found missing after
                         if (s.collectorStatus.get(e.getKey()) != Status.NOT_RUN) s.collectorStatus.put(e.getKey(), e.getValue());
@@ -537,14 +540,17 @@ public final class CycleEngine {
     }
 
     /**
-     * One warning event on the vCenter's object for each check-list file that could not be used (design 4.10). They
-     * go every cycle the problem lasts, as the original sent them; the platform ends one that stops coming.
+     * One warning event on the vCenter's object for each check-list file that could not be used (design 4.10). A problem
+     * that lasts is sent once and not again for the time the Windows events are held (DV-98): a REST event with the same
+     * message is not known to be merged, and one a cycle would be a storm.
      */
     private void configProblems(Map<ListKind, CheckListStore.Entry> lists, String vcId, long t0, Failures failures) {
-        List<OpsEvent> events = ConfigProblemEvents.of(lists.values(), vcId, t0);
+        List<OpsEvent> events = configEventMemory.fresh(ConfigProblemEvents.of(lists.values(), vcId, t0), t0);
         if (events.isEmpty()) return;
         PushOutcome po = ops.pushEvents(events);
-        if (!po.isClean() || po.sent < events.size()) {
+        if (po.isClean() && po.sent >= events.size()) {
+            configEventMemory.remember(events, t0);
+        } else {
             warns.addExternal(1, "the configuration warning events were not sent cleanly: " + po);
             failures.add(COLLECTOR_VCENTER, FailureCause.EVENTS, "configuration events", 0,
                     "the configuration warning events were not sent cleanly (" + po + ")");
@@ -566,7 +572,8 @@ public final class CycleEngine {
             refreshHealth(s, failures, t0, vcId, new PushSet(log));
             return;
         }
-        if (cfg.tlsMode == VCommunityConfig.TlsMode.TRUST_ON_FIRST_USE && !warnedGuestTls) {
+        if (!GuestPlan.REQUIRE_CHECKED_VCENTER_TLS && cfg.tlsMode == VCommunityConfig.TlsMode.TRUST_ON_FIRST_USE
+                && !warnedGuestTls) {
             warnedGuestTls = true;
             log.warn("Guest monitoring sends the Windows account to vCenter over a connection whose certificate is not "
                     + "checked (vCenter TLS Validation: Trust on First Use); Pinned or Enabled protects it");
@@ -575,7 +582,8 @@ public final class CycleEngine {
         GuestPhase.Input in = new GuestPhase.Input();
         in.plan = plan;
         in.auth = new GuestAuth(cfg.winUser, cfg.winPassword());
-        in.trust = new GuestTrust(cfg.guestTlsMode, p2.roster.thumbprints());
+        in.trust = new GuestTrust(cfg.guestTlsMode, p2.roster.thumbprints(), p2.roster.hostsRead(),
+                GuestTrust::sha1Available);
         in.vim = vim.reader();
         in.http = guestHttp;
         in.roster = p2.roster;
@@ -603,8 +611,12 @@ public final class CycleEngine {
         refreshHealth(s, failures, t0, vcId, gps);
     }
 
-    /** How long past the cycle's deadline a VM that is being asked may go on before it is stopped. */
-    static final long GUEST_HARD_STOP_GRACE_MS = 45_000;
+    /**
+     * How long past the cycle's deadline a VM that is being asked may go on before it is stopped. The deadline is the
+     * interval minus 60 s: this grace (20 s), the wait for the workers to remove their directories (10 s) and the two pushes
+     * after them (30 s) fit in that margin.
+     */
+    static final long GUEST_HARD_STOP_GRACE_MS = 20_000;
 
     /** Send the guest phase's values with its collector's health keys; the figures of the cycle are brought up to date. */
     private void refreshHealth(CollectionHealth.Summary s, Failures failures, long t0, String vcId, PushSet gps) {

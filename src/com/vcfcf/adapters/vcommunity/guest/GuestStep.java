@@ -39,6 +39,10 @@ public enum GuestStep {
     CLEANUP("the temporary directory could not be removed"),
     /** Any other refusal of a vCenter call. */
     CALL("vCenter refused the call"),
+    /** A Windows event query failed in the guest (a log it may not read, a log that is not there). */
+    QUERY("an event query failed in the guest"),
+    /** Events older than the window the program looks at were not looked at for this VM. */
+    WINDOW("events before the window were not looked at"),
     /** Not tried: the cycle ended, or the account was being protected. */
     SKIPPED("it was not tried");
 

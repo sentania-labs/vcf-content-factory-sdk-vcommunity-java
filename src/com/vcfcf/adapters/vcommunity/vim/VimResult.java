@@ -13,6 +13,7 @@ public final class VimResult<T> {
     private final String invalidPropertyPath;
     private final long bytes;
     private final Throwable cause;
+    private String detail;
 
     private VimResult(T value, String faultClass, String message, String invalidPropertyPath,
             long bytes, Throwable cause) {
@@ -64,6 +65,19 @@ public final class VimResult<T> {
     /** Response bytes read. */
     public long bytes() {
         return bytes;
+    }
+
+    /**
+     * The fault's own text as the server sent it, not cut (up to the size of a fault read), or null. For a caller that has
+     * to remove a secret from it before cutting it to size; {@link #message()} is the cut form.
+     */
+    public String detail() {
+        return detail;
+    }
+
+    public VimResult<T> withDetail(String d) {
+        this.detail = d;
+        return this;
     }
 
     /** The underlying exception of a transport failure, or null. */

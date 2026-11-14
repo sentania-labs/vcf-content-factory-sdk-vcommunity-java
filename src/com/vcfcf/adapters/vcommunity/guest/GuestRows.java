@@ -59,6 +59,8 @@ public final class GuestRows {
     public static final class Parsed<T> {
         public final List<T> rows = new ArrayList<>();
         public int skipped;
+        /** Events: the positions (1 based) of the queries that failed in the guest. */
+        public final List<Integer> failedQueries = new ArrayList<>();
     }
 
     /** The six operating system values as property names of the keys' last segment; the last valid row wins. */
@@ -98,7 +100,11 @@ public final class GuestRows {
         return out;
     }
 
-    public static Parsed<Service> services(GuestCsv.Table t) throws HeaderException {
+    /**
+     * @param requested the service names that were asked for, lower case: a row is kept only when its {@code Name} is
+     *        one of them, and at most once (the guest decides what it writes, not which keys the collector creates)
+     */
+    public static Parsed<Service> services(GuestCsv.Table t, java.util.Set<String> requested) throws HeaderException {
         int name = t.column("Name");
         int display = t.column("DisplayName");
         int status = t.column("Status");
@@ -108,6 +114,7 @@ public final class GuestRows {
                     : "Status") + " column");
         }
         Parsed<Service> out = new Parsed<>();
+        java.util.Set<String> seen = new java.util.HashSet<>();
         for (List<String> row : t.rows) {
             if (row.size() < t.header.size()) {
                 out.skipped++;
@@ -115,6 +122,11 @@ public final class GuestRows {
             }
             String d = row.get(display);
             String n = row.get(name);
+            String key = n.toLowerCase(java.util.Locale.ROOT);
+            if (!requested.contains(key) || !seen.add(key)) {
+                out.skipped++; // a service nobody asked for, or a second row for a name
+                continue;
+            }
             String s = row.get(status);
             String st = start < 0 ? null : row.get(start);
             if (!GuestText.isSafeInstance(d) || !GuestText.isSafeValue(n) || !GuestText.isSafeValue(s)
@@ -131,13 +143,22 @@ public final class GuestRows {
         int level = t.column("Level");
         int event = t.column("Event");
         int number = t.column("LevelNumber");
-        if (level < 0 || event < 0) {
-            throw new HeaderException("the output has no " + (level < 0 ? "Level" : "Event") + " column");
+        int failed = t.column("Failed");
+        if (level < 0 || event < 0 || failed < 0) {
+            throw new HeaderException("the output has no " + (level < 0 ? "Level" : event < 0 ? "Event" : "Failed")
+                    + " column");
         }
         Parsed<EventRow> out = new Parsed<>();
         for (List<String> row : t.rows) {
             if (row.size() < t.header.size()) {
                 out.skipped++;
+                continue;
+            }
+            String f = row.get(failed);
+            if (!f.isEmpty()) {
+                // the program says which query (by its place in the file it was given) could not be run
+                if (f.matches("[0-9]{1,5}")) out.failedQueries.add(Integer.valueOf(f));
+                else out.skipped++;
                 continue;
             }
             int n = -1;

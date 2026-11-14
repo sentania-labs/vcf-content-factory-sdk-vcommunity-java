@@ -29,11 +29,12 @@ public interface GuestHttp {
      * @throws IOException the connection, the handshake or the transfer failed; the message is credential-free
      *         and carries no URL (the URL holds a ticket)
      */
-    Response put(String url, byte[] body, GuestTrust.Channel channel) throws IOException;
+    Response put(String url, byte[] body, GuestTrust.Channel channel, int readTimeoutMs) throws IOException;
 
     /**
      * @param maxBytes the most bytes read
+     * @param readTimeoutMs the longest wait for the host (the transfer is also bounded by the VM's own time)
      * @throws IOException as {@link #put}
      */
-    Response get(String url, GuestTrust.Channel channel, long maxBytes) throws IOException;
+    Response get(String url, GuestTrust.Channel channel, long maxBytes, int readTimeoutMs) throws IOException;
 }

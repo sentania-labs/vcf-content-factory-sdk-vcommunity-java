@@ -9,7 +9,8 @@ public final class GuestText {
 
     public static final int MAX_VALUE = 512;
     public static final int MAX_INSTANCE = 128;
-    public static final int MAX_EVENT = 2000;
+    /** The longest event text published: the largest field the output parser reads (32 KiB); no Operations limit is known (live proof). */
+    public static final int MAX_EVENT = 32 * 1024;
 
     private GuestText() {}
 
@@ -45,11 +46,36 @@ public final class GuestText {
     }
 
     /**
-     * Event text made fit to carry: line breaks become one line feed, tabs stay, every other control character,
-     * separator, override and unpaired surrogate is dropped, and it is cut at {@code max} characters (with
-     * {@code ...} when it was longer).
+     * A Windows event's text as published: kept as the guest wrote it, line breaks included, except for what cannot be
+     * carried at all or can disguise other text: NUL, bidi overrides and isolates, and an unpaired surrogate (JSON
+     * cannot hold one). It is cut at {@code max} characters, with {@code ...} when it was longer. Nothing else
+     * is changed, and nothing of it is logged.
      */
     public static String eventText(String s, int max) {
+        StringBuilder b = new StringBuilder(Math.min(s.length(), max + 3));
+        boolean cut = false;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == 0 || (c >= 0x202a && c <= 0x202e) || (c >= 0x2066 && c <= 0x2069) || loneSurrogate(s, i)) continue;
+            if (b.length() >= max) {
+                cut = true;
+                break;
+            }
+            b.append(c);
+        }
+        if (cut) {
+            if (b.length() > 0 && Character.isHighSurrogate(b.charAt(b.length() - 1))) b.setLength(b.length() - 1);
+            b.append("...");
+        }
+        return b.toString();
+    }
+
+    /**
+     * Text for a log line, a failure or a message of our own: line breaks become one line feed, tabs stay, every other
+     * control character, separator, override and unpaired surrogate is dropped, and it is cut at {@code max}
+     * characters (with {@code ...} when it was longer).
+     */
+    public static String lineText(String s, int max) {
         StringBuilder b = new StringBuilder(Math.min(s.length(), max + 3));
         boolean cut = false;
         for (int i = 0; i < s.length(); i++) {
@@ -66,7 +92,6 @@ public final class GuestText {
             b.append(c);
         }
         if (cut) {
-            // never end on half a surrogate pair
             if (b.length() > 0 && Character.isHighSurrogate(b.charAt(b.length() - 1))) b.setLength(b.length() - 1);
             b.append("...");
         }

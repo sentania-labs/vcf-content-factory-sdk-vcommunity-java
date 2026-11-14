@@ -73,6 +73,7 @@ public final class GuestEngineTest {
             vc.setHandler(fx);
             Map<String, String> m = new HashMap<>();
             m.put("host", "vc.example.test");
+            m.put("vcenter_tls_validation", "Enabled"); // guest monitoring does not run over an unchecked vCenter connection (W5)
             for (int i = 0; i < kv.length; i += 2) m.put(kv[i], kv[i + 1]);
             cfg = account ? VCommunityConfig.parse(m::get, "u", "p", GuestOpsTest.USER, GuestOpsTest.SECRET)
                     : VCommunityConfig.parse(m::get, "u", "p", null, null);
@@ -93,7 +94,8 @@ public final class GuestEngineTest {
         }
 
         CycleEngine.Result run() throws Exception {
-            return engine.run(clock.get() + 240_000);
+            lastResult = engine.run(clock.get() + 240_000);
+            return lastResult;
         }
 
         /** The last value pushed for a property of a resource, over every push of the run; null when none. */
@@ -118,6 +120,13 @@ public final class GuestEngineTest {
         Object health(String key) {
             return prop("vc-res", COLLECTOR_KEY + key);
         }
+
+        /** Collection|guest_vms_done of the last collection of this rig. */
+        int lastDone() {
+            return lastResult == null ? 0 : lastResult.metrics().get("Collection|guest_vms_done").intValue();
+        }
+
+        CycleEngine.Result lastResult;
 
         List<String> allText() {
             List<String> out = new ArrayList<>();
@@ -171,6 +180,8 @@ public final class GuestEngineTest {
         run("the cycle's time", GuestEngineTest::deadline);
         run("a cancelled cycle removes what it made", GuestEngineTest::cancelled);
         run("a directory the guest could not remove is removed next time", GuestEngineTest::leftover);
+        run("an event query that failed in the guest is counted, the events found are sent", GuestEngineTest::queryFailures);
+        run("the events window follows the time since the VM was last looked at", GuestEngineTest::eventWindow);
         run("configuration warning events", GuestEngineTest::configEvents);
         run("an event list entry the guest cannot carry is counted", GuestEngineTest::skippedEventEntries);
         run("nothing secret anywhere", GuestEngineTest::secrets);
@@ -249,9 +260,6 @@ public final class GuestEngineTest {
             r.run();
             T.eq(4L, r.fx.programs.stream().filter(p -> p.contains("Win32_OperatingSystem")).count(),
                     "both VMs are asked again in the second cycle");
-            int tofu = 0;
-            for (String w : r.log.warns) if (w.contains("over a connection whose certificate is not checked")) tofu++;
-            T.eq(1, tofu, "the account travelling over an unchecked vCenter connection is said once, not every cycle");
         }
     }
 
@@ -294,19 +302,21 @@ public final class GuestEngineTest {
             T.eq(1, r.ops.eventPushes.size(), "the same window is not sent twice");
             // a new event appears in the window
             for (String vm : new String[] {"vm-1", "vm-2"}) {
-                r.fx.guest(vm).csv.put("events", GuestOpsTest.EVENTS_OK
-                        + "\"Error\",\"2\",\"[Timestamp=11/13/2026 10:03:00 AM] [Category=System] [EventID=7036] [Message=new]\"\r\n");
+                String first = GuestOpsTest.EVENTS_OK.substring(GuestOpsTest.EVENTS_HEADER.length(),
+                        GuestOpsTest.EVENTS_OK.indexOf("\r\n", GuestOpsTest.EVENTS_HEADER.length()) + 2);
+                r.fx.guest(vm).csv.put("events", GuestOpsTest.EVENTS_HEADER + first
+                        + GuestOpsTest.evRow("Error", "2", "[Timestamp=11/13/2026 10:03:00 AM] [Category=System] [EventID=7036] [Message=new]", ""));
             }
             r.clock.addAndGet(300_000);
             r.run();
             T.eq(2, r.ops.eventPushes.size(), "a new event is sent");
             T.eq(2, r.ops.eventPushes.get(1).size(), "only the new one, once per VM");
             T.contains(r.ops.eventPushes.get(1).get(0).message, "[Message=new]", "the new one");
-            // later than the time to live the memory forgets
-            r.clock.addAndGet(31 * 60_000);
+            // later than the time to live (two hours) the memory forgets
+            r.clock.addAndGet(125 * 60_000);
             r.run();
             T.eq(3, r.ops.eventPushes.size(), "after the memory's time an event still in view is sent once more");
-            T.eq(6, r.ops.eventPushes.get(2).size(), "all three of each VM");
+            T.eq(4, r.ops.eventPushes.get(2).size(), "both of each VM");
             // a restart forgets everything, as the original does
             r.newEngine();
             r.clock.addAndGet(60_000);
@@ -336,7 +346,6 @@ public final class GuestEngineTest {
             r.clockMovesWhenWaiting = true;                       // a program that hangs ends when its waits add up
             r.fx.guest("vm-2").pass = "not-the-password";          // refused
             r.fx.guest("vm-3").hang.add("services");              // hangs
-            r.fx.guest("vm-3").csv.put("events", "\"Level\",\"Event\"\r\n\"Err\"\r\n"); // a header that lacks no column but has a short row
             CycleEngine.Result res = r.run();
             T.check(res.failure == null, "the cycle goes on: " + res.failure);
             T.eq("Running", r.prop("res-vm-1", SV + "Background Intelligent Transfer Service|Service Status"), "VM 1 is untouched");
@@ -356,26 +365,94 @@ public final class GuestEngineTest {
         }
     }
 
+    /** Collections of five minutes each; the phase pauses for 24 hours. */
+    static void cycles(Rig r, int n) throws Exception {
+        for (int i = 0; i < n; i++) {
+            r.clock.addAndGet(300_000);
+            r.run();
+        }
+    }
+
     static void accountProtection() throws Exception {
+        // a wrong password on a fleet: one VM alone, one more in the next collection, then nothing for a day
         try (Rig r = new Rig(10, "serviceMonitoring", "Enabled")) {
             for (int i = 1; i <= 10; i++) r.fx.guest("vm-" + i).pass = "wrong";
             r.run();
-            int tries = r.fx.count("CreateTemporaryDirectoryInGuest");
-            T.check(tries >= 3 && tries <= 6, "the account is tried on a few VMs only: " + tries);
+            T.eq(1, r.fx.count("CreateTemporaryDirectoryInGuest"), "the first collection tries the account on one VM, alone");
             T.eq("FAILED", r.health("Status"), "every VM that was asked refused the account");
             T.contains(String.valueOf(r.health("Causes")), "F-GUEST-AUTH", "named");
+            cycles(r, 1);
+            T.eq(2, r.fx.count("CreateTemporaryDirectoryInGuest"), "the second collection tries one other VM (the first is not asked again)");
             int after = r.fx.log.size();
-            for (int c = 0; c < 12; c++) {
-                r.clock.addAndGet(300_000);
-                r.run();
-                T.eq(after, r.fx.log.size(), "paused: no guest operation in collection " + (c + 2));
+            for (int c = 0; c < 20; c++) {
+                cycles(r, 1);
+                T.eq(after, r.fx.log.size(), "paused: no guest operation in collection " + (c + 3));
                 T.eq("SKIPPED", r.health("Status"), "and it says so");
             }
-            for (int i = 1; i <= 10; i++) r.fx.guest("vm-" + i).pass = GuestOpsTest.SECRET;
-            r.clock.addAndGet(300_000);
+            // 24 hours later: one attempt, and a refusal pauses again at once
+            r.clock.addAndGet(24L * 3600_000);
             r.run();
-            T.check(r.fx.log.size() > after, "after the pause the phase tries again");
-            T.eq("OK", r.health("Status"), "and with the right password it is fine");
+            T.eq(3, r.fx.count("CreateTemporaryDirectoryInGuest"), "after the pause one VM is tried");
+            cycles(r, 2);
+            T.eq(3, r.fx.count("CreateTemporaryDirectoryInGuest"), "and a refusal paused it again");
+            // the right password and 24 hours: it works, and then VMs are asked four at a time
+            for (int i = 1; i <= 10; i++) r.fx.guest("vm-" + i).pass = GuestOpsTest.SECRET;
+            r.clock.addAndGet(24L * 3600_000);
+            r.run();
+            T.eq("OK", r.health("Status"), "with the right password it is fine");
+            T.eq(10, r.lastDone(), "and every VM is asked in that collection");
+        }
+        // one Windows VM, a wrong password, four collections: one refused logon
+        try (Rig r = new Rig(1, "serviceMonitoring", "Enabled")) {
+            r.fx.guest("vm-1").pass = "wrong";
+            r.run();
+            cycles(r, 3);
+            T.check(r.fx.count("CreateTemporaryDirectoryInGuest") <= 2, "one VM: at most two refused logons, got "
+                    + r.fx.count("CreateTemporaryDirectoryInGuest"));
+            T.eq(1, r.fx.count("CreateTemporaryDirectoryInGuest"), "in fact one: the VM that refused is not asked again");
+        }
+        // two VMs: one refused logon in each of two collections, then pause
+        try (Rig r = new Rig(2, "serviceMonitoring", "Enabled")) {
+            for (int i = 1; i <= 2; i++) r.fx.guest("vm-" + i).pass = "wrong";
+            r.run();
+            cycles(r, 3);
+            T.eq(2, r.fx.count("CreateTemporaryDirectoryInGuest"), "two VMs: two refused logons, then the pause");
+        }
+        // a restart loop: one VM alone, one attempt, each time
+        try (Rig r = new Rig(5, "serviceMonitoring", "Enabled")) {
+            for (int i = 1; i <= 5; i++) r.fx.guest("vm-" + i).pass = "wrong";
+            for (int restart = 1; restart <= 3; restart++) {
+                r.newEngine();
+                r.clock.addAndGet(300_000);
+                r.run();
+                T.eq(restart, r.fx.count("CreateTemporaryDirectoryInGuest"), "restart " + restart + ": one refused logon");
+            }
+        }
+        // the account worked, then one VM's own account stops working: only that VM, and it is not asked again
+        try (Rig r = new Rig(6, "serviceMonitoring", "Enabled")) {
+            r.run();
+            T.eq("OK", r.health("Status"), "first the account works");
+            r.fx.guest("vm-3").pass = "changed-on-that-vm";
+            int before = r.fx.count("CreateTemporaryDirectoryInGuest");
+            cycles(r, 1);
+            T.eq(before + 11, r.fx.count("CreateTemporaryDirectoryInGuest"), "all six were asked: five VMs with two programs, one refused at the first call");
+            cycles(r, 1);
+            T.eq(before + 11 + 10, r.fx.count("CreateTemporaryDirectoryInGuest"), "the next collection asks the other five only");
+            T.contains(String.valueOf(r.health("Causes")), "F-GUEST-AUTH", "and says why");
+            T.eq("PARTIAL", r.health("Status"), "partial");
+        }
+        // the credential changed behind our back: the VMs in flight are refused, then the phase pauses
+        try (Rig r = new Rig(12, "serviceMonitoring", "Enabled")) {
+            r.run();
+            for (int i = 1; i <= 12; i++) r.fx.guest("vm-" + i).pass = "rotated";
+            int before = r.fx.count("CreateTemporaryDirectoryInGuest");
+            r.fx.startDelayMs = 0;
+            cycles(r, 1);
+            int tries = r.fx.count("CreateTemporaryDirectoryInGuest") - before;
+            T.check(tries >= 2 && tries <= 5, "at most the VMs in flight when the second refusal came: " + tries);
+            int after = r.fx.log.size();
+            cycles(r, 3);
+            T.eq(after, r.fx.log.size(), "then paused");
         }
     }
 
@@ -394,6 +471,16 @@ public final class GuestEngineTest {
             T.eq(0, r.fx.log.size(), "a bad TLS mode: no guest operation");
             T.eq("FAILED", r.health("Status"), "failed, said so");
             T.contains(String.valueOf(r.health("Causes")), "F-TLS-CONFIG", "named");
+            T.check(r.prop("res-host-1", "vCommunity|Configuration|Config Status") != null, "the rest of the cycle collects");
+        }
+        // W5: vCenter TLS Validation is Trust on First Use: the Windows account is not sent to it
+        try (Rig r = new Rig(1, "serviceMonitoring", "Enabled", "vcenter_tls_validation", "Trust on First Use")) {
+            CycleEngine.Result res = r.run();
+            T.eq(0, r.fx.log.size(), "an unchecked vCenter connection: no guest operation");
+            T.eq(0, r.fx.bodies.size(), "and the account is not sent");
+            T.eq("FAILED", r.health("Status"), "said");
+            T.contains(String.valueOf(r.health("Causes")), "F-GUEST-TLS-MODE", "with its own cause");
+            T.contains(res.failureCausesProperty(), "F-GUEST-TLS-MODE", "also on the account");
             T.check(r.prop("res-host-1", "vCommunity|Configuration|Config Status") != null, "the rest of the cycle collects");
         }
         // the VM read failed: there is no list of Windows VMs
@@ -462,6 +549,39 @@ public final class GuestEngineTest {
         }
     }
 
+    static void queryFailures() throws Exception {
+        try (Rig r = new Rig(2, "winEventMonitoring", "Enabled")) {
+            r.fx.guest("vm-2").csv.put("events", GuestOpsTest.EVENTS_HEADER
+                    + GuestOpsTest.evRow("Error", "2", "[Timestamp=t] [Category=System] [EventID=7036] [Message=found]", "")
+                    + GuestOpsTest.evRow("", "", "", "2"));
+            r.run();
+            T.eq(1, r.ops.eventPushes.size(), "one send");
+            boolean found = false;
+            for (OpsEvent e : r.ops.eventPushes.get(0)) found |= e.resourceId.equals("res-vm-2") && e.message.contains("[Message=found]");
+            T.check(found, "the event that was found on the VM with a failed query is sent");
+            T.contains(String.valueOf(r.health("Causes")), "F-GUEST-QUERY x1", "the failed query is counted: " + r.health("Causes"));
+            T.eq("PARTIAL", r.health("Status"), "and the collector is not OK");
+        }
+    }
+
+    static void eventWindow() throws Exception {
+        try (Rig r = new Rig(1, "winEventMonitoring", "Enabled")) {
+            r.run();
+            T.contains(r.fx.programs.get(0), "$WindowMinutes = 5\n", "the first look is the original's five minutes");
+            r.clock.addAndGet(20 * 60_000);
+            r.run();
+            T.contains(r.fx.programs.get(1), "$WindowMinutes = 21\n", "a VM last looked at 20 minutes ago is looked at for 21 minutes");
+            T.contains(String.valueOf(r.health("Causes")), "None", "nothing is missed");
+            r.clock.addAndGet(90 * 60_000);
+            r.run();
+            T.contains(r.fx.programs.get(2), "$WindowMinutes = 60\n", "bounded at an hour");
+            T.contains(String.valueOf(r.health("Causes")), "F-GUEST-WINDOW x1", "what is older is counted, not looked at");
+            r.clock.addAndGet(5 * 60_000);
+            r.run();
+            T.contains(r.fx.programs.get(3), "$WindowMinutes = 6\n", "and the next look is back to its own gap");
+        }
+    }
+
     static void leftover() throws Exception {
         try (Rig r = new Rig(1, "serviceMonitoring", "Enabled")) {
             r.fx.guest("vm-1").failDelete = true;
@@ -489,6 +609,13 @@ public final class GuestEngineTest {
             T.check(e.message.startsWith("vCommunity configuration: Configuration file 'windows_event_list.xml'"), e.message);
             T.eq(0, r.fx.log.size(), "an event list that is not there starts no guest program");
             T.eq("SKIPPED", r.health("Status"), "the guest collector has nothing to do without the list");
+            // W11: a problem that lasts is said once, as the Windows events are, and again after the memory's time
+            int sent = r.ops.eventPushes.size();
+            cycles(r, 3);
+            T.eq(sent, r.ops.eventPushes.size(), "not again on the next collections");
+            r.clock.addAndGet(125 * 60_000);
+            r.run();
+            T.eq(sent + 1, r.ops.eventPushes.size(), "once more after the memory's time");
         }
         // the Windows lists are not read, so not reported, while their switch is off
         try (Rig r = new Rig(1)) {
@@ -525,7 +652,7 @@ public final class GuestEngineTest {
             r.fx.guest("vm-2").pass = "nope";
             r.fx.guest("vm-2").echoSecrets = true;
             r.fx.guest("vm-1").csv.put("services", "\"Name\",\"DisplayName\",\"Status\",\"StartType\"\r\n"
-                    + "\"x\",\"Evil|Operating System|OS Name\",\"Running\",\"Auto\"\r\n\"y\",\"Fine\",\"Running\",\"Auto\"\r\n");
+                    + "\"BITS\",\"Evil|Operating System|OS Name\",\"Running\",\"Auto\"\r\n\"W32Time\",\"Fine\",\"Running\",\"Auto\"\r\n");
             CycleEngine.Result res = r.run();
             for (String s : r.allText()) {
                 T.notContains(s, GuestOpsTest.SECRET, "the password is nowhere in what was sent or logged");

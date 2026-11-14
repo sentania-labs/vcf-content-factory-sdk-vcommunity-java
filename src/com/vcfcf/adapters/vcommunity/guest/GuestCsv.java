@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Reads what a guest wrote as comma separated values (RFC 4180): fields split on commas, a quoted field may
  * hold commas, doubled quotes and line breaks. The text came from a guest, so it is untrusted: it is decoded
- * as strict UTF-8, one leading byte order mark is dropped, and the size of the text, the number of rows and
+ * as strict UTF-8, one leading byte order mark is dropped, an output whose last row has no line break is refused (it was cut short), and the size of the text, the number of rows and
  * columns and the length of a field are bounded. Anything the format does not allow (a quote inside an
  * unquoted field, text after a closing quote, a quote that never closes) refuses the whole text rather than
  * guessing a row.
@@ -113,8 +113,8 @@ public final class GuestCsv {
         }
         if (quoted) throw new CsvException("a quoted field never closes");
         if (field.length() != 0 || wasQuoted || !row.isEmpty()) {
-            row.add(field.toString());
-            records.add(row);
+            // both programs end every line with a line break, so a last row without one was cut short
+            throw new CsvException("the output ends in the middle of a row");
         }
         if (records.isEmpty()) return null;
         List<String> header = records.get(0);

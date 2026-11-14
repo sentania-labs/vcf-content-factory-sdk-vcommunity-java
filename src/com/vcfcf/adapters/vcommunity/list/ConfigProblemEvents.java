@@ -27,7 +27,7 @@ public final class ConfigProblemEvents {
                     || e.problem == null) {
                 continue;
             }
-            String text = com.vcfcf.adapters.vcommunity.guest.GuestText.eventText(e.problem, 600)
+            String text = com.vcfcf.adapters.vcommunity.guest.GuestText.lineText(e.problem, 600)
                     .replace('\n', ' ').replace('\t', ' ');
             out.add(new OpsEvent(vcenterResourceId, PREFIX + text, OpsEvent.Severity.WARNING, nowMs));
         }

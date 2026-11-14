@@ -9,6 +9,7 @@ import com.vcfcf.adapters.vcommunity.guest.GuestOpsClient;
 import com.vcfcf.adapters.vcommunity.guest.GuestPlan;
 import com.vcfcf.adapters.vcommunity.guest.GuestRunner;
 import com.vcfcf.adapters.vcommunity.guest.GuestStep;
+import com.vcfcf.adapters.vcommunity.guest.GuestText;
 import com.vcfcf.adapters.vcommunity.guest.GuestTrust;
 import com.vcfcf.adapters.vcommunity.guest.HttpsGuestHttp;
 import com.vcfcf.adapters.vcommunity.ops.OpsEvent;
@@ -43,9 +44,11 @@ public final class GuestOpsTest {
     static final String OS_OK = "\"Name\",\"Version\",\"BuildNumber\",\"OSArchitecture\",\"LastBootUpTime\",\"ReleaseId\"\r\n"
             + "\"Microsoft Windows Server 2019 Datacenter\",\"10.0.17763\",\"17763\",\"64-bit\",\"11/12/2026 8:15:00 AM\",\"1809\"\r\n";
 
-    static final String EVENTS_OK = "\"Level\",\"LevelNumber\",\"Event\"\r\n"
-            + "\"Error\",\"2\",\"[Timestamp=11/13/2026 9:58:01 AM] [Category=System] [EventID=7036] [Source=Service Control Manager] [Message=The Background Intelligent Transfer Service service entered the stopped state.]\"\r\n"
-            + "\"Warning\",\"3\",\"[Timestamp=11/13/2026 9:57:00 AM] [Category=Application] [EventID=1000] [Source=Contoso] [Message=line one\r\nline two]\"\r\n";
+    static final String EVENTS_HEADER = "\"Level\",\"LevelNumber\",\"Event\",\"Failed\"\r\n";
+
+    static final String EVENTS_OK = EVENTS_HEADER
+            + "\"Error\",\"2\",\"[Timestamp=11/13/2026 9:58:01 AM] [Category=System] [EventID=7036] [Source=Service Control Manager] [Message=The Background Intelligent Transfer Service service entered the stopped state.]\",\"\"\r\n"
+            + "\"Warning\",\"3\",\"[Timestamp=11/13/2026 9:57:00 AM] [Category=Application] [EventID=1000] [Source=Contoso] [Message=line one\r\nline two]\",\"\"\r\n";
 
     static final String EVENT_XML = "<Events><Log Name=\"System\"><EventID>7036</EventID></Log>"
             + "<Log Name=\"Application\"><EventID>1000</EventID></Log></Events>";
@@ -108,6 +111,11 @@ public final class GuestOpsTest {
         }
     }
 
+    /** An events output row: level, number, event text, failed query position. */
+    static String evRow(String level, String number, String event, String failed) {
+        return "\"" + level + "\",\"" + number + "\",\"" + event.replace("\"", "\"\"") + "\",\"" + failed + "\"\r\n";
+    }
+
     static GuestPlan plan() {
         return GuestPlan.create(true, Arrays.asList("BITS", "W32Time", "wuauserv", "Missing Service"), true, EVENT_XML);
     }
@@ -134,6 +142,7 @@ public final class GuestOpsTest {
         failuresLeaveNothing();
         cleanupOnInterrupt();
         leftovers();
+        review();
         tlsModes();
         transferUrls();
         noSecretAnywhere();
@@ -161,7 +170,7 @@ public final class GuestOpsTest {
             T.check(o.events.get(0).message.endsWith("entered the stopped state.]]"), "closed bracket: " + o.events.get(0).message);
             T.eq(OpsEvent.Severity.IMMEDIATE, o.events.get(0).severity, "Error is immediate");
             T.eq(OpsEvent.Severity.WARNING, o.events.get(1).severity, "Warning is a warning");
-            T.check(o.events.get(1).message.contains("line one\nline two"), "a line break inside the message is kept as one LF");
+            T.check(o.events.get(1).message.contains("line one\r\nline two"), "a line break inside the message is kept as it was written");
             T.eq("rid-1", o.events.get(0).resourceId, "the event is for the VM's object");
             // the order of the original: services, operating system, events
             List<String> progs = r.fx.programs;
@@ -266,7 +275,7 @@ public final class GuestOpsTest {
         GuestPlan ev = GuestPlan.create(false, Collections.<String>emptyList(), true, EVENT_XML);
         // empty window: header only, and zero bytes
         try (Rig r = new Rig()) {
-            r.fx.guest(VM).csv.put("events", "\"Level\",\"LevelNumber\",\"Event\"\r\n");
+            r.fx.guest(VM).csv.put("events", EVENTS_HEADER);
             GuestRunner.Outcome o = r.run(ev);
             T.eq(0, o.events.size(), "no events in an empty window");
             T.eq("", causes(o), "an empty window is no failure and is not an event");
@@ -279,18 +288,30 @@ public final class GuestOpsTest {
         }
         // a large window: 100 are sent, the rest counted
         try (Rig r = new Rig()) {
-            StringBuilder b = new StringBuilder("\"Level\",\"LevelNumber\",\"Event\"\r\n");
-            for (int i = 0; i < 300; i++) b.append("\"Information\",\"4\",\"[Timestamp=t").append(i).append("]\"\r\n");
+            StringBuilder xml = new StringBuilder("<Events>");
+            for (int i = 0; i < 150; i++) xml.append("<Log Name=\"L").append(i).append("\"><EventID>1</EventID></Log>");
+            xml.append("</Events>");
+            StringBuilder b = new StringBuilder(EVENTS_HEADER);
+            for (int i = 0; i < 300; i++) b.append(evRow("Information", "4", "[Timestamp=t" + i + "]", ""));
             r.fx.guest(VM).csv.put("events", b.toString());
-            GuestRunner.Outcome o = r.run(ev);
+            GuestRunner.Outcome o = r.run(GuestPlan.create(false, Collections.<String>emptyList(), true, xml.toString()));
             T.eq(100, o.events.size(), "100 per VM");
             T.eq(200, o.eventsOver, "the rest is counted");
             T.eq(OpsEvent.Severity.INFORMATION, o.events.get(0).severity, "level 4 is information");
         }
+        // B2: each query gives at most one record, so a guest cannot send more events than there are queries
+        try (Rig r = new Rig()) {
+            StringBuilder b = new StringBuilder(EVENTS_HEADER);
+            for (int i = 0; i < 9; i++) b.append(evRow("Information", "4", "[Timestamp=t" + i + "]", ""));
+            r.fx.guest(VM).csv.put("events", b.toString());
+            GuestRunner.Outcome o = r.run(ev);
+            T.eq(2, o.events.size(), "two queries: at most two events");
+            T.eq(7, o.eventsOver, "the rest is counted");
+        }
         // non-ASCII, in the text and the level (a localised guest)
         try (Rig r = new Rig()) {
-            r.fx.guest(VM).csv.put("events", "\"Level\",\"LevelNumber\",\"Event\"\r\n"
-                    + "\"Fehler\",\"2\",\"[Message=\u00dcbertragung f\u00fcr \u65e5\u672c\u8a9e \ud83d\ude80 \u043f\u0440\u0438\u0432\u0435\u0442]\"\r\n");
+            r.fx.guest(VM).csv.put("events", EVENTS_HEADER
+                    + evRow("Fehler", "2", "[Message=\u00dcbertragung f\u00fcr \u65e5\u672c\u8a9e \ud83d\ude80 \u043f\u0440\u0438\u0432\u0435\u0442]", ""));
             GuestRunner.Outcome o = r.run(ev);
             T.eq(1, o.events.size(), "one event");
             T.contains(o.events.get(0).message, "\u00dcbertragung f\u00fcr \u65e5\u672c\u8a9e \ud83d\ude80 \u043f\u0440\u0438\u0432\u0435\u0442", "non-ASCII kept");
@@ -299,8 +320,9 @@ public final class GuestOpsTest {
         }
         // no level number (an older script): the English display names of the original
         try (Rig r = new Rig()) {
-            r.fx.guest(VM).csv.put("events", "\"Level\",\"Event\"\r\n\"Critical\",\"a\"\r\n\"Verbose\",\"b\"\r\n\"Weird\",\"c\"\r\n");
-            GuestRunner.Outcome o = r.run(ev);
+            r.fx.guest(VM).csv.put("events", "\"Level\",\"Event\",\"Failed\"\r\n\"Critical\",\"a\",\"\"\r\n\"Verbose\",\"b\",\"\"\r\n\"Weird\",\"c\",\"\"\r\n");
+            GuestRunner.Outcome o = r.run(GuestPlan.create(false, Collections.<String>emptyList(), true,
+                    "<Events><Log Name=\"System\"><EventID>1</EventID><EventID>2</EventID><EventID>3</EventID></Log></Events>"));
             T.eq(OpsEvent.Severity.CRITICAL, o.events.get(0).severity, "Critical");
             T.eq(OpsEvent.Severity.INFORMATION, o.events.get(1).severity, "Verbose is information");
             T.eq(OpsEvent.Severity.INFORMATION, o.events.get(2).severity, "anything else is information");
@@ -311,21 +333,22 @@ public final class GuestOpsTest {
             Map<String, byte[]> files = new HashMap<>();
             T.eq(1L, r.fx.programs.stream().filter(p -> p.contains("Get-WinEvent")).count(), "one events program");
             T.contains(r.fx.programs.get(0), "$InputFile = 'C:\\Windows\\Temp\\VCFOperationsvCommunity-", "input path bound");
+            T.contains(r.fx.programs.get(0), "$WindowMinutes = 5\n", "the original's five minutes unless a window is asked for");
         }
         T.done("guest: event windows: empty, large, non-ASCII, localised, no level number");
     }
 
     static void hostileOutput() throws Exception {
-        GuestPlan both = GuestPlan.create(true, Arrays.asList("BITS"), true, EVENT_XML);
+        GuestPlan both = GuestPlan.create(true, Arrays.asList("ok", "n1", "n2", "n3", "n4", "n5", "n6"), true, EVENT_XML);
         try (Rig r = new Rig()) {
             StringBuilder s = new StringBuilder("\"Name\",\"DisplayName\",\"Status\",\"StartType\"\r\n");
             s.append("\"ok\",\"Fine\",\"Running\",\"Auto\"\r\n");
-            s.append("\"x\",\"Evil|Operating System|OS Name\",\"Running\",\"Auto\"\r\n");           // would start another key level
-            s.append("\"x\",\"Bad\u0007Bell\",\"Running\",\"Auto\"\r\n");                             // a control character
-            s.append("\"x\",\"Over\u202eride\",\"Running\",\"Auto\"\r\n");                            // a bidi override
-            s.append("\"x\",\"").append("L".repeat(500)).append("\",\"Running\",\"Auto\"\r\n");       // too long for a key
-            s.append("\"x\",\"\",\"Running\",\"Auto\"\r\n");                                           // blank instance
-            s.append("\"x\",\"Fine2\",\"").append("S".repeat(600)).append("\",\"Auto\"\r\n");        // value too long
+            s.append("\"n1\",\"Evil|Operating System|OS Name\",\"Running\",\"Auto\"\r\n");          // would start another key level
+            s.append("\"n2\",\"Bad\u0007Bell\",\"Running\",\"Auto\"\r\n");                            // a control character
+            s.append("\"n3\",\"Over\u202eride\",\"Running\",\"Auto\"\r\n");                           // a bidi override
+            s.append("\"n4\",\"").append("L".repeat(500)).append("\",\"Running\",\"Auto\"\r\n");      // too long for a key
+            s.append("\"n5\",\"\",\"Running\",\"Auto\"\r\n");                                          // blank instance (DV-99)
+            s.append("\"n6\",\"Fine2\",\"").append("S".repeat(600)).append("\",\"Auto\"\r\n");       // value too long
             r.fx.guest(VM).csv.put("services", s.toString());
             GuestRunner.Outcome o = r.run(both);
             T.eq(1, o.services.size(), "only the clean row is published");
@@ -334,17 +357,15 @@ public final class GuestOpsTest {
         }
         try (Rig r = new Rig()) {
             String evil = "[Message=a\u0000b\u001b[31mred\u0007\r\n\u2028INJECTED\u202e\ud800 end]" + "x".repeat(5000);
-            r.fx.guest(VM).csv.put("events", "\"Level\",\"LevelNumber\",\"Event\"\r\n\"Err\u0001or\",\"2\",\"" + evil + "\"\r\n");
+            r.fx.guest(VM).csv.put("events", EVENTS_HEADER + evRow("Err\u0001or", "2", evil, ""));
             GuestRunner.Outcome o = r.run(GuestPlan.create(false, Collections.<String>emptyList(), true, EVENT_XML));
             String m = o.events.get(0).message;
             T.notContains(m, "\u0000", "no NUL");
-            T.notContains(m, "\u0007", "no bell");
-            T.notContains(m, "\u001b", "no escape");
-            T.notContains(m, "\u2028", "no line separator");
             T.notContains(m, "\u202e", "no bidi override");
             T.notContains(m, "\ud800", "no lone surrogate");
-            T.check(m.length() <= 2100, "bounded: " + m.length());
-            T.contains(m, "red\n", "the line break stays one LF");
+            T.check(m.length() <= GuestText.MAX_EVENT + 100, "bounded: " + m.length());
+            T.contains(m, "red\u0007\r\n\u2028INJECTED", "everything else is the text as the guest wrote it, line breaks included");
+            T.contains(m, "x".repeat(5000), "and is not cut short of the field limit");
             T.check(m.startsWith("[WindowsEvent-Error "), "the level is cleaned too: " + m.substring(0, 30));
             // nothing the guest wrote reaches a log line
             T.notContains(r.log.all(), "INJECTED", "no guest text in the log");
@@ -352,15 +373,15 @@ public final class GuestOpsTest {
         }
         // too many rows, too many columns, too long a field
         try (Rig r = new Rig()) {
-            StringBuilder b = new StringBuilder("\"Level\",\"LevelNumber\",\"Event\"\r\n");
-            for (int i = 0; i < 12_000; i++) b.append("a,1,b\r\n");
+            StringBuilder b = new StringBuilder(EVENTS_HEADER);
+            for (int i = 0; i < 12_000; i++) b.append("a,1,b,\r\n");
             r.fx.guest(VM).csv.put("events", b.toString());
             GuestRunner.Outcome o = r.run(GuestPlan.create(false, Collections.<String>emptyList(), true, EVENT_XML));
             T.check(has(o, GuestStep.PARSE), "more rows than the limit is refused whole: " + causes(o));
             T.eq(0, o.events.size(), "none of it is an event");
         }
         try (Rig r = new Rig()) {
-            r.fx.guest(VM).csv.put("events", "\"Level\",\"LevelNumber\",\"Event\"\r\na,1,\"" + "z".repeat(40_000) + "\"\r\n");
+            r.fx.guest(VM).csv.put("events", EVENTS_HEADER + "a,1,\"" + "z".repeat(40_000) + "\",\r\n");
             GuestRunner.Outcome o = r.run(GuestPlan.create(false, Collections.<String>emptyList(), true, EVENT_XML));
             T.check(has(o, GuestStep.PARSE), "a field over the limit is refused");
         }
@@ -508,6 +529,153 @@ public final class GuestOpsTest {
         T.done("guest: a directory that could not be removed is removed the next time the VM is asked");
     }
 
+    /** The findings of the P5 review that are about one VM (B2, B3, W3, W4, W6, W7, W9, W10, N4, N6). */
+    static void review() throws Exception {
+        // B2: a service nobody asked for is not published, and a name gives one row
+        try (Rig r = new Rig()) {
+            r.fx.guest(VM).csv.put("services", "\"Name\",\"DisplayName\",\"Status\",\"StartType\"\r\n"
+                    + "\"BITS\",\"Background Intelligent Transfer Service\",\"Running\",\"Auto\"\r\n"
+                    + "\"bits\",\"Second row of one name\",\"Stopped\",\"Auto\"\r\n"
+                    + "\"Planted1\",\"Planted one\",\"Running\",\"Auto\"\r\n\"Planted2\",\"Planted two\",\"Running\",\"Auto\"\r\n"
+                    + "\"w32time\",\"Windows Time\",\"Running\",\"Auto\"\r\n");
+            GuestRunner.Outcome o = r.run(plan());
+            T.eq(2, o.services.size(), "BITS and W32Time (the name matches whatever its case), nothing else");
+            T.eq("Background Intelligent Transfer Service", o.services.get(0).displayName, "the first row of a name");
+            T.check(has(o, GuestStep.ROW), "the rest is counted");
+        }
+        // B3: an event query that failed in the guest is named; the events that were found are still sent
+        try (Rig r = new Rig()) {
+            r.fx.guest(VM).csv.put("events", EVENTS_HEADER
+                    + evRow("Error", "2", "[Timestamp=t] [Category=System] [EventID=7036] [Message=found]", "")
+                    + evRow("", "", "", "2"));
+            GuestRunner.Outcome o = r.run(GuestPlan.create(false, Collections.<String>emptyList(), true, EVENT_XML));
+            T.eq(1, o.events.size(), "the event that was found is sent");
+            T.check(has(o, GuestStep.QUERY), "the failed query is a failure: " + causes(o));
+            T.contains(o.failures.get(0).message, "Application", "named by the log of the entry (the second)");
+            T.eq(1, o.scriptsOk, "the output was read");
+        }
+        // an output with a failed-query position that is not one of ours is a row left out, not a name
+        try (Rig r = new Rig()) {
+            r.fx.guest(VM).csv.put("events", EVENTS_HEADER + evRow("", "", "", "99999"));
+            GuestRunner.Outcome o = r.run(GuestPlan.create(false, Collections.<String>emptyList(), true, EVENT_XML));
+            T.check(has(o, GuestStep.QUERY), causes(o));
+            T.notContains(o.failures.get(0).message, "99999", "a position that names nothing is not repeated");
+        }
+        // W3: an output cut short is refused, never read as a row with an empty value
+        try (Rig r = new Rig()) {
+            r.fx.guest(VM).csv.put("services", "\"Name\",\"DisplayName\",\"Status\",\"StartType\"\r\n"
+                    + "\"BITS\",\"Background Intelligent Transfer Service\",\"Running\",");
+            GuestRunner.Outcome o = r.run(GuestPlan.create(true, Arrays.asList("BITS"), false, null));
+            T.check(has(o, GuestStep.PARSE), "cut short: " + causes(o));
+            T.eq(0, o.services.size(), "no service with an empty start type is published");
+        }
+        // W4: a password that straddles the cut of a fault text is scrubbed before the cut
+        try (Rig r = new Rig()) {
+            GuestFx.Guest g = r.fx.guest(VM);
+            g.echoSecrets = true;
+            g.echoPad = 160;
+            g.pass = "wrong";
+            r.fx.guest(VM).user = USER;
+            // the server echoes the account and the password it was given, which is the one being tried
+            GuestAuth auth = new GuestAuth(USER, "S3cretLongPasswordValue");
+            GuestOpsClient c = new GuestOpsClient(r.vim, auth);
+            g.pass = "other";
+            com.vcfcf.adapters.vcommunity.vim.VimResult<String> d = c.createTemporaryDirectory(VM, "p", "s", "C:\\Windows\\Temp");
+            T.check(!d.isOk(), "refused");
+            T.notContains(d.message(), "S3cret", "no start of the password");
+            T.notContains(d.message(), "LongPassword", "no end of the password");
+            T.notContains(d.message(), USER, "nor the account");
+        }
+        // W6: no SHA-1 in the JVM (a FIPS provider): said once, before any connection
+        try (Rig r = new Rig()) {
+            r.trust = new GuestTrust(GuestTlsMode.PINNED, Map.of("host-1", r.fx.esxiSha1()), true, () -> false);
+            r.build(new HttpsGuestHttp(2000, 5000));
+            GuestRunner.Outcome o = r.run(plan());
+            T.eq(GuestStep.TLS, o.fatal, "refused");
+            T.contains(o.failures.get(0).message, "SHA-1", "the reason");
+            T.eq(0, r.fx.esxi.connections.get(), "no connection");
+        }
+        // N5: a host read that did not finish is not "vCenter records no thumbprint"
+        try (Rig r = new Rig()) {
+            r.trust = new GuestTrust(GuestTlsMode.PINNED, Collections.<String, String>emptyMap(), false, () -> true);
+            r.build(new HttpsGuestHttp(2000, 5000));
+            GuestRunner.Outcome o = r.run(plan());
+            T.contains(o.failures.get(0).message, "did not finish", "told as what it is");
+        }
+        // W7: the VM moved to another host after the cycle read it: asked again on the new host, no refusal recorded
+        try (Rig r = new Rig(); FakeVc esxi2 = new FakeVc(q -> new FakeVc.Resp(404, null, ""))) {
+            esxi2.setRestHandler(r.fx::transfer);
+            java.security.MessageDigest sha = java.security.MessageDigest.getInstance("SHA-256");
+            StringBuilder hex = new StringBuilder();
+            for (byte x : sha.digest(esxi2.cert.getEncoded())) hex.append(String.format("%02x", x & 0xff));
+            GuestFx.Guest g = r.fx.guest(VM);
+            g.urlPort = esxi2.port();
+            g.currentHost = "host-2";
+            r.trust = new GuestTrust(GuestTlsMode.PINNED, Map.of("host-1", r.fx.esxiSha1(), "host-2", hex.toString()));
+            r.build(new HttpsGuestHttp(2000, 5000));
+            GuestRunner.Job j = r.job(plan());
+            j.hostNameOf = h -> "localhost";
+            GuestRunner.Outcome o = r.runner.run(j, System.currentTimeMillis() + 60_000);
+            T.eq("", causes(o), "after the move the transfers went to the new host and passed its pin");
+            T.eq("host-2", j.hostMoref, "the new host is the one used");
+            T.eq(3, o.scriptsOk, "all three programs");
+        }
+        // ... and a certificate that is wrong while the VM has not moved is still a refusal
+        try (Rig r = new Rig(); GuestFx other = new GuestFx(FakeVc.happy(), true)) {
+            r.fx.guest(VM).currentHost = "host-1";
+            r.trust = new GuestTrust(GuestTlsMode.PINNED, Map.of("host-1", other.esxiSha1()));
+            r.build(new HttpsGuestHttp(2000, 5000));
+            GuestRunner.Outcome o = r.run(plan());
+            T.eq(GuestStep.TLS, o.fatal, "not moved: still refused");
+        }
+        // W9: a directory path in another case is still ours, and is removed
+        try (Rig r = new Rig()) {
+            r.fx.guest(VM).oddDirectory = "c:\\windows\\temp\\vcfoperationsvcommunity-77-osinfo-temp";
+            GuestRunner.Outcome o = r.run(GuestPlan.create(true, Collections.<String>emptyList(), false, null));
+            T.eq("", causes(o), "the path form of another case is accepted");
+            T.check(o.operatingSystem != null, "and the program ran");
+            T.eq(0, r.fx.liveDirs().size(), "and the directory is removed");
+        }
+        // N4: when the guest refuses the account while leftovers are being removed, every leftover is kept
+        try (Rig r = new Rig()) {
+            r.fx.guest(VM).pass = "changed";
+            GuestRunner.Job j = r.job(plan());
+            j.leftover = new ArrayList<>(Arrays.asList("C:\\Windows\\Temp\\VCFOperationsvCommunity-1-OSInfo-TEMP",
+                    "C:\\Windows\\Temp\\VCFOperationsvCommunity-2-Services-TEMP"));
+            GuestRunner.Outcome o = r.runner.run(j, System.currentTimeMillis() + 60_000);
+            T.eq(GuestStep.AUTH, o.fatal, "refused");
+            T.eq(2, o.leftBehind.size(), "both are remembered for the next time");
+            T.eq(false, o.loggedOn, "a refused logon is not proof that the account works");
+        }
+        // N6: a VM powered off in the middle, and the other refusals of guest operations
+        for (String[] f : new String[][] {{"InvalidPowerState", "TOOLS"}, {"GuestComponentsOutOfDate", "UNAVAILABLE"},
+            {"OperationDisabledByGuest", "UNAVAILABLE"}}) {
+            try (Rig r = new Rig()) {
+                r.fx.guest(VM).fault = f[0];
+                T.eq(GuestStep.valueOf(f[1]), r.run(plan()).fatal, f[0]);
+            }
+        }
+        // W10: a transfer is given no more time than the VM has left
+        try (Rig r = new Rig()) {
+            r.fx.esxi.setRestHandler(q -> {
+                try {
+                    Thread.sleep(4000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return new FakeVc.Resp(200, null, "");
+            });
+            long t0 = System.currentTimeMillis();
+            GuestRunner.Outcome o = r.runner.run(r.job(GuestPlan.create(false, Collections.<String>emptyList(), true, EVENT_XML)),
+                    t0 + 1500);
+            long took = System.currentTimeMillis() - t0;
+            T.check(has(o, GuestStep.TIMEOUT), "timed out: " + causes(o));
+            T.check(took < 3900, "within the VM's own time, not the transfer's five seconds: " + took + " ms");
+            T.eq(0, r.fx.liveDirs().size(), "and cleaned up");
+        }
+        T.done("guest: the review's findings for one VM");
+    }
+
     static void cleanupOnInterrupt() throws Exception {
         try (Rig r = new Rig()) {
             r.fx.guest(VM).hang.add("services");
@@ -638,7 +806,7 @@ public final class GuestOpsTest {
             for (String a : r.fx.argumentStrings) {
                 T.notContains(a, SECRET, "no password on a command line");
                 T.notContains(a, USER, "no account name on a command line");
-                T.check(a.startsWith("-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand "), a);
+                T.check(a.startsWith("-NoLogo -NoProfile -NonInteractive -EncodedCommand "), a);
             }
             for (String p : r.fx.programs) {
                 T.notContains(p, SECRET, "no password in a program text");

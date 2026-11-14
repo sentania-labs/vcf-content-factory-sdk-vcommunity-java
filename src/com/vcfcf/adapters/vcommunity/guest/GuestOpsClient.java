@@ -62,6 +62,9 @@ public final class GuestOpsClient {
     private final VimReader vim;
     private final GuestAuth auth;
     private final int callMs;
+    /** The time this thread's VM runs out (epoch ms), or 0: a call is never allowed past it. */
+    private final ThreadLocal<long[]> stop = ThreadLocal.withInitial(() -> new long[] {0});
+    private final java.util.function.LongSupplier clock;
 
     private long managersGeneration = -1;
     private Managers managers;
@@ -71,9 +74,50 @@ public final class GuestOpsClient {
     }
 
     public GuestOpsClient(VimReader vim, GuestAuth auth, int callMs) {
+        this(vim, auth, callMs, System::currentTimeMillis);
+    }
+
+    public GuestOpsClient(VimReader vim, GuestAuth auth, int callMs, java.util.function.LongSupplier clock) {
         this.vim = vim;
         this.auth = auth;
         this.callMs = callMs;
+        this.clock = clock;
+    }
+
+    /** The shortest a call is given, so that a removal after the time is up still has a moment to be made. */
+    static final int MIN_CALL_MS = 3_000;
+
+    /** Calls made by this thread are given no more time than is left until {@code stopMs}; 0 removes the limit. */
+    public void limitTo(long stopMs) {
+        stop.get()[0] = stopMs;
+    }
+
+    /** How long one call may take: the call limit, or the time left for this VM if that is shorter (at least a moment). */
+    int timeout() {
+        long s = stop.get()[0];
+        if (s <= 0) return callMs;
+        long left = s - clock.getAsLong();
+        return (int) Math.max(MIN_CALL_MS, Math.min(callMs, left));
+    }
+
+    /** The MoRef value of the host the VM runs on now, or null when it cannot be read. */
+    public String currentHost(String vm) {
+        ServiceRefs refs = vim.refs();
+        if (refs == null || refs.propertyCollector == null) return null;
+        String body = "<RetrievePropertiesEx xmlns=\"urn:vim25\"><_this type=\"PropertyCollector\">"
+                + VimXml.escape(refs.propertyCollector.value) + "</_this><specSet><propSet><type>VirtualMachine</type>"
+                + "<all>false</all><pathSet>runtime.host</pathSet></propSet><objectSet><obj type=\"VirtualMachine\">"
+                + VimXml.escape(vm) + "</obj><skip>false</skip></objectSet></specSet><options/></RetrievePropertiesEx>";
+        VimResult<XmlNode> r = vim.call(body, "RetrievePropertiesEx", timeout());
+        if (!r.isOk()) return null;
+        XmlNode objects = r.value().find("objects");
+        if (objects == null) return null;
+        for (XmlNode ps : objects.children()) {
+            if (!"propSet".equals(ps.name)) continue;
+            XmlNode val = ps.child("val");
+            if (val != null && !val.text().isEmpty()) return val.text();
+        }
+        return null;
     }
 
     public GuestAuth auth() {
@@ -98,7 +142,7 @@ public final class GuestOpsClient {
                 + "<pathSet>processManager</pathSet></propSet><objectSet><obj type=\"GuestOperationsManager\">"
                 + VimXml.escape(g.value) + "</obj><skip>false</skip></objectSet></specSet><options/>"
                 + "</RetrievePropertiesEx>";
-        VimResult<XmlNode> r = vim.call(body, "RetrievePropertiesEx", callMs);
+        VimResult<XmlNode> r = vim.call(body, "RetrievePropertiesEx", timeout());
         if (!r.isOk()) return VimResult.fault(r.faultClass(), clean(r), null, 0, r.cause());
         MoRef files = null;
         MoRef procs = null;
@@ -195,7 +239,7 @@ public final class GuestOpsClient {
         VimResult<XmlNode> r = vim.call("<StartProgramInGuest xmlns=\"urn:vim25\">" + head(m.value().processes, vm)
                 + "<spec><programPath>" + VimXml.escape(program) + "</programPath><arguments>"
                 + VimXml.escape(arguments) + "</arguments><workingDirectory>" + VimXml.escape(workingDirectory)
-                + "</workingDirectory></spec></StartProgramInGuest>", "StartProgramInGuest", callMs);
+                + "</workingDirectory></spec></StartProgramInGuest>", "StartProgramInGuest", timeout());
         if (!r.isOk()) return VimResult.fault(r.faultClass(), clean(r), null, 0, r.cause());
         XmlNode rv = r.value().find("returnval");
         String t = rv == null ? null : rv.text();
@@ -210,7 +254,7 @@ public final class GuestOpsClient {
         VimResult<Managers> m = managers();
         if (!m.isOk()) return VimResult.fault(m.faultClass(), m.message(), null, 0, m.cause());
         VimResult<XmlNode> r = vim.call("<ListProcessesInGuest xmlns=\"urn:vim25\">" + head(m.value().processes, vm)
-                + "<pids>" + pid + "</pids></ListProcessesInGuest>", "ListProcessesInGuest", callMs);
+                + "<pids>" + pid + "</pids></ListProcessesInGuest>", "ListProcessesInGuest", timeout());
         if (!r.isOk()) return VimResult.fault(r.faultClass(), clean(r), null, 0, r.cause());
         XmlNode rv = r.value().find("returnval");
         if (rv != null && String.valueOf(pid).equals(rv.childText("pid"))) {
@@ -235,7 +279,7 @@ public final class GuestOpsClient {
         VimResult<Managers> m = managers();
         if (!m.isOk()) return VimResult.fault(m.faultClass(), m.message(), null, 0, m.cause());
         VimResult<XmlNode> r = vim.call("<TerminateProcessInGuest xmlns=\"urn:vim25\">" + head(m.value().processes, vm)
-                + "<pid>" + pid + "</pid></TerminateProcessInGuest>", "TerminateProcessInGuest", callMs);
+                + "<pid>" + pid + "</pid></TerminateProcessInGuest>", "TerminateProcessInGuest", timeout());
         return r.isOk() ? VimResult.<Void>ok(null, 0) : VimResult.<Void>fault(r.faultClass(), clean(r), null, 0, r.cause());
     }
 
@@ -250,7 +294,7 @@ public final class GuestOpsClient {
         VimResult<Managers> m = managers();
         if (!m.isOk()) return VimResult.fault(m.faultClass(), m.message(), null, 0, m.cause());
         return vim.call("<" + operation + " xmlns=\"urn:vim25\">" + head(m.value().files, vm) + args + "</"
-                + operation + ">", operation, callMs);
+                + operation + ">", operation, timeout());
     }
 
     private VimResult<String> string(String operation, String vm, String args) {
@@ -263,10 +307,20 @@ public final class GuestOpsClient {
         return VimResult.ok(rv.text(), 0);
     }
 
-    /** The fault's text with the account and password taken out. */
+    /**
+     * The fault's text with the account and password taken out: the whole text is scrubbed first and only then cut to
+     * size, so a secret that straddles the cut cannot leave its first half in the message.
+     */
     private String clean(VimResult<?> r) {
-        String m = auth.scrub(r.message());
-        return m == null ? r.faultClass() : m;
+        if (r.detail() == null) {
+            String m = auth.scrub(r.message());
+            return m == null ? r.faultClass() : m;
+        }
+        String message = r.message() == null ? r.faultClass() : r.message();
+        int colon = message.indexOf(": ");
+        String prefix = colon > 0 ? message.substring(0, colon) : message; // the operation and the HTTP status
+        String text = auth.scrub(r.detail());
+        return prefix + ": " + (text.length() > 200 ? text.substring(0, 200) + "..." : text);
     }
 
     /**
@@ -282,9 +336,12 @@ public final class GuestOpsClient {
             case "GuestAuthenticationChallenge":
                 return GuestStep.AUTH;
             case "GuestOperationsUnavailable":
+            case "GuestComponentsOutOfDate":
+            case "OperationDisabledByGuest":
             case "Unavailable":
                 return GuestStep.UNAVAILABLE;
             case "InvalidState":
+            case "InvalidPowerState":
                 return GuestStep.TOOLS;
             default:
                 break;
