@@ -248,7 +248,7 @@ symptom	SymptomDefinition-e0fbe746-272c-4b51-8d93-bc59124f8f7d	SymptomDefinition
 symptom	SymptomDefinition-ff8e08f4-5af5-4f93-bb5d-4bdb3ff07070	SymptomDefinition-8ace1818-80d2-57ee-8abd-322278ab65ef	Condition_93e95c4e-63aa-4e04-b332-cc27317966e2		symptoms/condition-93e95c4e-63aa-4e04-b332-cc27317966e2.yaml
 symptom	SymptomDefinition-c8d1e671-d0ea-489f-acc4-46e34cc246b6	SymptomDefinition-c0975856-7e1e-5c45-90d7-66bd38ebd519	ESXi Host NIC Disconnected		symptoms/esxi-host-nic-disconnected.yaml
 symptom	SymptomDefinition-7675759b-2ca0-4847-87ed-e3e23acdf7a5	SymptomDefinition-4fb75f4c-8f7d-5180-b95f-acc5a28a8215	Windows Service Status Down		symptoms/windows-service-status-down.yaml
-recommendation	vCommunityCollectionWarnings	Recommendation-ec5f14b5-b009-564e-8c31-66f205a839b1	vCommunityCollectionWarnings		recommendations/vcommunitycollectionwarnings.yaml
+recommendation	vCommunityCollectionWarnings	Recommendation-df-VMWARE-ec5f14b5-b009-564e-8c31-66f205a839b1	vCommunityCollectionWarnings		recommendations/vcommunitycollectionwarnings.yaml
 alert	AlertDefinition-e5da6dcc-0e22-46da-a405-8bb514ff4f1b	AlertDefinition-6cf5e456-3bf6-590f-a92d-355b7f58e999	vCommunity Collection Warnings		alerts/vcommunity-collection-warnings.yaml
 alert	AlertDefinition-3ec480a2-49a0-4e9d-b745-5ab5923a2c9f	AlertDefinition-8179982d-8676-5f3d-9259-5eb64fe66e10	ESXi Host License Expiring		alerts/esxi-host-license-expiring.yaml
 alert	AlertDefinition-1e5a233a-36ef-4961-8e35-499de49390ee	AlertDefinition-5e1d2beb-7deb-5bde-bb72-0a67a899015c	ESXi Host NIC Disconnected		alerts/esxi-host-nic-disconnected.yaml
