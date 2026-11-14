@@ -52,6 +52,11 @@ it does not overwrite the Python pack's content, and uninstalling one does not d
   them deletes those built-in views (measured). Have a clean export of the built-in views of the same
   product version at hand and import it after the uninstall.
 
+**Supported path: uninstall, then install fresh.** This is the only supported way onto this pak
+from the Python pack, and from any earlier dev build of this pak that used different content ids
+(builds up to 0.0.0.16). An in-place upgrade across an id change is not supported. Normal upgrades
+between releases that keep their ids are in-place as usual.
+
 The full guide is in `docs/installing.md`, "Moving from the Python pack".
 
 ## Documentation

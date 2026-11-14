@@ -1445,7 +1445,7 @@ later release; mint a new one.
 
 ### 10.1c Versioning
 
-Dev builds are stamped `0.0.0.N` (RULE-014); this build is `0.0.0.17`. The released line is to be labelled 3.0.x: Onur's pack is the 1.x
+Dev builds are stamped `0.0.0.N` (RULE-014); this build is `0.0.0.18`. The released line is to be labelled 3.0.x: Onur's pack is the 1.x
 line, Ewan's the 2.x line, this port the 3.x line. The version scheme and build numbers are unchanged by this record. Where the release version is
 set: `version` in `adapter.yaml` (currently `1.0.0`, to be changed to the 3.0.x value) and the `v*` git tag the repository's CI builds from; the dev stamp
 `0.0.0.<build_number>` comes from `build_number` in `adapter.yaml`. Not changed here.
@@ -1453,6 +1453,8 @@ set: `version` in `adapter.yaml` (currently `1.0.0`, to be changed to the 3.0.x 
 **Minimum product version (owner decision, 2026-11-14, verbatim):** "Also, minimum version should just be 8.18.x, not 8.18.7." The pak states VCF Operations /
 Aria Operations 8.18.x as its minimum; 8.18.7, 9.0.2 and 9.1.1 remain the tested versions and the versions of the lab measurements. The built manifest's
 `vcops_minimum_version` is a constant of the factory builder (8.0.0 at build 17) and is being changed there to 8.18.0 separately; the pak does not work around it.
+
+**Migration across an id change (owner decision, 2026-11-14, verbatim):** "don't develop any workarounds or anything like that. Just, like, assume people are going to be doing things with a clean slate, like uninstalling and then installing fresh, and like our upgrading with converting IDs is a weird one-off that we're introducing onto ourselves." The supported path onto this pak, from the Python pack and from any dev build up to 0.0.0.16 (different content ids), is uninstall then fresh install. Build 17 observation: on 9.0.2, an in-place upgrade across the id change left the old-id views in place, and views and report templates with the same names under the new ids failed to import. Not pursued. Upgrades between releases that keep ids are in-place as usual.
 
 ### 10.1a Conversion decisions recorded after the P6 review
 

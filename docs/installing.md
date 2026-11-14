@@ -59,6 +59,11 @@ them. This pak never uses a built-in view id for its own content, so it neither 
 deletes a built-in view; the 19 built-in views its dashboards and reports use in place must
 exist on your instance, which is why the restore matters.
 
+**Supported path: uninstall, then install fresh.** This is the only supported way onto this pak
+from the Python pack, and from any earlier dev build of this pak that used different content ids
+(builds up to 0.0.0.16). An in-place upgrade across an id change is not supported. Normal upgrades
+between releases that keep their ids are in-place as usual.
+
 **A safe order:** (1) save your edited check-list files and note anything you changed in the Python pack's content;
 (2) have the clean built-in views export ready if your version is one of those named above;
 (3) uninstall the Python pack with remove-content; (4) restore the built-in views if it
