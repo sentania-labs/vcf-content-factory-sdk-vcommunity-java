@@ -140,7 +140,9 @@ final class FakeVcenter implements FakeVc.Handler {
                 return ok("<DestroyViewResponse xmlns=\"urn:vim25\"/>");
             case "RetrievePropertiesEx": return retrieve(r.body);
             case "ContinueRetrievePropertiesEx": return cont(r.body);
-            case "InstallDate": return installDate(r.body);
+            // the operation is named installDate on the wire; the capitalised name is refused, as vCenter does
+            case "installDate": return installDate(r.body);
+            case "InstallDate": return serverFault("The method InstallDate is not found");
             case "FetchSoftwarePackages": {
                 String v = first(r.body, "<_this[^>]*>([^<]*)</_this>");
                 String p = packages.get(v);
@@ -189,8 +191,8 @@ final class FakeVcenter implements FakeVc.Handler {
         String v = first(body, "<_this[^>]*>([^<]*)</_this>");
         if (!installDate.containsKey(v)) return serverFault("no install date for " + v);
         String d = installDate.get(v);
-        return ok("<InstallDateResponse xmlns=\"urn:vim25\">"
-                + (d == null ? "" : "<returnval>" + d + "</returnval>") + "</InstallDateResponse>");
+        return ok("<installDateResponse xmlns=\"urn:vim25\">"
+                + (d == null ? "" : "<returnval>" + d + "</returnval>") + "</installDateResponse>");
     }
 
     private FakeVc.Resp retrieve(String body) {
@@ -209,6 +211,8 @@ final class FakeVcenter implements FakeVc.Handler {
             }
         }
         String type = first(body, "<propSet><type>(\\w+)</type>");
+        // the license manager is not a managed entity: it has no name property, and asking for it fails the read
+        if ("LicenseManager".equals(type) && asked.contains("name")) return invalidProperty("name");
         FakeVc.Resp ft = forcedType.get(type);
         if (ft != null) return ft;
         int max = Integer.parseInt(first(body, "<maxObjects>(\\d+)</maxObjects>"));

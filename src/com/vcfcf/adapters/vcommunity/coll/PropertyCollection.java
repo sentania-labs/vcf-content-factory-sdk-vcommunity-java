@@ -533,8 +533,10 @@ public final class PropertyCollection {
     }
 
     private String installDate(Input in, String host, MoRef mgr) {
-        VimResult<XmlNode> r = in.vim.call("<InstallDate xmlns=\"urn:vim25\"><_this type=\""
-                + xml(mgr.type) + "\">" + xml(mgr.value) + "</_this></InstallDate>", "InstallDate", CALL_MS);
+        // the operation's name on the wire is installDate (lower case, unlike most of vim25); InstallDate is
+        // refused as an unknown method, which failed the call on every host (live differential, build 6)
+        VimResult<XmlNode> r = in.vim.call("<installDate xmlns=\"urn:vim25\"><_this type=\""
+                + xml(mgr.type) + "\">" + xml(mgr.value) + "</_this></installDate>", "installDate", CALL_MS);
         if (!r.isOk()) {
             in.failures.add(C_HOST, FailureCause.HOST_INSTALL_DATE, host, 1,
                     "the install date of the host could not be read: " + r.message());
@@ -583,7 +585,7 @@ public final class PropertyCollection {
         MoRef[] am = new MoRef[1];
         VimResult<RetrieveStats> pr = reader(in).retrieve(
                 new RetrieveRequest("R-LIC", "LicenseManager", 1, Collections.singletonList(lm))
-                        .path("licenseAssignmentManager"), Collections.<String>emptySet(), row -> {
+                        .withoutName().path("licenseAssignmentManager"), Collections.<String>emptySet(), row -> {
                             XmlNode v = row.val("licenseAssignmentManager");
                             if (v != null && !v.text().isEmpty()) {
                                 am[0] = new MoRef(v.attr("type") == null ? "LicenseAssignmentManager"

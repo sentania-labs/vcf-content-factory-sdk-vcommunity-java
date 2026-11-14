@@ -337,7 +337,7 @@ public final class PropertiesTest {
             eq(r, "res-host-4", "Network|DHCP", "True");
             none(r, "res-host-4", "Network|Search Domain");
             // the hosts' install-date and packages calls went only to the connected host that has the manager
-            T.eq(1, r.count("InstallDate"), "one install date call");
+            T.eq(1, r.count("installDate"), "one install date call");
             T.eq(1, r.count("FetchSoftwarePackages"), "one packages call");
         }
     }
@@ -784,7 +784,7 @@ public final class PropertiesTest {
             T.eq("PARTIAL", r.health(0, "Collector:host|Status"), "partly collected");
             T.contains(r.log.all(), "F-HOST-INSTALLDATE: 1 failed read(s)", "named once");
             T.contains(r.log.all(), "F-HOST-PACKAGES: 1 failed read(s)", "named once");
-            T.eq(3, r.count("InstallDate"), "a call per connected host that has a manager");
+            T.eq(3, r.count("installDate"), "a call per connected host that has a manager");
         }
     }
 
@@ -919,7 +919,7 @@ public final class PropertiesTest {
             r.ops.files.put("esxi_advanced_system_settings", new IOException("the store is down"));
             vc.packages.put("imgmgr-1", ""); // nothing else changes
             r.run();
-            T.eq(2, r.count("InstallDate"), "the cycle ran");
+            T.eq(2, r.count("installDate"), "the cycle ran");
             T.check(r.ops.pushedProps.get(1).get(H) == null || !r.ops.pushedProps.get(1).get(H)
                     .containsKey(V + "Configuration|Advanced System Settings|Net.TcpipHeapSize") ||
                     "64".equals(r.ops.pushedProps.get(1).get(H).get(V + "Configuration|Advanced System Settings|Net.TcpipHeapSize")),

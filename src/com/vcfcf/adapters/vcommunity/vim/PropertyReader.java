@@ -336,7 +336,7 @@ public final class PropertyReader {
                 .append(VimSoapClient.xml(refs.propertyCollector.type)).append("\">")
                 .append(VimSoapClient.xml(refs.propertyCollector.value)).append("</_this><specSet>");
         b.append("<propSet><type>").append(VimSoapClient.xml(req.type)).append("</type><all>false</all>");
-        b.append("<pathSet>name</pathSet>");
+        if (req.asksName()) b.append("<pathSet>name</pathSet>");
         for (String p : paths.keySet()) {
             if (!"name".equals(p)) b.append("<pathSet>").append(VimSoapClient.xml(p)).append("</pathSet>");
         }

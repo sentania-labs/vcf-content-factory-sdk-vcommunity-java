@@ -19,6 +19,7 @@ public final class RetrieveRequest {
     public final List<MoRef> objects;
     private final Map<String, PathSpec> paths = new LinkedHashMap<>();
     private boolean firstPageOnly;
+    private boolean withoutName;
 
     /** @param label the read's id for messages ({@code R-HO}); never sent */
     public RetrieveRequest(String label, String type, int maxObjects, List<MoRef> objects) {
@@ -26,6 +27,19 @@ public final class RetrieveRequest {
         this.type = type;
         this.maxObjects = maxObjects;
         this.objects = objects == null ? null : Collections.unmodifiableList(new ArrayList<>(objects));
+    }
+
+    /**
+     * Do not ask for {@code name}: the object is not a managed entity (the license manager has no such
+     * property, and vCenter refuses the whole read with an InvalidProperty fault).
+     */
+    public RetrieveRequest withoutName() {
+        this.withoutName = true;
+        return this;
+    }
+
+    public boolean asksName() {
+        return !withoutName;
     }
 
     /** Ask for a path and keep all of its value. */
