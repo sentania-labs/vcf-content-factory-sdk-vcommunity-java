@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vmAdvParameters>
+<!--
+  Virtual machine advanced parameters to collect (VCF Content Factory
+  vCommunity).
+
+  Name the advanced configuration parameters (the keys that appear in a
+  virtual machine's .vmx file, vSphere's "extra configuration") whose value
+  you want on each virtual machine. A virtual machine that does not carry the
+  parameter publishes nothing for it. Names are case sensitive.
+
+  Format
+    - Separate entries with commas. A line break does NOT separate entries.
+    - An XML comment, like this one, is ignored. To switch an entry on, move
+      it out of the comment, and keep the comma after it.
+    - Do not write two hyphens in a row inside a comment.
+
+  Do not edit this shipped file: a forced upgrade of the pack replaces it and
+  your edits are lost. Make a copy under another name in the VCF Operations configuration-file store, and
+  enter that name (no .xml) in the account's VM Advanced Parameters Config
+  File field.
+  As shipped, every entry is commented out, so nothing is collected.
+
+  Examples, one per line:
+    disk.EnableUUID,
+    isolation.tools.copy.disable,
+    isolation.tools.paste.disable,
+    isolation.tools.dnd.disable,
+    tools.guestlib.enableHostInfo,
+-->
+</vmAdvParameters>

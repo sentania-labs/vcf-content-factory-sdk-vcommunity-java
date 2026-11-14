@@ -26,6 +26,7 @@ public final class CheckListTest {
         events();
         store();
         gating();
+        shipped();
     }
 
     static List<String> items(String xml) throws Exception {
@@ -318,5 +319,93 @@ public final class CheckListTest {
         m.put("serviceMonitoring", "Enabled");
         T.eq(5, VCommunityConfig.parse(m::get, "u", "p", null, null).filesInUse().size(), "services on");
         T.done("only the files in use are read");
+    }
+
+    private static final java.nio.file.Path SHIPPED = java.nio.file.Paths.get("content", "files", "solutionconfig");
+
+    /** The names the account defaults to, and the shipped kind each file is read as. */
+    private static Map<ListKind, String> shippedNames() {
+        Map<ListKind, String> m = new EnumMap<>(ListKind.class);
+        m.put(ListKind.ESXI_SETTINGS, VCommunityConfig.DEFAULT_ESXI_SETTINGS_FILE);
+        m.put(ListKind.ESXI_PACKAGES, VCommunityConfig.DEFAULT_ESXI_PACKAGES_FILE);
+        m.put(ListKind.VM_PARAMS, VCommunityConfig.DEFAULT_VM_PARAMS_FILE);
+        m.put(ListKind.VM_OPTIONS, VCommunityConfig.DEFAULT_VM_OPTIONS_FILE);
+        m.put(ListKind.WIN_SERVICES, VCommunityConfig.DEFAULT_WIN_SERVICE_FILE);
+        m.put(ListKind.WIN_EVENTS, VCommunityConfig.DEFAULT_WIN_EVENT_FILE);
+        return m;
+    }
+
+    /**
+     * The six files the pak ships (content/files/solutionconfig/): one per default account name and nothing else,
+     * each read through the real store without a warning and with no active entry, and each one's examples,
+     * once moved out of the comment, are valid entries under the adapter's own rules.
+     */
+    static void shipped() throws Exception {
+        Map<ListKind, String> names = shippedNames();
+        java.util.Set<String> want = new java.util.TreeSet<>();
+        for (String n : names.values()) want.add(n + ".xml");
+        java.util.Set<String> have = new java.util.TreeSet<>();
+        try (java.util.stream.Stream<java.nio.file.Path> s = java.nio.file.Files.list(SHIPPED)) {
+            s.forEach(f -> have.add(f.getFileName().toString()));
+        }
+        T.eq(want, have, "the shipped files are exactly the six default names, with .xml");
+
+        for (Map.Entry<ListKind, String> e : names.entrySet()) {
+            ListKind kind = e.getKey();
+            String name = e.getValue();
+            String xml = new String(java.nio.file.Files.readAllBytes(SHIPPED.resolve(name + ".xml")),
+                    java.nio.charset.StandardCharsets.UTF_8);
+            T.check(xml.contains("<!--") && xml.contains("-->"), name + ": has a header comment");
+            T.eq(1, xml.split("<!--", -1).length - 1, name + ": one comment");
+
+            // read through the store, as the collector does: no entry, no skipped entry, no problem
+            T.RecLog rec = new T.RecLog();
+            CheckListStore store = new CheckListStore(rec);
+            Fake f = new Fake();
+            f.put(name, xml);
+            CheckListStore.Entry r = store.refresh(one(kind, name), f).get(kind);
+            T.eq(Outcome.OK, r.outcome, name + ": reads OK");
+            T.check(r.problem == null, name + ": no warning: " + r.problem);
+            T.check(r.skipped.isEmpty(), name + ": nothing skipped");
+            T.check(r.items.isEmpty(), name + ": zero active entries");
+            T.check(rec.warns.isEmpty() && rec.errors.isEmpty() && rec.infos.isEmpty(), name + ": nothing logged: " + rec.all());
+            if (kind.isEventList()) {
+                EventListValidator.Result v = EventListValidator.validate(xml);
+                T.check(v.ok(), name + ": valid event list: " + v.problem);
+                T.eq(0, v.logs, name + ": no active Log");
+                T.eq(0, v.eventIds, name + ": no active EventID");
+            }
+
+            // the examples, switched on, are accepted
+            String comment = xml.substring(xml.indexOf("<!--") + 4, xml.indexOf("-->"));
+            String root = xml.substring(xml.indexOf('<', xml.indexOf("?>")) + 1);
+            root = root.substring(0, root.indexOf('>'));
+            int at = comment.indexOf("Examples, one");
+            T.check(at >= 0, name + ": has an examples block");
+            String examples = comment.substring(comment.indexOf('\n', at));
+            if (kind.isEventList()) {
+                EventListValidator.Result v = EventListValidator.validate("<" + root + ">" + examples + "</" + root + ">");
+                T.check(v.ok(), name + ": examples valid once switched on: " + v.problem);
+                T.eq(2, v.logs, name + ": two example logs");
+                T.eq(3, v.eventIds, name + ": three example event ids");
+            } else {
+                int lines = 0;
+                for (String line : examples.split("\n")) {
+                    if (!line.trim().isEmpty()) {
+                        lines++;
+                        T.check(line.trim().endsWith(",") && line.trim().indexOf(',') == line.trim().length() - 1,
+                                name + ": one entry with a trailing comma per line: " + line);
+                    }
+                }
+                T.check(lines >= 3, name + ": at least three examples");
+                Fake g = new Fake();
+                g.put(name, "<" + root + ">" + examples + "</" + root + ">");
+                CheckListStore.Entry on = new CheckListStore(new T.RecLog()).refresh(one(kind, name), g).get(kind);
+                T.eq(Outcome.OK, on.outcome, name + ": examples on: reads OK");
+                T.check(on.skipped.isEmpty() && on.problem == null, name + ": examples on: none skipped");
+                T.eq(lines, on.items.size(), name + ": every example line is one entry");
+            }
+        }
+        T.done("shipped check-list files: six, zero active entries, no warning, examples valid when switched on");
     }
 }
