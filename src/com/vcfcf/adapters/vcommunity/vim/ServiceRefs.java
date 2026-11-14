@@ -11,14 +11,22 @@ public final class ServiceRefs {
     public final MoRef viewManager;
     public final MoRef licenseManager;
     public final MoRef setting;
+    /** The guest operations manager (its file and process managers are properties of it); null when absent. */
+    public final MoRef guestOperationsManager;
 
     public ServiceRefs(MoRef rootFolder, MoRef propertyCollector, MoRef viewManager,
             MoRef licenseManager, MoRef setting) {
+        this(rootFolder, propertyCollector, viewManager, licenseManager, setting, null);
+    }
+
+    public ServiceRefs(MoRef rootFolder, MoRef propertyCollector, MoRef viewManager,
+            MoRef licenseManager, MoRef setting, MoRef guestOperationsManager) {
         this.rootFolder = rootFolder;
         this.propertyCollector = propertyCollector;
         this.viewManager = viewManager;
         this.licenseManager = licenseManager;
         this.setting = setting;
+        this.guestOperationsManager = guestOperationsManager;
     }
 
     static ServiceRefs from(XmlNode serviceContent) {
@@ -26,7 +34,8 @@ public final class ServiceRefs {
                 ref(serviceContent, "propertyCollector", "PropertyCollector"),
                 ref(serviceContent, "viewManager", "ViewManager"),
                 ref(serviceContent, "licenseManager", "LicenseManager"),
-                ref(serviceContent, "setting", "OptionManager"));
+                ref(serviceContent, "setting", "OptionManager"),
+                ref(serviceContent, "guestOperationsManager", "GuestOperationsManager"));
     }
 
     private static MoRef ref(XmlNode sc, String name, String defaultType) {

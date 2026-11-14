@@ -1,6 +1,7 @@
 package com.vcfcf.adapters.vcommunity.ops;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -34,4 +35,13 @@ public interface OpsApi {
      */
     PushOutcome pushBatch(Map<String, Map<String, Object>> properties,
             Map<String, Map<String, Double>> stats, long timestampMs);
+
+    /**
+     * Send events to the objects they name. Never throws: a failure is in the outcome. The default sends
+     * nothing and says every event was dropped, so an implementation that cannot send events is seen to.
+     */
+    default PushOutcome pushEvents(Collection<OpsEvent> events) {
+        return events == null || events.isEmpty() ? PushOutcome.NOTHING
+                : new PushOutcome(0, 0, 0, 0, events.size(), false);
+    }
 }

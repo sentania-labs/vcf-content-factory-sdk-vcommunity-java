@@ -10,16 +10,20 @@ public final class Thumbprints {
 
     private Thumbprints() {}
 
-    /** SHA-256 ({@code bits} 256) or SHA-512 ({@code bits} 512) of the certificate's DER. */
+    /**
+     * SHA-256 ({@code bits} 256), SHA-512 ({@code bits} 512) or SHA-1 ({@code bits} 160, the digest vCenter keeps
+     * of a host's certificate) of the certificate's DER.
+     */
     public static String of(X509Certificate cert, int bits) throws CertificateEncodingException {
         return hex(digest(cert.getEncoded(), bits));
     }
 
     static byte[] digest(byte[] der, int bits) {
         try {
-            return MessageDigest.getInstance(bits == 512 ? "SHA-512" : "SHA-256").digest(der);
+            String algorithm = bits == 512 ? "SHA-512" : bits == 160 ? "SHA-1" : "SHA-256";
+            return MessageDigest.getInstance(algorithm).digest(der);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-" + bits + " is not available in this JVM", e);
+            throw new IllegalStateException("the digest for " + bits + " bits is not available in this JVM", e);
         }
     }
 

@@ -10,7 +10,9 @@ import javax.net.ssl.X509ExtendedTrustManager;
 
 /**
  * Accepts exactly one certificate: the server's leaf, when its SHA-256 (a 64
- * digit pin) or SHA-512 (128 digit pin) digest equals the pin. The chain, the
+ * digit pin) or SHA-512 (128 digit pin) digest equals the pin. A 40 digit pin
+ * is a SHA-1 thumbprint, the form vCenter records for an ESXi host; only the
+ * guest file transfer uses it. The chain, the
  * dates and the name are not looked at; the pin alone decides (design 2.5). It
  * runs during the handshake, so a mismatch ends the connection before the
  * first request.
@@ -26,13 +28,13 @@ public final class PinnedTrustManager extends X509ExtendedTrustManager {
      */
     private final ThreadLocal<PinMismatchException> lastMismatch = new ThreadLocal<>();
 
-    /** @param pinHex lowercase hex, 64 or 128 characters */
+    /** @param pinHex lowercase hex, 64 or 128 characters (40 for an ESXi host's SHA-1 thumbprint) */
     public PinnedTrustManager(String pinHex) {
-        if (pinHex == null || (pinHex.length() != 64 && pinHex.length() != 128)) {
-            throw new IllegalArgumentException("a pin is 64 (SHA-256) or 128 (SHA-512) hex digits");
+        if (pinHex == null || (pinHex.length() != 64 && pinHex.length() != 128 && pinHex.length() != 40)) {
+            throw new IllegalArgumentException("a pin is 64 (SHA-256) or 128 (SHA-512) hex digits, or 40 (SHA-1)");
         }
         this.pin = pinHex;
-        this.bits = pinHex.length() == 128 ? 512 : 256;
+        this.bits = pinHex.length() == 128 ? 512 : pinHex.length() == 40 ? 160 : 256;
     }
 
     private void check(X509Certificate[] chain) throws CertificateException {
