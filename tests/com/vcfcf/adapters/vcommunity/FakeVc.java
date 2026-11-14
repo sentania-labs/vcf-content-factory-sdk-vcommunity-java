@@ -66,6 +66,13 @@ final class FakeVc implements AutoCloseable {
         final String setCookie;
         final String body;
         final String contentType;
+        /** A Location header to send (a redirect), or null. */
+        String location;
+
+        Resp withLocation(String l) {
+            this.location = l;
+            return this;
+        }
 
         Resp(int status, String setCookie, String body) {
             this(status, setCookie, body, "text/xml; charset=utf-8");
@@ -91,7 +98,6 @@ final class FakeVc implements AutoCloseable {
     static final String INSTANCE_UUID = "11111111-2222-3333-4444-555555555555";
     static final String COOKIE = "vmware_soap_session=\"52c0ffee-test-session\"";
 
-    private final Path dir;
     private final ServerSocket server;
     final X509Certificate cert;
     final List<Req> requests = new CopyOnWriteArrayList<>();
@@ -156,17 +162,33 @@ final class FakeVc implements AutoCloseable {
 
     /** @param san the certificate's subject alternative names, in keytool's {@code -ext san=} form */
     FakeVc(Handler h, String san) throws Exception {
+        this(h, san, false);
+    }
+
+    /** A server that reuses one certificate made once for the whole run (keytool takes a second each time). */
+    static FakeVc withSharedCertificate(Handler h) throws Exception {
+        return new FakeVc(h, "dns:localhost,ip:127.0.0.1", true);
+    }
+
+    private static KeyStore sharedStore;
+    private static char[] sharedPassword;
+
+    private FakeVc(Handler h, String san, boolean shared) throws Exception {
         this.handler = h;
-        this.dir = Files.createTempDirectory("fakevc");
-        char[] pw = randomPassword();
-        File ks = dir.resolve("ks.p12").toFile();
-        run(javaTool("keytool"), "-genkeypair", "-alias", "fake", "-keyalg", "RSA", "-keysize", "2048",
-                "-validity", "2", "-dname", "CN=localhost", "-ext", "san=" + san,
-                "-storetype", "PKCS12", "-keystore", ks.getPath(), "-storepass", new String(pw),
-                "-keypass", new String(pw));
-        KeyStore store = KeyStore.getInstance("PKCS12");
-        try (InputStream in = new FileInputStream(ks)) {
-            store.load(in, pw);
+        KeyStore store;
+        char[] pw;
+        synchronized (FakeVc.class) {
+            if (shared && sharedStore != null) {
+                store = sharedStore;
+                pw = sharedPassword;
+            } else {
+                pw = randomPassword();
+                store = generate(san, pw);
+                if (shared) {
+                    sharedStore = store;
+                    sharedPassword = pw;
+                }
+            }
         }
         this.cert = (X509Certificate) store.getCertificate("fake");
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -178,6 +200,32 @@ final class FakeVc implements AutoCloseable {
         Thread t = new Thread(this::acceptLoop, "fakevc-accept");
         t.setDaemon(true);
         t.start();
+    }
+
+    /** A key pair and certificate from the JDK's keytool, in a temporary directory that is removed before this returns. */
+    private static KeyStore generate(String san, char[] pw) throws Exception {
+        Path dir = Files.createTempDirectory("fakevc");
+        try {
+            File ks = dir.resolve("ks.p12").toFile();
+            run(javaTool("keytool"), "-genkeypair", "-alias", "fake", "-keyalg", "RSA", "-keysize", "2048",
+                    "-validity", "2", "-dname", "CN=localhost", "-ext", "san=" + san,
+                    "-storetype", "PKCS12", "-keystore", ks.getPath(), "-storepass", new String(pw),
+                    "-keypass", new String(pw));
+            KeyStore store = KeyStore.getInstance("PKCS12");
+            try (InputStream in = new FileInputStream(ks)) {
+                store.load(in, pw);
+            }
+            return store;
+        } finally {
+            try (java.util.stream.Stream<Path> files = Files.walk(dir)) {
+                List<Path> all = new ArrayList<>();
+                files.forEach(all::add);
+                Collections.reverse(all);
+                for (Path p : all) Files.deleteIfExists(p);
+            } catch (IOException ignored) {
+                // temp files
+            }
+        }
     }
 
     int port() {
@@ -284,6 +332,7 @@ final class FakeVc implements AutoCloseable {
                 head.append(hdr("Content-Type")).append(": ").append(resp.contentType).append("\r\n");
                 head.append(hdr("Content-Length")).append(": ").append(rb.length).append("\r\n");
                 if (resp.setCookie != null) head.append(hdr("Set-Cookie")).append(": ").append(resp.setCookie).append("\r\n");
+                if (resp.location != null) head.append("Location: ").append(resp.location).append("\r\n");
                 head.append("\r\n");
                 // one write: two small writes meet Nagle and the peer's delayed ACK, 40 ms a request
                 byte[] hb = head.toString().getBytes(StandardCharsets.UTF_8);
@@ -333,16 +382,6 @@ final class FakeVc implements AutoCloseable {
             server.close();
         } catch (IOException ignored) {
             // closing
-        }
-        try {
-            try (java.util.stream.Stream<Path> files = Files.walk(dir)) {
-                List<Path> all = new ArrayList<>();
-                files.forEach(all::add);
-                Collections.reverse(all);
-                for (Path p : all) Files.deleteIfExists(p);
-            }
-        } catch (IOException ignored) {
-            // temp files
         }
     }
 }

@@ -30,6 +30,18 @@ final class T {
         }
     }
 
+    interface Thrower {
+        void run() throws Exception;
+    }
+
+    static void throwsNothing(Thrower r, String what) {
+        try {
+            r.run();
+        } catch (Exception e) {
+            throw new AssertionError(what + ": threw " + e);
+        }
+    }
+
     static void throwsIae(Runnable r, String partOfMessage, String what) {
         try {
             r.run();

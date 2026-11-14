@@ -1,6 +1,7 @@
 package com.vcfcf.adapters.vcommunity;
 
 import com.vcfcf.adapters.vcommunity.ops.OpsApi;
+import com.vcfcf.adapters.vcommunity.ops.OpsEvent;
 import com.vcfcf.adapters.vcommunity.ops.OpsHttpException;
 import com.vcfcf.adapters.vcommunity.ops.PushOutcome;
 
@@ -104,6 +105,17 @@ final class P2Ops implements OpsApi {
         pushedProps.add(properties);
         pushedStats.add(stats);
         return outcome;
+    }
+
+    /** Every call to send events, in order; what each answered is {@link #eventOutcome}, or a clean send of all. */
+    final List<List<OpsEvent>> eventPushes = new CopyOnWriteArrayList<>();
+    volatile PushOutcome eventOutcome;
+
+    @Override
+    public PushOutcome pushEvents(java.util.Collection<OpsEvent> events) {
+        eventPushes.add(new ArrayList<>(events));
+        PushOutcome o = eventOutcome;
+        return o != null ? o : new PushOutcome(events.size(), 1, 0, 0, 0, false);
     }
 
     int pushes() {

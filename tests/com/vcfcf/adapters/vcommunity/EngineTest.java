@@ -69,6 +69,15 @@ public final class EngineTest {
             throw new IOException("unexpected " + path);
         }
 
+        /** The events the engine sent (the configuration warnings of an unusable file). */
+        final List<com.vcfcf.adapters.vcommunity.ops.OpsEvent> events = new ArrayList<>();
+
+        @Override
+        public PushOutcome pushEvents(java.util.Collection<com.vcfcf.adapters.vcommunity.ops.OpsEvent> sent) {
+            events.addAll(sent);
+            return new PushOutcome(sent.size(), 1, 0, 0, 0, false);
+        }
+
         @Override
         public String post(String path, String jsonBody) throws IOException {
             throw new IOException("no POST in this fake");
