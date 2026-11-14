@@ -309,12 +309,10 @@ public final class GuestPhase {
             }
             GuestRunner.Outcome o = item.outcome;
             if (o.scriptsOk > 0) usable++;
-            boolean failed = false;
             for (GuestFailure f : o.failures) {
-                if (f.step != GuestStep.CLEANUP && f.step != GuestStep.ROW) failed = true;
                 in.failures.add(COLLECTOR, f.step.cause(), item.vm.moref, withheld(f, in.plan), f.toString());
             }
-            if (failed || !o.failures.isEmpty()) failedVms++;
+            if (!o.failures.isEmpty()) failedVms++;
             publish(in, item);
         }
         int notStarted = ordered.size() - started;
@@ -347,7 +345,10 @@ public final class GuestPhase {
     }
 
     private static int withheld(GuestFailure f, GuestPlan plan) {
-        if (f.step == GuestStep.CLEANUP || f.step == GuestStep.ROW || "events".equals(f.script)) return 0;
+        if (f.step == GuestStep.CLEANUP || f.step == GuestStep.ROW || "events".equals(f.script)
+                || "cleanup".equals(f.script)) {
+            return 0;
+        }
         if ("os".equals(f.script)) return 6;
         return plan.serviceNames.size() * 3;
     }

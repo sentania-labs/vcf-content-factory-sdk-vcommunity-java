@@ -46,14 +46,18 @@ public final class GuestScripts {
     public static final String TEMP_PARENT = "C:\\Windows\\Temp";
     public static final String POWERSHELL = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe";
     public static final String DIRECTORY_PREFIX = "VCFOperationsvCommunity-";
-    public static final String INPUT_NAME = "input.txt";
-    public static final String OUTPUT_NAME = "output.csv";
+    /** The guest names the two files (design 8.2): prefix and suffix are ours, the middle is the guest's. */
+    public static final String INPUT_PREFIX = "input";
+    public static final String INPUT_SUFFIX = ".txt";
+    public static final String OUTPUT_PREFIX = "output";
+    public static final String OUTPUT_SUFFIX = ".csv";
 
     private static final String PRELUDE = String.join("\n",
             "$ErrorActionPreference = 'Stop'",
             "$ProgressPreference = 'SilentlyContinue'",
-            "function Save-Csv($items) {",
+            "function Save-Csv($items, $columns) {",
             "    $lines = @($items | ConvertTo-Csv -NoTypeInformation)",
+            "    if ($lines.Count -eq 0) { $lines = @(($columns | ForEach-Object { '\"' + $_ + '\"' }) -join ',') }",
             "    try {",
             "        $utf8 = New-Object System.Text.UTF8Encoding($false)",
             "        [System.IO.File]::WriteAllLines($OutputFile, $lines, $utf8)",
@@ -74,7 +78,7 @@ public final class GuestScripts {
             "    OSArchitecture = $os.OSArchitecture",
             "    LastBootUpTime = $os.LastBootUpTime",
             "    ReleaseId = $release",
-            "})");
+            "}) 'Name','Version','BuildNumber','OSArchitecture','LastBootUpTime','ReleaseId'");
 
     private static final String SERVICES_BODY = String.join("\n",
             "$found = @()",
@@ -89,7 +93,7 @@ public final class GuestScripts {
             "        }",
             "    }",
             "}",
-            "Save-Csv $found");
+            "Save-Csv $found 'Name','DisplayName','Status','StartType'");
 
     private static final String EVENTS_BODY = String.join("\n",
             "$since = (Get-Date).AddMinutes(-5)",
@@ -114,11 +118,15 @@ public final class GuestScripts {
             "        Event = '[Timestamp=' + $record.TimeCreated + '] [Category=' + $log + '] [EventID=' + $id + '] [Source=' + $record.ProviderName + '] [Message=' + $record.Message + ']'",
             "    }",
             "}",
-            "Save-Csv $found");
+            "Save-Csv $found 'Level','LevelNumber','Event'");
 
-    /** The program text with its two paths bound; ends the process with 0, or 2 when anything threw. */
+    /**
+     * The program text with its two paths bound ({@code inputPath} is null for a program that reads no file); ends the
+     * process with 0, or 2 when anything threw. The output always has its header line, so an output with rows
+     * left out is told from a program that wrote nothing.
+     */
     public static String program(Kind kind, String inputPath, String outputPath) {
-        return "$InputFile = " + literal(inputPath) + "\n$OutputFile = " + literal(outputPath) + "\n" + PRELUDE
+        return "$InputFile = " + (inputPath == null ? "$null" : literal(inputPath)) + "\n$OutputFile = " + literal(outputPath) + "\n" + PRELUDE
                 + "\ntry {\n" + kind.body + "\nexit 0\n} catch {\nexit 2\n}\n";
     }
 

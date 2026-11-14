@@ -8,8 +8,6 @@ import com.vcfcf.adapters.vcommunity.vim.VimXml;
 import com.vcfcf.adapters.vcommunity.vim.XmlNode;
 
 import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The calls of the guest file and process managers, over the vCenter session the property reads use. Every
@@ -134,6 +132,12 @@ public final class GuestOpsClient {
                 + VimXml.escape(parent) + "</directoryPath>");
     }
 
+    /** A new empty file in {@code directory}, named by the guest from the prefix and suffix; its path. */
+    public VimResult<String> createTemporaryFile(String vm, String prefix, String suffix, String directory) {
+        return string("CreateTemporaryFileInGuest", vm, "<prefix>" + VimXml.escape(prefix) + "</prefix><suffix>"
+                + VimXml.escape(suffix) + "</suffix><directoryPath>" + VimXml.escape(directory) + "</directoryPath>");
+    }
+
     /** The ESXi host's URL to which the file's content is PUT over HTTPS. */
     public VimResult<String> initiateFileTransferToGuest(String vm, String path, long size) {
         return string("InitiateFileTransferToGuest", vm, "<guestFilePath>" + VimXml.escape(path)
@@ -157,18 +161,19 @@ public final class GuestOpsClient {
         return VimResult.ok(new Transfer(url, size), 0);
     }
 
-    /** The names of the files in a directory (at most 100), as the guest lists them. */
-    public VimResult<List<String>> listFiles(String vm, String directory) {
+    /** The files in a directory (at most 100) as the guest lists them: name to size, -1 when the size is not given. */
+    public VimResult<java.util.Map<String, Long>> listFiles(String vm, String directory) {
         VimResult<XmlNode> r = file("ListFilesInGuest", vm, "<filePath>" + VimXml.escape(directory)
                 + "</filePath><index>0</index><maxResults>" + MAX_FILES + "</maxResults>");
         if (!r.isOk()) return VimResult.fault(r.faultClass(), clean(r), null, 0, r.cause());
-        List<String> names = new ArrayList<>();
+        java.util.Map<String, Long> names = new java.util.LinkedHashMap<>();
         XmlNode rv = r.value().find("returnval");
         if (rv != null) {
             for (XmlNode f : rv.children()) {
                 if (!"files".equals(f.name)) continue;
                 String p = f.childText("path");
-                if (p != null) names.add(p);
+                String size = f.childText("size");
+                if (p != null) names.put(p, size != null && size.matches("[0-9]{1,18}") ? Long.valueOf(size) : Long.valueOf(-1));
             }
         }
         return VimResult.ok(names, 0);

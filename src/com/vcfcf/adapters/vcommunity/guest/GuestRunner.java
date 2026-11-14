@@ -166,9 +166,14 @@ public final class GuestRunner {
                 return;
             }
             dir = d.value();
-            String in = dir + "\\" + GuestScripts.INPUT_NAME;
-            String out = dir + "\\" + GuestScripts.OUTPUT_NAME;
-            if (input != null && !upload(job, in, input, o, which, stopMs)) return;
+            // every file is one the guest names inside the directory it named: nothing has a name chosen here
+            String in = null;
+            if (input != null) {
+                in = tempFile(job, dir, GuestScripts.INPUT_PREFIX, GuestScripts.INPUT_SUFFIX, o, which, stopMs);
+                if (in == null || !upload(job, in, input, o, which, stopMs)) return;
+            }
+            String out = tempFile(job, dir, GuestScripts.OUTPUT_PREFIX, GuestScripts.OUTPUT_SUFFIX, o, which, stopMs);
+            if (out == null) return;
 
             if (!time(stopMs, o, which)) return;
             VimResult<Long> p = ops.startProgram(job.vm, GuestScripts.POWERSHELL,
@@ -203,6 +208,25 @@ public final class GuestRunner {
         return true;
     }
 
+    /** A file the guest makes in the directory; null (with the failure recorded) when it did not, or named it unexpectedly. */
+    private String tempFile(Job job, String dir, String prefix, String suffix, Outcome o, String which, long stopMs)
+            throws InterruptedException {
+        if (!time(stopMs, o, which)) return null;
+        VimResult<String> f = ops.createTemporaryFile(job.vm, prefix, suffix, dir);
+        if (!f.isOk()) {
+            o.fail(GuestOpsClient.classify(f, GuestStep.DIRECTORY), which, "a file could not be made in the temporary "
+                    + "directory: " + f.message());
+            return null;
+        }
+        String p = f.value();
+        String leaf = p.startsWith(dir + "\\") ? p.substring(dir.length() + 1) : null;
+        if (leaf == null || !leaf.matches("[A-Za-z0-9._-]{1,64}")) {
+            o.fail(GuestStep.DIRECTORY, which, "the guest named a file this port does not use; nothing was sent to it");
+            return null;
+        }
+        return p;
+    }
+
     private boolean upload(Job job, String path, byte[] bytes, Outcome o, String which, long stopMs)
             throws InterruptedException {
         if (!time(stopMs, o, which)) return false;
@@ -219,20 +243,25 @@ public final class GuestRunner {
             return false;
         }
         if (!time(stopMs, o, which)) return false;
-        VimResult<List<String>> l = ops.listFiles(job.vm, path.substring(0, path.lastIndexOf('\\')));
+        VimResult<Map<String, Long>> l = ops.listFiles(job.vm, path.substring(0, path.lastIndexOf('\\')));
         if (!l.isOk()) {
             o.fail(GuestOpsClient.classify(l, GuestStep.UPLOAD), which, "the sent file could not be looked for: "
                     + l.message());
             return false;
         }
         String leaf = path.substring(path.lastIndexOf('\\') + 1);
-        boolean there = false;
-        for (String n : l.value()) {
-            String x = n.substring(Math.max(n.lastIndexOf('\\'), n.lastIndexOf('/')) + 1);
-            if (x.equalsIgnoreCase(leaf)) there = true;
+        Long size = null;
+        for (Map.Entry<String, Long> n : l.value().entrySet()) {
+            String x = n.getKey().substring(Math.max(n.getKey().lastIndexOf('\\'), n.getKey().lastIndexOf('/')) + 1);
+            if (x.equalsIgnoreCase(leaf)) size = n.getValue();
         }
-        if (!there) {
+        if (size == null) {
             o.fail(GuestStep.UPLOAD, which, "the file sent to the guest is not there");
+            return false;
+        }
+        if (size >= 0 && size != bytes.length) {
+            o.fail(GuestStep.UPLOAD, which, "the file in the guest is " + size + " bytes, not the " + bytes.length
+                    + " that were sent");
             return false;
         }
         return true;
@@ -340,11 +369,16 @@ public final class GuestRunner {
             o.fail(GuestStep.PARSE, which, "the output could not be read: " + e.getMessage());
             return;
         }
+        if (t == null) {
+            // the output is made before the program runs; a program that wrote nothing is not "found none"
+            o.fail(GuestStep.PARSE, which, "the program wrote no output (not even the header)");
+            return;
+        }
         try {
             switch (kind) {
                 case OS: {
-                    GuestRows.Parsed<Map<String, String>> p = t == null ? null : GuestRows.operatingSystem(t);
-                    if (p == null || p.rows.isEmpty()) {
+                    GuestRows.Parsed<Map<String, String>> p = GuestRows.operatingSystem(t);
+                    if (p.rows.isEmpty()) {
                         o.fail(GuestStep.PARSE, which, "the output has no operating system row");
                         return;
                     }
@@ -353,14 +387,12 @@ public final class GuestRunner {
                     break;
                 }
                 case SERVICES: {
-                    if (t == null) break; // none of the listed services exists in this guest
                     GuestRows.Parsed<GuestRows.Service> p = GuestRows.services(t);
                     o.services.addAll(p.rows);
                     skipped(o, which, p.skipped);
                     break;
                 }
                 default: {
-                    if (t == null) break; // no record in the last five minutes
                     GuestRows.Parsed<GuestRows.EventRow> p = GuestRows.events(t);
                     long now = clock.getAsLong();
                     int n = 0;
