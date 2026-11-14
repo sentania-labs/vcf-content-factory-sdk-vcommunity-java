@@ -24,7 +24,7 @@ description: >
   cluster check, the vSphere World and Business Application figures); the
   guest checks and the content come in later phases.
 version: 1.0.0
-build_number: 10
+build_number: 11
 tier: 2
 released: false
 

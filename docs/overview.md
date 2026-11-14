@@ -120,7 +120,8 @@ pushes nothing onto the vCenter's objects.
   keys within a cycle or two of Ops knowing it.
 - **Matches the original, quirks included.** For now the pak reproduces what the
   original 0.8.1 publishes even where it looks wrong, so the first comparison
-  against it is exact: the two VM Tools keys are the text `None`, a VM with no
+  against it is exact: the two VM Tools keys are the text `None` (the real values when `config.tools` is
+  in the VM Options list), a VM with no
   network adapter has no Virtual Disk keys, PCI ids above 0x7FFF are signed
   (`-7f7a`), blank strings are pushed as they are, and so on. Each is a
   one-edit switch in `text/Quirks.java` and is listed in the design (section 5.8)

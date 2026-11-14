@@ -3,6 +3,27 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.11 (Unreleased)
+
+Review of build 10 (`docs/reviews/p4-derived-review.md`) and the second live differential.
+
+- fix(adapter): the pool counts (R218, R219) leave out Supervisor namespaces and everything under them: vCenter holds
+  them as pools, Operations as `Namespace` objects (`ResourcePool.namespace` is read); a fixture with namespace pools.
+- fix(adapter): comments rewritten in the port's own words and the derived helpers renamed from the design's vocabulary;
+  the order of the arithmetic is unchanged (the 1,243 KPI checks and the baseline re-score are as before).
+- fix(adapter): R211 counts as upstream does (0 while the answer names hosts, even with only stale values), as quirk Q16.
+- fix(adapter): the statistics answers are read as a stream, in batches of 50 hosts, so the per-thread and per-NIC series
+  the platform adds to every answer cost no heap (the heap test now carries them, in 48 MB).
+- fix(adapter): a failed World read marks the cluster, host and VM lists for a new read; a VM whose host vCenter would not
+  read is placed by Operations' host name; a failed fallback read withholds only the share that needed it; the relationship
+  reads ask for 1000 per page.
+- fix(adapter): the two warnings of the original (no NIC speed for any host, no availability data for any host) are logged,
+  so Warnings in Last Cycle and First Warning agree with it.
+- feat(adapter): with `config.tools` in the VM Options list, Tools Sync Time and Tools Upgrade Policy carry the real values
+  (the edge of Q1); a list of datastores and the tools configuration are published as pyVmomi prints them (DV-93).
+- fix(adapter): Check-List Entries Skipped counts the VM Options entries skipped now, every cycle.
+- docs: DV-35, DV-87, DV-91, DV-93, Q1, Q15, Q16; the open difference L3 for two lab VMs (design 5.8).
+
 ## 1.0.0.10 (Unreleased)
 
 Phase P4, the derived metrics (design 7, 4.3 to 4.9, 4.12; rows R70, R71, R153 to R219, R221 to R225).
