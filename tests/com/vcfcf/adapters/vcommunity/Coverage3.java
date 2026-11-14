@@ -47,17 +47,17 @@ final class Coverage3 {
         switch (row) {
             case 227: case 228: case 231: case 232:
                 return text;
-            case 229: return "text of the count; not returned: withheld, upstream's 0 is a false zero (DV-11)";
-            case 230: return "text of round(MB / 1024, 2); not returned: withheld, upstream's 0.0 is a false zero (DV-11)";
-            case 233: return "round(bytes / 1024^3, 2); not returned: withheld, upstream's 0.0 is a false zero (DV-11)";
+            case 229: return "text of the count; not returned: 0, as upstream (Q9)";
+            case 230: return "text of round(MB / 1024, 2); not returned: 0.0, as upstream (Q9)";
+            case 233: return "round(bytes / 1024^3, 2); not returned: 0.0, as upstream (Q9)";
             case 234: case 235: case 236: case 237: case 238: case 239: case 240: case 241: case 242: case 243:
                 return text;
-            case 244: return "round(bytes / 1024^3, 2); not returned: withheld, upstream's 0.0 is a false zero (DV-11)";
+            case 244: return "round(bytes / 1024^3, 2); not returned: 0.0, as upstream (Q9)";
             case 245: case 246: case 247: case 248:
                 return text;
             case 249: return "the number of items listed; withheld when any item could not be read (DV-46)";
-            case 250: case 251: return "withheld when any item lacks the field or could not be read (DV-18, DV-46)";
-            case 252: return "round(sum / 1024^3, 2); withheld when any item lacks a size or could not be read (DV-11, DV-18, DV-46)";
+            case 250: case 251: return "an item that lacks the field counts as not stored / not compliant, as upstream (Q9); withheld when an item could not be read (DV-46)";
+            case 252: return "round(sum / 1024^3, 2); a missing size is 0, as upstream (Q9); withheld when an item could not be read (DV-46)";
             default: return "";
         }
     }

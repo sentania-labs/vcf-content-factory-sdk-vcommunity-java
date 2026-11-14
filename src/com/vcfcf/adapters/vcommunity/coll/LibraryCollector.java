@@ -142,17 +142,19 @@ public final class LibraryCollector {
         double bytes = 0;
         for (Map<String, Object> item : lib.items.values()) {
             Object cached = item.get("cached");
-            if (cached == null) allCached = false;
+            if (cached == null && !Quirks.UNSET_AS_UPSTREAM) allCached = false;
             else if (!truthy(cached)) notStored++;
             Object compliant = item.get("security_compliance");
-            if (compliant == null) allCompliant = false;
+            if (compliant == null && !Quirks.UNSET_AS_UPSTREAM) allCompliant = false;
             else if (!truthy(compliant)) notCompliant++;
             Object size = item.get("size");
             if (size instanceof Double) bytes += (Double) size;
-            else allSized = false;
+            else if (!Quirks.UNSET_AS_UPSTREAM) allSized = false;
         }
-        // DV-18: the original counts a missing field as "not stored" / "not compliant" and a missing
-        // size as zero; none of that was read, so a count with such an item in it is not sent
+        // Q9: an item that was read and lacks the field counts as the original counts it: "not stored" and
+        // "not compliant" (a falsy field), and a missing size as 0. With the switch off (DV-18) a count with
+        // such an item in it is not sent. An item that could not be read is not here at all, and the whole
+        // block is withheld (the caller)
         o.statY(LIB + "Items Not Stored Locally", allCached ? (Double) (double) notStored : null);
         o.statY(LIB + "Items Not Security Compliant", allCompliant ? (Double) (double) notCompliant : null);
         o.statY(LIB + "Total Size (GB)", allSized ? (Double) PyRound.gib(bytes) : null);
@@ -183,7 +185,9 @@ public final class LibraryCollector {
         o.propY(ITEM + "Last Sync", text(m, "last_sync_time", empty));
         o.propY(ITEM + "Source Item ID", text(m, "source_id", empty));
         Object size = m.get("size");
-        o.statY(ITEM + "Size (GB)", size instanceof Double ? (Double) PyRound.gib((Double) size) : null);
+        // a size the item lacks is the original's 0 (Q9), else nothing
+        o.statY(ITEM + "Size (GB)", size instanceof Double ? (Double) PyRound.gib((Double) size)
+                : Quirks.UNSET_AS_UPSTREAM ? Double.valueOf(0) : null);
         return o;
     }
 

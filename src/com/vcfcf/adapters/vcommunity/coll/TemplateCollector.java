@@ -84,7 +84,8 @@ public final class TemplateCollector {
                 .id("VMEntityObjectID", r.moref).id("VMEntityVCID", vcid);
         o.propY(T + "Guest OS", Quirks.ownText(r.guestOs, empty));
         o.propY(T + "Hardware Version", Quirks.ownText(r.hardwareVersion, empty));
-        o.propY(T + "vCPUs", r.numCpu);
+        // a figure the VM read did not return is the original's 0 (Q9), as text: "0", "0.0", and 0.0
+        o.propY(T + "vCPUs", r.numCpu != null ? r.numCpu : Quirks.orText(null, "0", Quirks.UNSET_AS_UPSTREAM));
         o.propY(T + "Memory (GB)", memory(r.memoryMb));
         o.propY(T + "Datastore", datastores(r, dsNames, failures, empty));
         o.propY(T + "VM Folder", folder(r, folderNames, failures, empty));
@@ -95,13 +96,14 @@ public final class TemplateCollector {
     /** {@code str(round(MB / 1024, 2))}: {@code 8.0}, {@code 0.5}, {@code 1.75}. */
     static String memory(String mb) {
         Double v = number(mb);
-        return v == null ? null : PyText.repr(PyRound.round2(v / MB_PER_GB));
+        if (v == null) return Quirks.orText(null, "0.0", Quirks.UNSET_AS_UPSTREAM);
+        return PyText.repr(PyRound.round2(v / MB_PER_GB));
     }
 
     /** {@code round(bytes / 1024**3, 2)}. */
     static Double disk(String bytes) {
         Double v = number(bytes);
-        return v == null ? null : PyRound.gib(v);
+        return v == null ? (Quirks.UNSET_AS_UPSTREAM ? Double.valueOf(0) : null) : PyRound.gib(v);
     }
 
     private static Double number(String integerText) {
