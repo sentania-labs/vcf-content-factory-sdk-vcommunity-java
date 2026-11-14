@@ -18,9 +18,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * The Business Application figures on the Container objects (map D12, design 4.12): Tier, Business Application
- * and Enterprise performance, from the VM Guest OS KPI of the VMs below them, as stored (a cycle behind). The
- * tree is read from VCF Operations: CHILD relationships, one request each.
+ * Business Application figures for the Container objects (design 4.12), built from the VM Guest OS KPI that the
+ * previous cycle stored, so they trail by one cycle. The tree comes from VCF Operations, one CHILD request per
+ * object that has children to find.
  *
  * <p>A relationship request or a batch of statistics that failed withholds the objects whose inputs it carried
  * and every object above them (DV-24); the others are still computed. The original stops at the first failure.
@@ -89,7 +89,7 @@ final class BusinessStage {
         }
         if (tiers.isEmpty() && apps.isEmpty() && enterprises.isEmpty()) return;
 
-        // Tier: the VMs of each Tier, and their VM Guest OS KPI
+        // Tiers: find the VMs under each, then read those VMs' stored scores
         Map<String, List<String>> tierVms = new LinkedHashMap<>();
         Set<String> tierUnknown = new HashSet<>();
         Set<String> vmIds = new TreeSet<>();
@@ -125,7 +125,7 @@ final class BusinessStage {
                 tierUnknown.add(e.getKey());
                 continue;
             }
-            Double v = BusinessApps.tier(kpis);
+            Double v = BusinessApps.tierValue(kpis);
             if (v != null) {
                 x.stat(e.getKey(), G + BusinessApps.GROUP + "|Tier Performance", v);
                 tierValue.put(e.getKey(), v);
@@ -133,7 +133,7 @@ final class BusinessStage {
         }
         x.withheld(tierUnknown.size());
 
-        // Business Application: its Tiers, and the K8S Namespaces within two levels of it
+        // applications: the Tiers under each, and the namespaces up to two steps below it
         Map<String, List<String>> appTiers = new LinkedHashMap<>();
         Map<String, List<String>> appNamespaces = new LinkedHashMap<>();
         Set<String> appUnknown = new HashSet<>();
@@ -145,7 +145,7 @@ final class BusinessStage {
             Set<String> ns = new TreeSet<>();
             if (!unknown) {
                 ns.addAll(kindOf(children, NAMESPACE));
-                // level 2, through the children that are not Tiers: a Tier's own children are its VMs
+                // namespaces one step further down, below any child that is not a Tier (a Tier's children are VMs)
                 for (OpsReads.Related ch : children) {
                     if (TIER.equals(ch.kind)) continue;
                     List<OpsReads.Related> grand = children(ch.id);
@@ -191,7 +191,7 @@ final class BusinessStage {
                 appUnknown.add(a);
                 continue;
             }
-            Double v = BusinessApps.application(nsList, tierList);
+            Double v = BusinessApps.applicationValue(nsList, tierList);
             if (v != null) {
                 x.stat(a, G + BusinessApps.GROUP + "|Business Application Performance", v);
                 appValue.put(a, v);
@@ -199,7 +199,7 @@ final class BusinessStage {
         }
         x.withheld(appUnknown.size());
 
-        // Enterprise: the Business Applications of each Enterprise
+        // enterprises: the applications under each
         for (String en : enterprises) {
             if (x.stop()) return;
             List<OpsReads.Related> ch = children(en);
@@ -218,7 +218,7 @@ final class BusinessStage {
                 x.withheld(1);
                 continue;
             }
-            Double v = BusinessApps.enterprise(values);
+            Double v = BusinessApps.enterpriseValue(values);
             if (v != null) x.stat(en, G + BusinessApps.GROUP + "|Business Applications Performance", v);
         }
     }

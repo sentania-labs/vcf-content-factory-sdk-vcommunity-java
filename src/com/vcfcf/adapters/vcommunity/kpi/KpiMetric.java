@@ -1,8 +1,8 @@
 package com.vcfcf.adapters.vcommunity.kpi;
 
 /**
- * One scored row of a KPI: its name and the five limits where its score is 100, 75, 50, 25 and 0
- * (design 7.1, Appendix A). A row whose zero-at is below its best is higher-is-better.
+ * One scored row of a KPI: a name and five limits at which the row scores 100, 75, 50, 25 and 0 (design 7.1,
+ * Appendix A). A row whose last limit lies below its first is read as higher-is-better.
  */
 public final class KpiMetric {
     public final String name;
@@ -12,9 +12,9 @@ public final class KpiMetric {
     public final double yellow;
     public final double orange;
     public final double zeroAt;
-    /** True: the row is left out of the KPI while its value is green. */
+    /** True: while the value is in the best band the row does not take part in the KPI. */
     public final boolean skipWhenGreen;
-    /** False: the row is scored but not pushed (the object already has that statistic). */
+    /** False: the row counts in the score but is not sent, the object already carrying that statistic. */
     public final boolean published;
 
     KpiMetric(String name, String unit, double best, double green, double yellow, double orange,

@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The eight VM contention rows shared by Cluster Performance and ESXi Performance, and the bad
- * network packets of a host (map D1, D4): for each of four VM statistics, how deep (the worst VM)
- * and how broad (the 90th percentile).
+ * The rows both Cluster Performance and ESXi Performance are built from (design 7.1): per VM statistic, the
+ * worst VM and the 90th-percentile VM, which shows how far a problem goes and how many VMs share it; and a host's
+ * share of faulty network packets.
  */
 public final class VmContention {
 
@@ -40,8 +40,8 @@ public final class VmContention {
     }
 
     /**
-     * Errored and dropped packets of one host as a percentage of all its packets in the last cycle; null when
-     * any of the six counters is missing or the host sent and received nothing.
+     * Faulty (errored or dropped) packets as a percent of all packets the host moved in the latest sample; no
+     * value if one of the six counters is absent or the host moved no packets.
      */
     public static Double badPacketPct(Map<String, Double> packets) {
         for (String k : StatKeys.BAD_PACKETS) if (packets.get(k) == null) return null;

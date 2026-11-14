@@ -32,7 +32,7 @@ public final class ClusterRisk {
         return dram == null ? null : Stat.percent(memoryKb, dram);
     }
 
-    /** The value of every row for one host; a row with no value is absent. */
+    /** One host's value for each row; a row it has no value for is missing from the map. */
     public static Map<String, Double> hostValues(HostInv host, Map<String, Double> s, MonsterVm monster) {
         Map<String, Double> v = new LinkedHashMap<>();
         put(v, KpiTable.R_THREADS, s.get(StatKeys.CPU_THREAD_UTIL));
@@ -95,7 +95,7 @@ public final class ClusterRisk {
         return max / monsterMb;
     }
 
-    /** The value of every row for the cluster: the highest host. */
+    /** The cluster's value for each row: the highest value among its hosts. */
     public static Map<String, Double> clusterValues(List<HostInv> hosts,
             Function<HostInv, Map<String, Double>> statsOf, MonsterVm monster) {
         Map<String, Double> out = new LinkedHashMap<>();

@@ -2,7 +2,7 @@ package com.vcfcf.adapters.vcommunity.kpi;
 
 import java.util.Map;
 
-/** Network Speed Degradation (map D12): the speed the physical NICs run at as a share of what they are set to. */
+/** Network Speed Degradation (design 7.1): how fast a host's NICs actually link compared with their configured speed. */
 public final class NetworkSpeed {
 
     private NetworkSpeed() {}
@@ -10,8 +10,8 @@ public final class NetworkSpeed {
     public static final String GROUP = "Network";
 
     /**
-     * {@code sum of actual speeds / sum of configured speeds x 100} over the NICs that have both greater than 0,
-     * at most 100; null when no NIC can be compared.
+     * Percent of configured speed reached: total actual speed over total configured speed, over those NICs with both
+     * above zero, capped at 100. No value when no NIC qualifies.
      */
     public static Double degradation(Map<String, Double> speeds, Map<String, Double> configured) {
         double actual = 0;

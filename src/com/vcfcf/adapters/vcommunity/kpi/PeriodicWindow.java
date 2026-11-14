@@ -1,9 +1,9 @@
 package com.vcfcf.adapters.vcommunity.kpi;
 
 /**
- * The window of the Periodic Cluster Check (map D9): it ends at the latest {@code HH:MM} UTC plus a whole
- * number of periods at or before now, and begins one period earlier. The period divides a day, so the
- * ends fall at the same times every day. Pure arithmetic on epoch milliseconds, so a test can set the clock.
+ * The Periodic Cluster Check window (design 7.1). Its end is the most recent moment, no later than now, that falls
+ * on the configured {@code HH:MM} UTC plus a whole number of periods; it starts one period before that. Periods
+ * divide a day, so the same end times recur daily. Integer arithmetic on epoch milliseconds, so tests set the clock.
  */
 public final class PeriodicWindow {
 
@@ -30,11 +30,11 @@ public final class PeriodicWindow {
     }
 
     /**
-     * True when a cluster was not calculated for the window and has KPI data in it: its newest published
-     * sample is older than the window end, and some KPI has a sample at or after the window start.
-     * Timestamps are the latest sample time of each key, absent when the key was never published.
+     * Whether a cluster still has to be checked for this window: none of its four published series has a sample as
+     * new as the window's end, and one of its three KPI series has a sample inside the window. The map holds the
+     * latest sample time of each key; a key never stored is absent.
      */
-    public boolean isDue(java.util.Map<String, Double> latest) {
+    public boolean awaitsCheck(java.util.Map<String, Double> latest) {
         double calculated = 0.0;
         for (String k : StatKeys.PERIODIC_PUBLISHED) {
             Double t = latest.get(k);
@@ -49,11 +49,12 @@ public final class PeriodicWindow {
     }
 
     /**
-     * The due clusters to calculate this cycle: at most {@code limit}, taken in turn. Each cycle after the
-     * window end starts {@code limit} further along the list, wrapping around, so a cluster that stays due
-     * does not keep the others waiting. No state is needed: the position comes from the time since the end.
+     * The part of the due list to work on now. Up to {@code limit} clusters, all of them; beyond that, a slice of
+     * {@code limit} whose start advances by {@code limit} for every five minutes since the window ended and wraps
+     * past the end of the list. The slice depends on the clock alone, so nothing is remembered between cycles and
+     * a cluster that cannot be finished does not block the rest.
      */
-    public <T> java.util.List<T> thisCycle(java.util.List<T> due, long nowMs, int limit) {
+    public <T> java.util.List<T> sliceFor(java.util.List<T> due, long nowMs, int limit) {
         if (due.size() <= limit) return due;
         long cycle = Math.floorDiv(nowMs - endMs, CYCLE_MINUTES * 60_000L);
         int start = (int) Math.floorMod(cycle * limit, (long) due.size());

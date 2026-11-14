@@ -14,13 +14,14 @@ public final class Availability {
     public static final double POINTS_PER_CONDITION = 25.0;
 
     /**
-     * 25 points for each condition met: powered on (the statistic is 1), connected, not in maintenance,
-     * not in quarantine. A condition with no data is not met, so the value is 0, 25, 50, 75 or 100.
+     * A host's figure: 25 for each of four conditions that holds (the powered-on statistic is 1, the host is
+     * connected, not in maintenance, not in quarantine). A condition nothing was stored for does not hold, so the
+     * result is 0, 25, 50, 75 or 100.
      *
      * @param poweredOn the latest {@code sys|poweredOn} sample, or null
      * @param props     the three runtime properties of the host
      */
-    public static double host(Double poweredOn, Map<String, String> props) {
+    public static double ofHost(Double poweredOn, Map<String, String> props) {
         int met = 0;
         if (poweredOn != null && poweredOn == 1.0) met++;
         if ("connected".equals(props.get(StatKeys.HOST_CONNECTION))) met++;
@@ -30,11 +31,12 @@ public final class Availability {
     }
 
     /**
-     * {@code min(100, (sum - the k lowest) / (N - k))}. N is the cluster's host count or the hosts found, if
-     * larger; k the host failures vSphere HA tolerates (none counts as 0). Hosts counted in N but not found
-     * count as 0 %. Null when N - k is 0 or less.
+     * The cluster figure: the host values, less the k smallest, averaged over N - k and capped at 100. N is the
+     * host count Operations states or the number of values given if that is more; k is the number of host
+     * failures HA tolerates, 0 when it is not known. A host the count includes but that has no value is taken as 0.
+     * Nothing when N - k is not positive.
      */
-    public static Double cluster(List<Double> hostValues, Double hostCount, Double failoverLevel) {
+    public static Double ofCluster(List<Double> hostValues, Double hostCount, Double failoverLevel) {
         int n = Math.max(hostCount == null ? 0 : (int) (double) hostCount, hostValues.size());
         int k = failoverLevel == null ? 0 : (int) (double) failoverLevel;
         if (n - k <= 0) return null;

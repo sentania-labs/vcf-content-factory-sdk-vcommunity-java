@@ -1,6 +1,6 @@
 package com.vcfcf.adapters.vcommunity.kpi;
 
-/** The size at which a VM becomes a monster on its host (the three account settings, map D2). */
+/** How large a VM must be, against its host, to count as a monster (the account's three settings, design 7.1). */
 public final class MonsterVm {
     public final double ratioOfCores;
     public final double ratioOfDram;

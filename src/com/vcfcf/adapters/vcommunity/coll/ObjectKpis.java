@@ -63,7 +63,10 @@ final class ObjectKpis {
         boolean powered;
         boolean propsFailed;
         boolean statsFailed;
+        /** The share statistics (the fallback for a missing share property) could not be read. */
         boolean sharesFailed;
+        /** The host MoRef named by the VM's Operations property {@code summary|parentHost}, for a VM whose vCenter host was unreadable. */
+        String hostName;
         Double vcpus;
         Double memoryMb;
         Double cpuShares;
@@ -84,7 +87,7 @@ final class ObjectKpis {
         Map<String, Double> stats = Collections.emptyMap();
         Map<String, String> props = Collections.emptyMap();
         Map<String, Map<String, Double>> nic;
-        boolean answered; // the statistics or the properties answered for it
+        boolean answered; // an answer named it (as upstream tests it, whether or not a sample survived the age limit)
         boolean statsFailed;
         boolean propsFailed;
         boolean nicFailed;
@@ -124,6 +127,8 @@ final class ObjectKpis {
     private final Set<String> hostsWithUnknownVmProps = new HashSet<>();
     private final Set<String> hostsWithUnknownVmStats = new HashSet<>();
     private boolean vmListOk;
+    /** False when a VM could not be placed on a host, so no host or cluster figure over VMs can be trusted. */
+    private boolean placementOk = true;
     private final Map<String, HostF> hostsByMoref = new LinkedHashMap<>();
     private final Map<String, ClusterF> clustersByMoref = new LinkedHashMap<>();
 
@@ -186,6 +191,7 @@ final class ObjectKpis {
             v.memoryMb = kb == null ? null : kb / 1024.0;
             v.cpuShares = num(p.get(StatKeys.VM_CPU_SHARES));
             v.memShares = num(p.get(StatKeys.VM_MEM_SHARES));
+            v.hostName = p.get(StatKeys.VM_PARENT_HOST);
         });
         x.account(props, c, FailureCause.opsProps("vm"), "the properties of the virtual machines");
         for (String id : props.failedIds) vmsByRid.get(id).propsFailed = true;
@@ -220,6 +226,12 @@ final class ObjectKpis {
         }
         for (VmF v : vmsByRid.values()) {
             String host = m.hostOfVm(v.moref);
+            if (!m.vmHostKnown(v.moref)) {
+                // vCenter would not say where this VM runs: place it as the original does, by the host name Operations
+                // holds, when exactly one host has that name; else the placement of every VM is in doubt
+                host = v.propsFailed ? null : m.hostByName(v.hostName);
+                if (host == null) placementOk = false;
+            }
             if (host == null) continue;
             if (v.propsFailed) {
                 hostsWithUnknownVmProps.add(host);
@@ -234,14 +246,21 @@ final class ObjectKpis {
 
     /** {@code shares / units}, rounded to two decimals; no value when either is missing or the units are 0. */
     private void shares(VmF v) {
-        if (v.propsFailed || v.sharesFailed) {
+        if (v.propsFailed) {
             x.withheld(2);
             return;
         }
-        Double cpu = perUnit(v.cpuShares, v.vcpus);
-        Double mem = perUnit(v.memShares, v.memoryMb);
-        if (cpu != null) x.stat(v.rid, G + "Configuration|Share per vCPU", PyRound.round2(cpu));
-        if (mem != null) x.stat(v.rid, G + "Configuration|Share per MB of Memory", PyRound.round2(mem));
+        // a failed fallback read costs only the share that needed it: one found in the properties is known
+        if (v.cpuShares == null && v.sharesFailed) x.withheld(1);
+        else {
+            Double cpu = perUnit(v.cpuShares, v.vcpus);
+            if (cpu != null) x.stat(v.rid, G + "Configuration|Share per vCPU", PyRound.round2(cpu));
+        }
+        if (v.memShares == null && v.sharesFailed) x.withheld(1);
+        else {
+            Double mem = perUnit(v.memShares, v.memoryMb);
+            if (mem != null) x.stat(v.rid, G + "Configuration|Share per MB of Memory", PyRound.round2(mem));
+        }
     }
 
     private static Double perUnit(Double shares, Double units) {
@@ -259,10 +278,10 @@ final class ObjectKpis {
             if (d != null) any = true;
         }
         v.contention = any ? cont : null;
-        KpiScorer.Computed perf = KpiScorer.compute(KpiTable.VM_PERFORMANCE, VmKpis.vmPerformanceValues(s), false);
+        KpiScorer.Evaluation perf = KpiScorer.evaluate(KpiTable.VM_PERFORMANCE, VmKpis.vmPerformanceValues(s), false);
         publishRows(v.rid, VmKpis.VM_GROUP, KpiTable.VM_PERFORMANCE, perf.rows);
         if (perf.score != null) x.stat(v.rid, G + VmKpis.VM_GROUP + "|VM Performance Score", perf.score);
-        KpiScorer.Computed guest = KpiScorer.compute(KpiTable.GUEST_OS_PERFORMANCE, VmKpis.guestValues(s), false);
+        KpiScorer.Evaluation guest = KpiScorer.evaluate(KpiTable.GUEST_OS_PERFORMANCE, VmKpis.guestValues(s), false);
         if (guest.score != null) x.stat(v.rid, G + VmKpis.GUEST_GROUP + "|Guest OS Performance Score", guest.score);
         Double kpi = VmKpis.vmGuestOsKpi(perf.score, guest.score);
         if (kpi != null) x.stat(v.rid, StatKeys.VM_GUEST_KPI, kpi);
@@ -298,11 +317,12 @@ final class ObjectKpis {
             byRid.put(rid, f);
             rids.add(rid);
         }
-        OpsReads.Report st = x.reads.latestStats(rids, StatKeys.HOST_STATS, OpsReads.STALE_MS, x.now(), (id, s) -> {
+        OpsReads.Report st = x.reads.latestStats(rids, StatKeys.HOST_STATS, OpsReads.STALE_MS, x.now(),
+                OpsReads.HOST_BATCH, (id, s) -> {
             HostF f = byRid.get(id);
             if (f == null) return;
             f.stats = s;
-            f.answered |= !s.isEmpty();
+            f.answered = true;
         });
         x.account(st, c, FailureCause.opsStats("host"), "the statistics of the hosts");
         for (String id : st.failedIds) byRid.get(id).statsFailed = true;
@@ -310,7 +330,7 @@ final class ObjectKpis {
             HostF f = byRid.get(id);
             if (f == null) return;
             f.props = p;
-            f.answered |= !p.isEmpty();
+            f.answered = true;
         });
         x.account(pr, c, FailureCause.opsProps("host"), "the properties of the hosts");
         for (String id : pr.failedIds) byRid.get(id).propsFailed = true;
@@ -329,7 +349,7 @@ final class ObjectKpis {
             for (VmF v : poweredOnByHost.getOrDefault(f.moref, Collections.<VmF>emptyList())) {
                 f.inv.vms.add(new HostInv.Vm(v.vcpus, v.memoryMb));
             }
-            if (f.ok()) f.availability = Availability.host(f.stats.get(StatKeys.HOST_POWERED_ON), f.props);
+            if (f.ok()) f.availability = Availability.ofHost(f.stats.get(StatKeys.HOST_POWERED_ON), f.props);
         }
         // upstream publishes no availability at all when no host answered either read (Q15)
         boolean anyAnswer = false;
@@ -341,6 +361,7 @@ final class ObjectKpis {
         if (Quirks.NOTHING_WHEN_NO_HOST_HAS_DATA && !hostsByMoref.isEmpty() && !anyAnswer && !anyFailed) {
             for (HostF f : hostsByMoref.values()) f.availability = null;
             availabilityNoData = true;
+            x.log.warn("No Operational Availability data for any host, so none is published this cycle");
         }
         // network speed: nothing for any host when no host has any NIC speed (Q15)
         boolean anyNic = false;
@@ -351,7 +372,7 @@ final class ObjectKpis {
         }
         networkNoData = Quirks.NOTHING_WHEN_NO_HOST_HAS_DATA && !hostsByMoref.isEmpty() && !anyNic && !nicFailed;
         if (networkNoData) {
-            x.log.info("No NIC speeds for any host, so no Network Speed Degradation this cycle");
+            x.log.warn("No NIC speeds for any host, so no Network Speed Degradation this cycle");
         } else {
             for (HostF f : hostsByMoref.values()) {
                 if (f.nicFailed) continue;
@@ -418,7 +439,7 @@ final class ObjectKpis {
 
     /** The VMs on the host are known with their sizes (what the monster rows need). */
     private boolean vmSizesOk(String hostMoref) {
-        return m.vmsRead() && vmListOk && !hostsWithUnknownVmProps.contains(hostMoref);
+        return m.vmListRead() && vmListOk && placementOk && !hostsWithUnknownVmProps.contains(hostMoref);
     }
 
     private void publishHosts() {
@@ -455,7 +476,7 @@ final class ObjectKpis {
      */
     private void publishKpi(String rid, String group, String key, KpiMetric[] metrics, Map<String, Double> raw,
             boolean higherIsWorse, int unknownRows) {
-        KpiScorer.Computed r = KpiScorer.compute(metrics, raw, higherIsWorse);
+        KpiScorer.Evaluation r = KpiScorer.evaluate(metrics, raw, higherIsWorse);
         publishRows(rid, group, metrics, r.rows);
         if (unknownRows > 0) {
             x.withheld(unknownRows + 1);
@@ -547,14 +568,14 @@ final class ObjectKpis {
         for (HostF h : cl.hosts) {
             invs.add(h.inv);
             stats.put(h.inv, h.stats);
-            anyRunning |= ClusterConsumption.hostIsRunning(h.inv, h.stats);
+            anyRunning |= ClusterConsumption.servesVms(h.inv, h.stats);
         }
-        // no host runs: no VM runs, so nothing is consumed; no data, whatever the usable capacity says
+        // with no serving host there is no load to measure: nothing is published, even if capacity figures exist
         if (!anyRunning) return;
         Map<String, Double> raw = ClusterConsumption.values(invs, stats::get, cl.stats);
-        if (ClusterConsumption.hasNoUsableCapacity(cl.stats)) {
-            // the hosts run but HA and the buffer leave nothing to VMs: the cluster is full, whatever the rows say
-            KpiScorer.Computed r = KpiScorer.compute(new KpiMetric[0], raw, ClusterConsumption.HIGHER_IS_WORSE);
+        if (ClusterConsumption.usableIsZero(cl.stats)) {
+            // hosts are serving but the reserve takes all the capacity: the score is fixed at full; the rows that can be computed still go out
+            KpiScorer.Evaluation r = KpiScorer.evaluate(new KpiMetric[0], raw, ClusterConsumption.HIGHER_IS_WORSE);
             publishRows(cl.rid, ClusterConsumption.GROUP, KpiTable.CLUSTER_CONSUMPTION, r.rows);
             x.stat(cl.rid, G + ClusterConsumption.GROUP + "|" + ClusterConsumption.KPI_KEY, ClusterConsumption.FULL);
             return;
@@ -595,7 +616,7 @@ final class ObjectKpis {
             availabilityUnknown = true;
             return null;
         }
-        Double v = Availability.cluster(values, count, failover);
+        Double v = Availability.ofCluster(values, count, failover);
         if (v != null) x.stat(cl.rid, StatKeys.CLUSTER_AVAILABILITY, PyRound.round2(v));
         return v;
     }

@@ -40,11 +40,11 @@ public final class Percentile {
     }
 
     /**
-     * The value with only the worst {@code worstPercent} % of the samples beyond it: the
-     * (100 - worstPercent)th percentile when higher is worse, the same rank from the low end when
-     * higher is better. 0 is the single worst sample.
+     * Sets the worst {@code worstPercent} % of the samples aside and gives the worst one left: the
+     * (100 - worstPercent)th percentile where higher is worse, the same rank counted from the low end where higher
+     * is better. With 0 nothing is set aside, so it is the extreme sample itself.
      */
-    public static Double worst(List<Double> v, int worstPercent, boolean higherIsWorse) {
+    public static Double worstTail(List<Double> v, int worstPercent, boolean higherIsWorse) {
         if (v.isEmpty()) return null;
         if (higherIsWorse) return nearestRank(v, 100 - worstPercent);
         double[] neg = new double[v.size()];

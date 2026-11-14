@@ -44,7 +44,10 @@ public final class StatKeys {
     public static final String VM_MEMORY_KB = "config|hardware|memoryKB";
     public static final String VM_CPU_SHARES = "config|cpuAllocation|shares|shares";
     public static final String VM_MEM_SHARES = "config|memoryAllocation|shares|shares";
-    public static final List<String> VM_PROPS = unique(VM_POWER, VM_VCPUS, VM_MEMORY_KB, VM_CPU_SHARES, VM_MEM_SHARES);
+    /** The name of the host a VM runs on, as Operations holds it: used only to place a VM whose host vCenter would not say. */
+    public static final String VM_PARENT_HOST = "summary|parentHost";
+    public static final List<String> VM_PROPS = unique(VM_POWER, VM_VCPUS, VM_MEMORY_KB, VM_CPU_SHARES, VM_MEM_SHARES,
+            VM_PARENT_HOST);
     public static final List<String> SHARE_KEYS = unique(VM_CPU_SHARES, VM_MEM_SHARES);
     public static final String POWERED_ON = "Powered On";
 

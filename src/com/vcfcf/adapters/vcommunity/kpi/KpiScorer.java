@@ -23,8 +23,8 @@ public final class KpiScorer {
         return Math.pow(2.0, (100.0 - score) / SCORE_DROP_PER_TIER);
     }
 
-    /** True when the value is in the green tier: at or below best, or below the green limit. */
-    public static boolean isGreen(KpiMetric m, double value) {
+    /** Whether the value lies in the best band: at or beyond the best limit, or short of the green limit (compared negated for a higher-is-better row). */
+    public static boolean inGreen(KpiMetric m, double value) {
         double v = value;
         double best = m.best;
         double green = m.green;
@@ -48,7 +48,7 @@ public final class KpiScorer {
         if (v <= tierStart) return 100.0;
         for (int t = 0; t < 4; t++) {
             double tierEnd = limits[t + 1];
-            // a tier with no width, such as green when it is one value, holds no value
+            // two equal limits enclose no values, so the search moves to the next band
             if (tierEnd == tierStart) continue;
             if (v < tierEnd || t == 3) {
                 double distance = Math.min((v - tierStart) / (tierEnd - tierStart), 1.0);
@@ -61,10 +61,10 @@ public final class KpiScorer {
     }
 
     /**
-     * The KPI of rows whose values are already rounded: null when no row has a value, 100 when every
-     * row with a value was skipped as green, else the rounded weighted mean.
+     * Combines rows whose values are already rounded: no result when no row has a value; 100 when every row that has
+     * one is in a band that is set aside (so nothing is wrong); otherwise the weighted mean, rounded.
      */
-    public static Double kpi(KpiMetric[] metrics, Map<String, Double> values) {
+    public static Double combine(KpiMetric[] metrics, Map<String, Double> values) {
         double totalWeighted = 0.0;
         double totalWeight = 0.0;
         boolean anyData = false;
@@ -74,7 +74,7 @@ public final class KpiScorer {
             anyData = true;
             double s = score(m, value);
             double w = weight(s);
-            if (m.skipWhenGreen && isGreen(m, value)) continue;
+            if (m.skipWhenGreen && inGreen(m, value)) continue;
             totalWeighted += s * w;
             totalWeight += w;
         }
@@ -83,29 +83,29 @@ public final class KpiScorer {
     }
 
     /** What {@link #compute} gave: the rounded row values and the KPI as published. */
-    public static final class Computed {
+    public static final class Evaluation {
         /** The rows that have a value, each rounded to two decimals (all of them, published or not). */
         public final Map<String, Double> rows;
         /** The KPI as published (flipped for a higher-is-worse KPI), or null when no row had a value. */
         public final Double score;
 
-        Computed(Map<String, Double> rows, Double score) {
+        Evaluation(Map<String, Double> rows, Double score) {
             this.rows = rows;
             this.score = score;
         }
     }
 
     /**
-     * The original's {@code publish_kpi} without the publishing: round every value, score them, flip
-     * for a KPI where higher is worse (100 minus the score, rounded again).
+     * Rounds every row value to two places, combines the rows, and for a higher-is-worse KPI reports 100 less the
+     * result, rounded again. Nothing is queued here; the caller decides what to send.
      */
-    public static Computed compute(KpiMetric[] metrics, Map<String, Double> raw, boolean higherIsWorse) {
+    public static Evaluation evaluate(KpiMetric[] metrics, Map<String, Double> raw, boolean higherIsWorse) {
         Map<String, Double> rows = new LinkedHashMap<>();
         for (Map.Entry<String, Double> e : raw.entrySet()) {
             if (e.getValue() != null) rows.put(e.getKey(), PyRound.round2(e.getValue()));
         }
-        Double score = kpi(metrics, rows);
+        Double score = combine(metrics, rows);
         if (score != null && higherIsWorse) score = PyRound.round2(100.0 - score);
-        return new Computed(rows, score);
+        return new Evaluation(rows, score);
     }
 }
