@@ -1,5 +1,6 @@
 package com.vcfcf.adapters.vcommunity;
 
+import com.vcfcf.adapters.vcommunity.coll.DerivedPhase;
 import com.vcfcf.adapters.vcommunity.coll.LibraryCollector;
 import com.vcfcf.adapters.vcommunity.coll.OwnObject;
 import com.vcfcf.adapters.vcommunity.coll.OwnObjects;
@@ -10,6 +11,7 @@ import com.vcfcf.adapters.vcommunity.health.CollectionHealth.Status;
 import com.vcfcf.adapters.vcommunity.health.FailureCause;
 import com.vcfcf.adapters.vcommunity.health.Failures;
 import com.vcfcf.adapters.vcommunity.health.WarnCounter;
+import com.vcfcf.adapters.vcommunity.kpi.MonsterVm;
 import com.vcfcf.adapters.vcommunity.list.CheckListStore;
 import com.vcfcf.adapters.vcommunity.list.ConfigFileFetch;
 import com.vcfcf.adapters.vcommunity.list.ListKind;
@@ -134,6 +136,7 @@ public final class CycleEngine {
     private final Clock clock;
     private final LastPushed lastPushed = new LastPushed(REFRESH_EVERY);
     private final PropertyCollection properties;
+    private final DerivedPhase derived;
     private final LibrarySource libraries;
 
     private long cycleNo;
@@ -166,6 +169,7 @@ public final class CycleEngine {
         this.log = warns;
         this.clock = clock;
         this.properties = new PropertyCollection(warns, clock::now);
+        this.derived = new DerivedPhase(warns, clock::now);
     }
 
     /**
@@ -272,6 +276,30 @@ public final class CycleEngine {
                     p2 = properties.run(in);
                     s.collectorStatus.putAll(p2.status);
                     if (p2.deadlineHit) s.deadlineHit = true;
+                    // D: the derived metrics, from the membership those reads gave and what Operations holds
+                    DerivedPhase.Input d = new DerivedPhase.Input();
+                    d.ops = ops;
+                    d.vcid = vcid;
+                    d.vcenterResourceId = vcId;
+                    d.members = p2.membership;
+                    d.opsMap = kind -> properties.opsMap(kind, vcid);
+                    d.markStale = properties::markStale;
+                    d.periodHours = cfg.periodHours;
+                    d.checkHour = cfg.checkHour;
+                    d.checkMinute = cfg.checkMinute;
+                    d.worstPercent = cfg.worstPercent;
+                    d.monster = MonsterVm.of(cfg.monsterCpuPercent, cfg.monsterMemPercent, cfg.monsterMemMinGb);
+                    d.cycle = cycleNo;
+                    d.startMs = t0;
+                    d.deadlineMs = deadlineMs;
+                    d.ps = ps;
+                    d.failures = failures;
+                    DerivedPhase.Result dr = derived.run(d);
+                    for (Map.Entry<String, Status> e : dr.status.entrySet()) {
+                        // a collector the deadline kept from running stays "not run", whatever it found missing after
+                        if (s.collectorStatus.get(e.getKey()) != Status.NOT_RUN) s.collectorStatus.put(e.getKey(), e.getValue());
+                    }
+                    if (dr.deadlineHit) s.deadlineHit = true;
                     // the count is whole only when the vCenter lookup and every kind's read and map completed
                     s.objectsUnmatched = s.objectsUnmatched == null || p2.unmatched == null ? null
                             : Integer.valueOf(s.objectsUnmatched + p2.unmatched);
