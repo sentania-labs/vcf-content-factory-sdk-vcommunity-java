@@ -225,13 +225,27 @@ public final class PyText {
         }
     }
 
+    /** The longest {@code str()} of a JSON object or list this builds; a longer one is not reproduced. */
+    static final int MAX_REPR = 4096;
+
     /**
      * {@code str(value)} of a value read from a JSON answer: a string as it is, a boolean as
-     * {@code True} / {@code False}, a number as Python writes it (a whole one without a fraction).
-     * Null for JSON null and for an object or a list, whose Python text is not reproduced; the
-     * caller reads null as "not there" and withholds.
+     * {@code True} / {@code False}, a number as Python writes it (a whole one without a fraction), and an
+     * object or a list as Python's {@code repr} of the dict or list ({@code {'a': 1, 'b': [True, None]}}).
+     * The one thing a JSON text cannot say is whether {@code 1} was an int or {@code 1.0} a float, so a
+     * whole number inside an object or list prints as an int. Null for JSON null, and for an object or
+     * list nested deeper than 8 or longer than {@value #MAX_REPR} characters, which are not reproduced
+     * (the caller reads null as "not there").
      */
     public static String json(Object v) {
+        if (v instanceof java.util.Map || v instanceof java.util.List) {
+            StringBuilder b = new StringBuilder();
+            return repr(v, b, 0) && b.length() <= MAX_REPR ? b.toString() : null;
+        }
+        return jsonScalar(v);
+    }
+
+    private static String jsonScalar(Object v) {
         if (v == null) return null;
         if (v instanceof String) return (String) v;
         if (v instanceof Boolean) return ((Boolean) v) ? "True" : "False";
@@ -241,6 +255,63 @@ public final class PyText {
             return repr(d);
         }
         return null;
+    }
+
+    /** Python's {@code repr} of a JSON value into {@code b}; false when it cannot (too deep, too long). */
+    private static boolean repr(Object v, StringBuilder b, int depth) {
+        if (depth > 8 || b.length() > MAX_REPR) return false;
+        if (v == null) {
+            b.append("None");
+        } else if (v instanceof String) {
+            b.append(strRepr((String) v));
+        } else if (v instanceof java.util.Map) {
+            b.append('{');
+            boolean first = true;
+            for (java.util.Map.Entry<?, ?> e : ((java.util.Map<?, ?>) v).entrySet()) {
+                if (!first) b.append(", ");
+                first = false;
+                b.append(strRepr(String.valueOf(e.getKey()))).append(": ");
+                if (!repr(e.getValue(), b, depth + 1)) return false;
+            }
+            b.append('}');
+        } else if (v instanceof java.util.List) {
+            b.append('[');
+            boolean first = true;
+            for (Object o : (java.util.List<?>) v) {
+                if (!first) b.append(", ");
+                first = false;
+                if (!repr(o, b, depth + 1)) return false;
+            }
+            b.append(']');
+        } else {
+            String s = jsonScalar(v);
+            if (s == null) return false;
+            b.append(s);
+        }
+        return true;
+    }
+
+    /** Python's {@code repr(str)}: single quotes unless the text has a single and no double quote. */
+    static String strRepr(String s) {
+        char q = s.indexOf('\'') >= 0 && s.indexOf('"') < 0 ? '"' : '\'';
+        StringBuilder b = new StringBuilder().append(q);
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == q || c == '\\') {
+                b.append('\\').append(c);
+            } else if (c == '\n') {
+                b.append("\\n");
+            } else if (c == '\r') {
+                b.append("\\r");
+            } else if (c == '\t') {
+                b.append("\\t");
+            } else if (c < 0x20 || (c >= 0x7f && c < 0xa0)) {
+                b.append(String.format("\\x%02x", (int) c));
+            } else {
+                b.append(c);
+            }
+        }
+        return b.append(q).toString();
     }
 
     /** Managed object types whose pyVmomi class lives in a sub-namespace. */

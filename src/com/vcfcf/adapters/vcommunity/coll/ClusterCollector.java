@@ -62,9 +62,12 @@ public final class ClusterCollector {
         o.statY(CFG + "Number of Effective Hosts", effective != null ? effective
                 : summaryRead && Quirks.UNSET_AS_UPSTREAM ? Double.valueOf(0) : null);
         ha(o, row, row.val("configuration.dasConfig"));
-        boolean drsOn = drs(o, row.val("configuration.drsConfig"), row.val("configurationEx"));
+        XmlNode drsCfg = row.val("configuration.drsConfig");
+        // a DRS configuration that could not be read says nothing about whether DRS is on: no DRS key, no score
+        boolean drsRead = drsCfg != null || row.isUnset("configuration.drsConfig");
+        boolean drsOn = drs(o, drsCfg, row.val("configurationEx"), drsRead);
         evc(o, summary, summaryRead);
-        drsScore(o, summary, drsOn, row);
+        drsScore(o, summary, drsOn, drsRead);
         dpm(o, row.val("configurationEx"));
         return o;
     }
@@ -108,13 +111,13 @@ public final class ClusterCollector {
     }
 
     /** @return whether DRS is on (true only when the cluster says so) */
-    private static boolean drs(ObjectOut o, XmlNode drsCfg, XmlNode ex) {
+    private static boolean drs(ObjectOut o, XmlNode drsCfg, XmlNode ex, boolean drsRead) {
         boolean on = "True".equals(Vals.bool(drsCfg, "enabled"));
         XmlNode proactive = Vals.at(ex, "proactiveDrsConfig");
         // Without the proactive configuration the original raises before it sends any of the four.
         String proactiveEnabled = proactive == null ? null : Vals.bool(proactive, "enabled");
         String maxVcpus = null;
-        boolean bad = proactive == null;
+        boolean bad = proactive == null || !drsRead;
         for (XmlNode opt : Vals.items(Vals.at(ex, "drsConfig"))) {
             if ("option".equals(opt.name) && "MaxVcpusPerCore".equals(opt.childText("key"))) {
                 String v = pyInt(PyText.scalar(opt.child("value")));
@@ -151,7 +154,7 @@ public final class ClusterCollector {
      * The original: 0 while DRS is off, 0 for a negative score, the score otherwise; no summary, or a
      * score that is unset while DRS is on, raises there and sends nothing (Q9 for the zeros).
      */
-    private static void drsScore(ObjectOut o, XmlNode summary, boolean drsOn, BulkRow row) {
+    private static void drsScore(ObjectOut o, XmlNode summary, boolean drsOn, boolean drsRead) {
         Integer score = null;
         String s = Vals.integer(summary, "drsScore");
         if (s != null) {
@@ -163,7 +166,7 @@ public final class ClusterCollector {
         }
         Double zero = Quirks.UNSET_AS_UPSTREAM ? Double.valueOf(0) : null;
         Double v;
-        if (summary == null) {
+        if (summary == null || !drsRead) {
             v = null;
         } else if (!drsOn) {
             v = zero;

@@ -61,8 +61,11 @@ public final class PropertiesTest {
 
         volatile String presented = "ab".repeat(32);
 
+        CycleEngine.Result lastResult;
+
         CycleEngine.Result run() throws Exception {
             CycleEngine.Result r = engine.run(clock.get() + 240_000);
+            lastResult = r;
             Coverage.record(ops);
             return r;
         }
@@ -202,6 +205,8 @@ public final class PropertiesTest {
             run("no sentinel, no null, no secret", () -> noSentinels(fake));
             run("sparse objects print the original's text for unset values, and are counted", () -> sparse(fake));
             run("an unset value is the original's text; a failed read sends nothing", () -> unsetVersusFailed(fake));
+            run("a refused privilege is one failed read naming it", () -> privilegeRefused(fake));
+            run("failed reads of every family send no placeholder and are counted", () -> failedReadFamilies(fake));
             run("failed reads withhold and count", () -> failedReads(fake));
             run("a failed page discards the whole type", () -> failedPage(fake));
             run("per-host call failures", () -> hostCallFailures(fake));
@@ -345,7 +350,7 @@ public final class PropertiesTest {
             eq(r, "res-host-4", "Network|Search Domain", "null"); // no search domain: "null"
             // the hosts' install-date and packages calls went only to the connected host that has the manager
             T.eq(1, r.count("installDate"), "one install date call");
-            T.eq(1, r.count("FetchSoftwarePackages"), "one packages call");
+            T.eq(1, r.count("fetchSoftwarePackages"), "one packages call");
         }
     }
 
@@ -665,6 +670,109 @@ public final class PropertiesTest {
         }
     }
 
+    /** The object loses the value of these paths and vCenter says it could not read them (a missing-set fault). */
+    static SoapFx.Obj unreadable(SoapFx.Obj o, String... paths) {
+        for (String p : paths) {
+            o.vals.remove(p);
+            o.missing(p);
+        }
+        return o;
+    }
+
+    /** Keys must not be sent: a value for them would be one made up from a failed read. */
+    static void absent(Rig r, String rid, String... keys) {
+        for (String k : keys) {
+            T.check(r.p(0, rid, V + k) == null && r.st(0, rid, V + k) == null,
+                    rid + " must not carry " + k + " (its read failed) but has " + r.p(0, rid, V + k) + r.st(0, rid, V + k));
+        }
+    }
+
+    /**
+     * B1 to B4 and the sweep behind them (Q8, Q9, Q10): for every family of key that has a placeholder for an
+     * unset value, a read that FAILED (a missing-set fault) sends nothing for it and is counted, while the
+     * same key on an object whose read worked and is unset gets the original's text.
+     */
+    static void failedReadFamilies(FakeVc fake) throws Exception {
+        String ha = "Cluster Configuration|vSphere HA|";
+        String drs = "Cluster Configuration|Distributed Resource Scheduler|";
+        String evc = "Cluster Configuration|EVC|";
+        // clusters: DRS (B1), HA, summary
+        FakeVcenter vc = dataset();
+        unreadable(vc.byType.get("ClusterComputeResource").get(0), "configuration.drsConfig");
+        unreadable(vc.byType.get("ClusterComputeResource").get(1), "summary");
+        unreadable(vc.byType.get("ClusterComputeResource").get(2), "configuration.dasConfig");
+        try (Rig r = standard(fake, vc)) {
+            r.run();
+            absent(r, C1, drs + "Proactive DRS", drs + "Scale Descendants Shares", drs + "CPU Over-Commitment",
+                    drs + "Virtual Machine Automation Enabled", drs + "DRS Score");
+            eq(r, C1, ha + "Host Monitoring", "enabled"); // what did read is sent
+            eq(r, C1, "Cluster Configuration|Configuration Status", "green");
+            absent(r, "res-domain-c2", evc + "Enabled", evc + "Mode", "Cluster Configuration|Number of Effective Hosts",
+                    drs + "DRS Score");
+            absent(r, "res-domain-c3", ha + "Host Monitoring", ha + "VM Monitoring", ha + "Failure Interval",
+                    ha + "Max Failures", ha + "Minimum Up Time");
+            T.check((Double) r.health(0, "Reads Failed in Last Cycle") >= 1, "the failed reads are counted");
+            T.check((Double) r.health(0, "Values Withheld in Last Cycle") >= 10, "and the values left out");
+        }
+        // hosts: the option read (B2), the image manager (B3), DNS, PCI, adapters, EVC, BIOS vendor
+        vc = dataset();
+        unreadable(vc.byType.get("HostSystem").get(0), "config.option", "configManager.imageConfigManager",
+                "config.network.dnsConfig", "hardware.pciDevice", "config.storageDevice.hostBusAdapter",
+                "summary.maxEVCModeKey", "hardware.biosInfo.vendor");
+        try (Rig r = standard(fake, vc)) {
+            r.run();
+            absent(r, H, "Configuration|VAAI|ATS Heartbeat", "Configuration|VAAI|ATS Locking",
+                    "Configuration|Advanced System Settings|Net.TcpipHeapSize", "Configuration|Install Date|UTC",
+                    "Network|DHCP", "Network|Search Domain", "Storage Adapter|Number of HBA", "Configuration|Max EVC",
+                    "Hardware|BIOS Vendor", "Network|Device:vmnic2|PCI Vendor Name", "Network|Device:vmnic2|PCI Vendor ID (VID)",
+                    "Storage Adapter:vmhba2|Device");
+            eq(r, H, "Configuration|Config Status", "green");
+            eq(r, H, "Network|Device:vmnic0|Status", "Connected");
+            T.check(r.count("installDate") == 0, "no call for a host whose image manager could not be read");
+        }
+        // a host that left between the host read and the option read: no option list, no ATS "null"
+        vc = dataset();
+        vc.byType.get("HostSystem").get(0).vals.remove("config.option");
+        try (Rig r = standard(fake, vc)) {
+            r.run();
+            absent(r, H, "Configuration|VAAI|ATS Heartbeat", "Configuration|VAAI|ATS Locking");
+            eq(r, H, "Configuration|Config Status", "green");
+            T.contains(firstFailure(r, 0), "R-HOO", "counted as a row not returned");
+        }
+        // VMs: timeout, customization, detailed data, devices, firmware
+        vc = dataset();
+        unreadable(vc.byType.get("VirtualMachine").get(0), "config.vmOpNotificationTimeout",
+                "guest.customizationInfo.customizationStatus", "guest.guestDetailedData", "config.hardware.device",
+                "config.firmware");
+        try (Rig r = standard(fake, vc)) {
+            r.run();
+            absent(r, VM, "Configuration|Op Notification Timeout", "Guest|Customization Status",
+                    "Guest|Detailed Data|Build Number", "Guest|Detailed Data|Pretty Name",
+                    "Configuration|SCSI Controllers|Count", "Configuration|Firmware");
+            eq(r, VM, "Guest|State", "running");
+        }
+        // a path vCenter refuses on every VM (InvalidProperty): nothing for it, on any VM, whatever its value
+        vc = dataset();
+        vc.invalid.add("config.vmOpNotificationTimeout");
+        vc.invalid.add("guest.guestDetailedData");
+        try (Rig r = standard(fake, vc)) {
+            r.run();
+            for (String vm : new String[] {VM, "res-vm-2"}) {
+                absent(r, vm, "Configuration|Op Notification Timeout", "Guest|Detailed Data|CPE String");
+            }
+            eq(r, VM, "Configuration|Firmware", "efi");
+            T.contains(r.log.all(), "F-SOAP-INVALIDPROP", "named");
+        }
+        // datastore: no info, no status
+        vc = dataset();
+        unreadable(vc.byType.get("Datastore").get(1), "info", "overallStatus");
+        try (Rig r = standard(fake, vc)) {
+            r.run();
+            absent(r, "res-datastore-2", "Identifiers|Number of Extents", "Summary|Status");
+            eq(r, "res-datastore-2", "Summary|SIOC Enabled", "False");
+        }
+    }
+
     /**
      * A value that was read and is unset is the original's text; one whose read FAILED is not sent and is
      * counted: a refused path, and a path vCenter could not read for the object (missing set).
@@ -677,6 +785,11 @@ public final class PropertiesTest {
         denied.vals.remove("config.firmware"); // vCenter returns no value for what it could not read
         denied.vals.remove("guest.guestState");
         vc.add(denied.missing("config.firmware").missing("guest.guestState"));
+        // a host whose DNS configuration came back without the dhcp flag: str(None); with none at all: "null" (N1)
+        vc.add(new SoapFx.Obj("HostSystem", "host-12").name("flagless")
+                .put("runtime.connectionState", SoapFx.en("HostSystemConnectionState", "connected"))
+                .put("config.network.dnsConfig", SoapFx.obj("HostDnsConfig", SoapFx.e("hostName", "x")))
+                .put("config.option", SoapFx.arr("ArrayOfOptionValue", "")));
         try (Rig r = standard(fake, vc)) {
             CycleEngine.Result res = r.run();
             T.check(res.failure == null, "no failure: " + res.failure);
@@ -686,6 +799,8 @@ public final class PropertiesTest {
             T.check(r.p(0, vm9, V + "Configuration|Firmware") == null, "a path vCenter could not read for this VM: not \"None\"");
             T.check(r.p(0, vm9, V + "Guest|State") == null, "likewise");
             eq(r, "res-vm-2", "Configuration|Firmware", "None"); // unset on a read that worked: the text
+            eq(r, "res-host-12", "Network|DHCP", "None"); // the DNS configuration without the flag: str(None)
+            eq(r, "res-host-4", "Network|DHCP", "True");
             T.check(r.p(0, vm9, V + "Configuration|Boot Options|Delay") != null, "what read is sent");
             T.contains(firstFailure(r, 0), "F-SOAP", "the failed reads are counted");
             T.check((Double) r.health(0, "Values Withheld in Last Cycle") >= 1, "the values left out are counted");
@@ -815,6 +930,31 @@ public final class PropertiesTest {
         }
     }
 
+    /** W6: a refusal for lack of Host.Config.Image is one failed read of the cycle that names the privilege, not one per host. */
+    static void privilegeRefused(FakeVc fake) throws Exception {
+        FakeVcenter vc = dataset();
+        vc.add(P2Fixtures.hostFull("host-5", "esx5", "imgmgr-5"));
+        vc.add(P2Fixtures.hostFull("host-6", "esx6", "imgmgr-6"));
+        vc.forced.put("installDate", FakeVc.fault("NoPermission", "Permission to perform this operation was denied."));
+        vc.forced.put("fetchSoftwarePackages", FakeVc.fault("NoPermission", "Permission to perform this operation was denied."));
+        try (Rig r = standard(fake, vc)) {
+            r.run();
+            T.eq(3, r.count("installDate"), "every host was asked");
+            T.contains(r.log.all(), "F-HOST-INSTALLDATE: 1 failed read(s)", "one failed read, not one per host");
+            T.contains(r.log.all(), "F-HOST-PACKAGES: 1 failed read(s)", "likewise for the packages");
+            T.contains(r.log.all(), "Host.Config.Image", "and it names the privilege to grant");
+            absent(r, H, "Configuration|Install Date|UTC", "Configuration|Packages:esx-base|Package Name");
+            eq(r, H, "Configuration|Config Status", "green");
+            T.eq(2.0, r.health(0, "Reads Failed in Last Cycle"), "two failed reads in all");
+            // which reads failed, from the health keys alone
+            T.eq("F-HOST-INSTALLDATE x1; F-HOST-PACKAGES x1", r.health(0, "Collector:host|Causes"), "the causes of the host collector");
+            T.eq("None in the last cycle", r.health(0, "Collector:vm|Causes"), "none for a collector that did not fail");
+            T.contains(r.engine == null ? "" : String.valueOf(r.lastResult.failureCausesProperty()), "host: F-HOST-INSTALLDATE x1",
+                    "and all of them in one line for the account");
+            T.check((Double) r.health(0, "Values Withheld in Last Cycle") >= 6, "the values left out are counted per host");
+        }
+    }
+
     static void hostCallFailures(FakeVc fake) throws Exception {
         FakeVcenter vc = dataset();
         vc.add(P2Fixtures.hostFull("host-5", "esx5", "imgmgr-5")); // the manager answers faults
@@ -936,7 +1076,7 @@ public final class PropertiesTest {
             mapAll(r.ops, vc);
             files(r.ops, "", "", "", "");
             r.run();
-            T.eq(0, r.count("FetchSoftwarePackages"), "no packages call without a packages list");
+            T.eq(0, r.count("fetchSoftwarePackages"), "no packages call without a packages list");
             for (FakeVc.Req q : r.reqs("RetrievePropertiesEx")) {
                 T.notContains(q.body, "config.extraConfig", "the extra configuration is not asked for");
             }
@@ -959,7 +1099,7 @@ public final class PropertiesTest {
         try (Rig r = standard(fake, vc)) {
             r.ops.files.remove("esxi_packages");
             r.run();
-            T.eq(0, r.count("FetchSoftwarePackages"), "an absent list is empty");
+            T.eq(0, r.count("fetchSoftwarePackages"), "an absent list is empty");
             eq(r, H, "Configuration|Config Status", "green");
         }
         // a fetch failure keeps the last good list in force (DV-27)
@@ -1213,9 +1353,10 @@ public final class PropertiesTest {
 
     static void deadline(FakeVc fake) throws Exception {
         FakeVcenter vc = dataset();
-        vc.delayMs.put("RetrievePropertiesEx:VirtualMachine", 6000);
+        // the deadline is far enough for the other reads to finish on a loaded machine, and the VM read is far past it
+        vc.delayMs.put("RetrievePropertiesEx:VirtualMachine", 15000);
         try (Rig r = standard(fake, vc)) {
-            CycleEngine.Result res = r.engine.run(r.clock.get() + 1500);
+            CycleEngine.Result res = r.engine.run(r.clock.get() + 4000);
             Coverage.record(r.ops);
             T.check(res.summary.deadlineHit, "the deadline was reached");
             T.check(r.ops.pushedProps.get(0).get(VM) == null && r.ops.pushedStats.get(0).get(VM) == null,
@@ -1298,7 +1439,7 @@ public final class PropertiesTest {
                 T.eq(i % 2 == 0 ? "efi" : "bios", r.p(0, "res-vm-" + (1000 + i), V + "Configuration|Firmware"), "VM " + i);
             }
             T.eq(vms, countWith(r, "Configuration|Config Status", "res-vm-"), "every VM carries its status");
-            T.check(System.currentTimeMillis() - t0 < 60_000, "the cycle finished in a reasonable time");
+            T.check(System.currentTimeMillis() - t0 < 180_000, "the cycle finished (a bound against a hang, not a speed claim)");
         }
     }
 
@@ -1426,13 +1567,19 @@ public final class PropertiesTest {
         // a read cut at the deadline pages no further and releases what it holds
         vc = new FakeVcenter();
         for (int i = 0; i < 150; i++) vc.add(vmLight(i));
-        vc.delayMs.put("RetrievePropertiesEx:VirtualMachine", 2500);
+        vc.delayMs.put("RetrievePropertiesEx:VirtualMachine", 6000);
         try (Rig r = new Rig(fake, vc)) {
             mapAll(r.ops, vc);
             files(r.ops, "", "", "", "");
-            CycleEngine.Result res = r.engine.run(r.clock.get() + 1000);
+            CycleEngine.Result res = r.engine.run(r.clock.get() + 2000);
             T.check(res.summary.deadlineHit, "deadline");
-            Thread.sleep(4000); // the abandoned read gets its first page, sees it was stopped, and stops
+            // the abandoned read gets its first page, sees it was stopped, and releases what it holds: wait for
+            // that to be seen (up to 60 s) rather than for a fixed time
+            long until = System.currentTimeMillis() + 60_000;
+            while ((r.count("CancelRetrievePropertiesEx") < 1 || r.count("DestroyView") < 1)
+                    && System.currentTimeMillis() < until) {
+                Thread.sleep(100);
+            }
             T.eq(0, r.count("ContinueRetrievePropertiesEx"), "no page after the deadline");
             T.check(r.count("CancelRetrievePropertiesEx") >= 1, "the token it holds is released");
             T.check(r.count("DestroyView") >= 1, "and the view");

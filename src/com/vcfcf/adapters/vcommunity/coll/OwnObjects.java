@@ -46,6 +46,19 @@ public final class OwnObjects {
         return this;
     }
 
+    /** The kind is not proven read in full after all (the guard of an abrupt drop to none). */
+    public OwnObjects unread(String kind) {
+        kindsRead.remove(kind);
+        return this;
+    }
+
+    /** How many objects of the kind this cycle read. */
+    public int count(String kind) {
+        int n = 0;
+        for (OwnObject o : objects) if (o.kind.equals(kind)) n++;
+        return n;
+    }
+
     /** The kind was read in full this cycle. */
     public OwnObjects read(String kind) {
         kindsRead.add(kind);

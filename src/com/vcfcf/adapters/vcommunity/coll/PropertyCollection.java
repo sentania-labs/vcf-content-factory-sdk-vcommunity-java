@@ -422,6 +422,9 @@ public final class PropertyCollection {
     private HostResult hosts(Input in, List<String> advSettings, List<String> pkgList) {
         Map<String, ObjectOut> byMoref = new LinkedHashMap<>();
         Map<String, MoRef> imageMgr = new HashMap<>();
+        // hosts whose image manager was read and is unset (upstream: install date "null"); a host whose
+        // read of it failed is in neither set, and gets no install date at all
+        Set<String> noImageMgr = new HashSet<>();
         List<MoRef> refs = new ArrayList<>();
         Tally tally = new Tally();
         RetrieveStats st = read(in, C_HOST, HostCollector.request(), row -> {
@@ -433,6 +436,8 @@ public final class PropertyCollection {
             if (im != null && !im.text().isEmpty()) {
                 imageMgr.put(row.obj.value, new MoRef(im.attr("type") == null
                         ? "HostImageConfigManager" : im.attr("type"), im.text()));
+            } else if (row.isUnset("configManager.imageConfigManager")) {
+                noImageMgr.add(row.obj.value);
             }
         });
         if (st == null || allFailed(tally)) return null;
@@ -445,8 +450,9 @@ public final class PropertyCollection {
         for (Map.Entry<String, ObjectOut> e : byMoref.entrySet()) {
             HostCollector.Extras x = new HostCollector.Extras();
             x.installDate = installDate.get(e.getKey());
-            // a host the read named no image manager for is the original's "null"; so is one whose call answered
-            x.installDateRead = !imageMgr.containsKey(e.getKey()) || installAnswered.contains(e.getKey());
+            // a host whose image manager is unset is the original's "null"; so is one whose call answered; a
+            // host whose manager could not be read, or whose call failed, has no answer at all
+            x.installDateRead = noImageMgr.contains(e.getKey()) || installAnswered.contains(e.getKey());
             x.options = options == null ? null : options.get(e.getKey());
             x.packages = wantedPkgs.isEmpty() ? null : packages.get(e.getKey());
             HostCollector.addExtras(e.getValue(), x, advSettings);
@@ -465,6 +471,10 @@ public final class PropertyCollection {
         wanted.add(HostCollector.ATS_LOCKING);
         Map<String, Map<String, String>> out = new HashMap<>();
         com.vcfcf.adapters.vcommunity.vim.RowSink sink = row -> {
+            // no option list: vCenter could not read it (a missing-set fault, a refused path) or the host left
+            // between the two reads and has no configuration; either way there is no answer for this host,
+            // not an empty list, and it is counted below as a row not returned
+            if (row.val("config.option") == null) return;
             Map<String, String> m = new HashMap<>();
             for (XmlNode opt : Vals.items(row.val("config.option"))) {
                 String k = opt.childText("key");
@@ -544,12 +554,29 @@ public final class PropertyCollection {
      * @param out receives the date as ISO UTC text when the call returned one
      * @return true when the call answered (with or without a date); false when it failed (counted)
      */
+    /** The privilege both per-host calls need. */
+    static final String IMAGE_PRIVILEGE = "Host.Config.Image";
+
+    /**
+     * Count a failed per-host call. A refusal for lack of the privilege is the same on every host, so it is
+     * one failed read of the cycle that says what to grant, not one per host (the withheld values are still
+     * counted per host).
+     */
+    private static void hostCallFailed(Input in, String cause, String host, VimResult<?> r, String what) {
+        if ("NoPermission".equals(r.faultClass())) {
+            in.failures.add(C_HOST, cause, "privilege " + IMAGE_PRIVILEGE, 1, what + " could not be read: the "
+                    + "account has no " + IMAGE_PRIVILEGE + " privilege on the vCenter objects; grant it to the "
+                    + "account's role, or those keys stay unsent on every host");
+            return;
+        }
+        in.failures.add(C_HOST, cause, host, 1, what + " could not be read: " + r.message());
+    }
+
     private boolean installDate(Input in, String host, MoRef mgr, String[] out) {
         VimResult<XmlNode> r = in.vim.call("<installDate xmlns=\"urn:vim25\"><_this type=\""
                 + xml(mgr.type) + "\">" + xml(mgr.value) + "</_this></installDate>", "installDate", CALL_MS);
         if (!r.isOk()) {
-            in.failures.add(C_HOST, FailureCause.HOST_INSTALL_DATE, host, 1,
-                    "the install date of the host could not be read: " + r.message());
+            hostCallFailed(in, FailureCause.HOST_INSTALL_DATE, host, r, "the install date of the host");
             return false;
         }
         XmlNode rv = r.value().find("returnval");
@@ -561,9 +588,9 @@ public final class PropertyCollection {
         List<HostCollector.Pkg> out = new ArrayList<>();
         PathSpec spec = PathSpec.keeping("name", "version", "acceptanceLevel", "maintenanceModeRequired",
                 "summary", "type", "vendor");
-        VimResult<Long> r = in.vim.stream("<FetchSoftwarePackages xmlns=\"urn:vim25\"><_this type=\""
-                + xml(mgr.type) + "\">" + xml(mgr.value) + "</_this></FetchSoftwarePackages>",
-                "FetchSoftwarePackages", CALL_MS, PACKAGES_MAX_BYTES,
+        VimResult<Long> r = in.vim.stream("<fetchSoftwarePackages xmlns=\"urn:vim25\"><_this type=\""
+                + xml(mgr.type) + "\">" + xml(mgr.value) + "</_this></fetchSoftwarePackages>",
+                "fetchSoftwarePackages", CALL_MS, PACKAGES_MAX_BYTES,
                 rd -> Returnvals.forEach(rd, spec, n -> {
                     String name = n.childText("name");
                     if (name == null || !wanted.contains(name)) return;
@@ -573,8 +600,7 @@ public final class PropertyCollection {
                             n.rawChildText("summary"), n.rawChildText("type"), n.rawChildText("vendor")));
                 }));
         if (!r.isOk()) {
-            in.failures.add(C_HOST, FailureCause.HOST_PACKAGES, host, 1,
-                    "the software packages of the host could not be read: " + r.message());
+            hostCallFailed(in, FailureCause.HOST_PACKAGES, host, r, "the software packages of the host");
             return null;
         }
         return out;

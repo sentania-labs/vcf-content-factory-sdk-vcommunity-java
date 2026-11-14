@@ -34,6 +34,16 @@ public final class TemplateScan {
         public List<String> datastores;
         /** The parent folder's MoRef value, or null. */
         public String parent;
+        /**
+         * The paths whose read did not work for this template (a missing-set fault, a path vCenter
+         * refused): their fields are unknown, not unset, and nothing is sent for them.
+         */
+        public final java.util.Set<String> unread = new java.util.HashSet<>();
+
+        /** True when the read of the path worked, so that a null field means the property is unset. */
+        public boolean read(String path) {
+            return !unread.contains(path);
+        }
     }
 
     public final List<Row> rows = new ArrayList<>();
@@ -76,6 +86,9 @@ public final class TemplateScan {
             }
             XmlNode p = row.val("parent");
             r.parent = p == null || p.text().isEmpty() ? null : p.text();
+            for (String path : PATHS) {
+                if (!row.readable(path)) r.unread.add(path);
+            }
             rows.add(r);
         } catch (RuntimeException e) {
             broken++;

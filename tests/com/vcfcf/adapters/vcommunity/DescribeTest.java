@@ -227,8 +227,8 @@ public final class DescribeTest {
         Set<String> declared = new TreeSet<>();
         for (Element a : kids(group, "ResourceAttribute")) {
             declared.add("Collection|" + a.getAttribute("key"));
-            if (a.getAttribute("key").equals("last_error")) {
-                T.eq("true", a.getAttribute("isProperty"), "last_error is a property");
+            if (a.getAttribute("key").equals("last_error") || a.getAttribute("key").equals("failure_causes")) {
+                T.eq("true", a.getAttribute("isProperty"), a.getAttribute("key") + " is a property");
             } else {
                 T.eq("false", a.getAttribute("isProperty"), a.getAttribute("key") + " is a metric");
                 T.eq("float", a.getAttribute("dataType"), a.getAttribute("key") + " is a number");
@@ -237,6 +237,7 @@ public final class DescribeTest {
         }
         Set<String> pushed = new TreeSet<>(CollectionHealth.selfMetrics(fullSummary()).keySet());
         pushed.add(CollectionHealth.LAST_ERROR);
+        pushed.add(CollectionHealth.FAILURE_CAUSES);
         Set<String> guest = new TreeSet<>(Arrays.asList("Collection|guest_vms_done", "Collection|guest_vms_pending"));
         Set<String> need = new TreeSet<>(pushed);
         need.addAll(guest);

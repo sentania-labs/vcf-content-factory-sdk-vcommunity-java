@@ -143,11 +143,13 @@ final class FakeVcenter implements FakeVc.Handler {
             // the operation is named installDate on the wire; the capitalised name is refused, as vCenter does
             case "installDate": return installDate(r.body);
             case "InstallDate": return serverFault("The method InstallDate is not found");
-            case "FetchSoftwarePackages": {
+            // the operation is named fetchSoftwarePackages on the wire; the capitalised name is refused
+            case "FetchSoftwarePackages": return serverFault("The method FetchSoftwarePackages is not found");
+            case "fetchSoftwarePackages": {
                 String v = first(r.body, "<_this[^>]*>([^<]*)</_this>");
                 String p = packages.get(v);
                 if (p == null) return serverFault("no packages for " + v);
-                return ok("<FetchSoftwarePackagesResponse xmlns=\"urn:vim25\">" + p + "</FetchSoftwarePackagesResponse>");
+                return ok("<fetchSoftwarePackagesResponse xmlns=\"urn:vim25\">" + p + "</fetchSoftwarePackagesResponse>");
             }
             case "QueryAssignedLicenses": {
                 String entity = first(r.body, "<entityId>([^<]*)</entityId>");

@@ -11,6 +11,7 @@ import com.vcfcf.adapter.stitch.SuiteApiStitcher;
 import com.vcfcf.adapters.vcommunity.coll.LibraryLinks;
 import com.vcfcf.adapters.vcommunity.coll.OwnObject;
 import com.vcfcf.adapters.vcommunity.coll.OwnObjects;
+import com.vcfcf.adapters.vcommunity.health.CollectionHealth;
 import com.vcfcf.adapters.vcommunity.health.Reachability;
 import com.vcfcf.adapters.vcommunity.health.WarnCounter;
 import com.vcfcf.adapters.vcommunity.list.CheckListStore;
@@ -322,8 +323,9 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
 
     @Override
     protected void onCycleStart() {
+        // the cycle record is not cleared here: the enumeration replaces it every collection (also with a
+        // failure when it cannot run), and a collect that meets none reports that
         cycleInstance = null;
-        cycle = null;
     }
 
     @Override
@@ -364,6 +366,7 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
         lastRead = null;
         Runtime r = this.runtime;
         if (r == null) {
+            this.cycle = new CycleRecord(null, notConfigured(), false, null, System.currentTimeMillis());
             throw new IllegalStateException(notConfigured());
         }
         sink.accept(collectorResource(r.cfg));
@@ -544,22 +547,34 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
         }
     }
 
+    /**
+     * Why this collection's objects fail, or null when the cycle did not fail. A failed cycle (an
+     * unreachable vCenter, a refused login, a defect) fails <em>every</em> object of the account, the own
+     * ones too: the platform sets the account DOWN or ERROR only when all of its objects fail, and an own
+     * object that returned quietly would show DATA_RECEIVING with nothing behind it.
+     */
+    private Exception cycleFailure() {
+        CycleRecord rec = this.cycle;
+        if (rec == null) {
+            return new IllegalStateException(runtime == null ? notConfigured()
+                    : "the collection cycle did not run; see the log");
+        }
+        if (rec.aborted) return null;
+        if (rec.result == null) return new IllegalStateException(rec.unexpected);
+        return rec.result.failureException();
+    }
+
     /** The collector object's collect: report the cycle, the self metrics first, then a failure throws. */
     private void reportCycle() throws Exception {
         if (isAbortRequested()) return;
         CycleRecord rec = this.cycle;
-        if (rec == null) {
-            final ResourceConfig inst = cycleInstance != null ? cycleInstance : instanceResource();
-            String msg = runtime == null ? notConfigured()
-                    : "the collection cycle did not run; see the log";
-            if (inst != null) pushStringProperty(inst, "Collection|last_error", msg);
-            throw new IllegalStateException(msg);
-        }
-        if (rec.aborted) return;
-        final ResourceConfig inst = rec.instance;
-        if (rec.result == null) {
-            if (inst != null) pushStringProperty(inst, "Collection|last_error", rec.unexpected);
-            throw new IllegalStateException(rec.unexpected);
+        final ResourceConfig inst = rec != null ? rec.instance
+                : cycleInstance != null ? cycleInstance : instanceResource();
+        if (rec == null || rec.result == null) {
+            Exception f = cycleFailure();
+            if (f != null && inst != null) pushStringProperty(inst, "Collection|last_error", f.getMessage());
+            if (f != null) throw f;
+            return;
         }
         CycleEngine.Result res = rec.result;
         if (inst != null) {
@@ -567,15 +582,18 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
                 pushMetric(inst, e.getKey(), e.getValue(), rec.startMs);
             }
             pushStringProperty(inst, "Collection|last_error", res.lastErrorProperty());
+            pushStringProperty(inst, CollectionHealth.FAILURE_CAUSES, res.failureCausesProperty());
         } else {
             logWarn("the adapter instance resource was not available; the self metrics were not "
                     + "pushed this cycle");
         }
-        if (res.failure != null) throw new IOException(res.failure, res.failureCause);
+        if (res.failure != null) throw res.failureException();
     }
 
     /** An own object's collect: the values the cycle read for it, none when it read none. */
-    private void collectOwn(ResourceConfig rc, List<MetricData> out) {
+    private void collectOwn(ResourceConfig rc, List<MetricData> out) throws Exception {
+        Exception failed = cycleFailure();
+        if (failed != null) throw failed;
         CycleRecord rec = this.cycle;
         String kind = rc.getResourceKind();
         String[] keys = kind == null ? null : identifierKeys(kind);

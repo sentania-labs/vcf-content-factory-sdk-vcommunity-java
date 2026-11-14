@@ -258,6 +258,10 @@ public final class OwnObjectsTest {
             run("links: one full child set per library that was read whole", () -> linkSets(fake));
             run("an absent text is the empty text, an absent figure is not a zero", () -> bare(fake));
             run("the absent-text switch off: nothing for a field that was not returned", () -> absentTextOff(fake));
+            run("template paths that could not be read send nothing", () -> templatePathsFailed(fake));
+            run("a failed cycle fails every object of the account", () -> failedCycle(fake));
+            run("a repeated identifier counts twice; a deleted item or library is gone, not failed", () -> repeatsAndRaces(fake));
+            run("a kind that drops to none is believed only after 12 collections", () -> emptyGuard(fake));
             run("a denied library is skipped and counted, the rest is delivered", () -> deniedLibrary(fake));
             run("a failed item withholds it and its library's counts", () -> failedItem(fake));
             run("a failed list or login delivers nothing and says so", () -> failedList(fake));
@@ -554,6 +558,160 @@ public final class OwnObjectsTest {
         T.eq(1, t2.stats().size(), "and the disk figure, 0.0 (Q9)");
     }
 
+    /** B4: a template path that could not be read is unknown, not unset: no 0, no 0.0, no empty text. */
+    static void templatePathsFailed(FakeVc fake) throws Exception {
+        FakeVcenter vc = vcenter();
+        SoapFx.Obj t = template("vm-10", "tmpl", "group-v2", "g", "vmx-21", 4, 8192, 9 * GIB, "datastore-1");
+        for (String p : new String[] {"config.guestFullName", "config.version", "summary.config.numCpu",
+            "summary.config.memorySizeMB", "summary.storage.committed", "datastore", "parent"}) {
+            t.vals.remove(p);
+            t.missing(p);
+        }
+        vc.add(t);
+        // a second template whose same paths are merely unset: upstream's text and zeros
+        SoapFx.Obj u = new SoapFx.Obj("VirtualMachine", "vm-11").name("unset").put("config.template", SoapFx.bool(true));
+        vc.add(u);
+        try (Rig r = new Rig(fake, vc, new FakeLibraries())) {
+            CycleEngine.Result res = r.run();
+            OwnObject a = tpl(res.own, "vm-10");
+            T.eq(0, a.props().size() + a.stats().size(), "nothing for a template whose paths could not be read: "
+                    + a.props() + a.stats());
+            T.check(a.withheld() >= 7, "and the values are counted: " + a.withheld());
+            OwnObject b = tpl(res.own, "vm-11");
+            T.eq("0", b.props().get(TPL + "vCPUs"), "unset: upstream's 0");
+            T.eq(Double.valueOf(0), b.stats().get(TPL + "Disk Used (GB)"), "unset: upstream's 0.0");
+            T.eq(Status.PARTIAL, res.summary.collectorStatus.get("template"), "partial");
+        }
+        // a path vCenter refuses (InvalidProperty): dropped from the read for every VM, and nothing for it
+        FakeVcenter vc2 = vcenter();
+        vc2.add(template("vm-10", "tmpl", "group-v2", "g", "vmx-21", 4, 8192, 9 * GIB, "datastore-1"));
+        vc2.invalid.add("summary.storage.committed");
+        try (Rig r = new Rig(fake, vc2, new FakeLibraries())) {
+            CycleEngine.Result res = r.run();
+            OwnObject a = tpl(res.own, "vm-10");
+            T.check(!a.stats().containsKey(TPL + "Disk Used (GB)"), "a refused path is not a 0.0");
+            T.eq("4", a.props().get(TPL + "vCPUs"), "the rest is sent");
+            T.contains(res.summary.firstFailure, "F-SOAP-INVALIDPROP", "counted");
+        }
+    }
+
+    /**
+     * B5: a failed cycle fails the account's every object, the own ones too. The adapter's collect for each
+     * object throws this exception ({@code failureException}), so that the platform sees all of them fail and
+     * sets the account DOWN (vCenter unreachable) or ERROR (login refused), as in P1.
+     */
+    static void failedCycle(FakeVc fake) throws Exception {
+        // a refused login
+        FakeVcenter vc = vcenter();
+        vc.forced.put("Login", FakeVc.fault("InvalidLogin", "Cannot complete login"));
+        try (Rig r = new Rig(fake, vc, libraries())) {
+            CycleEngine.Result res = r.run();
+            java.io.IOException e = res.failureException();
+            T.check(e != null, "a failed login fails the cycle");
+            T.eq(res.failure, e.getMessage(), "with the cycle's own text");
+            T.check(!com.vcfcf.adapters.vcommunity.health.Reachability.isUnreachable(e), "a refused login is ERROR, not DOWN");
+            T.eq(0, res.own.objects().size(), "and no own object is read");
+        }
+        // a successful cycle has none
+        try (Rig r = new Rig(fake, vcenter(), libraries())) {
+            T.check(r.run().failureException() == null, "no failure, no exception");
+        }
+        // an unreachable vCenter: the cause chain maps to DOWN
+        int dead;
+        try (java.net.ServerSocket ss = new java.net.ServerSocket(0)) {
+            dead = ss.getLocalPort();
+        }
+        com.vcfcf.adapters.vcommunity.health.WarnCounter warns = new com.vcfcf.adapters.vcommunity.health.WarnCounter(new T.RecLog());
+        try (VimSoapClient vim = new VimSoapClient("localhost:" + dead, "u", "p", TlsAndSessionTest.tofu(), warns, 2000, 5000, 5000)) {
+            CycleEngine engine = new CycleEngine(EngineTest.cfg(), vim,
+                    (h, p, t) -> ThumbprintProbe.Result.found("ab".repeat(32)), new P2Ops(),
+                    new CheckListStore(warns), warns, () -> NOW, null);
+            CycleEngine.Result res = engine.run(NOW + 240_000);
+            T.check(res.failureException() != null, "an unreachable vCenter fails the cycle");
+            T.check(com.vcfcf.adapters.vcommunity.health.Reachability.isUnreachable(res.failureException()),
+                    "and maps to DOWN through the cause chain");
+        }
+    }
+
+    /** W4, W5: a repeated identifier counts twice (Q11); something deleted between the list and its read is gone, not failed. */
+    static void repeatsAndRaces(FakeVc fake) throws Exception {
+        FakeLibraries l = libraries();
+        // lib-a lists item-a1 twice: upstream's len() is 4, and its sums count the repeat
+        l.body.put("/api/content/library/item?library_id=lib-a", "[\"item-a1\",\"item-a1\",\"item-a2\",\"item-a3\"]");
+        try (Rig r = new Rig(fake, vcenter(), l)) {
+            OwnObjects own = r.run().own;
+            OwnObject a = lib(own, "lib-a");
+            eq(a, LIB + "Items", 4.0);
+            // 2 GiB twice + 0 + 0.125 GiB = 4.125 GiB: a tie, to the even digit (4.12)
+            eq(a, LIB + "Total Size (GB)", 4.12);
+            T.eq(3, childIds(links(own, "lib-a")).size(), "one object and one link per item");
+            T.eq(3, count(own, OwnObjects.ITEM) - 3, "three items in lib-a (and three elsewhere)");
+        }
+        // an item deleted between the list and its read: gone (404), the library is still whole
+        FakeLibraries g = libraries();
+        g.status.put("/api/content/library/item/item-a2", 404);
+        try (Rig r = new Rig(fake, vcenter(), g)) {
+            CycleEngine.Result res = r.run();
+            OwnObjects own = res.own;
+            T.check(!has(own, OwnObjects.ITEM, "Item ID", "item-a2"), "no object for the item that is gone");
+            eq(lib(own, "lib-a"), LIB + "Items", 2.0);
+            T.eq(Set.of("item-a1", "item-a3"), childIds(links(own, "lib-a")), "and no link to it");
+            T.check(kinds(res).contains(OwnObjects.ITEM), "the kind is still read in full");
+            T.eq(Status.OK, res.summary.collectorStatus.get("library"), "and it is not a failure");
+        }
+        // a library deleted between the list and its read
+        FakeLibraries h = libraries();
+        h.status.put("/api/content/library/lib-b", 404);
+        try (Rig r = new Rig(fake, vcenter(), h)) {
+            CycleEngine.Result res = r.run();
+            T.check(!has(res.own, OwnObjects.LIBRARY, "Library ID", "lib-b"), "no object for the library that is gone");
+            T.check(kinds(res).containsAll(List.of(OwnObjects.LIBRARY, OwnObjects.ITEM)), "both kinds read in full");
+            T.eq(Status.OK, res.summary.collectorStatus.get("library"), "not a failure");
+        }
+    }
+
+    /** W3: a kind that drops to none is believed only after it has been none for 12 collections. */
+    static void emptyGuard(FakeVc fake) throws Exception {
+        FakeLibraries l = libraries();
+        FakeVcenter vc = vcenter();
+        vc.add(template("vm-10", "tmpl", "group-v2", "g", "vmx-21", 1, 1024, GIB, "datastore-1"));
+        try (Rig r = new Rig(fake, vc, l)) {
+            CycleEngine.Result first = r.run();
+            T.check(kinds(first).containsAll(List.of(OwnObjects.LIBRARY, OwnObjects.ITEM, OwnObjects.TEMPLATE)), "read in full");
+            // the account loses its rights: the API lists no library, the VM read shows no template
+            l.libraries.clear();
+            l.itemIds.clear();
+            vc.byType.get("VirtualMachine").removeIf(o -> "vm-10".equals(o.moid));
+            for (int i = 1; i <= 11; i++) {
+                CycleEngine.Result res = r.run();
+                T.eq(0, count(res.own, OwnObjects.LIBRARY), "none read, cycle " + i);
+                T.check(!kinds(res).contains(OwnObjects.LIBRARY) && !kinds(res).contains(OwnObjects.ITEM)
+                        && !kinds(res).contains(OwnObjects.TEMPLATE), "a drop to none proves nothing yet, cycle " + i);
+                T.eq(Status.OK, res.summary.collectorStatus.get("library"), "it is not a failure either");
+            }
+            CycleEngine.Result twelfth = r.run();
+            T.check(kinds(twelfth).containsAll(List.of(OwnObjects.LIBRARY, OwnObjects.ITEM, OwnObjects.TEMPLATE)),
+                    "after 12 in a row it is believed");
+            T.contains(r.log.all(), "found none, where there were some", "said once");
+        }
+        // an engine that has never seen any believes an empty list at once (a restart, a new account)
+        try (Rig r = new Rig(fake, vcenter(), new FakeLibraries())) {
+            T.check(kinds(r.run()).contains(OwnObjects.LIBRARY), "none from the start is believed");
+        }
+        // a failed read in between counts for nothing: the run of empty cycles is not broken by it nor built by it
+        FakeLibraries m = libraries();
+        try (Rig r = new Rig(fake, vcenter(), m)) {
+            r.run();
+            m.libraries.clear();
+            m.itemIds.clear();
+            r.run();
+            m.status.put("/api/content/library", 500);
+            for (int i = 0; i < 20; i++) {
+                T.check(!kinds(r.run()).contains(OwnObjects.LIBRARY), "failed reads never declare a kind");
+            }
+        }
+    }
+
     // ------------------------------------------------------------------ failures
 
     static void deniedLibrary(FakeVc fake) throws Exception {
@@ -800,7 +958,7 @@ public final class OwnObjectsTest {
             T.eq(1 + small, l.count("GET /api/content/library/lib-"), "one detail call per library");
             T.eq(1 + small, l.count("GET /api/content/library/item?library_id="), "one item list per library");
             T.eq(2500 + small * 3, l.count("GET /api/content/library/item/"), "one call per item");
-            T.check(ms < 60_000, "a read of 2,620 items finishes in time: " + ms + " ms");
+            T.check(ms < 180_000, "a read of 2,620 items finishes (a bound against a hang, not a speed claim): " + ms + " ms");
             // the VM pages: 700 templates + 1 VM at 50 per page
             T.check(r.vc.pages.get() >= 15, "the VMs came in pages: " + r.vc.pages.get());
         }

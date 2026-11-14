@@ -131,8 +131,9 @@ public final class HostCollector {
         XmlNode dns = row.val("config.network.dnsConfig");
         boolean dnsRead = dns != null || row.isUnset("config.network.dnsConfig");
         // no DNS configuration: the original's "null"; no search domain: "null" too
+        // no DNS configuration at all: the original's "null"; one without the flag: str(None)
         o.propY(NET + "DHCP", dns == null ? (dnsRead ? Quirks.orNull(null) : null)
-                : Quirks.orNull(Vals.bool(dns, "dhcp")));
+                : Quirks.orNone(Vals.bool(dns, "dhcp")));
         o.propY(NET + "Search Domain", dnsRead ? Quirks.orNull(searchDomain(dns)) : null);
         o.propY(CONF + "Time Zone|Name", Vals.scalarOrNone(row, "config.dateTimeInfo.timeZone.name"));
         o.propY(CONF + "Time Zone|Description", Vals.scalarOrNone(row, "config.dateTimeInfo.timeZone.description"));

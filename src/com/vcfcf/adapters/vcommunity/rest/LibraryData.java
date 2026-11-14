@@ -34,8 +34,13 @@ public final class LibraryData {
         public final String id;
         /** The library's detail answer, or null when it could not be read (then the library is skipped). */
         public Map<String, Object> detail;
-        /** The identifiers of its items in the order given, or null when that list could not be read. */
+        /**
+         * The identifiers of its items in the order given (a repeated one repeated, Q11), without the ones
+         * found gone; null when that list could not be read.
+         */
         public List<String> itemIds;
+        /** The library was deleted between the list and its read (HTTP 404): it is not there, which is not a failed read. */
+        public boolean gone;
         /** The items that were read, by item id, in list order. An item that failed is not here. */
         public final Map<String, Map<String, Object>> items = new LinkedHashMap<>();
         /** How many of its items were asked for and not read (failed, or not reached by the deadline). */
@@ -50,6 +55,11 @@ public final class LibraryData {
         /** The library and every one of its items were read. */
         public boolean complete() {
             return detail != null && itemIds != null && itemsMissing == 0 && !notRun;
+        }
+
+        /** The items to ask for: each identifier once. */
+        public java.util.Set<String> distinctItemIds() {
+            return itemIds == null ? java.util.Collections.<String>emptySet() : new java.util.LinkedHashSet<>(itemIds);
         }
     }
 

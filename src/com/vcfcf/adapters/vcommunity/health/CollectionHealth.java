@@ -50,6 +50,10 @@ public final class CollectionHealth {
         /** Collector name to status, only for collectors that exist in this build. */
         public final Map<String, Status> collectorStatus = new LinkedHashMap<>();
         public final Map<String, Integer> collectorFailures = new LinkedHashMap<>();
+        /** Collector name to its distinct failure causes with counts ({@link Failures#causesOf}); absent when none. */
+        public final Map<String, String> collectorCauses = new LinkedHashMap<>();
+        /** Every collector's causes in one line ({@link Failures#allCauses}), or null. */
+        public String allCauses;
     }
 
     private CollectionHealth() {}
@@ -77,10 +81,19 @@ public final class CollectionHealth {
             if (f != null) {
                 ps.stat(vcenterResourceId, PREFIX + "Collector:" + e.getKey() + "|Failures", f);
             }
+            // which reads failed, from the health keys alone: the distinct causes and how many of each
+            String c = s.collectorCauses.get(e.getKey());
+            ps.prop(vcenterResourceId, PREFIX + "Collector:" + e.getKey() + "|Causes", c == null ? NONE : c);
         }
     }
 
     public static final String LAST_ERROR = "Collection|last_error";
+    public static final String FAILURE_CAUSES = "Collection|failure_causes";
+
+    /** The text for {@code Collection|failure_causes}: every collector's failed-read causes with counts. */
+    public static String failureCauses(Summary s) {
+        return s.allCauses == null ? NONE : s.allCauses;
+    }
 
     /** The self metrics for the adapter instance; unmeasured figures are absent. */
     public static Map<String, Double> selfMetrics(Summary s) {

@@ -36,7 +36,7 @@ public final class PyTextTest {
         T.eq("x", Quirks.orText("x", "None", true), "a value is a value");
         T.eq("x", Quirks.orText("x", "None", false), "a value is a value");
         T.eq("", Quirks.orText("", "None", true), "an empty text is a value");
-        T.check(Quirks.UNSET_AS_UPSTREAM && Quirks.DUPLEX_HALF_WHEN_DOWN, "shipped as the match");
+        T.check(Quirks.UNSET_AS_UPSTREAM && Quirks.DUPLEX_HALF_WHEN_DOWN && Quirks.REPEATED_ITEM_COUNTED_TWICE, "shipped as the match");
         T.eq("None", Quirks.orNone(null), "str(None)");
         T.eq("null", Quirks.orNull(null), "NULL_STATUS");
         T.done("unset text (Q9)");
@@ -68,8 +68,16 @@ public final class PyTextTest {
         T.eq("46", PyText.json(46.0), "a whole number");
         T.eq("1.5", PyText.json(1.5), "a fraction");
         T.eq(null, PyText.json(null), "null is not there");
-        T.eq(null, PyText.json(new java.util.ArrayList<Object>()), "a list is not reproduced");
-        T.eq(null, PyText.json(new java.util.HashMap<String, Object>()), "an object is not reproduced");
+        T.eq("[]", PyText.json(new java.util.ArrayList<Object>()), "an empty list");
+        T.eq("{}", PyText.json(new java.util.HashMap<String, Object>()), "an empty dict");
+        Object parsed = com.vcfcf.adapters.vcommunity.json.Json.parse(
+                "{\"a\": 1, \"b\": [true, null, \"x\", 2.5], \"c\": {\"d\": \"it's\"}, \"e\": \"q\\\"\\n\"}");
+        T.eq("{'a': 1, 'b': [True, None, 'x', 2.5], 'c': {'d': \"it's\"}, 'e': 'q\"\\n'}", PyText.json(parsed),
+                "Python's repr of a dict: quotes, escapes, True/None");
+        StringBuilder deep = new StringBuilder();
+        for (int i = 0; i < 12; i++) deep.append('[');
+        for (int i = 0; i < 12; i++) deep.append(']');
+        T.eq(null, PyText.json(com.vcfcf.adapters.vcommunity.json.Json.parse(deep.toString())), "too deep is not reproduced");
         T.done("json text");
     }
 

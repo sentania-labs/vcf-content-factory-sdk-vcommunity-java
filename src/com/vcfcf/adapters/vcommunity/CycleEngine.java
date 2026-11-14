@@ -102,8 +102,21 @@ public final class CycleEngine {
             this.startMs = startMs;
         }
 
+        /**
+         * What a failed cycle fails every object of the account with: the one exception, carrying the
+         * credential-free text and the cause (so an unreachable vCenter maps to DOWN). Null when the
+         * cycle did not fail.
+         */
+        public IOException failureException() {
+            return failure == null ? null : new IOException(failure, failureCause);
+        }
+
         public Map<String, Double> metrics() {
             return CollectionHealth.selfMetrics(summary);
+        }
+
+        public String failureCausesProperty() {
+            return CollectionHealth.failureCauses(summary);
         }
 
         public String lastErrorProperty() {
@@ -269,6 +282,7 @@ public final class CycleEngine {
             if (reader != null) own.merge(templates(p2, vcid, failures, s));
             own.merge(libs.finish(deadlineMs, failures, s));
             for (OwnObject o : own.objects()) failures.addWithheld(o.withheld());
+            guardEmpty(own);
             return finish(t0, s, failures, null, null, about, presented, lists, vcId, ps, p2, own);
         } finally {
             libs.close();
@@ -319,6 +333,39 @@ public final class CycleEngine {
         @Override
         public void close() {
             if (pool != null) pool.shutdownNow();
+        }
+    }
+
+    /** A kind that had objects and reads as none this many cycles running is believed to be gone. */
+    static final int EMPTY_CYCLES_BEFORE_GONE = 12;
+    private final Map<String, Boolean> hadObjects = new java.util.HashMap<>();
+    private final Map<String, Integer> emptyRun = new java.util.HashMap<>();
+
+    /**
+     * W3: a successful read that finds none of a kind the engine has seen objects of is what a
+     * narrowed account role looks like (the API lists only what the account may see), and upstream
+     * never deletes. So a kind that drops to none is not declared read in full until it has read as none
+     * {@value #EMPTY_CYCLES_BEFORE_GONE} cycles in a row; the platform then waits its own 12 cycles
+     * before it marks anything. The memory is per adapter instance and starts empty: after a restart a
+     * kind that is already none is believed at once.
+     */
+    private void guardEmpty(OwnObjects own) {
+        for (String kind : new String[] {OwnObjects.LIBRARY, OwnObjects.ITEM, OwnObjects.TEMPLATE}) {
+            if (!own.kindsRead().contains(kind)) continue; // not read this cycle: nothing learnt
+            if (own.count(kind) > 0) {
+                hadObjects.put(kind, Boolean.TRUE);
+                emptyRun.put(kind, 0);
+            } else if (Boolean.TRUE.equals(hadObjects.get(kind))) {
+                int run = emptyRun.merge(kind, 1, Integer::sum);
+                if (run < EMPTY_CYCLES_BEFORE_GONE) {
+                    own.unread(kind);
+                    if (run == 1) {
+                        log.info("The " + kind + " read found none, where there were some. If the account's "
+                                + "role was narrowed, grant it back; they are not marked as gone unless this "
+                                + "stays so for " + EMPTY_CYCLES_BEFORE_GONE + " collections.");
+                    }
+                }
+            }
         }
     }
 
@@ -445,7 +492,10 @@ public final class CycleEngine {
         s.cycleSeconds = (clock.now() - t0) / 1000.0;
         for (String c : s.collectorStatus.keySet()) {
             s.collectorFailures.put(c, failures.forCollector(c));
+            String causes = failures.causesOf(c);
+            if (causes != null) s.collectorCauses.put(c, causes);
         }
+        s.allCauses = failures.allCauses();
     }
 
     /**

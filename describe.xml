@@ -118,6 +118,7 @@
 				<ResourceAttribute key="guest_vms_done" nameKey="45" dataType="float" isProperty="false" defaultMonitored="true"/>
 				<ResourceAttribute key="guest_vms_pending" nameKey="46" dataType="float" isProperty="false" defaultMonitored="true"/>
 				<ResourceAttribute key="last_error" nameKey="47" dataType="string" isProperty="true"/>
+				<ResourceAttribute key="failure_causes" nameKey="91" dataType="string" isProperty="true"/>
 			</ResourceGroup>
 		</ResourceKind>
 

@@ -40,9 +40,9 @@ public final class Quirks {
      * text. {@code true}: the empty text, as upstream (the live Python baseline shows it on every
      * object: 2 of the 4 library properties and 2 of the 10 item properties). {@code false}:
      * nothing is sent for a field that was not returned (DV-17, the owner's "a missing read sends
-     * nothing" answer). Only the text keys: a figure that was not returned is never sent as the
-     * zero upstream sends (vCPUs, Memory, sizes, counts: DV-11, DV-18), and a value that a failed
-     * read left unknown is never sent as anything.
+     * nothing" answer). Only the text keys: a figure that was not returned follows
+     * {@link #UNSET_AS_UPSTREAM} (the zero upstream sends), and a value that a failed read left
+     * unknown is never sent as anything, with either setting.
      */
     public static final boolean ABSENT_OWN_TEXT_IS_EMPTY = true;
 
@@ -65,6 +65,13 @@ public final class Quirks {
      * {@code false}: nothing for a link that is down (DV-15).
      */
     public static final boolean DUPLEX_HALF_WHEN_DOWN = true;
+
+    /**
+     * Q11, R249 Items: upstream counts the items by the length of the list of identifiers the REST API
+     * answers, so an identifier listed twice is counted twice (and its size, and its not-stored and
+     * not-compliant flags, with it), though it is one item and one object. {@code false}: each item once.
+     */
+    public static final boolean REPEATED_ITEM_COUNTED_TWICE = true;
 
     /** The original's {@code str(None)}. */
     public static final String NONE = "None";

@@ -20,10 +20,10 @@ import java.util.Map;
  * <p>Honest by construction. A library that could not be read gets no object; an item that could
  * not be read gets none and withholds the aggregates of its library, which would otherwise count
  * the items that happened to answer. A text the answer does not have is the empty text, as the
- * original sends it (Q8, {@link Quirks#ABSENT_OWN_TEXT_IS_EMPTY}); a figure it does not have is
- * not sent as the zero the original sends (DV-11), nor is a count that has an input missing
- * (DV-18). A returned empty text is sent as it is (Q4), and a library with no items has zero of
- * everything, which is what was read.
+ * original sends it (Q8, {@link Quirks#ABSENT_OWN_TEXT_IS_EMPTY}); a figure it does not have is 0
+ * and an item that lacks a flag counts as the original counts it (Q9, {@link Quirks#UNSET_AS_UPSTREAM}),
+ * because the items were read. A returned empty text is sent as it is (Q4), and a library with no
+ * items has zero of everything, which is what was read.
  */
 public final class LibraryCollector {
 
@@ -60,6 +60,7 @@ public final class LibraryCollector {
         boolean librariesRead = !d.deadlineHit;
         boolean itemsRead = !d.deadlineHit;
         for (LibraryData.Library lib : d.libraries) {
+            if (lib.gone) continue; // deleted since the list: not a library any more, and not a failed read
             if (lib.notRun) {
                 librariesRead = false;
                 itemsRead = false;
@@ -132,7 +133,10 @@ public final class LibraryCollector {
 
     /** The four counts of a library whose items were all read (R249 to R252). */
     private static void aggregates(OwnObject o, LibraryData.Library lib) {
-        int n = lib.items.size();
+        // by the list of identifiers, as upstream's len(): an identifier listed twice counts twice (Q11)
+        List<Map<String, Object>> listed = new ArrayList<>();
+        for (String id : lib.itemIds) listed.add(lib.items.get(id));
+        int n = listed.size();
         o.stat(LIB + "Items", (double) n);
         boolean allCached = true;
         boolean allCompliant = true;
@@ -140,7 +144,7 @@ public final class LibraryCollector {
         int notStored = 0;
         int notCompliant = 0;
         double bytes = 0;
-        for (Map<String, Object> item : lib.items.values()) {
+        for (Map<String, Object> item : listed) {
             Object cached = item.get("cached");
             if (cached == null && !Quirks.UNSET_AS_UPSTREAM) allCached = false;
             else if (!truthy(cached)) notStored++;
