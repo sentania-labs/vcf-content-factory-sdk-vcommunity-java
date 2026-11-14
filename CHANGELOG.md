@@ -3,6 +3,14 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.18 (Unreleased)
+
+- fix(adapter): the recommendation id is `Recommendation-df-VMWARE-ec5f14b5-b009-564e-8c31-66f205a839b1`; VCF Operations 9.0.2 refused the build 17 id at import
+  ("It should start with Recommendation-df- or Recommendation-ud-"). Import report and id map regenerated.
+- docs: uninstall then fresh install is the only supported way onto this pak from the Python pack and from dev builds up to 0.0.0.16 (different content
+  ids); in-place upgrade across an id change is not supported (owner decision, design 10.1c; build 17 observation recorded there).
+- build: `0.0.0.18`; built with factory main `7cd551ee` (content gate, one definition per alert id, minimum version 8.18.0).
+
 ## 1.0.0.17 (Unreleased)
 
 Content under ids of our own (owner decisions, 2026-11-14; design 10.1, "Versioning").
