@@ -223,7 +223,6 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `edit_allowed` | `True` | identical |
 | `column_count` | `0` | identical |
-| `summary_for` | `VMWARE:HostFolder` | identical |
 | interactions | 1 | identical |
 | name | `. Object Summary Page for Compute Folder` | identical |
 | description | 0 chars | identical |
@@ -248,7 +247,6 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `edit_allowed` | `True` | identical |
 | `column_count` | `0` | identical |
-| `summary_for` | `VMWARE:DistributedVirtualPortgroup` | identical |
 | interactions | 2 | identical |
 | name | `. Object Summary Page for Distributed Port Groups` | identical |
 | description | 0 chars | identical |
@@ -273,7 +271,6 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `edit_allowed` | `True` | identical |
 | `column_count` | `0` | identical |
-| `summary_for` | `VMWARE:VmwareDistributedVirtualSwitch` | identical |
 | interactions | 2 | identical |
 | name | `. Object Summary Page for Distributed Switch` | identical |
 | description | 0 chars | identical |
@@ -298,7 +295,6 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `edit_allowed` | `True` | identical |
 | `column_count` | `0` | identical |
-| `summary_for` | `VMWARE:NetworkFolder` | identical |
 | interactions | 1 | identical |
 | name | `. Object Summary Page for Network Folder` | identical |
 | description | 0 chars | identical |
@@ -323,7 +319,6 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `edit_allowed` | `True` | identical |
 | `column_count` | `0` | identical |
-| `summary_for` | `VMWARE:DatastoreFolder` | identical |
 | interactions | 1 | identical |
 | name | `. Object Summary Page for Storage Folder` | identical |
 | description | 0 chars | identical |
@@ -353,7 +348,6 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `edit_allowed` | `True` | identical |
 | `column_count` | `0` | identical |
-| `summary_for` | `VMWARE:VMFolder` | identical |
 | interactions | 2 | identical |
 | name | `. Object Summary Page for VM Folder` | identical |
 | description | 0 chars | identical |

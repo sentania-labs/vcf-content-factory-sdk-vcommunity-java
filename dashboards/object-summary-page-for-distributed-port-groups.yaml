@@ -10,7 +10,6 @@ hidden: false
 disabled: true
 edit_allowed: true
 column_count: 0
-summary_for: VMWARE:DistributedVirtualPortgroup
 widgets:
 - id: w0
   type: View
