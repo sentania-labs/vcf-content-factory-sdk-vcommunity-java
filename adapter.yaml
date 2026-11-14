@@ -22,7 +22,7 @@ description: >
   and the VM templates as objects of its own; the derived metrics, the guest
   checks and the content come in later phases.
 version: 1.0.0
-build_number: 7
+build_number: 8
 tier: 2
 released: false
 

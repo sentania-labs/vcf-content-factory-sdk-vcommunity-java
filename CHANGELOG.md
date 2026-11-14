@@ -3,10 +3,9 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
-## 1.0.0.7 (Unreleased)
+## 1.0.0.8 (Unreleased)
 
-Phase P3, the pak's own objects (design 4.11, rows R227 to R252), and the fixes from the first live
-differential of build 6.
+Fixes from the first live differential of build 6 (P2 against the Python 0.8.1 baseline).
 
 - fix(adapter) P2 live: the host license read asked the license manager for its `name`, which it does not have
   (it is not a managed entity), so vCenter refused it and no host had a license key;
@@ -18,6 +17,12 @@ differential of build 6.
   a read that failed still sends nothing and is counted. One switch, `Quirks.UNSET_AS_UPSTREAM`.
 - fix(adapter) P2 live: a NIC whose link is down is `half-duplex` (Q10); a datastore with no
   extents has `Number of Extents` 0; DRS Score is 0 while DRS is off or negative.
+
+- fix(adapter): the own kinds follow the same rule: a figure that was read and is missing is 0 (Q9).
+
+## 1.0.0.7 (Unreleased)
+
+Phase P3, the pak's own objects (design 4.11, rows R227 to R252).
 
 - feat(adapter): Content Library and Library Item objects, read from the vSphere
   Automation REST API (login, list, library, item list, item; logout in a
