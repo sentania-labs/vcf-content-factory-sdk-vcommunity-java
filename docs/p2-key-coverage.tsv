@@ -1,11 +1,11 @@
 row_id	key	object_kind	implemented	test	notes	phase
-R1	vCommunity|Configuration|Install Date|UTC	HostSystem	yes	PropertiesTest: hosts	property; ISO UTC text; a failed call is counted (F-HOST-INSTALLDATE), not sent as null (DV-10)	P2
+R1	vCommunity|Configuration|Install Date|UTC	HostSystem	yes	PropertiesTest: hosts	property; ISO UTC text; no image manager or no date is "null" (Q9); a failed call is counted (F-HOST-INSTALLDATE), not sent as null (DV-10)	P2
 R2	vCommunity|Licensing:{license_name}|Name	HostSystem	yes	PropertiesTest: hosts	property	P2
 R3	vCommunity|Licensing:{license_name}|License Key	HostSystem	yes	PropertiesTest: hosts	property; masked to the last group (DV-25)	P2
 R4	vCommunity|Licensing:{license_name}|Edition Key	HostSystem	yes	PropertiesTest: hosts	property	P2
 R5	vCommunity|Licensing:{license_name}|License Expiration Date	HostSystem	yes	PropertiesTest: hosts	property	P2
 R6	vCommunity|Licensing:{license_name}|Remaining Days	HostSystem	yes	PropertiesTest: hosts	metric; metric, floor of days	P2
-R7	vCommunity|Storage Adapter|Number of HBA	HostSystem	yes	PropertiesTest: hosts	property; count of the adapters read; absent list withheld, empty list is 0 (DV-11)	P2
+R7	vCommunity|Storage Adapter|Number of HBA	HostSystem	yes	PropertiesTest: hosts	property; count of the adapters read; none on a read that worked is "0" (Q9)	P2
 R8	vCommunity|Configuration|VAAI|ATS Heartbeat	HostSystem	yes	PropertiesTest: hosts	property	P2
 R9	vCommunity|Configuration|VAAI|ATS Locking	HostSystem	yes	PropertiesTest: hosts	property	P2
 R10	vCommunity|Configuration|Config Status	HostSystem	yes	PropertiesTest: hosts	property	P2
@@ -29,15 +29,15 @@ R27	vCommunity|Network|Device:{device}|Device Name	HostSystem	yes	PropertiesTest
 R28	vCommunity|Network|Device:{device}|Driver Version	HostSystem	yes	PropertiesTest: hosts	property	P2
 R29	vCommunity|Network|Device:{device}|Firmware Version	HostSystem	yes	PropertiesTest: hosts	property	P2
 R30	vCommunity|Network|Device:{device}|Status	HostSystem	yes	PropertiesTest: hosts	property	P2
-R31	vCommunity|Network|Device:{device}|PCI Vendor Name	HostSystem	yes	PropertiesTest: hosts	property; no PCI match: withheld (DV-14)	P2
-R32	vCommunity|Network|Device:{device}|PCI Device Name	HostSystem	yes	PropertiesTest: hosts	property; no PCI match: withheld (DV-14)	P2
-R33	vCommunity|Network|Device:{device}|PCI Vendor ID (VID)	HostSystem	yes	PropertiesTest: hosts	property; unsigned four-digit hex (DV-33)	P2
-R34	vCommunity|Network|Device:{device}|PCI Device ID (DID)	HostSystem	yes	PropertiesTest: hosts	property; unsigned four-digit hex (DV-33)	P2
-R35	vCommunity|Network|Device:{device}|PCI SubVendor ID (SVID)	HostSystem	yes	PropertiesTest: hosts	property; unsigned four-digit hex (DV-33)	P2
+R31	vCommunity|Network|Device:{device}|PCI Vendor Name	HostSystem	yes	PropertiesTest: hosts	property; no PCI device for the NIC: "N/A" (Q9)	P2
+R32	vCommunity|Network|Device:{device}|PCI Device Name	HostSystem	yes	PropertiesTest: hosts	property; no PCI device for the NIC: "N/A" (Q9)	P2
+R33	vCommunity|Network|Device:{device}|PCI Vendor ID (VID)	HostSystem	yes	PropertiesTest: hosts	property; signed 16-bit text, as upstream (Q3); "N/A" with no device (Q9)	P2
+R34	vCommunity|Network|Device:{device}|PCI Device ID (DID)	HostSystem	yes	PropertiesTest: hosts	property; signed 16-bit text, as upstream (Q3); "N/A" with no device (Q9)	P2
+R35	vCommunity|Network|Device:{device}|PCI SubVendor ID (SVID)	HostSystem	yes	PropertiesTest: hosts	property; signed 16-bit text, as upstream (Q3); "N/A" with no device (Q9)	P2
 R36	vCommunity|Network|Device:{device}|MAC	HostSystem	yes	PropertiesTest: hosts	property	P2
 R37	vCommunity|Network|Device:{device}|Wake On Lan Supported	HostSystem	yes	PropertiesTest: hosts	property	P2
 R38	vCommunity|Network|Device:{device}|PCI	HostSystem	yes	PropertiesTest: hosts	property	P2
-R39	vCommunity|Network|Device:{device}|Duplex	HostSystem	yes	PropertiesTest: hosts	property; withheld while the link is down (DV-15)	P2
+R39	vCommunity|Network|Device:{device}|Duplex	HostSystem	yes	PropertiesTest: hosts	property; half-duplex while the link is down, as upstream (Q10)	P2
 R40	vCommunity|Configuration|Packages:{package.name}|Package Name	HostSystem	yes	PropertiesTest: hosts	property	P2
 R41	vCommunity|Configuration|Packages:{package.name}|Package Version	HostSystem	yes	PropertiesTest: hosts	property	P2
 R42	vCommunity|Configuration|Packages:{package.name}|Acceptance Level	HostSystem	yes	PropertiesTest: hosts	property	P2
@@ -45,7 +45,7 @@ R43	vCommunity|Configuration|Packages:{package.name}|Maintenance Mode Required	H
 R44	vCommunity|Configuration|Packages:{package.name}|Package Summary	HostSystem	yes	PropertiesTest: hosts	property	P2
 R45	vCommunity|Configuration|Packages:{package.name}|Package Type	HostSystem	yes	PropertiesTest: hosts	property	P2
 R46	vCommunity|Configuration|Packages:{package.name}|Package Vendor	HostSystem	yes	PropertiesTest: hosts	property	P2
-R47	vCommunity|Identifiers|Number of Extents	Datastore	yes	PropertiesTest: datastores and vCenter	property; withheld without VMFS information (DV-11)	P2
+R47	vCommunity|Identifiers|Number of Extents	Datastore	yes	PropertiesTest: datastores and vCenter	property; "0" for a datastore with no VMFS extents, as upstream (Q9)	P2
 R48	vCommunity|Identifiers|Extent:{extent_number}|ID	Datastore	yes	PropertiesTest: datastores and vCenter	property	P2
 R49	vCommunity|Summary|MOID	Datastore	yes	PropertiesTest: datastores and vCenter	property	P2
 R50	vCommunity|Summary|Status	Datastore	yes	PropertiesTest: datastores and vCenter	property	P2
@@ -58,16 +58,16 @@ R56	vCommunity|Certificate|Status	VMwareAdapter Instance	yes	PropertiesTest: cer
 R57	vCommunity|Certificate|SHA-256 Thumbprint	VMwareAdapter Instance	yes	PropertiesTest: certificate state	property	P2
 R58	vCommunity|Certificate|Previous SHA-256 Thumbprint	VMwareAdapter Instance	yes	PropertiesTest: certificate state	property	P2
 R59	vCommunity|Certificate|Last Changed	VMwareAdapter Instance	yes	PropertiesTest: certificate state	property	P2
-R60	vCommunity|Configuration|User Directory Timeout	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property	P2
-R61	vCommunity|Configuration|Enable MOB	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property	P2
-R62	vCommunity|Configuration|Database|Event retention (days)	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property	P2
-R63	vCommunity|Configuration|Database|Event Cleanup Enabled	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property	P2
-R64	vCommunity|Configuration|Database|Task retention (days)	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property	P2
-R65	vCommunity|Configuration|Database|Task Cleanup Enabled	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property	P2
-R66	vCommunity|Configuration|Runtime|vCenter Unique ID	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property	P2
-R67	vCommunity|Configuration|Runtime|vCenter managed address	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property	P2
-R68	vCommunity|Configuration|Database|Maximum Connections	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property	P2
-R69	vCommunity|Configuration|Log Level	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property	P2
+R60	vCommunity|Configuration|User Directory Timeout	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property; a setting vCenter lacks or leaves blank: "null" (Q9)	P2
+R61	vCommunity|Configuration|Enable MOB	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property; a setting vCenter lacks or leaves blank: "null" (Q9)	P2
+R62	vCommunity|Configuration|Database|Event retention (days)	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property; a setting vCenter lacks or leaves blank: "null" (Q9)	P2
+R63	vCommunity|Configuration|Database|Event Cleanup Enabled	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property; a setting vCenter lacks or leaves blank: "null" (Q9)	P2
+R64	vCommunity|Configuration|Database|Task retention (days)	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property; a setting vCenter lacks or leaves blank: "null" (Q9)	P2
+R65	vCommunity|Configuration|Database|Task Cleanup Enabled	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property; a setting vCenter lacks or leaves blank: "null" (Q9)	P2
+R66	vCommunity|Configuration|Runtime|vCenter Unique ID	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property; a setting vCenter lacks or leaves blank: "null" (Q9)	P2
+R67	vCommunity|Configuration|Runtime|vCenter managed address	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property; a setting vCenter lacks or leaves blank: "null" (Q9)	P2
+R68	vCommunity|Configuration|Database|Maximum Connections	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property; a setting vCenter lacks or leaves blank: "null" (Q9)	P2
+R69	vCommunity|Configuration|Log Level	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property; a setting vCenter lacks or leaves blank: "null" (Q9)	P2
 R70	vCommunity|Configuration|Share per vCPU	VirtualMachine	no		P4: reads the VM's shares back from VCF Operations	P4
 R71	vCommunity|Configuration|Share per MB of Memory	VirtualMachine	no		P4: reads the VM's shares back from VCF Operations	P4
 R72	vCommunity|Guest OS|Operating System|OS Name	VirtualMachine	no		P5: guest operations	P5
@@ -94,7 +94,7 @@ R92	vCommunity|Configuration|Reboot PowerOff	VirtualMachine	yes	PropertiesTest: 
 R93	vCommunity|Configuration|Hardware Upgrade|Status	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R94	vCommunity|Configuration|Hardware Upgrade|Policy	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R95	vCommunity|Configuration|Hardware Upgrade|Target Version	VirtualMachine	yes	PropertiesTest: vms	property	P2
-R96	vCommunity|Configuration|Op Notification Timeout	VirtualMachine	yes	PropertiesTest: vms	property; negative value read becomes 0, as the original	P2
+R96	vCommunity|Configuration|Op Notification Timeout	VirtualMachine	yes	PropertiesTest: vms	property; negative value read becomes 0, as the original; unset is 0 (Q9)	P2
 R97	vCommunity|Configuration|Memory Allocation Share Level	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R98	vCommunity|Configuration|Config Status	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R99	vCommunity|Guest|State	VirtualMachine	yes	PropertiesTest: vms	property	P2
@@ -112,13 +112,13 @@ R110	vCommunity|Guest|Customization Status	VirtualMachine	yes	PropertiesTest: vm
 R111	vCommunity|Guest|Heartbeat Status	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R112	vCommunity|Guest|Detailed Data|Build Number	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R113	vCommunity|Guest|Detailed Data|CPE String	VirtualMachine	yes	PropertiesTest: vms	property	P2
-R114	vCommunity|Guest|Detailed Data|Distro Additional Version	VirtualMachine	yes	PropertiesTest: datastores and vCenter	property	P2
+R114	vCommunity|Guest|Detailed Data|Distro Additional Version	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R115	vCommunity|Guest|Detailed Data|Distro Name	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R116	vCommunity|Guest|Detailed Data|Distro Version	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R117	vCommunity|Guest|Detailed Data|Kernel Version	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R118	vCommunity|Guest|Detailed Data|Pretty Name	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R119	vCommunity|Summary|VM Path Name	VirtualMachine	yes	PropertiesTest: vms	property	P2
-R120	vCommunity|Configuration|SCSI Controllers|Count	VirtualMachine	yes	PropertiesTest: vms	metric; metric; 0 for a returned empty device list, withheld when absent	P2
+R120	vCommunity|Configuration|SCSI Controllers|Count	VirtualMachine	yes	PropertiesTest: vms	metric; metric; 0 when the VM lists no device (Q9)	P2
 R121	vCommunity|Configuration|SCSI Controllers:{bus_str}|Type	VirtualMachine	yes	PropertiesTest: vms	property; type text of an unmapped controller is its vim25 type name (DV-34)	P2
 R122	vCommunity|Network|Network Adapters:{vnicLabel}|Type	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R123	vCommunity|Network|Network Adapters:{vnicLabel}|Starts Connected	VirtualMachine	yes	PropertiesTest: vms	property	P2
@@ -130,26 +130,26 @@ R128	vCommunity|Virtual Disk:{vdiskLabel}|Split	VirtualMachine	yes	PropertiesTes
 R129	vCommunity|Virtual Disk:{vdiskLabel}|Write Through	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R130	vCommunity|Virtual Disk:{vdiskLabel}|Storage Allocation Share Level	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R131	vCommunity|Options|{configPath}	VirtualMachine	yes	PropertiesTest: vms	property; invalid entry dropped and reported (DV-26)	P2
-R132	vCommunity|Cluster Configuration|vSphere HA|Host Monitoring	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: withheld (DV-09)	P2
-R133	vCommunity|Cluster Configuration|vSphere HA|Response \ Host Isolation	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: withheld (DV-09)	P2
-R134	vCommunity|Cluster Configuration|vSphere HA|Response \ Default VM Restart Priority	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: withheld (DV-09)	P2
-R135	vCommunity|Cluster Configuration|vSphere HA|Response \ Datastore APD	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: withheld (DV-09)	P2
-R136	vCommunity|Cluster Configuration|vSphere HA|Response \ Datastore PDL	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: withheld (DV-09)	P2
-R137	vCommunity|Cluster Configuration|vSphere HA|VM Monitoring	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: withheld (DV-09)	P2
-R138	vCommunity|Cluster Configuration|vSphere HA|Heartbeat Datastore	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: withheld (DV-09)	P2
-R139	vCommunity|Cluster Configuration|vSphere HA|Failure Interval	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: withheld (DV-09)	P2
-R140	vCommunity|Cluster Configuration|vSphere HA|Max Failure Window	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: withheld (DV-09)	P2
-R141	vCommunity|Cluster Configuration|vSphere HA|Max Failures	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: withheld (DV-09)	P2
-R142	vCommunity|Cluster Configuration|vSphere HA|Minimum Up Time	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: withheld (DV-09)	P2
+R132	vCommunity|Cluster Configuration|vSphere HA|Host Monitoring	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: "null"; unset: "None" (Q9)	P2
+R133	vCommunity|Cluster Configuration|vSphere HA|Response \ Host Isolation	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: "null"; unset: "None" (Q9)	P2
+R134	vCommunity|Cluster Configuration|vSphere HA|Response \ Default VM Restart Priority	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: "null"; unset: "None" (Q9)	P2
+R135	vCommunity|Cluster Configuration|vSphere HA|Response \ Datastore APD	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: "null"; unset: "None" (Q9)	P2
+R136	vCommunity|Cluster Configuration|vSphere HA|Response \ Datastore PDL	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: "null"; unset: "None" (Q9)	P2
+R137	vCommunity|Cluster Configuration|vSphere HA|VM Monitoring	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: "null"; unset: "None" (Q9)	P2
+R138	vCommunity|Cluster Configuration|vSphere HA|Heartbeat Datastore	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: "null"; unset: "None" (Q9)	P2
+R139	vCommunity|Cluster Configuration|vSphere HA|Failure Interval	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: "null"; unset: "None" (Q9)	P2
+R140	vCommunity|Cluster Configuration|vSphere HA|Max Failure Window	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: "null"; unset: "None" (Q9)	P2
+R141	vCommunity|Cluster Configuration|vSphere HA|Max Failures	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: "null"; unset: "None" (Q9)	P2
+R142	vCommunity|Cluster Configuration|vSphere HA|Minimum Up Time	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled: "null"; unset: "None" (Q9)	P2
 R143	vCommunity|Cluster Configuration|DPM|Host Power Action Rate	ClusterComputeResource	yes	PropertiesTest: clusters	property	P2
 R144	vCommunity|Cluster Configuration|EVC|Enabled	ClusterComputeResource	yes	PropertiesTest: clusters	property; False when the cluster summary was read and names no mode (kept, Q2)	P2
-R145	vCommunity|Cluster Configuration|EVC|Mode	ClusterComputeResource	yes	PropertiesTest: clusters	property	P2
-R146	vCommunity|Cluster Configuration|Distributed Resource Scheduler|Proactive DRS	ClusterComputeResource	yes	PropertiesTest: clusters	property; DRS off or proactive configuration missing: withheld (DV-09)	P2
-R147	vCommunity|Cluster Configuration|Distributed Resource Scheduler|Scale Descendants Shares	ClusterComputeResource	yes	PropertiesTest: clusters	property; DRS off or proactive configuration missing: withheld (DV-09)	P2
-R148	vCommunity|Cluster Configuration|Distributed Resource Scheduler|CPU Over-Commitment	ClusterComputeResource	yes	PropertiesTest: clusters	property; DRS off or proactive configuration missing: withheld (DV-09)	P2
-R149	vCommunity|Cluster Configuration|Distributed Resource Scheduler|Virtual Machine Automation Enabled	ClusterComputeResource	yes	PropertiesTest: clusters	property; DRS off or proactive configuration missing: withheld (DV-09)	P2
+R145	vCommunity|Cluster Configuration|EVC|Mode	ClusterComputeResource	yes	PropertiesTest: clusters	property; "null" when EVC is off (Q9)	P2
+R146	vCommunity|Cluster Configuration|Distributed Resource Scheduler|Proactive DRS	ClusterComputeResource	yes	PropertiesTest: clusters	property; DRS off, or the value missing: "null"; no proactive configuration: none, as upstream (Q9)	P2
+R147	vCommunity|Cluster Configuration|Distributed Resource Scheduler|Scale Descendants Shares	ClusterComputeResource	yes	PropertiesTest: clusters	property; DRS off, or the value missing: "null"; no proactive configuration: none, as upstream (Q9)	P2
+R148	vCommunity|Cluster Configuration|Distributed Resource Scheduler|CPU Over-Commitment	ClusterComputeResource	yes	PropertiesTest: clusters	property; DRS off, or the value missing: "null"; no proactive configuration: none, as upstream (Q9)	P2
+R149	vCommunity|Cluster Configuration|Distributed Resource Scheduler|Virtual Machine Automation Enabled	ClusterComputeResource	yes	PropertiesTest: clusters	property; DRS off, or the value missing: "null"; no proactive configuration: none, as upstream (Q9)	P2
 R150	vCommunity|Cluster Configuration|Configuration Status	ClusterComputeResource	yes	PropertiesTest: clusters	property	P2
-R151	vCommunity|Cluster Configuration|Number of Effective Hosts	ClusterComputeResource	yes	PropertiesTest: clusters	metric; metric; absent withheld (DV-11)	P2
+R151	vCommunity|Cluster Configuration|Number of Effective Hosts	ClusterComputeResource	yes	PropertiesTest: clusters	metric; metric; not returned: 0, as upstream's default (Q9)	P2
 R152	vCommunity|Cluster Configuration|Overall Status	ClusterComputeResource	yes	PropertiesTest: clusters	property	P2
 R153	vCommunity|Cluster Performance|Cluster Performance Score	ClusterComputeResource	no		P4: derived metrics, World, Business Applications, resource pools	P4
 R154	vCommunity|Cluster Risk|Cluster Risk Score	ClusterComputeResource	no		P4: derived metrics, World, Business Applications, resource pools	P4
@@ -218,13 +218,13 @@ R216	vCommunity|Business Application|Business Application Performance	BusinessSe
 R217	vCommunity|Business Application|Business Applications Performance	Enterprise	no		P4: derived metrics, World, Business Applications, resource pools	P4
 R218	vCommunity|Resource Pools|Number of Resource Pools	ClusterComputeResource	no		P4: derived metrics, World, Business Applications, resource pools	P4
 R219	vCommunity|Resource Pools|Cascading Resource Pools	ClusterComputeResource	no		P4: derived metrics, World, Business Applications, resource pools	P4
-R220	vCommunity|Cluster Configuration|Distributed Resource Scheduler|DRS Score	ClusterComputeResource	yes	PropertiesTest: clusters	metric; metric; DRS off or negative withheld (DV-16)	P2
+R220	vCommunity|Cluster Configuration|Distributed Resource Scheduler|DRS Score	ClusterComputeResource	yes	PropertiesTest: clusters	metric; metric; DRS off or a negative score: 0, as upstream (Q9)	P2
 R221	vCommunity|Availability|Cluster Operational Availability	ClusterComputeResource	no		P4: availability and the periodic cluster check	P4
 R222	vCommunity|Periodic Cluster Check|Worst Cluster Performance	ClusterComputeResource	no		P4: availability and the periodic cluster check	P4
 R223	vCommunity|Periodic Cluster Check|Worst Cluster Risk	ClusterComputeResource	no		P4: availability and the periodic cluster check	P4
 R224	vCommunity|Periodic Cluster Check|Worst Cluster Consumption	ClusterComputeResource	no		P4: availability and the periodic cluster check	P4
 R225	vCommunity|Periodic Cluster Check|Close for Business	ClusterComputeResource	no		P4: availability and the periodic cluster check	P4
-R226	vCommunity|Configuration|Patch Level	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property; absent withheld (DV-13)	P2
+R226	vCommunity|Configuration|Patch Level	VMwareAdapter Instance	yes	PropertiesTest: datastores and vCenter	property; unset: "None" (Q9)	P2
 R227	vCommunity|VM Template|Guest OS	VM Template	no		P3: own objects (templates, libraries, items)	P3
 R228	vCommunity|VM Template|Hardware Version	VM Template	no		P3: own objects (templates, libraries, items)	P3
 R229	vCommunity|VM Template|vCPUs	VM Template	no		P3: own objects (templates, libraries, items)	P3

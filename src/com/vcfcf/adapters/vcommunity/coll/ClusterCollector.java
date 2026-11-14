@@ -1,6 +1,7 @@
 package com.vcfcf.adapters.vcommunity.coll;
 
 import com.vcfcf.adapters.vcommunity.text.PyText;
+import com.vcfcf.adapters.vcommunity.text.Quirks;
 import com.vcfcf.adapters.vcommunity.vim.BulkRow;
 import com.vcfcf.adapters.vcommunity.vim.PathSpec;
 import com.vcfcf.adapters.vcommunity.vim.RetrieveRequest;
@@ -8,11 +9,14 @@ import com.vcfcf.adapters.vcommunity.vim.XmlNode;
 
 /**
  * The cluster's own configuration keys (design 4.3, rows R132-R152 and R220
- * that vim25 answers directly). A pure function of one {@link BulkRow}: a path
- * that did not come back, a feature that is switched off, and a value that
- * does not parse are all "no value", never a placeholder (5.3 mechanisms 1, 2,
- * 4, 9). Only the part of the cluster's configuration these keys use is kept
- * while the answer streams past.
+ * that vim25 answers directly). A pure function of one {@link BulkRow}. A value
+ * that was read and is unset, a feature that is switched off and a count that is
+ * missing are published as the original prints them (Q9): the text {@code None}
+ * for an unset property, {@code null} for HA and DRS settings that are off or
+ * missing, 0 for a DRS score while DRS is off. A path that vCenter refused or
+ * could not read is never one of these: it sends nothing and is counted. Only
+ * the part of the cluster's configuration these keys use is kept while the
+ * answer streams past.
  */
 public final class ClusterCollector {
 
@@ -49,23 +53,36 @@ public final class ClusterCollector {
 
     public static ObjectOut collect(BulkRow row) {
         ObjectOut o = new ObjectOut(KIND, row.obj.value);
-        o.propY(CFG + "Configuration Status", Vals.scalar(row, "configStatus"));
-        o.propY(CFG + "Overall Status", Vals.scalar(row, "overallStatus"));
+        o.propY(CFG + "Configuration Status", Vals.scalarOrNone(row, "configStatus"));
+        o.propY(CFG + "Overall Status", Vals.scalarOrNone(row, "overallStatus"));
         XmlNode summary = row.val("summary");
-        o.statY(CFG + "Number of Effective Hosts", intOf(Vals.integer(summary, "numEffectiveHosts")));
-        ha(o, row.val("configuration.dasConfig"));
+        boolean summaryRead = summary != null || row.isUnset("summary");
+        // no effective-host count on a summary that was read: the original's default, 0 (Q9)
+        Double effective = intOf(Vals.integer(summary, "numEffectiveHosts"));
+        o.statY(CFG + "Number of Effective Hosts", effective != null ? effective
+                : summaryRead && Quirks.UNSET_AS_UPSTREAM ? Double.valueOf(0) : null);
+        ha(o, row, row.val("configuration.dasConfig"));
         boolean drsOn = drs(o, row.val("configuration.drsConfig"), row.val("configurationEx"));
-        evc(o, summary);
-        drsScore(o, summary, drsOn);
+        evc(o, summary, summaryRead);
+        drsScore(o, summary, drsOn, row);
         dpm(o, row.val("configurationEx"));
         return o;
     }
 
-    private static void ha(ObjectOut o, XmlNode das) {
+    /**
+     * The eleven HA keys, as the original prints them: the text {@code null} while HA is off (and the
+     * five response settings while host monitoring is disabled), else the value, else {@code None}
+     * for a setting that is unset (Q9).
+     */
+    private static void ha(ObjectOut o, BulkRow row, XmlNode das) {
         String[] keys = {"Host Monitoring", "Response \\ Host Isolation",
             "Response \\ Default VM Restart Priority", "Response \\ Datastore APD",
             "Response \\ Datastore PDL", "VM Monitoring", "Heartbeat Datastore", "Failure Interval",
             "Max Failure Window", "Max Failures", "Minimum Up Time"};
+        if (das == null && !row.isUnset("configuration.dasConfig")) {
+            o.withhold(keys.length); // the configuration could not be read
+            return;
+        }
         String vmts = "defaultVmSettings.vmToolsMonitoringSettings.";
         String[] vals = {
             Vals.str(das, "hostMonitoring"),
@@ -80,13 +97,13 @@ public final class ClusterCollector {
             Vals.integer(das, vmts + "maxFailures"),
             Vals.integer(das, vmts + "minUpTime")};
         String enabled = Vals.bool(das, "enabled");
-        // High availability switched off: none of the settings means anything, so none is sent.
+        // High availability switched off: none of the settings means anything, the original says "null".
         boolean off = "False".equals(enabled);
         // Host monitoring disabled: the five response settings are not in force.
         boolean noResponses = "True".equals(enabled) && "disabled".equals(vals[0]);
         for (int i = 0; i < keys.length; i++) {
             boolean suppressed = off || (noResponses && i < 5);
-            o.propY(HA + keys[i], suppressed ? null : vals[i]);
+            o.propY(HA + keys[i], suppressed ? Quirks.orNull(null) : Quirks.orNone(vals[i]));
         }
     }
 
@@ -108,29 +125,33 @@ public final class ClusterCollector {
         }
         String scale = Vals.str(drsCfg, "scaleDescendantsShares");
         String overrides = Vals.bool(drsCfg, "enableVmBehaviorOverrides");
-        boolean send = on && !bad;
-        o.propY(DRS + "Proactive DRS", send ? proactiveEnabled : null);
-        o.propY(DRS + "Scale Descendants Shares", send ? scale : null);
-        o.propY(DRS + "CPU Over-Commitment", send ? maxVcpus : null);
-        o.propY(DRS + "Virtual Machine Automation Enabled", send ? overrides : null);
+        // DRS off, or a value DRS does not have: the original's text "null" (Q9)
+        o.propY(DRS + "Proactive DRS", bad ? null : Quirks.orNull(on ? proactiveEnabled : null));
+        o.propY(DRS + "Scale Descendants Shares", bad ? null : Quirks.orNull(on ? scale : null));
+        o.propY(DRS + "CPU Over-Commitment", bad ? null : Quirks.orNull(on ? maxVcpus : null));
+        o.propY(DRS + "Virtual Machine Automation Enabled", bad ? null : Quirks.orNull(on ? overrides : null));
         return on;
     }
 
-    private static void evc(ObjectOut o, XmlNode summary) {
-        if (summary == null) {
+    private static void evc(ObjectOut o, XmlNode summary, boolean summaryRead) {
+        if (!summaryRead) {
             o.propY(EVC + "Enabled", null);
             o.propY(EVC + "Mode", null);
             return;
         }
         String mode = Vals.str(summary, "currentEVCModeKey");
-        // A summary that was read and names no mode means EVC is off: a reading, kept (Q2). A mode
-        // that is spaces is a mode, as for the original (a non-empty string is true there).
+        // A summary that was read and names no mode means EVC is off: a reading, kept (Q2), and the mode is
+        // the original's "null" (Q9). A mode that is spaces is a mode (a non-empty string is true there).
         boolean on = mode != null && !mode.isEmpty();
         o.prop(EVC + "Enabled", on ? "True" : "False");
-        o.propY(EVC + "Mode", on ? mode : null);
+        o.propY(EVC + "Mode", on ? mode : Quirks.orNull(null));
     }
 
-    private static void drsScore(ObjectOut o, XmlNode summary, boolean drsOn) {
+    /**
+     * The original: 0 while DRS is off, 0 for a negative score, the score otherwise; no summary, or a
+     * score that is unset while DRS is on, raises there and sends nothing (Q9 for the zeros).
+     */
+    private static void drsScore(ObjectOut o, XmlNode summary, boolean drsOn, BulkRow row) {
         Integer score = null;
         String s = Vals.integer(summary, "drsScore");
         if (s != null) {
@@ -140,14 +161,24 @@ public final class ClusterCollector {
                 score = null;
             }
         }
-        // DRS off, a negative score or none at all: vCenter has no score to give (DV-16).
-        o.statY(DRS + "DRS Score", drsOn && score != null && score >= 0 ? Double.valueOf(score) : null);
+        Double zero = Quirks.UNSET_AS_UPSTREAM ? Double.valueOf(0) : null;
+        Double v;
+        if (summary == null) {
+            v = null;
+        } else if (!drsOn) {
+            v = zero;
+        } else if (score == null) {
+            v = null;
+        } else {
+            v = score < 0 ? zero : Double.valueOf(score);
+        }
+        o.statY(DRS + "DRS Score", v);
     }
 
     private static void dpm(ObjectOut o, XmlNode ex) {
         XmlNode dpm = Vals.at(ex, "dpmConfigInfo");
         if (dpm == null) return;
-        o.prop(CFG + "DPM|Host Power Action Rate", Vals.integer(dpm, "hostPowerActionRate"));
+        o.prop(CFG + "DPM|Host Power Action Rate", Quirks.orNone(Vals.integer(dpm, "hostPowerActionRate")));
     }
 
     private static Double intOf(String s) {

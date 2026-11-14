@@ -264,6 +264,7 @@ public final class PropertyReader {
         }
         if (obj == null) throw new XMLStreamException("an object with no reference");
         BulkRow row = new BulkRow(obj);
+        row.asked(paths.keySet());
         for (Map.Entry<String, XmlNode> e : vals.entrySet()) row.put(e.getKey(), e.getValue());
         for (String[] m : miss) row.miss(m[0], m[1]);
         stats.totalNodes += nodes[0];

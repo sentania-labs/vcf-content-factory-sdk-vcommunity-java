@@ -17,6 +17,8 @@ public final class BulkRow {
     public final MoRef obj;
     private final Map<String, XmlNode> values = new HashMap<>();
     private final Set<String> missing = new HashSet<>();
+    /** The paths this read asked for (live: a path dropped as invalid leaves it); null for a hand-built row. */
+    private Set<String> asked;
     private final Map<String, String> missingFault = new HashMap<>();
 
     BulkRow(MoRef obj) {
@@ -28,6 +30,10 @@ public final class BulkRow {
         BulkRow r = new BulkRow(obj);
         r.values.putAll(values);
         return r;
+    }
+
+    void asked(Set<String> asked) {
+        this.asked = asked;
     }
 
     void put(String path, XmlNode val) {
@@ -47,6 +53,21 @@ public final class BulkRow {
     /** The value element of a path, or null when it was not returned. */
     public XmlNode val(String path) {
         return values.get(path);
+    }
+
+    /**
+     * True when the read of this path <em>worked</em>: it was asked for, and vCenter neither refused
+     * the path nor could not read it for this object (a missing-set fault). Then {@link #val} being
+     * null means the property is unset, which is a reading; when this is false, null means "unknown"
+     * and a collector must send nothing (design 5.1).
+     */
+    public boolean readable(String path) {
+        return (asked == null || asked.contains(path)) && !missing.contains(path);
+    }
+
+    /** The read of the path worked and the property is unset on this object. */
+    public boolean isUnset(String path) {
+        return readable(path) && !values.containsKey(path);
     }
 
     /** True when the path came back, empty arrays included. */

@@ -46,6 +46,46 @@ public final class Quirks {
      */
     public static final boolean ABSENT_OWN_TEXT_IS_EMPTY = true;
 
+    /**
+     * Q9 (P2 live differential, 2026-11-13): a value that was <em>read</em> and is <em>unset</em> is
+     * published the way upstream prints it, not left out. {@code str(None)} is the text {@code None};
+     * the original's own placeholders are {@code null} (an unset EVC mode, a HA key while HA is off, a
+     * missing vCenter setting, no install date, no HBA model), {@code []} (no maximum EVC mode),
+     * {@code N/A} (a NIC with no PCI device), {@code Unknown} (a disk with no backing or shares), and
+     * {@code 0} for a count, a DRS score while DRS is off, a timeout, a size. Which key prints which is
+     * decided where the key is built, from the original's code. {@code false}: nothing is sent for an
+     * unset value (DV-08 to DV-16, DV-11, DV-18). A value that vCenter did not return because the
+     * <em>read failed</em> is never one of these: it is withheld and counted, with either setting.
+     */
+    public static final boolean UNSET_AS_UPSTREAM = true;
+
+    /**
+     * Q10, R39 Duplex: upstream publishes {@code half-duplex} for a NIC whose link is down (no link speed),
+     * and for one whose speed has no duplex flag; only {@code full-duplex} says the flag is true.
+     * {@code false}: nothing for a link that is down (DV-15).
+     */
+    public static final boolean DUPLEX_HALF_WHEN_DOWN = true;
+
+    /** The original's {@code str(None)}. */
+    public static final String NONE = "None";
+    /** The original's {@code NULL_STATUS}. */
+    public static final String NULL = "null";
+
+    /** Q9: {@code str(value)} of a property that may be unset on a read that worked. */
+    public static String orNone(String v) {
+        return orText(v, NONE, UNSET_AS_UPSTREAM);
+    }
+
+    /** Q9: the original's {@code "null"} placeholder. */
+    public static String orNull(String v) {
+        return orText(v, NULL, UNSET_AS_UPSTREAM);
+    }
+
+    /** Q9: a placeholder of the original's for an unset value, when the switch is on; else nothing. */
+    public static String orText(String v, String placeholder, boolean on) {
+        return v != null ? v : on ? placeholder : null;
+    }
+
     /** The text of an own-kind property: the value as returned, or per {@link #ABSENT_OWN_TEXT_IS_EMPTY} when it was not. */
     public static String ownText(String raw) {
         return ownText(raw, ABSENT_OWN_TEXT_IS_EMPTY);

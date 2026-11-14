@@ -113,30 +113,33 @@ final class Coverage {
     /** Notes of implemented rows, where something differs from the plain read. */
     static String note(int row) {
         switch (row) {
-            case 1: return "ISO UTC text; a failed call is counted (F-HOST-INSTALLDATE), not sent as null (DV-10)";
+            case 1: return "ISO UTC text; no image manager or no date is \"null\" (Q9); a failed call is counted (F-HOST-INSTALLDATE), not sent as null (DV-10)";
             case 3: return "masked to the last group (DV-25)";
             case 6: return "metric, floor of days";
-            case 7: return "count of the adapters read; absent list withheld, empty list is 0 (DV-11)";
-            case 31: case 32: return "no PCI match: withheld (DV-14)";
-            case 33: case 34: case 35: return "unsigned four-digit hex (DV-33)";
-            case 39: return "withheld while the link is down (DV-15)";
+            case 7: return "count of the adapters read; none on a read that worked is \"0\" (Q9)";
+            case 31: case 32: return "no PCI device for the NIC: \"N/A\" (Q9)";
+            case 33: case 34: case 35: return "signed 16-bit text, as upstream (Q3); \"N/A\" with no device (Q9)";
+            case 39: return "half-duplex while the link is down, as upstream (Q10)";
             case 43: return "numeric property (framework typed push)";
-            case 47: return "withheld without VMFS information (DV-11)";
+            case 47: return "\"0\" for a datastore with no VMFS extents, as upstream (Q9)";
             case 56: return "withheld on a failed read-back or probe (DV-23)";
-            case 96: return "negative value read becomes 0, as the original";
-            case 120: return "metric; 0 for a returned empty device list, withheld when absent";
+            case 96: return "negative value read becomes 0, as the original; unset is 0 (Q9)";
+            case 120: return "metric; 0 when the VM lists no device (Q9)";
             case 121: return "type text of an unmapped controller is its vim25 type name (DV-34)";
             case 131: case 257: return "invalid entry dropped and reported (DV-26)";
             case 132: case 133: case 134: case 135: case 136: case 137: case 138: case 139: case 140:
             case 141: case 142:
-                return "HA off or host monitoring disabled: withheld (DV-09)";
+                return "HA off or host monitoring disabled: \"null\"; unset: \"None\" (Q9)";
             case 144: return "False when the cluster summary was read and names no mode (kept, Q2)";
-            case 146: case 147: case 148: case 149: return "DRS off or proactive configuration missing: withheld (DV-09)";
-            case 151: return "metric; absent withheld (DV-11)";
-            case 220: return "metric; DRS off or negative withheld (DV-16)";
+            case 145: return "\"null\" when EVC is off (Q9)";
+            case 146: case 147: case 148: case 149: return "DRS off, or the value missing: \"null\"; no proactive configuration: none, as upstream (Q9)";
+            case 151: return "metric; not returned: 0, as upstream's default (Q9)";
+            case 220: return "metric; DRS off or a negative score: 0, as upstream (Q9)";
             case 253: case 254: return "built in P1; counted here because the cycle pushes them with the property keys";
-            case 226: return "absent withheld (DV-13)";
-            default: return "";
+            case 226: return "unset: \"None\" (Q9)";
+            default:
+                if (row >= 60 && row <= 69) return "a setting vCenter lacks or leaves blank: \"null\" (Q9)";
+                return "";
         }
     }
 

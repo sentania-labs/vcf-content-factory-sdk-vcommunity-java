@@ -26,6 +26,20 @@ public final class PyTextTest {
         hex16();
         pyRound();
         jsonText();
+        unsetText();
+    }
+
+    /** Q9: the original's text for an unset value, and nothing when the switch is off. */
+    static void unsetText() {
+        T.eq("None", Quirks.orText(null, "None", true), "unset, switch on");
+        T.eq(null, Quirks.orText(null, "None", false), "unset, switch off");
+        T.eq("x", Quirks.orText("x", "None", true), "a value is a value");
+        T.eq("x", Quirks.orText("x", "None", false), "a value is a value");
+        T.eq("", Quirks.orText("", "None", true), "an empty text is a value");
+        T.check(Quirks.UNSET_AS_UPSTREAM && Quirks.DUPLEX_HALF_WHEN_DOWN, "shipped as the match");
+        T.eq("None", Quirks.orNone(null), "str(None)");
+        T.eq("null", Quirks.orNull(null), "NULL_STATUS");
+        T.done("unset text (Q9)");
     }
 
     /** Python's round(x, 2) of a float, and how a library's byte count becomes GiB. */

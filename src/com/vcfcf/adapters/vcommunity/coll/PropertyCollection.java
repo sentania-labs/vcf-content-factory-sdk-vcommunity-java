@@ -438,12 +438,15 @@ public final class PropertyCollection {
         if (st == null || allFailed(tally)) return null;
         Map<String, Map<String, String>> options = hostOptions(in, refs, advSettings);
         Map<String, String> installDate = new ConcurrentHashMap<>();
+        Set<String> installAnswered = ConcurrentHashMap.newKeySet();
         Map<String, List<HostCollector.Pkg>> packages = new ConcurrentHashMap<>();
-        perHostCalls(in, imageMgr, pkgList, installDate, packages);
+        perHostCalls(in, imageMgr, pkgList, installDate, installAnswered, packages);
         Set<String> wantedPkgs = new HashSet<>(pkgList);
         for (Map.Entry<String, ObjectOut> e : byMoref.entrySet()) {
             HostCollector.Extras x = new HostCollector.Extras();
             x.installDate = installDate.get(e.getKey());
+            // a host the read named no image manager for is the original's "null"; so is one whose call answered
+            x.installDateRead = !imageMgr.containsKey(e.getKey()) || installAnswered.contains(e.getKey());
             x.options = options == null ? null : options.get(e.getKey());
             x.packages = wantedPkgs.isEmpty() ? null : packages.get(e.getKey());
             HostCollector.addExtras(e.getValue(), x, advSettings);
@@ -493,7 +496,8 @@ public final class PropertyCollection {
     }
 
     private void perHostCalls(Input in, Map<String, MoRef> imageMgr, List<String> pkgList,
-            Map<String, String> installDate, Map<String, List<HostCollector.Pkg>> packages) {
+            Map<String, String> installDate, Set<String> installAnswered,
+            Map<String, List<HostCollector.Pkg>> packages) {
         if (imageMgr.isEmpty()) return;
         Set<String> wanted = new HashSet<>(pkgList);
         ExecutorService sub = Executors.newFixedThreadPool(HOST_POOL, named("vcommunity-host"));
@@ -502,8 +506,9 @@ public final class PropertyCollection {
             for (Map.Entry<String, MoRef> e : imageMgr.entrySet()) {
                 fs.add(sub.submit(() -> {
                     if (stopNow(in)) return; // an abandoned cycle makes no more calls
-                    String iso = installDate(in, e.getKey(), e.getValue());
-                    if (iso != null) installDate.put(e.getKey(), iso);
+                    String[] answer = new String[1];
+                    if (installDate(in, e.getKey(), e.getValue(), answer)) installAnswered.add(e.getKey());
+                    if (answer[0] != null) installDate.put(e.getKey(), answer[0]);
                     if (!wanted.isEmpty() && !stopNow(in)) {
                         List<HostCollector.Pkg> p = packages(in, e.getKey(), e.getValue(), wanted);
                         if (p != null) packages.put(e.getKey(), p);
@@ -532,18 +537,24 @@ public final class PropertyCollection {
         }
     }
 
-    private String installDate(Input in, String host, MoRef mgr) {
-        // the operation's name on the wire is installDate (lower case, unlike most of vim25); InstallDate is
-        // refused as an unknown method, which failed the call on every host (live differential, build 6)
+    /**
+     * {@code HostImageConfigManager.installDate()}: the operation's name on the wire is {@code installDate}
+     * (lower case, unlike most of vim25; {@code InstallDate} is refused as an unknown method).
+     *
+     * @param out receives the date as ISO UTC text when the call returned one
+     * @return true when the call answered (with or without a date); false when it failed (counted)
+     */
+    private boolean installDate(Input in, String host, MoRef mgr, String[] out) {
         VimResult<XmlNode> r = in.vim.call("<installDate xmlns=\"urn:vim25\"><_this type=\""
                 + xml(mgr.type) + "\">" + xml(mgr.value) + "</_this></installDate>", "installDate", CALL_MS);
         if (!r.isOk()) {
             in.failures.add(C_HOST, FailureCause.HOST_INSTALL_DATE, host, 1,
                     "the install date of the host could not be read: " + r.message());
-            return null;
+            return false;
         }
         XmlNode rv = r.value().find("returnval");
-        return rv == null ? null : PyText.isoUtc(rv.text());
+        out[0] = rv == null ? null : PyText.isoUtc(rv.text());
+        return true;
     }
 
     private List<HostCollector.Pkg> packages(Input in, String host, MoRef mgr, Set<String> wanted) {

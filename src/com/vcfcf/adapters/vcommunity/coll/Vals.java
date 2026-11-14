@@ -1,6 +1,7 @@
 package com.vcfcf.adapters.vcommunity.coll;
 
 import com.vcfcf.adapters.vcommunity.text.PyText;
+import com.vcfcf.adapters.vcommunity.text.Quirks;
 import com.vcfcf.adapters.vcommunity.vim.BulkRow;
 import com.vcfcf.adapters.vcommunity.vim.XmlNode;
 
@@ -20,6 +21,16 @@ final class Vals {
     /** {@code str(value)} of a requested path whose value is a single typed scalar. */
     static String scalar(BulkRow row, String path) {
         return PyText.scalar(row.val(path));
+    }
+
+    /**
+     * {@code str(prop_dict.get(path))}: the scalar's text; the text {@code None} when the path is unset
+     * on a read that worked (Q9); null (withheld) when the read of the path did not work or its value
+     * is not a single value.
+     */
+    static String scalarOrNone(BulkRow row, String path) {
+        String v = scalar(row, path);
+        return v != null ? v : row.isUnset(path) ? Quirks.orNone(null) : null;
     }
 
     /** The element at a dotted path below {@code root} (first child of each name), or null. */

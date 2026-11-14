@@ -116,7 +116,10 @@ public final class VmCollector {
                 "config.scheduledHardwareUpgradeInfo.scheduledHardwareUpgradeStatus");
         yv(o, row, c + "Hardware Upgrade|Policy", "config.scheduledHardwareUpgradeInfo.upgradePolicy");
         yv(o, row, c + "Hardware Upgrade|Target Version", "config.scheduledHardwareUpgradeInfo.versionKey");
-        o.propY(c + "Op Notification Timeout", opNotificationTimeout(Vals.scalar(row, "config.vmOpNotificationTimeout")));
+        String timeout = opNotificationTimeout(Vals.scalar(row, "config.vmOpNotificationTimeout"));
+        // unset on a read that worked: the original's 0 (Q9)
+        if (timeout == null && row.isUnset("config.vmOpNotificationTimeout")) timeout = Quirks.orText(null, "0", Quirks.UNSET_AS_UPSTREAM);
+        o.propY(c + "Op Notification Timeout", timeout);
         yv(o, row, c + "Memory Allocation Share Level", "config.memoryAllocation.shares.level");
         yv(o, row, c + "Config Status", "configStatus");
         yv(o, row, V + "Guest|State", "guest.guestState");
@@ -129,11 +132,11 @@ public final class VmCollector {
         yv(o, row, V + "Runtime|Consolidation Needed", "runtime.consolidationNeeded");
         yv(o, row, V + "Runtime|DAS protection", "runtime.dasVmProtection.dasProtected");
         yv(o, row, V + "Runtime|Min Required EVC Mode Key", "runtime.minRequiredEVCModeKey");
-        o.propY(V + "Guest|Customization Status", customization(Vals.scalar(row, "guest.customizationInfo.customizationStatus")));
+        o.propY(V + "Guest|Customization Status", customization(row, "guest.customizationInfo.customizationStatus"));
         yv(o, row, V + "Guest|Heartbeat Status", "summary.quickStats.guestHeartbeatStatus");
-        detailed(o, Vals.scalar(row, "guest.guestDetailedData"));
+        detailed(o, row, "guest.guestDetailedData");
         yv(o, row, V + "Summary|VM Path Name", "summary.config.vmPathName");
-        devices(o, row.val(DEVICES));
+        devices(o, row, row.val(DEVICES));
         extra(o, row.val(EXTRA_CONFIG), advParams);
         options(o, row, optionPaths, nonScalar);
         return o;
@@ -154,9 +157,12 @@ public final class VmCollector {
         }
     }
 
-    /** A flagged scalar key: its value, or none (and counted). */
+    /**
+     * A flagged scalar key, {@code str(prop_dict.get(path))}: its value; the text {@code None} when it
+     * is unset on a read that worked (Q9); nothing (and counted) when the read of it did not work.
+     */
     private static void yv(ObjectOut o, BulkRow row, String key, String path) {
-        o.propY(key, Vals.scalar(row, path));
+        o.propY(key, Vals.scalarOrNone(row, path));
     }
 
     /** {@code max(0, int(v))}; null when absent or not an integer. */
@@ -168,9 +174,33 @@ public final class VmCollector {
         return n.signum() < 0 && Quirks.NEGATIVE_OP_TIMEOUT_IS_ZERO ? "0" : n.toString();
     }
 
+    /**
+     * The customization status: stripped, and without {@code TOOLSDEPLOYPKG_}; the original's placeholder
+     * {@code null} when it is unset or empty (Q9); nothing when it could not be read.
+     */
+    static String customization(BulkRow row, String path) {
+        String v = Vals.scalar(row, path);
+        if (v == null && !row.isUnset(path)) return null;
+        String t = Quirks.strippedIfTruthy(v);
+        return t == null ? Quirks.orNull(null) : t.replace("TOOLSDEPLOYPKG_", "");
+    }
+
     static String customization(String v) {
         String t = Quirks.strippedIfTruthy(v);
         return t == null ? null : t.replace("TOOLSDEPLOYPKG_", "");
+    }
+
+    /**
+     * The seven guest detail fields: each starts as the original's {@code null} and is replaced by the
+     * stripped value when the pattern found a non-empty one (Q9); nothing when the string could not be read.
+     */
+    private static void detailed(ObjectOut o, BulkRow row, String path) {
+        String text = Vals.scalar(row, path);
+        if (text == null && !row.isUnset(path)) {
+            o.withhold(7);
+            return;
+        }
+        detailed(o, text);
     }
 
     private static void detailed(ObjectOut o, String text) {
@@ -179,12 +209,16 @@ public final class VmCollector {
             {"distroVersion", "Distro Version"}, {"kernelVersion", "Kernel Version"},
             {"prettyName", "Pretty Name"}};
         Map<String, String> m = DetailedDataParser.parse(text);
-        for (String[] f : fields) o.propY(V + "Guest|Detailed Data|" + f[1], Quirks.text(m.get(f[0])));
+        for (String[] f : fields) {
+            o.propY(V + "Guest|Detailed Data|" + f[1], Quirks.orNull(Quirks.text(m.get(f[0]))));
+        }
     }
 
-    private static void devices(ObjectOut o, XmlNode list) {
+    private static void devices(ObjectOut o, BulkRow row, XmlNode list) {
         if (list == null) {
-            o.statY(V + "Configuration|SCSI Controllers|Count", null);
+            // no devices on a read that worked: the original counts none (Q9), and has no adapter or disk to list
+            o.statY(V + "Configuration|SCSI Controllers|Count",
+                    row.isUnset(DEVICES) && Quirks.UNSET_AS_UPSTREAM ? Double.valueOf(0) : null);
             return;
         }
         int scsi = 0;
@@ -250,8 +284,11 @@ public final class VmCollector {
             return;
         }
         String p = V + "Network|Network Adapters:" + label + "|";
-        o.propY(p + "Type", Quirks.text(Vals.str(d, "addressType")));
-        o.propY(p + "Starts Connected", Vals.bool(d, "connectable.startConnected"));
+        o.propY(p + "Type", Quirks.orNone(Quirks.text(Vals.str(d, "addressType"))));
+        // no connectable at all: the original's "null"; one without the flag: str(None)
+        XmlNode connectable = d.child("connectable");
+        o.propY(p + "Starts Connected", connectable == null ? Quirks.orNull(null)
+                : Quirks.orNone(Vals.bool(connectable, "startConnected")));
     }
 
     private static void disk(ObjectOut o, XmlNode d) {
@@ -263,11 +300,19 @@ public final class VmCollector {
         String p = V + "Virtual Disk:" + label + "|";
         o.prop(p + "Label", label);
         o.prop(p + "Key", Vals.integer(d, "key"));
-        o.propY(p + "Controller Key", Vals.integer(d, "controllerKey"));
-        o.propY(p + "Eagerly Scrub", Vals.bool(d, "backing.eagerlyScrub"));
-        o.propY(p + "Split", Vals.bool(d, "backing.split"));
-        o.propY(p + "Write Through", Vals.bool(d, "backing.writeThrough"));
-        o.propY(p + "Storage Allocation Share Level", Quirks.text(Vals.str(d, "shares.level")));
+        o.propY(p + "Controller Key", Quirks.orNone(Vals.integer(d, "controllerKey")));
+        // a disk with no backing is "Unknown" to the original; a backing without the flag is str(None)
+        XmlNode backing = d.child("backing");
+        o.propY(p + "Eagerly Scrub", backing == null ? unknown() : Quirks.orNone(Vals.bool(backing, "eagerlyScrub")));
+        o.propY(p + "Split", backing == null ? unknown() : Quirks.orNone(Vals.bool(backing, "split")));
+        o.propY(p + "Write Through", backing == null ? unknown() : Quirks.orNone(Vals.bool(backing, "writeThrough")));
+        XmlNode shares = d.child("shares");
+        o.propY(p + "Storage Allocation Share Level", shares == null ? unknown()
+                : Quirks.orNone(Quirks.text(Vals.str(shares, "level"))));
+    }
+
+    private static String unknown() {
+        return Quirks.orText(null, "Unknown", Quirks.UNSET_AS_UPSTREAM);
     }
 
     private static void extra(ObjectOut o, XmlNode extra, List<String> keys) {

@@ -14,8 +14,8 @@ import java.util.Set;
 /**
  * The vCenter's own configuration keys (design 4.7, rows R60-R69 and R226).
  * The ten settings come from one {@code QueryOptions} for every setting; a
- * setting that is not there, or is blank, is not sent, and a failed call sends
- * none (DV-37).
+ * setting that is not there, or is blank, is the original's {@code null} (Q9), and a
+ * failed call sends none (DV-37).
  */
 public final class VCenterCollector {
 
@@ -60,10 +60,11 @@ public final class VCenterCollector {
     public static ObjectOut collect(Map<String, String> settings, About about) {
         ObjectOut o = new ObjectOut(KIND, null);
         for (Map.Entry<String, String> e : SETTINGS.entrySet()) {
-            o.propY(e.getValue(), settings == null ? null : settings.get(e.getKey()));
+            // a setting the vCenter lacks or leaves blank is the original's "null" (Q9); a read that failed sends none
+            o.propY(e.getValue(), settings == null ? null : Quirks.orNull(settings.get(e.getKey())));
         }
-        String patch = about == null ? null : about.patchLevel;
-        o.propY(Vals.P + "Configuration|Patch Level", Quirks.text(patch));
+        // no patch level on a session that was read: str(None) (Q9)
+        o.propY(Vals.P + "Configuration|Patch Level", about == null ? null : Quirks.orNone(Quirks.text(about.patchLevel)));
         return o;
     }
 }
