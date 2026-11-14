@@ -823,7 +823,7 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-51 | Pinned REST accepts SHA-256 only | SOAP and REST accept SHA-256 or SHA-512 | one trust manager | a 128-hex pin also works for libraries |
 | DV-52 | Enabled uses the proxy OS trust store (SOAP) and certifi (REST) | platform trust plus the accept dialog | in-collector adapter | a self-signed vCenter can be accepted in Validate Connection |
 | DV-53 | invalid instance fields warned twice per cycle | once | noise | one warning |
-| DV-54 | 101 views that are edited built-in views ship under built-in ids; 19 renamed built-ins ship under built-in ids | 101 converted with new descriptions (nine with new titles), under the ids minted for the corrected upstream build (the fix sent upstream as its pull request 92), not ids of this project: see DV-106; 19 not shipped, referenced in place | `pak-content-must-not-reuse-stock-ids.md` | installing or removing the pak never overwrites or deletes built-in views; 101 views have new descriptions and nine new titles |
+| DV-54 | 101 views that are edited built-in views ship under built-in ids; 19 renamed built-ins ship under built-in ids | **superseded 2026-11-14 (10.1):** every content id is minted in this pak's namespace `vcfcf_vcommunity`; the 101 views have new descriptions (nine with new titles) under new ids; the 19 are not shipped, referenced in place by their built-in ids | `pak-content-must-not-reuse-stock-ids.md` | installing or removing the pak never overwrites or deletes built-in views; 101 views have new descriptions and nine new titles |
 | DV-55 | (only if Q1 is accepted) `None`/`null` sent while a feature is off | on a set-to-unset transition, `""` pushed once | a property keeps its last value forever | a turned-off feature's settings show blank, not their old values |
 | DV-56 | whole `guest` object read for every VM | the ten sub-paths | bytes and heap | none (Detailed Data on an older vCenter: withheld, as rule 2) |
 | DV-57 | sentinel instance names (`Unknown Adapter`, `unknown`, `Unknown`) for devices without labels | such devices not published | a sentinel instance is a fake object | no `Unknown` instances |
@@ -876,7 +876,7 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-103 | the Windows account is sent to vCenter whatever the vCenter TLS mode, Trust on First Use (the default) included | the guest phase does not run while vCenter TLS Validation is Trust on First Use: health `Collector:guest|Status` FAILED with `F-GUEST-TLS-MODE`, Test Connection says so as a warning when a guest switch is on, and nothing is sent to vCenter. Enabled or Pinned runs it. One named constant, `GuestPlan.REQUIRE_CHECKED_VCENTER_TLS`, reverses this (the phase then runs and warns once per start) | a Windows account is usually more privileged than the read-only vCenter account, and in that mode it would cross a connection nobody checked (owner decision Q6 covers the vCenter account only) | enabling guest monitoring needs vCenter TLS Validation changed to Enabled or Pinned first |
 | DV-104 | a fixed look-back of five minutes for every VM, every cycle | the look-back is the time since that VM's events were last read, plus a minute, between 5 and 60 minutes; a VM last read longer ago than that is looked at for the 60 and the minutes before are counted (`F-GUEST-WINDOW`, collector PARTIAL). Records are still the newest one per (log, event id), as upstream's `-MaxEvents 1`. A VM is asked every collection when the time allows, as upstream's serial run does within its 1800 s, so this only matters at scale (DV-43) or after a gap | events of collections in which a VM was not reached would otherwise be skipped for good | fewer silently missed events |
 | DV-105 | the Cluster Delta counts are published once per window, as the stored samples say (DV-86, no memory) | the same, plus a memory of 30 minutes after a clean push of the counts: Operations does not read a stored value back at once (a minute or four, so the next collection, five minutes later, may still not see it), and the read-back alone sent the same counts twice (two consecutive collections after a restart, third live differential, L2). After the 30 minutes the read-back decides again, so counts that never landed are sent again | L2 | one publication per window |
-| DV-106 | the 101 views that began as edited built-in views ship under built-in ids (released 0.8.1) | they ship under the ids minted for the corrected upstream build, the fix sent upstream as its pull request 92 (`--ids keep`; `docs/design/inputs/import-report/id_map.tsv`). The design (10.1, DV-54) said new ids minted by the factory; none was minted here, and no id was changed | the conversion kept the corrected source's ids; the ids are not built-in ids, so the stock-id guard passes | if upstream merges that fix, both packs carry all 170 views under the same ids, the same sharing situation as the rest of the content (installing guide, co-install warning): each pak's install overwrites the other's, and uninstalling either deletes the shared views |
+| DV-106 | the 101 views that began as edited built-in views ship under built-in ids (released 0.8.1) | **retired 2026-11-14 (10.1):** build 16 and earlier kept the ids of the corrected upstream build (pull request 92, `--ids keep`), which would have been shared with upstream if merged. From build 17 every content id is minted in `vcfcf_vcommunity` (`--ids mint --mint-namespace vcfcf_vcommunity`; `docs/design/inputs/import-report/id_map.tsv`), so no id is shared with any Python pack line | the owner's decision (1) below; also avoids burned symptom ids (10.1b) | no sharing, so no overwrite or shared deletion; the co-install outcomes of earlier builds no longer apply, the pak states plainly that side by side is unsupported (installing guide, "Moving from the Python pack") |
 
 Superseded by quirk Q9 (P2 live fixes, build 7): DV-08, DV-09, DV-11 (counts and sizes), DV-12, DV-14, DV-16, DV-18 and the text and figure parts of DV-17 and DV-13 (an unset patch level is `None`); by Q10: DV-15. DV-10 stands: a failed `installDate` call is withheld and counted, and no image manager or no date is `null`.
 
@@ -1408,25 +1408,58 @@ packs `content/files/**`, `sdk_builder.py` "content/files/"). Inventory of 0.8.1
 
 ### 10.1 Id and name rules
 
+**Rule (owner decisions, 2026-11-14).** Every content id is minted in this pak's namespace `vcfcf_vcommunity` (deterministic
+uuid5, `--ids mint --mint-namespace vcfcf_vcommunity`; the old-to-new map is `docs/design/inputs/import-report/id_map.tsv`, and
+`section-dashboards-report.json` for the two Section dashboards). Content names are kept. Metric and property keys are kept.
+Built-in (product) views that content references in place keep their product ids; they are not shipped.
+
+Owner statements, verbatim, 2026-11-14:
+
+1. "Our symptoms and dashboards should all have, unique to us IDs and everything generated in our namespace so that there's no collisions, because we're going to ultimately label this as 3.0.x."
+2. "Metrics and properties by name should stay the same so that we retain history across major upgrade versions of O-NORs to E1s to Rs. But if there's dashboard symptoms, alert things that are going to cause collisions, we need to address those. Names should be consistent so that there's not issues, but IDs should be unique." (The transcription garbles names; the meaning is that history is kept across the upgrade from Onur's pack, to Ewan's, to this one.)
+3. "if somebody tries to install this while the other pack is installed, like, we can't work around that ... the guidance needs to be in the README, uninstall the Python pack, onurs 1.0, or Ewans 2.0, and then install ours. Like, if they install and have both running side by side, they're gonna have a bad time no matter what we do."
+
 | Content | Id | Name |
 |---|---|---|
-| The 101 views that began as edited built-in views | **as built (DV-106):** the ids of the corrected upstream build (pull request 92), kept; **as designed:** new ids minted by the factory | freshly written title and description; a title equal to any built-in view title on 8.18.7, 9.0.2 or 9.1.1 gets a distinct title |
-| The 19 views that only renamed a built-in | **not shipped** | dashboards and reports reference the built-in view in place, by its built-in id; E17 checks each exists with the same id on all three lines; one missing on a line is re-authored under a new id instead |
-| All other views (about 69) | upstream ids | upstream names |
-| Dashboards (52) | upstream ids | upstream names (50-character editor limit, `dashboard-name-limit-50-editor.md`) |
-| Reports (16), super metrics (2), symptoms (2), alerts (4) | upstream ids | upstream names |
+| All 170 views (including the 101 that began as edited built-in views) | minted in `vcfcf_vcommunity` | upstream names; the 101 get freshly written descriptions, nine of them new titles (a title equal to any built-in view title on 8.18.7, 9.0.2 or 9.1.1 gets a distinct title) |
+| The 19 views that only renamed a built-in | **not shipped** | dashboards and reports reference the built-in view in place, by its product id; E17 checks each exists with the same id on all three lines |
+| Dashboards (52), reports (16), super metrics (2), symptoms (10), alerts (4), recommendation (1) | minted in `vcfcf_vcommunity` | upstream names (50-character editor limit, `dashboard-name-limit-50-editor.md`) |
+| Metric and property keys | unchanged | unchanged, so history continues across the move from the Python pack |
 | Check-list files (6) | same file names (`esxi_advanced_system_settings`, `esxi_packages`, `vm_advanced_parameters`, `vm_options`, `windows_service_list`, `windows_event_list`) | rewritten: own header text, every entry commented, examples one per line with trailing commas |
 
-Every id that keeps upstream's value is checked against a clean export of each line by the stock-id guard
-(issue #345); a collision means re-id it like the 101.
+Consequences: the stock-id guard has nothing to check for content ids (none is a product id; it still checks the pak, `stock-id-check`).
+The pak shares no content id with any Python pack line, so installing it overwrites nothing of theirs and uninstalling either deletes nothing
+of the other's; the one shared thing is the six check-list file names. Running both packs is still unsupported (same keys onto the same objects,
+same content names), so the README and installing guide say: uninstall the Python pack (Onur's 1.x or Ewan's 2.x) first, then install this
+one. The deviations that existed only because ids were shared with upstream (DV-54, DV-106, the co-install outcomes of builds 15 and 16) are
+superseded or retired above.
+
+### 10.1b Why own ids (symptoms)
+
+A deleted symptom definition is soft-deleted; about 45 days later (global setting `CANCELLED_ALERTS_SYMPTOMS_RETENTION_TIME_IN_DAYS`) a cleaner
+removes the tombstone but leaves a relationship row, and re-creating that id then fails with a duplicate-key error, takes down every symptom
+of the same import batch and leaves the alert installed with empty conditions (factory note
+`2026-11-14-symptom-duplicate-key-on-902.md`; measured on 9.0.2, same code in 8.18.7 and 9.1.1 by bytecode). With upstream ids, this pak's alerts
+failed that way on an instance where the upstream pack had been removed months earlier. Own ids avoid it. Do not resurrect a dropped symptom id in a
+later release; mint a new one.
+
+### 10.1c Versioning
+
+Dev builds are stamped `0.0.0.N` (RULE-014); this build is `0.0.0.17`. The released line is to be labelled 3.0.x: Onur's pack is the 1.x
+line, Ewan's the 2.x line, this port the 3.x line. The version scheme and build numbers are unchanged by this record. Where the release version is
+set: `version` in `adapter.yaml` (currently `1.0.0`, to be changed to the 3.0.x value) and the `v*` git tag the repository's CI builds from; the dev stamp
+`0.0.0.<build_number>` comes from `build_number` in `adapter.yaml`. Not changed here.
+
+**Minimum product version (owner decision, 2026-11-14, verbatim):** "Also, minimum version should just be 8.18.x, not 8.18.7." The pak states VCF Operations /
+Aria Operations 8.18.x as its minimum; 8.18.7, 9.0.2 and 9.1.1 remain the tested versions and the versions of the lab measurements. The built manifest's
+`vcops_minimum_version` is a constant of the factory builder (8.0.0 at build 17) and is being changed there to 8.18.0 separately; the pak does not work around it.
 
 ### 10.1a Conversion decisions recorded after the P6 review
 
 - **Duplicate symptom id.** The source pak defines `SymptomDefinition-7675759b-2ca0-4847-87ed-e3e23acdf7a5` twice
   under two names: "Windows Service Down" (`symptomdefs/Windows Service Down Symptom.xml`) and "Windows Service
   Status Down" (inside `alertdefs/Windows Service Down.xml`). One id can carry one definition. The conversion kept the second,
-  name "Windows Service Status Down", chosen with `--prefer-source "alertdefs/Windows Service Down.xml"`. An install of the source
-  pack may show the other name for the same id. The importer's `merged_duplicates` lists only identical pairs, so
+  name "Windows Service Status Down", chosen with `--prefer-source "alertdefs/Windows Service Down.xml"`. (The source pack's own install may show the other name for the source id; this pak's id for it is its own.) The importer's `merged_duplicates` lists only identical pairs, so
   this choice is not in `report.json`; it is recorded here.
 - **No Summary binding.** The six "Object Summary Page for ..." dashboards carry no `summary_for`, so the pak has no
   `content/dashboards/dashboards.properties`, as the source pak. The importer had inferred the binding from the folder
