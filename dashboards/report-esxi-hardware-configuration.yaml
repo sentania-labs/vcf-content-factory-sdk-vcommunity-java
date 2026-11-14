@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
-id: d0d182c9-2d83-48e1-9891-46905631c057
+id: 1a5701f8-26bb-598d-b551-ffa1aeef3faf
 name: 'Report: ESXi Hardware Configuration'
 description: "Part of a report covering configuration. Designed to be run on a weekly basis, and be compared\
   \ with previous report. \nWorking with a VCF expert, tailor the dashboard and widget to the specific\

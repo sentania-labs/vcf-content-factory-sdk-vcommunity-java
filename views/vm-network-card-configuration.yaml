@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
-id: 1304ea60-5615-4a71-9454-68140418006f
+id: 1c28c222-0f65-5d40-a3be-53b87f375d5a
 name: VM Network Card Configuration
 description: 'Per-VM table of network adapter details: IP address, MAC address, port group and adapter
   type for the first adapter instance.'

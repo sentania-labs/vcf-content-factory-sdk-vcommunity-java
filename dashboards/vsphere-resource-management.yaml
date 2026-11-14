@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/vsphere resource management/vSphere Resource Management.json
-id: 3dff5e2d-5db1-4eec-97c7-b2b7c545ff3c
+id: 18b44b62-db71-5071-b930-100260dae503
 name: vSphere Resource Management
 description: CPU and memory resource management spans across VMs, resource pools and cluster. Ensure the
   settings of Share and Reservation match best practices.

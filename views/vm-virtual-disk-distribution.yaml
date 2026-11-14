@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
-id: 561d5ce1-c473-401a-bfc6-47472a305412
+id: 02958137-dce0-5c1d-ab3c-6a4a436e6a0b
 name: VM Virtual Disk Distribution
 description: Pie chart of virtual machines that have more than one virtual disk, grouped by disk count.
 data_type: distribution

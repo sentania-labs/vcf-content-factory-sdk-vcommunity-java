@@ -1,16 +1,31 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/alertdefs/Collection Warnings.xml
 name: vCommunityCollectionWarnings
-id: vCommunityCollectionWarnings
-description: |
-  The vCommunity adapter logged at least one warning in its last collection cycle, so some values were not sent. Work through these steps.
+id: Recommendation-ec5f14b5-b009-564e-8c31-66f205a839b1
+description: 'The vCommunity adapter logged at least one warning in its last collection cycle, so some
+  values were not sent. Work through these steps.
 
-  1. Open the vCenter's VMwareAdapter Instance object and read vCommunity|Collection Health|First Warning. It holds the text of the first warning. Also read Reads Failed in Last Cycle, Values Withheld in Last Cycle, Check-List Entries Skipped and Objects Not Matched to see what kind of problem it is.
 
-  2. Find the collector at fault. Each collector has a Collector:<name>|Status key (OK, PARTIAL, FAILED, SKIPPED or NOT RUN). For any that is not OK, read its Failures count and its Causes key, which lists each distinct cause with the number of failed reads. On the adapter's own instance object, Collection|failure_causes shows the causes of every collector in one line, and Collection|last_error shows the first one.
+  1. Open the vCenter''s VMwareAdapter Instance object and read vCommunity|Collection Health|First Warning.
+  It holds the text of the first warning. Also read Reads Failed in Last Cycle, Values Withheld in Last
+  Cycle, Check-List Entries Skipped and Objects Not Matched to see what kind of problem it is.
 
-  3. If that is not enough, open the adapter account log on the collector node: /storage/log/vcops/log/adapters/VCommunityAdapter/VCommunityAdapter_<id>.log. Each cycle writes one line starting "Collection cycle N finished in", with the reads failed in that cycle. Each warning has its own WARN line, naming the cause and the first object affected.
 
-  4. Fix the usual causes. A check-list file that cannot be read or has an invalid entry: correct the file, using commas between items. A privilege the account lacks (for example license, setting or host image reads): grant it to the vCenter account. A derived value with no recent statistics, such as network speed: check that the VMware adapter is collecting that object.
+  2. Find the collector at fault. Each collector has a Collector:<name>|Status key (OK, PARTIAL, FAILED,
+  SKIPPED or NOT RUN). For any that is not OK, read its Failures count and its Causes key, which lists
+  each distinct cause with the number of failed reads. On the adapter''s own instance object, Collection|failure_causes
+  shows the causes of every collector in one line, and Collection|last_error shows the first one.
 
-  The alert clears by itself after a cycle with no warnings.
+
+  3. If that is not enough, open the adapter account log on the collector node: /storage/log/vcops/log/adapters/VCommunityAdapter/VCommunityAdapter_<id>.log.
+  Each cycle writes one line starting "Collection cycle N finished in", with the reads failed in that
+  cycle. Each warning has its own WARN line, naming the cause and the first object affected.
+
+
+  4. Fix the usual causes. A check-list file that cannot be read or has an invalid entry: correct the
+  file, using commas between items. A privilege the account lacks (for example license, setting or host
+  image reads): grant it to the vCenter account. A derived value with no recent statistics, such as network
+  speed: check that the VMware adapter is collecting that object.
+
+
+  The alert clears by itself after a cycle with no warnings.'
 adapter_kind: VMWARE

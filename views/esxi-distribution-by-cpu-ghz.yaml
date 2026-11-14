@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
-id: 43b5a59e-d45b-4cef-b5a3-debb9a4e566f
+id: 0c7acc14-dec9-5b65-97d1-f90efc5ac933
 name: ESXi Distribution by CPU GHz
 description: Bar chart counting ESXi hosts by total CPU capacity in GHz, in fixed buckets that step from
   0 up to 300 GHz and beyond.

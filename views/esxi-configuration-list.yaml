@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
-id: 34fd21d0-0853-4f9c-b3f2-e52216842d91
+id: 4ef1ae75-df0c-5558-b0ee-466ff2412a1c
 name: ESXi Configuration List
 description: Wide per-host inventory table covering hardware vendor and model, ESXi and BIOS versions,
   CPU, memory, NTP and SNMP and SSH service state, storage paths, NICs, port group security rollups, parent

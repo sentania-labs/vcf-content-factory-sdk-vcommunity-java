@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/esxi configuration 2.0/ESXi Configuration 2.0.json
-id: b1b3ede5-32f2-4c49-a1a8-443dc23bd993
+id: 95801204-ecfe-53c3-9f03-b578db431833
 name: ESXi Configuration 2.0
 description: Highlight ESXi Host configurations that need your attention. Use this dashboard to fix incorrect
   settings, update outdated components and reduce overall cost by optimizing your environment. The dashboard

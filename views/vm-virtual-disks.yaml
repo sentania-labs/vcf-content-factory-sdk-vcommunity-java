@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
-id: 7ccaaa23-fb7c-4d4d-9258-e2f018681d60
+id: 3da37b9d-0b30-5824-bccf-22b2b6c74dcd
 name: VM Virtual Disks
 description: 'Per-VM table of virtual disk details: label, size in GB, datastore, raw device mapping flag,
   IOPS limit, provisioning format, SCSI controller type and bus sharing. Columns are bound to the first

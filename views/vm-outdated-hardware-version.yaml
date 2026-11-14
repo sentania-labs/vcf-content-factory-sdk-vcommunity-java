@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/vm outdated hardware version vcommunity/VM Outdated Hardware Version vCommunity.xml
-id: a694a0d6-0bfa-4129-a19c-2bad4e49e639
+id: 50a075b7-e7bd-52dd-9620-dcc97909abb3
 name: VM Outdated Hardware Version
 description: 'Absolute distribution of VM hardware version (VMX). Newer hardware enables new capabilities
   and ensure compatibility with later vSphere release.

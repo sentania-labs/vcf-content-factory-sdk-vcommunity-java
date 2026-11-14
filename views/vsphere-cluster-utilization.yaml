@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
-id: e6404a9a-40b2-4687-9d41-f23b79bc7f93
+id: 5dc6c1da-a0b3-58f7-85bb-5c93e4e3c9fc
 name: vSphere Cluster Utilization
 description: "List of clusters and their utilization. The context is capacity management, not performance.\
   \ 95th percentile is chosen. Note this is not a projection, so it's not looking into the future. \n\n\

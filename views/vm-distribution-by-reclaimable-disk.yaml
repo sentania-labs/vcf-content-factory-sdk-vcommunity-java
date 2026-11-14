@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
-id: eadc211b-772e-4178-863a-b1fe018929ae
+id: afe7c84e-d3aa-5f6e-993b-a9abe747e449
 name: VM Distribution by Reclaimable Disk
 description: Bar chart of powered-off virtual machines grouped by disk space used, in terabyte buckets
   from under 1 TB to over 20 TB.

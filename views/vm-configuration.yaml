@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
-id: f0a5f04e-17c3-4c6d-817c-eb65e296c9cd
+id: 76605805-51e9-5fd4-a7c5-bfcb33729ca7
 name: VM Configuration
 description: Per-VM configuration table with guest hostname, hardware version, guest OS as set in vCenter
   and as reported by Tools, vCPU and socket counts, memory, NIC count, missing guest counter flag, creation

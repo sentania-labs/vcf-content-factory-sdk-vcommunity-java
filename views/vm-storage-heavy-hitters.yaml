@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
-id: a54e74b2-06dc-4645-a64d-5040e5ba4c3d
+id: d278de9f-6c1c-5bf5-8471-2d0cba0e9749
 name: VM Storage Heavy Hitters
 description: Lists virtual machines whose average disk IOPS exceeds 10 over the last week, with peak IOPS
   and throughput at 5-minute and 1-hour granularity, plus datacenter. Highest 5-minute IOPS first.

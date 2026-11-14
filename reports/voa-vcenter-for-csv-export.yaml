@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/report - voa - vcenter for csv export/Report - VOA - vCenter for CSV Export.xml
-id: 11063635-cdc4-4a9f-8689-9f34ff08c41b
+id: 2bd63e41-054a-5772-a5da-362329c37257
 name: VOA - vCenter for CSV Export
 description: "This CSV file is part of VCF Optimization Assessment. It's not a standalone file. Use it\
   \ together with the other CSV export as each file only covers 1 object.  \n\nIt's designed for further\

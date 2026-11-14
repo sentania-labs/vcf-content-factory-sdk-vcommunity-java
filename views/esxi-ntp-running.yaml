@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
-id: 4e41a54d-a13c-409b-8c97-06e028f72bcc
+id: 68e5832f-84e8-5c85-9329-3784494e32d9
 name: ESXi NTP Running
 description: Pie chart splitting ESXi hosts by whether the NTP daemon service is running.
 data_type: distribution

@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/vsphere cluster configuration 2.0/vSphere Cluster Configuration 2.0.json
-id: d1941adc-5664-421e-af12-84736f76aa76
+id: e865f4a8-7936-53d8-ab2b-5a409c0f842e
 name: vSphere Cluster Configuration 2.0
 description: Highlight cluster configurations that need your attention. Use this dashboard to fix incorrect
   settings, update outdated components, and reduce overall cost by optimizing your environment. The dashboard

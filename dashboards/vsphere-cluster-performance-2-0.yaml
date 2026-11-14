@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/vsphere cluster performance 2.0/vSphere Cluster Performance 2.0.json
-id: 325fd7c9-b8a9-48f2-a018-be070f49e1b5
+id: e4feadb6-8cd1-540d-bbcb-2ec3e8945660
 name: vSphere Cluster Performance 2.0
 description: Monitor the performance of vSphere Clusters. Both the contention and utilization counters
   are shown. It lists all the clusters with their key performance indicators.

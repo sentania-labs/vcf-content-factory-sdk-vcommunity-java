@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
-id: 3af58d7d-168f-4edf-be3e-857cfb5c4d8e
+id: e61fe848-0956-5705-aa80-11e5f2ad5f1b
 name: ESXi HyperThread Active
 description: 'Count of ESXi hosts where the CPU Hyper-Threading (HT) is disabled. For better overall througput,
   enable HT.

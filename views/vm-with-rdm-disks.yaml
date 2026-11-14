@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
-id: 3ab2df38-8a5e-40df-912c-a354b5526d3f
+id: 32d3c347-afd7-5c89-85c0-ad974a1e4688
 name: VM with RDM disks
 description: VM having Raw Device Mapping devices instead of virtual disk (VMDK file). They increase operational
   complexity.

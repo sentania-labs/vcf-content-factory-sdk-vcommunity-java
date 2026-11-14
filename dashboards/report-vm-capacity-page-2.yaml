@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
-id: c6b3909f-f1ec-4691-b22c-70b7175e0c87
+id: 078dddf2-39d0-57b9-af49-cb94e3480bb1
 name: 'Report: VM Capacity (page 2)'
 description: "Part of a report covering capacity. Designed to be run on a weekly basis, and be compared\
   \ with previous week result. \nWorking with a VCF expert, tailor the dashboard and widget to the specific\

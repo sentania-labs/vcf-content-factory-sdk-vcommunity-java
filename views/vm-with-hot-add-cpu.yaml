@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
-id: 506b9eae-b51c-4467-abfb-890bbd824117
+id: ca0f888a-05ba-598b-9ed8-c96845a34ae7
 name: VM with Hot Add CPU
 description: Bar chart counting virtual machines that have CPU hot add set to true.
 data_type: distribution

@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 1/View - Set 1.xml
-id: 68de2830-eeaf-49df-aeda-a60fadc2b9e9
+id: d1778273-e842-5704-9aeb-71705da73b48
 name: VM Distribution by Reclaimable CPU
 description: Bar chart counting oversized virtual machines by how many vCPUs could be reclaimed, in buckets
   from 1 up to 16 and above.

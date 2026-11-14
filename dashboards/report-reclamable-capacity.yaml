@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
-id: a3b87c13-3965-443a-bdc9-a69d402e3cec
+id: afd4e974-e0cf-5222-a838-5c343c2c8378
 name: 'Report: Reclamable Capacity'
 description: "Part of a report covering capacity. Designed to be run on a weekly basis, and be compared\
   \ with previous week result. \nWorking with a VCF expert, tailor the dashboard and widget to the specific\

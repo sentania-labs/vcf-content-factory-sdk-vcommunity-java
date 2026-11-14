@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
-id: cb5ca3cc-1fda-4216-99e3-72d5565bfd59
+id: 9e603075-3f3d-5ffd-90da-863708b6637f
 name: vSphere Cluster Memory Reservation
 description: Bar chart counting clusters by reserved memory in TB, in five equal buckets across the observed
   range.

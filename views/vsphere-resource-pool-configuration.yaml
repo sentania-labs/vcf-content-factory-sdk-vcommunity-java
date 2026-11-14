@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
-id: f31188cc-6862-4885-9bfc-67c644a12cba
+id: 8df8c4e9-6c7b-5813-9385-3f8fda2d85db
 name: vSphere Resource Pool Configuration
 description: 'Table of resource pool settings: CPU and memory limits, reservations, expandable flags and
   shares, running and total VM counts, and tag.'

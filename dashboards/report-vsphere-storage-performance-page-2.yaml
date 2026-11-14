@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
-id: a36f514e-f544-4a89-88f1-2a85887b01cb
+id: 03d85620-2f9c-5ae6-8b65-d1ff430fa9aa
 name: 'Report: vSphere Storage Performance (page 2)'
 description: "Part of a report covering performance, as opposed to capacity. Designed to be run on a weekly\
   \ basis, and be compared with previous week result. \nWorking with a VCF expert, tailor the dashboard\

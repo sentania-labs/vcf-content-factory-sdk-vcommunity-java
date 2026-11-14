@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
-id: 25c8dd87-54b1-47b2-9de1-766253da9f01
+id: 0eba3bf5-4c51-56df-a207-65ac7c2d3f24
 name: vSphere Cluster Resource Management
 description: List of vSphere Clusters with relevant information for CPU and memory resources analysis.
 data_type: list

@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
-id: 8edbf859-2b36-4ea3-8fe5-68c44d7343f6
+id: 23709e89-81de-5326-8481-5a1ebdd93f0b
 name: 'Report: Guest OS Configuration'
 description: "Part of a report covering configuration. Designed to be run on a weekly basis, and be compared\
   \ with previous report. \nWorking with a VCF expert, tailor the dashboard and widget to the specific\

@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 1/View - Set 1.xml
-id: 182a4bfa-b9c9-448d-a41a-5982673f33dc
+id: 7de98fd2-a664-5288-b58e-d9c9cb394ac7
 name: ESXi Distribution by NIC Speed
 description: Donut chart showing how many ESXi hosts report each network link speed, one slice per distinct
   speed value.

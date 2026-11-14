@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
-id: c32894fc-f375-4f4d-b486-9f10473dc82b
+id: 05382cf8-4965-5b44-b52f-e7a7ebe9bd5a
 name: 'Report: VM Inventory (page 2)'
 description: "Part of a report covering inventory (what items you have where). Designed to be run on a\
   \ weekly basis, and be compared with previous week result. \nWorking with a VCF expert, tailor the dashboard\

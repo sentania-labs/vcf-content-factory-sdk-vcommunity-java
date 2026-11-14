@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
-id: f62618d5-7f91-47cf-a3b1-172d7da0b7da
+id: 8efbf206-9b8f-5937-bf87-98acdf71bdbf
 name: ESXi Switch property
 description: Table for distributed virtual switches with per-host check results for configuration sync,
   teaming mismatch, MTU mismatch, unsupported MTU and unsupported VLAN. Its host columns are bound to

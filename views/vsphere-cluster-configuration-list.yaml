@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
-id: 23c3c66b-cc72-4070-a67b-326841e7e5dd
+id: 77180095-090f-5b29-aabe-f6e30c1b7081
 name: vSphere Cluster Configuration List
 description: Per-cluster configuration table covering type, host and datastore counts, HA and admission
   control settings, DRS enablement, automation, affinity rules, migration and imbalance thresholds, plus

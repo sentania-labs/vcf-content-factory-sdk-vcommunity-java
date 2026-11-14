@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 1/View - Set 1.xml
-id: 1be018ca-1588-40c4-9bc4-9dfc4849d6a5
+id: 18303329-10d1-5587-aeea-d1d4f217fd78
 name: vSphere Port Group Configuration
 description: Wide table for distributed port groups with used and maximum ports, VM count, backing type,
   VLAN and trunk, override permissions, security policy settings, segment and switch IDs and uplink. Highest

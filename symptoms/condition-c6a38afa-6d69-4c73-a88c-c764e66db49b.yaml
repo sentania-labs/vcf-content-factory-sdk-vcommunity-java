@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/alertdefs/ESXi Host License Expiring.xml
-id: 9803e6a3-d41c-47f7-8a21-1504a5a99821
+id: f93d690c-d09f-5fa6-ad80-c6aa83e0bf57
 name: Condition_c6a38afa-6d69-4c73-a88c-c764e66db49b
 adapter_kind: VMWARE
 resource_kind: HostSystem

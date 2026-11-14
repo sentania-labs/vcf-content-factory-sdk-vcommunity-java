@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/vcf management services nodes view/VCF Management Services Nodes View.xml
-id: 5950ce2d-c619-49de-b854-06c4110e9197
+id: 2e6077eb-dac8-55b2-97ce-07ad52700e5b
 name: VCF Management Services Node Resource List
 description: Lists platform nodes of the management services with maximum CPU usage, memory usage, disk
   usage and status, each ordered highest first.

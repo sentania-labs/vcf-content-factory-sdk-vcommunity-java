@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/vcf management services volumes view/VCF Management Services Volumes View.xml
-id: 1a7a6700-bdfe-4918-9600-16adcccf063a
+id: 708eec78-2fcd-59b2-94e1-96ab6259245f
 name: VCF Management Services Volume Usage List
 description: Lists platform volumes of the management services with their volume group, component name
   and volume utilization percent, highest utilization first.

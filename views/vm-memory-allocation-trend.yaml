@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 1/View - Set 1.xml
-id: 8f46e7de-d976-45c4-b7ad-b2477cc96da3
+id: 8a515e12-0875-5906-afcf-350d7202e8aa
 name: VM Memory Allocation Trend
 description: Trend line of VM growth. It shows both the powered on and powered off, to see the relative
   movement over time

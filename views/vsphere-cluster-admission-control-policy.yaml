@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
-id: c87c6499-8beb-4caa-89c4-b6865d5692ea
+id: 575db3b2-5a44-541b-8f5b-b59e60696ae4
 name: vSphere Cluster Admission Control Policy
 description: Donut chart of clusters with HA admission control enabled, grouped by the admission control
   policy in use.

@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/vsphere cluster capacity 2.0/vSphere Cluster Capacity 2.0.json
-id: c608ccb8-218a-4834-8a9d-af9241e01de1
+id: 77e838ec-232b-5235-999e-9b47ceb95943
 name: vSphere Cluster Capacity 2.0
 description: Designed to be used weekly, not daily. It complements the Daily Check
 name_path: vCommunity
@@ -8,7 +8,6 @@ hidden: false
 time_range: last6Hour
 edit_allowed: true
 column_count: 0
-section_fallback: omit
 widgets:
 - id: w0
   type: HealthChart

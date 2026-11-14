@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
-id: f3dc056c-bd52-42f4-b821-bd8e37bd092b
+id: ea78690c-1c8f-55f2-abab-1d8d4fd6ed13
 name: ESXi on Maintenance Mode
 description: Lists ESXi hosts whose maintenance state is in maintenance, with connection state, power
   state, powered-on flag, hardware model and parent cluster, ordered by cluster.

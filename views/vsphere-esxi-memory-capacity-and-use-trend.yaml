@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
-id: 28042bb1-5d32-455c-86c0-b65af38c02ac
+id: f9dfe5ab-b7a0-5872-ac34-88ca469c49bc
 name: vSphere ESXi Memory Capacity and Use Trend
 description: Line chart for ESXi hosts of provisioned, usable and consumed memory and memory demand in
   GB over the previous week.

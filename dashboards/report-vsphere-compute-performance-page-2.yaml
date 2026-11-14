@@ -1,5 +1,5 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
-id: 9c05826d-2695-487a-a10e-fb58997002dc
+id: dbd22448-430c-53ff-87f7-5a9c45a7b582
 name: 'Report: vSphere Compute Performance (page 2)'
 description: "Part of a report covering performance, as opposed to capacity. Designed to be run on a weekly\
   \ basis, and be compared with previous week result. \nWorking with a VCF expert, tailor the dashboard\
@@ -66,7 +66,7 @@ widgets:
     y: 1
   adapter_kind: VMWARE
   resource_kind: ClusterComputeResource
-  metric_key: Super Metric|sm_99152539-e2c3-473d-a4bf-26fc56988f50
+  metric_key: Super Metric|sm_f7f64488-6a08-51b5-8f1b-c0229fe299d5
   metric_name: Super Metrics|CPU Usable Capacity Utilization (%)
   mode: all
   top_n: 15

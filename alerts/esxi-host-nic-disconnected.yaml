@@ -1,7 +1,7 @@
 # Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/alertdefs/ESXi Host NIC Disconnected Alert.xml
 name: ESXi Host NIC Disconnected
 description: ESXi Host NIC Disconnected
-id: 1e5a233a-36ef-4961-8e35-499de49390ee
+id: 5e1d2beb-7deb-5bde-bb72-0a67a899015c
 adapter_kind: VMWARE
 resource_kind: HostSystem
 type: 15
