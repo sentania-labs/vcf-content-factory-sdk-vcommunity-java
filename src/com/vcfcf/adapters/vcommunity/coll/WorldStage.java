@@ -36,7 +36,10 @@ final class WorldStage {
     private final UnscopedIds lists;
     private final String c;
 
-    WorldStage(DerivedContext x, UnscopedIds lists, String collector) {
+    private final DeltaMemory delta;
+
+    WorldStage(DerivedContext x, UnscopedIds lists, String collector, DeltaMemory delta) {
+        this.delta = delta;
         this.x = x;
         this.lists = lists;
         this.c = collector;
@@ -237,6 +240,8 @@ final class WorldStage {
         }
         // these counts already carry a sample from this window (stamped at or after its end)
         if (published >= w.endMs) return;
+        // sent by this instance a moment ago and not yet to be read back (L2)
+        if (delta.sentLately(w.endMs, x.now())) return;
         if (clusters == null) {
             x.withheld(2);
             return;
@@ -271,6 +276,7 @@ final class WorldStage {
         int[] t = PeriodicCheck.flips(previous, current);
         x.stat(world, StatKeys.DELTA_CLOSE, t[0]);
         x.stat(world, StatKeys.DELTA_OPEN, t[1]);
+        delta.queued(w.endMs);
         x.log.info("Cluster Delta counts for the window to " + new java.util.Date(w.endMs).toInstant() + ": "
                 + t[0] + " closed, " + t[1] + " opened, of " + clusters.size() + " clusters.");
     }

@@ -122,6 +122,15 @@ public final class PropertyCollection {
         public void commit() {
             afterCleanPush.run();
         }
+
+        /** Also run this after a clean push (the derived phase's memory of what it sent). */
+        public void alsoOnCleanPush(Runnable r) {
+            Runnable before = afterCleanPush;
+            afterCleanPush = () -> {
+                before.run();
+                r.run();
+            };
+        }
     }
 
     private final Log log;

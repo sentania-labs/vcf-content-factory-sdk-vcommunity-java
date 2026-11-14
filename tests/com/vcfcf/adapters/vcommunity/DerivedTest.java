@@ -540,11 +540,16 @@ public final class DerivedTest {
             l.r.run();
             chk(l, "vSphere World", WORLD, V + "Cluster Delta Close Count", 1.0);
             chk(l, "vSphere World", WORLD, V + "Cluster Delta Open Count", 1.0);
+            // the next collection, before Operations has made the stored counts readable (a minute or four of lag, L2): the
+            // push was clean and is remembered, so the same counts are not sent again
+            l.r.run();
+            T.check(l.st(1, WORLD, StatKeys.DELTA_CLOSE) == null && l.st(1, WORLD, StatKeys.DELTA_OPEN) == null,
+                    "not sent again while the read-back has not caught up");
             // the counts were stored just now (a sample at or after the window's end): not again this window
             int histories = l.d.requests(P4Data.HISTORY);
             l.d.stat(WORLD, StatKeys.DELTA_CLOSE, 1, 1000).stat(WORLD, StatKeys.DELTA_OPEN, 1, 1000);
             l.r.run();
-            T.check(l.st(1, WORLD, StatKeys.DELTA_CLOSE) == null, "published once per window");
+            T.check(l.st(2, WORLD, StatKeys.DELTA_CLOSE) == null, "published once per window");
             T.eq(histories, l.d.requests(P4Data.HISTORY), "and not read for");
             // a cluster still due holds the counts back
             Lab.class.getName();

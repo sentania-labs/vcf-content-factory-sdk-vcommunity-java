@@ -63,12 +63,19 @@ public final class DerivedPhase {
     public static final class Result {
         public final Map<String, Status> status = new LinkedHashMap<>();
         public boolean deadlineHit;
+        private Runnable afterCleanPush = () -> { };
+
+        /** Remember what was sent; call it once, after a clean push. */
+        public void commit() {
+            afterCleanPush.run();
+        }
     }
 
     private final Log log;
     private final LongSupplier clock;
     private final OpsMapCache datacenterMaps = new OpsMapCache();
     private final UnscopedIds unscoped = new UnscopedIds();
+    private final DeltaMemory delta = new DeltaMemory();
 
     public DerivedPhase(Log log, LongSupplier clock) {
         this.log = log == null ? Log.NONE : log;
@@ -98,7 +105,7 @@ public final class DerivedPhase {
         Status world = Status.NOT_RUN;
         Status business = Status.NOT_RUN;
         if (!x.stop()) {
-            new WorldStage(x, unscoped, C_WORLD).run();
+            new WorldStage(x, unscoped, C_WORLD, delta).run();
             world = status(x, in, C_WORLD);
         }
         if (!x.stop()) {
@@ -111,6 +118,8 @@ public final class DerivedPhase {
         res.status.put(C_WORLD, world);
         res.status.put(C_BUSINESS, business);
         res.deadlineHit = x.deadlineHit;
+        final long at = x.now();
+        res.afterCleanPush = () -> delta.commit(at);
         return res;
     }
 
