@@ -279,4 +279,4 @@ prints `SECTIONS OMITTED` for them while the floor is below VCF Operations 9.1.1
 
 ## License
 
-MIT, see `LICENSE`. `NOTICE` credits the authors of the original pack, whose design this port follows.
+MIT for the adapter code, see `LICENSE`. The bundled content derives from a PolyForm Noncommercial source and its terms are pending the owner's confirmation (`NOTICE`; the pak shows it as its license text, `EULA.txt`). `NOTICE` credits the authors of the original pack, whose design this port follows.
