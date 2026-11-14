@@ -1,0 +1,110 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: 46054d7d-335f-4c11-a3e5-18cf47a9f1f0
+name: 'Report: Executive Summary (page 3)'
+description: "Part of a report for senior IT Leadership. Designed to be run on a weekly basis, and be\
+  \ compared with previous report. \nWorking with a VCF Consultant, tailor the dashboard and widget to\
+  \ the specific requirements."
+name_path: VCF Optimization Assessment
+shared: false
+hidden: true
+disabled: true
+time_range: last7Days
+doc_center_key: vcom_788
+column_proportion: 1-1
+widgets:
+- id: w0
+  type: HealthChart
+  title: 10th Percentile Performance of All Clusters
+  coords:
+    w: 12
+    x: 1
+    h: 5
+    y: 7
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vCommunity|Worst 10 Percent Cluster Performance
+  metric_name: vCommunity|Worst 10 Percent Cluster Performance
+  metric_full_name: Super Metrics|vSphere Clusters Performance (%)
+  mode: resource
+  depth: 1
+  chart_height: 190
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 267
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+- id: w1
+  type: HealthChart
+  title: Count of Clusters not in Green zone
+  coords:
+    w: 12
+    x: 1
+    h: 5
+    y: 12
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: Super Metric|sm_dda97f70-65e0-4c5a-b6f0-7acec936a0bd
+  metric_name: Super Metrics|vSphere Clusters not Green
+  metric_full_name: Super Metrics|vSphere Clusters not Green
+  mode: resource
+  depth: 1
+  chart_height: 190
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 1
+  orange_bound: 5
+  red_bound: 10
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 266
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+- id: w2
+  type: View
+  title: VM Contention at 99th Percentile
+  coords:
+    w: 8
+    x: 1
+    h: 6
+    y: 1
+  view: vSphere VM 99th Percentile Performance Profile
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 323
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-mem%2525257C20_sec_peak_host_contentionPct1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-virtualDisk%2525257C20_sec_peak_totalLatency_average2%25255Ehidden%25253Db%2525253A0
+- id: w3
+  type: TextDisplay
+  title: Explanation
+  coords:
+    w: 4
+    x: 9
+    h: 6
+    y: 1
+  html: <div>The Summary table works in 2 steps. <br></div><div>First across time, then across VMs.</div><div><br></div><div>In
+    the first step, each VM is measured across time. It calculates the VM memory contention (%) at the
+    99th percentile of the reporting period. For example, if there are 100 data points, it takes the 99th
+    worst data. <br></div><div><br></div><div>In the second step, it takes the average of all VMs. As
+    a leading indicator, it also takes the worst of all these 99th percentile data.</div>
+  ui:
+    height: 324
+interactions: []

@@ -1,0 +1,142 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: a746c425-7fd0-4106-bdb1-c7684081d1ba
+name: vSphere Resource Pool List
+description: Resource pool table combining running VM count, CPU and memory contention, CPU usage, effective
+  limit, and CPU and memory limits, reservations, shares and expandable flags.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ResourcePool
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|number_running_vms
+  display_name: Running VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|capacity_contentionPct
+  display_name: CPU Contention
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 2.5
+  orange_bound: 5
+  red_bound: 10
+  ascending_range: false
+- attribute: config|cpuAllocation|limit
+  display_name: CPU Limit
+  unit: auto
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0
+  orange_bound: 1
+  red_bound: 2
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|cpuAllocation|reservation
+  display_name: CPU Reservation
+  unit: ghz
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 1
+  orange_bound: 100
+  red_bound: 200
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|cpuAllocation|shares|shares
+  display_name: CPU Shares
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  red_bound: 2001
+  ascending_range: true
+  omit:
+  - roll_up_type
+- attribute: cpu|usagemhz_average
+  display_name: Usage
+  unit: ghz
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|effective_limit
+  display_name: Effective Limit
+  unit: ghz
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: config|cpuAllocation|expandableReservation
+  display_name: Expandable CPU?
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.2
+  orange_bound: 0.1
+  red_bound: 0
+  ascending_range: true
+  omit:
+  - roll_up_type
+- attribute: mem|host_contentionPct
+  display_name: Memory Contention
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 1
+  orange_bound: 2
+  red_bound: 4
+  ascending_range: false
+- attribute: config|memoryAllocation|limit
+  display_name: Memory Limit
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0
+  orange_bound: 1
+  red_bound: 2
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|memoryAllocation|reservation
+  display_name: Memory Reservation
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 1
+  orange_bound: 1000
+  red_bound: 2000
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|memoryAllocation|shares|shares
+  display_name: Memory Shares
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  red_bound: 81921
+  ascending_range: true
+  omit:
+  - roll_up_type
+- attribute: config|memoryAllocation|expandableReservation
+  display_name: Expandable Memory?
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.2
+  orange_bound: 0.1
+  red_bound: 0
+  ascending_range: true
+  omit:
+  - roll_up_type
+page_size: 50
+omit:
+- include_resource_creation_time

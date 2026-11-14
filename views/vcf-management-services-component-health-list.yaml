@@ -1,0 +1,59 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/vcf management services components view/VCF Management Services Components View.xml
+id: 181c5479-8b1b-40e7-ae36-9aee36746eda
+name: VCF Management Services Component Health List
+description: Table for management services components with a 15-minute availability value and the peak
+  and average memory utilization against requests.
+data_type: list
+presentation: list
+subject: {}
+subjects:
+- adapter_kind: VMSP
+  resource_kind: ops-logs
+- adapter_kind: VMSP
+  resource_kind: salt
+- adapter_kind: VMSP
+  resource_kind: salt-raas
+- adapter_kind: VMSP
+  resource_kind: telemetry-acceptor
+- adapter_kind: VMSP
+  resource_kind: vcf-distribution
+- adapter_kind: VMSP
+  resource_kind: vcf-fleet-depot
+- adapter_kind: VMSP
+  resource_kind: vcf-fleet-lcm
+- adapter_kind: VMSP
+  resource_kind: vcf-obs-data-platform
+- adapter_kind: VMSP
+  resource_kind: vcf-sddc-lcm
+- adapter_kind: VMSP
+  resource_kind: vidb
+- adapter_kind: VMSP
+  resource_kind: vsp
+usage:
+- dashboard
+- content
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: status|health_15min
+  display_name: Availability
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  red_bound: Unhealthy
+- attribute: memory|utilizationVsRequests-max-15min
+  display_name: Peak Memory Utilization
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: memory|utilizationVsRequests-avg-15min
+  display_name: Average Memory Utilization
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+page_size: 50
+omit:
+- include_resource_creation_time

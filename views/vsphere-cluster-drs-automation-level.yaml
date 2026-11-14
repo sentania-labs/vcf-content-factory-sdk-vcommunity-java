@@ -1,0 +1,46 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: 818ca87d-feb3-4b3c-8534-ba47cfeaf610
+name: vSphere Cluster DRS Automation Level
+description: Donut chart of clusters grouped by their DRS migration threshold setting, one slice per value,
+  sorted ascending.
+data_type: distribution
+presentation: donut-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  types:
+  - descendant
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: configuration|drsconfig|vmotionRate
+  display_name: .
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+  omit:
+  - roll_up_type
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  is_sum: false
+additional_columns:
+- attribute: configuration|drsconfig|targetBalance
+  localized_name: Cluster Configuration|DRS Configuration|Tolerable imbalance threshold
+  display_name: Imbalance threshold
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+- attribute: configuration|drsconfig|defaultVmBehavior
+  localized_name: Cluster Configuration|DRS Configuration|Default DRS Behaviour
+  display_name: DRS Behaviour
+  is_string_attribute: true
+  is_property: true
+  roll_up_count: 0
+omit:
+- include_resource_creation_time

@@ -1,0 +1,34 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 39b1dc9d-2218-4ade-8fd7-a75f07dda262
+name: ESXi Network Interfaces
+description: List the summary of the network properties associated with the Distributed Virtual Switch
+  for the selected Host System in your environment.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- instanced_group:
+    name: GROUP_net
+    show_instance_name: true
+    keep_instance_summary: false
+  sort: asc
+  omit:
+  - display_name
+- attribute: net:vmk0|ip_address
+  display_name: IP Address
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+distribution_color: 6870C4
+hide_object_name: true
+omit:
+- include_resource_creation_time

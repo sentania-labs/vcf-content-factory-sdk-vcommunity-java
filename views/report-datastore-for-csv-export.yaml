@@ -1,0 +1,202 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/report - voa - datastore for csv export/Report - VOA - Datastore for CSV export.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: f66bed30-c7fd-4072-8bf8-1b0e4bce1ce7
+name: 'Report: Datastore for CSV export'
+description: "A simple table for export as a CSV file. Used in report only, hence it has no formatting.\
+  \ Just like the rest of the report, it is designed for weekly, not daily nor monthly. \n\nSchedule it\
+  \ to run end of the week, such as Sunday 23:59"
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: Datastore
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|type
+  display_name: Datastore Type
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+- attribute: summary|isLocal
+  display_name: Is Local?
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|vmfs_version
+  display_name: VMFS version
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: datastore|hostScsiDiskPartition
+  display_name: VMFS Extents
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|maintenanceState
+  display_name: Maintenance
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: datastore|hostcount
+  display_name: Hosts
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: summary|total_number_vms
+  display_name: Total VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|total_number_clusters
+  display_name: vSphere Clusters
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|path
+  display_name: Directory Path
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|diskCapacity
+  display_name: Capacity
+  unit: tb
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+- attribute: capacity|usableCapacity
+  display_name: Usable Capacity
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: capacity|consumer_provisioned
+  display_name: Provisioned Space
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: capacity|used_space
+  display_name: Used Space
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: capacity|usedSpacePct
+  display_name: Used Space
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: reclaimable|orphaned_disk|diskspace
+  display_name: Orphaned Disk
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|max_vm_disk_latency
+  display_name: Max VM Disk Latency
+  unit: msec
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: summary|number_vm_templates
+  display_name: VM Templates
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: datastore|totalReadLatency_average
+  display_name: Read Latency
+  unit: msec
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: datastore|totalWriteLatency_average
+  display_name: Write Latency
+  unit: msec
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: datastore|numberReadAveraged_average
+  display_name: Reads/secs
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: datastore|numberWriteAveraged_average
+  display_name: Writes/sec
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: datastore|read_average
+  display_name: Read Throughput
+  unit: mbps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: datastore|write_average
+  display_name: Write Throughput
+  unit: mbps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: summary|parentDatacenter
+  display_name: Data Center
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|parentVcenter
+  display_name: vCenter
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|tag
+  display_name: vSphere Tags
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|folder
+  display_name: vSphere Folder
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

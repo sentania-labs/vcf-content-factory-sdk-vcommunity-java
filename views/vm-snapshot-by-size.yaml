@@ -1,0 +1,49 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: 77cb575f-e70d-4549-9779-281203327307
+name: VM Snapshot by Size
+description: 'Bar chart of virtual machines whose snapshot age is above one day, grouped by snapshot size
+  in GB: under 100, 100 to 200, 200 to 400 and larger.'
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+  filter:
+  - - filter_type: properties
+      metric_key: diskspace|snapshot|snapshotAge
+      condition: GREATER_THAN
+      value: 1
+time_window:
+  unit: MINUTES
+  count: 1
+columns:
+- attribute: diskspace|snapshot
+  display_name: Snapshot size
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+buckets:
+  dynamic: false
+  ranges:
+  - start: 0
+    end: 100
+    color: 8ABF5B
+  - start: 100
+    end: 200
+    color: EACC58
+  - start: 200
+    end: 400
+    color: EB953F
+  - start: 400
+    end: 9999
+    color: ED665A
+  min_value: 0
+  max_value: 0
+  is_sum: false
+omit:
+- include_resource_creation_time

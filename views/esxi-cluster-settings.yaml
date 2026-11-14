@@ -1,0 +1,197 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: 16b9b05c-c0e0-4c1c-b7d5-7232d0a64687
+name: ESXi Cluster Settings
+description: Per-host table of ESXi version and build, BIOS, CPU sockets, cores, model and speed, memory,
+  datastore and NIC counts, hyperthreading, power policy, vMotion, shell and SSH state, and active storage
+  paths. Ends with an average row.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: config|product|apiVersion
+  display_name: ESXi
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: sys|build
+  display_name: Build Number
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: hardware|biosVersion
+  display_name: BIOS
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: hardware|cpuInfo|numCpuCores
+  display_name: Total Cores
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 60
+  orange_bound: 40
+  red_bound: 20
+  ascending_range: true
+- attribute: hardware|memorySize
+  display_name: Memory
+  unit: tb
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.9
+  orange_bound: 0.6
+  red_bound: 0.3
+  ascending_range: true
+- attribute: summary|total_number_datastores
+  display_name: Datastores
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: config|network|nnic
+  display_name: NICs
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: hardware|cpuInfo|numCpuPackages
+  display_name: CPU Sockets
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: cpu|cpuModel
+  display_name: CPU Model
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: cpu|speed
+  display_name: CPU Capacity
+  unit: ghz
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: config|hyperThread|active
+  display_name: HT Enabled
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 'false'
+  orange_bound: '1'
+  red_bound: '2'
+  ascending_range: true
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: hardware|powerManagementPolicy
+  display_name: Power Management
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: sys|vmotionEnabled
+  display_name: vMotion Status
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0
+  orange_bound: -10
+  red_bound: -20
+  ascending_range: true
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: config|security|service:ESXi Shell|isRunning
+  display_name: Shell Enabled?
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 'true'
+  orange_bound: 'true'
+  red_bound: 'true'
+  ascending_range: true
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: config|security|service:SSH|isRunning
+  display_name: SSH Enabled?
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 'true'
+  orange_bound: 'true'
+  red_bound: 'true'
+  ascending_range: true
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: config|storageDevice|multipathInfo|numberofActivePath
+  display_name: '# of Active Paths'
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+summary:
+- display_name: Average
+  aggregation: AVG
+  columns:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

@@ -1,0 +1,19 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/alertdefs/ESXi Host License Expiring.xml
+id: ff8e08f4-5af5-4f93-bb5d-4bdb3ff07070
+name: Condition_93e95c4e-63aa-4e04-b332-cc27317966e2
+adapter_kind: VMWARE
+resource_kind: HostSystem
+severity: WARNING
+wait_cycles: 1
+cancel_cycles: 1
+disable_in_base_policy: true
+symptom_def_type: condition_self
+condition:
+  type: metric_static
+  key: vCommunity|Licensing:vSphere 8 Enterprise Plus for VCF|Remaining Days
+  operator: LT
+  value: 90.0
+omit:
+- wait_cycles
+- cancel_cycles
+- instanced

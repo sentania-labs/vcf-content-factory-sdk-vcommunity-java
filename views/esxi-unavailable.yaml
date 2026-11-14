@@ -1,0 +1,115 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: dde0721f-7e54-4233-a29c-5558636b5301
+name: ESXi Unavailable
+description: Lists ESXi hosts that are powered off, not connected, unavailable, in maintenance or in quarantine,
+  with their power, connection, maintenance and quarantine states, version and cluster. A host matching
+  any one condition appears.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+  filter:
+  - - filter_type: metrics
+      metric_key: sys|poweredOn
+      condition: EQUALS
+      value: 0
+      transform: CURRENT
+      business_hours: false
+  - - filter_type: properties
+      metric_key: runtime|connectionState
+      condition: EQUALS
+      value: notConnected
+      transform: CURRENT
+  - - filter_type: properties
+      metric_key: runtime|isUnavailable
+      condition: EQUALS
+      value: 1
+      transform: CURRENT
+  - - filter_type: properties
+      metric_key: runtime|maintenanceState
+      condition: EQUALS
+      value: inMaintenance
+      transform: CURRENT
+  - - filter_type: properties
+      metric_key: runtime|powerState
+      condition: EQUALS
+      value: Powered Off
+      transform: CURRENT
+  - - filter_type: properties
+      metric_key: runtime|quarantineState
+      condition: EQUALS
+      value: inQuarantine
+      transform: CURRENT
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: runtime|powerState
+  display_name: Power State
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: runtime|connectionState
+  display_name: Connection State
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+  yellow_bound: disconnected
+  orange_bound: .
+  red_bound: notResponding
+  ascending_range: true
+  omit:
+  - roll_up_type
+- attribute: runtime|isUnavailable
+  display_name: Responsive?
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.1
+  orange_bound: 0.2
+  red_bound: 1
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: runtime|maintenanceState
+  display_name: Maintenance State
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: runtime|quarantineState
+  display_name: Quarantine State
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|product|apiVersion
+  display_name: Version
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|parentCluster
+  display_name: Cluster
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

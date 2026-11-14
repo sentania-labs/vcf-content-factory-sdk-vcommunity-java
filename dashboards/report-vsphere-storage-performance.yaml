@@ -1,0 +1,61 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: 8119d513-b05d-4142-8df6-caa8f38f1d7d
+name: 'Report: vSphere Storage Performance'
+description: "Part of a report covering performance, as opposed to capacity. Designed to be run on a weekly\
+  \ basis, and be compared with previous week result. \nWorking with a VCF expert, tailor the dashboard\
+  \ and widget to the specific requirements."
+name_path: VCF Optimization Assessment
+shared: false
+hidden: true
+disabled: true
+time_range: last7Days
+doc_center_key: vcom_788
+column_proportion: 1-1
+widgets:
+- id: w0
+  type: View
+  title: Total Throughput (MB/s)
+  coords:
+    w: 12
+    x: 1
+    h: 8
+    y: 9
+  view: 4c335172-0eb4-4b8e-b019-7bdf51f5ed57
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 438
+    legacy_xy:
+      x: 2
+      y: 1
+    states:
+    - key: perm_isDashboardTime_
+      value: b%3A1
+    - key: permSelectedDate_
+      value: s%3A%7B%22minType%22%3A%22.TimeIntervalControl%22%2C%22count%22%3A%227%22%2C%22unit%22%3A%22DAYS%22%7D
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w1
+  type: View
+  title: Total IOPS
+  coords:
+    w: 12
+    x: 1
+    h: 8
+    y: 1
+  view: e6cd13d9-02af-4252-af46-1f8402cc3296
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 437
+    legacy_xy:
+      x: 1
+      y: 1
+    states:
+    - key: permSelectedDate_
+      value: s%3A%7B%22minType%22%3A%22.TimeIntervalControl%22%2C%22count%22%3A%227%22%2C%22unit%22%3A%22DAYS%22%7D
+    - key: perm_isDashboardTime_
+      value: b%3A1
+    - key: perm_toolbarVisible_
+      value: b%3A0
+interactions: []

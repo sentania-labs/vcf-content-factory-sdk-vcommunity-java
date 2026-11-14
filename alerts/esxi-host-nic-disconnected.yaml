@@ -1,0 +1,21 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/alertdefs/ESXi Host NIC Disconnected Alert.xml
+name: ESXi Host NIC Disconnected
+description: ESXi Host NIC Disconnected
+id: 1e5a233a-36ef-4961-8e35-499de49390ee
+adapter_kind: VMWARE
+resource_kind: HostSystem
+type: 15
+sub_type: 19
+wait_cycles: 2
+cancel_cycles: 2
+criticality: SYMPTOM_BASED
+impact:
+  badge: HEALTH
+disable_in_base_policy: true
+symptom_sets:
+  operator: ALL
+  sets:
+  - defined_on: SELF
+    operator: ALL
+    symptoms:
+    - name: ESXi Host NIC Disconnected

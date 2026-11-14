@@ -1,0 +1,44 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 39e00d79-920b-4d6a-bf44-e7eb2eb69df8
+name: ESXi Distribution by NIC Count
+description: Relative distribution of ESXi physical network card speed. Use 25 Gb NIC or higher for faster
+  performance, especially if ESXi runs distributed storage. Keep the total number of combination minimal
+  as a high number complicate operations. Also, check ESXi with < 10 Gb NIC.
+data_type: distribution
+presentation: donut-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+  types:
+  - descendant
+usage:
+- dashboard
+- report
+- content
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: config|network|nnic
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - display_name
+  - roll_up_type
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  is_sum: false
+additional_columns:
+- attribute: config|network|linkspeed
+  localized_name: Configuration|Network|Average Physical NIC Speed
+  display_name: Average Speed
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+omit:
+- include_resource_creation_time

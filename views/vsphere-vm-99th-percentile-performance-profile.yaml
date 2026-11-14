@@ -1,0 +1,51 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: 1045bd7c-eae6-441b-99c8-ac2fc102336f
+name: vSphere VM 99th Percentile Performance Profile
+description: Lists VMs by 99th percentile peak memory contention, disk latency and CPU ready over one
+  week. Summary rows show the average and worst value across all VMs.
+data_type: list
+presentation: summary
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+time_window:
+  unit: WEEKS
+  count: 1
+columns:
+- attribute: mem|20_sec_peak_host_contentionPct
+  display_name: The VM Peak Memory Contention at the 99th percentile of entire collection period
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 99
+- attribute: virtualDisk|20_sec_peak_totalLatency_average
+  display_name: The VM Peak Disk Latency at the 99th percentile of entire collection period
+  unit: msec
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 99
+- attribute: cpu|20_sec_peak_readyPct
+  display_name: The VM Peak CPU Ready at the 99th percentile of entire collection period
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 99
+summary:
+- display_name: Average of all VMs
+  aggregation: AVG
+  columns:
+  - 0
+  - 1
+  - 2
+- display_name: Worst of all VMs
+  aggregation: MAX
+  columns:
+  - 0
+  - 1
+  - 2
+page_size: 50
+omit:
+- metadata

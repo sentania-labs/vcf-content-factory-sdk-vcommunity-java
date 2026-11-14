@@ -1,0 +1,109 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: 6a61ab77-3d45-4c93-b932-1c67640e29b1
+name: 'Report: VM Inventory (page 3)'
+description: "Part of a report covering inventory (what items you have where). Designed to be run on a\
+  \ weekly basis, and be compared with previous week result. \nWorking with a VCF expert, tailor the dashboard\
+  \ and widget to the specific requirements."
+name_path: VCF Optimization Assessment
+shared: false
+hidden: false
+disabled: true
+time_range: last7Days
+column_proportion: 1-1
+widgets:
+- id: w0
+  type: ParetoAnalysis
+  title: Top-20 Largest CPU
+  coords:
+    w: 4
+    x: 1
+    h: 15
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  metric_key: cpu|corecount_provisioned
+  metric_name: CPU|Provisioned vCPU(s) (vCPUs)
+  mode: all
+  top_n: 20
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Configured vCPU
+  refresh_content: false
+  relationship_mode: children
+  yellow_bound: 32
+  orange_bound: 48
+  red_bound: 64
+  ui:
+    height: 837
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A1
+- id: w1
+  type: ParetoAnalysis
+  title: Top-20 Largest Disk
+  coords:
+    w: 4
+    x: 9
+    h: 15
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  metric_key: diskspace|used
+  metric_name: Disk Space|Virtual Machine used (GB)
+  mode: all
+  top_n: 20
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Disk Used
+  refresh_content: false
+  relationship_mode: children
+  max_value: null
+  metric_unit:
+    id: tb
+    name: TB
+  yellow_bound: 0.25
+  orange_bound: 1
+  red_bound: 4
+  ui:
+    height: 836
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A1
+- id: w2
+  type: ParetoAnalysis
+  title: Top-20 Largest Memory
+  coords:
+    w: 4
+    x: 5
+    h: 15
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  metric_key: mem|guest_provisioned
+  metric_name: Memory|Total Capacity (KB)
+  mode: all
+  top_n: 20
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Configured RAM
+  refresh_content: false
+  relationship_mode: children
+  max_value: 256
+  metric_unit:
+    id: gb
+    name: GB
+  yellow_bound: 64
+  orange_bound: 128
+  red_bound: 256
+  ui:
+    height: 837
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A1
+interactions: []

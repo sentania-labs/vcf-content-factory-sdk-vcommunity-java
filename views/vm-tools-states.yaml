@@ -1,0 +1,45 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: 6ec4c367-a145-420e-b205-95247739a82c
+name: VM Tools States
+description: Donut chart showing how many virtual machines are in each VMware Tools version status, one
+  slice per status.
+data_type: distribution
+presentation: donut-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|guest|toolsVersionStatus2
+  display_name: .
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  omit:
+  - roll_up_type
+  - transformation
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  is_sum: false
+additional_columns:
+- attribute: summary|guest|toolsRunningStatus
+  localized_name: Summary|Guest Operating System|Tools Running Status
+  display_name: Running State
+  is_string_attribute: true
+  is_property: true
+  roll_up_count: 0
+- attribute: summary|guest|toolsVersion
+  localized_name: Summary|Guest Operating System|Tools Version
+  display_name: Version
+  is_string_attribute: true
+  is_property: true
+  roll_up_count: 0
+omit:
+- include_resource_creation_time

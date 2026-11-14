@@ -1,0 +1,1383 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/overall daily check/Overall Daily Check.json
+id: 555b7d86-b48e-4f26-ae9e-b19ba24369d4
+name: Overall Daily Check
+description: A set of basic check that focuses on the big picture. You should be able to pass these health
+  check. Do this check at least daily each morning.
+name_path: vCommunity
+shared: false
+hidden: false
+time_range: lastHour
+edit_allowed: true
+column_count: 0
+section_fallback: omit
+widgets:
+- id: w0
+  type: Section
+  title: AVAILABILITY
+  coords:
+    x: 1
+    y: 1
+  widgets:
+  - w1
+  - w2
+  - w3
+  - w4
+  description: 'Since VM runs on ESXi, any availability or consumption issue at ESXi need to be checked.
+
+
+    The data comes from all ESXi in the environment.'
+  ui:
+    state: ''
+    tab_id: true
+    widget_id: true
+- id: w1
+  type: Scoreboard
+  title: Key Inventory
+  coords:
+    w: 12
+    x: 1
+    h: 3
+    y: 2
+  description: If these numbers change drastically and not matching your expectation, something wrong
+    has happened.
+  title_localized: Key Inventory
+  view_details: ''
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: summary|number_running_vms
+    metric_name: Summary|Number of Running VMs
+    color_method: 2
+    unit: ''
+    link: ../vcf-operations/ui/operate/dashboards/dashboards;tabId=cc6454bb-4a01-40b5-b6fa-eaed60934e21
+    label_localized: ''
+    label_orig: ''
+    metric_unit: ''
+    resource_kind_name: vSphere World
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: summary|total_number_vms
+    metric_name: Summary|Total Number of VMs
+    color_method: 2
+    unit: ''
+    link: ./vcf-operations/ui/operate/dashboards/dashboards;tabId=cc6454bb-4a01-40b5-b6fa-eaed60934e21
+    label_localized: ''
+    label_orig: ''
+    metric_unit: ''
+    resource_kind_name: vSphere World
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: summary|number_running_hosts
+    metric_name: Summary|Number of Running Hosts
+    color_method: 2
+    unit: ''
+    link: /vcf-operations/ui/operate/dashboards/dashboards;tabId=cc6454bb-4a01-40b5-b6fa-eaed60934e21
+    label_localized: ''
+    label_orig: ''
+    metric_unit: ''
+    resource_kind_name: vSphere World
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: summary|total_number_datastores
+    metric_name: Summary|Total Number of Datastores
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: vCommunity|Number of Port Groups
+    metric_name: vCommunity|Number of Port Groups
+    color_method: 2
+    unit: ''
+    link: /vcf-operations/ui/operate/dashboards/dashboards;tabId=50522b10-6dff-46a4-b1a5-c4c5d61cdf64
+    label_localized: ''
+    label_orig: ''
+    metric_unit: ''
+    resource_kind_name: vSphere World
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: summary|total_number_clusters
+    metric_name: Summary|Total Number of Clusters
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+    - unit
+  self_provider: true
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 6
+  value_size: 24
+  label_size: 16
+  round_decimals: null
+  max_cell_count: 100
+  show_sparkline: true
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  period_length: dashboardTime
+  refresh_content: false
+  old_metric_values: false
+  show_remaining: false
+  show_percent_text: false
+  focus_on_percent: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+    gauge_switches: true
+- id: w2
+  type: Scoreboard
+  title: VM Availability
+  coords:
+    w: 4
+    x: 1
+    h: 5
+    y: 5
+  description: ''
+  title_localized: VM Availability
+  view_details: ''
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: vmop|stateChange|numReset_latest
+    metric_name: Number of VM Operations|State|VM Reset
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 10
+    red_bound: 25
+    unit: ''
+    label_localized: ''
+    label_orig: ''
+    metric_unit: ''
+    resource_kind_name: vSphere World
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: vmop|stateChange|numSuspend_latest
+    metric_name: Number of VM Operations|State|VM Suspend
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 10
+    red_bound: 25
+    unit: ''
+    label_localized: ''
+    label_orig: ''
+    metric_unit: ''
+    resource_kind_name: vSphere World
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: vmop|inventoryChange|numDestroy_latest
+    metric_name: Number of VM Operations|Inventory|VM Delete
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 10
+    red_bound: 25
+    unit: ''
+    label_localized: ''
+    label_orig: ''
+    metric_unit: ''
+    resource_kind_name: vSphere World
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: vmop|stateChange|numPoweroff_latest
+    metric_name: Number of VM Operations|State|VM Power Off
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 10
+    red_bound: 25
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: vmop|inventoryChange|numUnregister_latest
+    metric_name: Number of VM Operations|Inventory|VM Unregister
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 10
+    red_bound: 25
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: vmop|stateChange|numRebootGuest_latest
+    metric_name: Number of VM Operations|State|VM Guest Reboot
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 10
+    red_bound: 25
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: vmop|stateChange|numShutdownGuest_latest
+    metric_name: Number of VM Operations|State|VM Guest Shutdown
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 10
+    red_bound: 25
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: vmop|stateChange|numStandbyGuest_latest
+    metric_name: Number of VM Operations|State|VM Standby Guest
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 10
+    red_bound: 25
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+    - unit
+  self_provider: true
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 4
+  value_size: 24
+  label_size: 16
+  round_decimals: null
+  max_cell_count: 100
+  show_sparkline: true
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  period_length: dashboardTime
+  refresh_content: false
+  old_metric_values: false
+  show_remaining: false
+  show_percent_text: false
+  focus_on_percent: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+    gauge_switches: true
+- id: w3
+  type: HealthChart
+  title: Worst Cluster Operational Availability
+  coords:
+    w: 4
+    x: 5
+    h: 5
+    y: 5
+  description: ''
+  title_localized: Worst Cluster Operational Availability
+  view_details: ''
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vCommunity|Availability|Worst Cluster Operational Availability
+  metric_name: vCommunity|Availability|Worst Cluster Operational Availability
+  metric_full_name: vCommunity|Availability|Worst Cluster Operational Availability
+  mode: resource
+  depth: 1
+  chart_height: 190
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 99
+  orange_bound: 95
+  red_bound: 90
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w4
+  type: HealthChart
+  title: Average ESXi Hosts Operational Availability
+  coords:
+    w: 4
+    x: 9
+    h: 5
+    y: 5
+  description: ''
+  title_localized: Average ESXi Hosts Operational Availability
+  view_details: ''
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vCommunity|Availability|ESXi Hosts Operational Availability
+  metric_name: vCommunity|Availability|ESXi Hosts Operational Availability
+  metric_full_name: vCommunity|Availability|ESXi Hosts Operational Availability
+  mode: resource
+  depth: 1
+  chart_height: 190
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 98
+  orange_bound: 96
+  red_bound: 94
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w5
+  type: Section
+  title: URGENT ISSUES
+  coords:
+    x: 1
+    y: 10
+  widgets:
+  - w6
+  - w7
+  description: Red or orange alerts means the issues need immediate attentions. It's not something you
+    defer to the next day. Expect the numbers to be low, once you fine tune the alerts definition to your
+    environment
+  ui:
+    state: ''
+    tab_id: true
+    widget_id: true
+- id: w6
+  type: HealthChart
+  title: 'Alerts: Urgent and Important'
+  coords:
+    w: 6
+    x: 1
+    h: 4
+    y: 11
+  description: 'Proactive, morning routine. Designed to be completed in 5 minutes in a healthy environment.
+
+
+    Red = attend as soon as possible, not delay until end of day. This number should be 0 most of the
+    time.'
+  view_details: /vcf-operations/ui/operate/alerts;tab=alerts
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: System Attributes|alert_count_critical
+  metric_name: VCF Operations Generated|Alert Count Critical
+  metric_full_name: vRealize Operations Generated|Alert Count Critical
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 0
+  orange_bound: 0
+  red_bound: 1
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w7
+  type: HealthChart
+  title: 'Alerts: Urgent but Not Important'
+  coords:
+    w: 6
+    x: 7
+    h: 4
+    y: 11
+  description: 'The number should be low. It may not be 0.
+
+
+    Attend by end of day, not defer until tomorrow. Alerts that you defer until tomorrow means it''s not
+    urgent. It''s more effective to see these non-urgent warning in totality as insight than as individual
+    alerts'
+  title_localized: 'Alerts: Urgent but Not Important'
+  view_details: /vcf-operations/ui/operate/alerts;tab=alerts
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: System Attributes|alert_count_immediate
+  metric_name: VCF Operations Generated|Alert Count Immediate
+  metric_full_name: vRealize Operations Generated|Alert Count Immediate
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 0
+  orange_bound: 1
+  red_bound: 999999999
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w8
+  type: Section
+  title: PERFORMANCE
+  coords:
+    x: 1
+    y: 15
+  widgets:
+  - w9
+  - w10
+  - w11
+  - w12
+  description: 'Is your IaaS serving the VMs well? Each of the trend charts show the worst experience
+    of any VM in your private cloud. A low number means all VMs are getting a good service from your shared
+    infrastructure.
+
+
+    Aim for yellow to orange range, indicating you''re pushing utilization hard but not sacrificing performance
+    too much.'
+  ui:
+    state: ''
+    tab_id: true
+    widget_id: true
+- id: w9
+  type: HealthChart
+  title: Worst Performance of all Clusters
+  coords:
+    w: 6
+    x: 1
+    h: 4
+    y: 16
+  description: ''
+  title_localized: Worst Performance of all Clusters
+  view_details: ''
+  navigations:
+  - dashboard: vSphere Cluster Performance 2.0
+    widgets:
+    - w0
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vCommunity|Worst Cluster Performance
+  metric_name: vCommunity|Worst Cluster Performance
+  metric_full_name: vCommunity|Worst Cluster Performance
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    - key: perm_toolbarVisible_
+      value: b%3A1
+    widget_id: true
+    config_key: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w10
+  type: HealthChart
+  title: Highest Risk of all Clusters
+  coords:
+    w: 6
+    x: 7
+    h: 4
+    y: 16
+  description: ''
+  title_localized: Highest Risk of all Clusters
+  view_details: ''
+  navigations:
+  - dashboard: vSphere Cluster Capacity 2.0
+    widgets:
+    - w3
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vCommunity|Worst Cluster Risk
+  metric_name: vCommunity|Worst Cluster Risk
+  metric_full_name: vCommunity|Worst Cluster Risk
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 25
+  orange_bound: 50
+  red_bound: 75
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    config_key: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w11
+  type: HealthChart
+  title: Worst 10% Cluster Performance
+  coords:
+    w: 6
+    x: 1
+    h: 4
+    y: 20
+  description: ''
+  title_localized: Worst 10% Cluster Performance
+  view_details: ''
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vCommunity|Worst 10 Percent Cluster Performance
+  metric_name: vCommunity|Worst 10 Percent Cluster Performance
+  metric_full_name: vCommunity|Worst 10 Percent Cluster Performance
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    config_key: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w12
+  type: HealthChart
+  title: Worst 10% Cluster Risk
+  coords:
+    w: 6
+    x: 7
+    h: 4
+    y: 20
+  description: ''
+  title_localized: Worst 10% Cluster Risk
+  view_details: ''
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vCommunity|Worst 10 Percent Cluster Risk
+  metric_name: vCommunity|Worst 10 Percent Cluster Risk
+  metric_full_name: vCommunity|Worst 10 Percent Cluster Risk
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 25
+  orange_bound: 50
+  red_bound: 75
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    config_key: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w13
+  type: Section
+  title: CAPACITY
+  coords:
+    x: 1
+    y: 24
+  widgets:
+  - w14
+  - w15
+  - w16
+  - w17
+  - w18
+  - w19
+  - w20
+  description: "The aggregate workload or demand on your private cloud should be fairly stable. If not,\
+    \ it should matches either the business cycle or data center activities. \n\nInvestigate if the number\
+    \ drops when it's a supposed to be busy day for business, or if the number spike when it's supposed\
+    \ to be a quiet hours."
+  ui:
+    state: ''
+    tab_id: true
+    widget_id: true
+- id: w14
+  type: Scoreboard
+  title: Total Capacity
+  coords:
+    w: 2
+    x: 1
+    h: 4
+    y: 25
+  description: The total capacity should be fairly stable. A big drop indicates a major issue.
+  title_localized: Total Capacity
+  view_details: ''
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: cpu|capacity_provisioned
+    metric_name: CPU|Total Capacity
+    color_method: 2
+    label: CPU
+    unit_id: ghz
+    unit: GHz
+    link: /vcf-operations/ui/operate/dashboards/dashboards;tabId=c608ccb8-218a-4834-8a9d-af9241e01de1
+    label_localized: CPU
+    label_orig: CPU
+    metric_unit: GHz
+    resource_kind_name: vSphere World
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: mem|host_provisioned
+    metric_name: Memory|Total Capacity
+    color_method: 2
+    label: Memory
+    unit_id: tb
+    unit: TB
+    link: /vcf-operations/ui/operate/dashboards/dashboards;tabId=c608ccb8-218a-4834-8a9d-af9241e01de1
+    label_localized: Memory
+    label_orig: Memory
+    metric_unit: TB
+    resource_kind_name: vSphere World
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: diskspace|total_capacity
+    metric_name: Disk Space|Total Capacity
+    color_method: 2
+    label: Disk
+    unit_id: tb
+    unit: TB
+    link: /vcf-operations/ui/operate/dashboards/dashboards;tabId=c608ccb8-218a-4834-8a9d-af9241e01de1
+    label_localized: Disk
+    label_orig: Disk
+    metric_unit: TB
+    resource_kind_name: vSphere World
+  self_provider: true
+  omit:
+  - sub_mode
+  visual_theme: 4
+  layout_mode: fixedView
+  box_columns: 3
+  value_size: 24
+  label_size: 16
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: false
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  refresh_content: false
+  old_metric_values: false
+  show_remaining: false
+  show_percent_text: false
+  focus_on_percent: false
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  pin_resource: true
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+    gauge_switches: true
+- id: w15
+  type: HealthChart
+  title: Highest Consumption of all Clusters
+  coords:
+    w: 5
+    x: 3
+    h: 4
+    y: 25
+  description: ''
+  title_localized: Highest Consumption of all Clusters
+  view_details: ''
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vCommunity|Worst Cluster Performance
+  metric_name: vCommunity|Worst Cluster Performance
+  metric_full_name: vCommunity|Worst Cluster Performance
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 25
+  orange_bound: 50
+  red_bound: 75
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w16
+  type: HealthChart
+  title: 10P Cluster Utilization
+  coords:
+    w: 5
+    x: 8
+    h: 4
+    y: 25
+  description: The cluster utilization taken at the 90th percentile. If this number is high, check the
+    capacity.
+  title_localized: 10P Cluster Utilization
+  view_details: ''
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vCommunity|Highest 10 Percent Cluster Utilization
+  metric_name: vCommunity|Highest 10 Percent Cluster Utilization
+  metric_full_name: vCommunity|Highest 10 Percent Cluster Utilization
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w17
+  type: MetricChart
+  title: Total Disk IOPS
+  coords:
+    w: 3
+    x: 1
+    h: 6
+    y: 29
+  description: Total SCSI commands (read or write) in the entire environment. A big drop or a big jump
+    that does not match data center activities is a concern.
+  title_localized: Total Disk IOPS
+  view_details: ''
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: disk|commandsAveraged_average
+    metric_name: Disk|Commands per second
+    color_method: 2
+    resource_kind_name: vSphere World
+    omit:
+    - label
+    - max_value
+    - link
+    - unit
+  self_provider: true
+  refresh_content: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permBtn_pan_permMetricChart_
+      value: b%3A0
+    - key: permBtn_zoomAllGraphs_permMetricChart_
+      value: b%3A0
+    - key: permDateRange1_permMetricChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    - key: permMetricChart_
+      value: o%3A
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    widget_id: true
+- id: w18
+  type: MetricChart
+  title: Total Network Throughput
+  coords:
+    w: 3
+    x: 4
+    h: 6
+    y: 29
+  description: Total network throughput (send and receive) in the entire environment. A big drop or a
+    big jump that does not match data center activities is a concern.
+  title_localized: Total Network Throughput
+  view_details: ''
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: net|usage_average
+    metric_name: Network|Usage Rate
+    color_method: 2
+    unit_id: gbitsps
+    unit: Gbps
+    metric_unit: Gbps
+    resource_kind_name: vSphere World
+    omit:
+    - label
+    - link
+  self_provider: true
+  refresh_content: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permMetricChart_
+      value: o%3A
+    - key: permDateRange1_permMetricChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    - key: permBtn_zoomAllGraphs_permMetricChart_
+      value: b%3A0
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    - key: permBtn_pan_permMetricChart_
+      value: b%3A0
+    widget_id: true
+- id: w19
+  type: MetricChart
+  title: CPU Reservation
+  coords:
+    w: 3
+    x: 7
+    h: 6
+    y: 29
+  description: Total amount of reservation given to VM CPU. This amount should be low or 0. Setting reservation
+    impacts both vSphere DRS and HA, creating a risk of overall performance.
+  title_localized: CPU Reservation
+  view_details: ''
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: cpu|reservedCapacity_average
+    metric_name: CPU|Reserved Capacity
+    color_method: 2
+    unit_id: ghz
+    unit: GHz
+    metric_unit: GHz
+    resource_kind_name: vSphere World
+    omit:
+    - label
+    - link
+  self_provider: true
+  refresh_content: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permMetricChart_
+      value: o%3A
+    - key: permDateRange1_permMetricChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    - key: permBtn_zoomAllGraphs_permMetricChart_
+      value: b%3A0
+    - key: permBtn_pan_permMetricChart_
+      value: b%3A0
+    widget_id: true
+- id: w20
+  type: MetricChart
+  title: Memory Reservation
+  coords:
+    w: 3
+    x: 10
+    h: 6
+    y: 29
+  description: Total amount of reservation given to VM memory. This amount should be 0 as memory reservation
+    is "sticky". It persists despite the Guest OS not using the page anymore.
+  title_localized: Memory Reservation
+  view_details: ''
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: mem|reservedCapacity_average
+    metric_name: Memory|Reserved Capacity
+    color_method: 2
+    unit_id: gb
+    unit: GB
+    metric_unit: GB
+    resource_kind_name: vSphere World
+    omit:
+    - label
+    - link
+  self_provider: true
+  refresh_content: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permBtn_zoomAllGraphs_permMetricChart_
+      value: b%3A0
+    - key: permDateRange1_permMetricChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    - key: permMetricChart_
+      value: o%3A
+    - key: permBtn_pan_permMetricChart_
+      value: b%3A0
+    widget_id: true
+- id: w21
+  type: Section
+  title: VOLATILITY
+  coords:
+    x: 1
+    y: 35
+  widgets:
+  - w22
+  - w23
+  - w24
+  description: 'While your private cloud is dynamic, the degree of changes need to be within your expectation.
+    It needs to match business cycle or data center operations.
+
+
+    Investigate if the number drops when it''s a supposed to be busy day for business, or if the number
+    spike when it''s supposed to be a quiet hours.'
+  ui:
+    state: ''
+    tab_id: true
+    widget_id: true
+- id: w22
+  type: HealthChart
+  title: 'VM: Inventory Change'
+  coords:
+    w: 4
+    x: 1
+    h: 4
+    y: 36
+  description: '7 types of VM inventory changes: clone, create, delete, reconfigure, register to vCenter,
+    unregister to vCenter, deploy from template.'
+  title_localized: 'VM: Inventory Change'
+  view_details: ''
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: summary|number_inventory_changes
+  metric_name: Summary|VM Inventory Changes
+  metric_full_name: Summary|VM Inventory Changes
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 10
+  orange_bound: 40
+  red_bound: 160
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w23
+  type: HealthChart
+  title: 'VM: Location Change'
+  coords:
+    w: 4
+    x: 5
+    h: 4
+    y: 36
+  description: 'Tracks all 6 types, grouped into cold or hot migration.
+
+    compute change, storage change, both changes.'
+  title_localized: 'VM: Location Change'
+  view_details: ''
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: summary|number_vm_location_changes
+  metric_name: Summary|VM Location Changes
+  metric_full_name: Summary|VM Location Changes
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 10
+  orange_bound: 50
+  red_bound: 250
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w24
+  type: HealthChart
+  title: 'VM: State Change'
+  coords:
+    w: 4
+    x: 9
+    h: 4
+    y: 36
+  description: 'Track all 7 changes to VM states: guest reboot, guest shutdown, VM power off, VM power
+    on, VM reset, VM Standby Guest and VM Suspend.'
+  title_localized: 'VM: State Change'
+  view_details: ''
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: summary|number_vm_state_changes
+  metric_name: Summary|VM State Changes
+  metric_full_name: Summary|VM State Changes
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 10
+  orange_bound: 30
+  red_bound: 100
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w25
+  type: Section
+  title: CONFIGURATION
+  coords:
+    x: 1
+    y: 40
+  widgets:
+  - w26
+  - w27
+  - w28
+  - w29
+  - w30
+  - w31
+  - w32
+  description: 'What settings or condition are known to cause issue in your cloud as they are easy to
+    do, and hence easy to forget in a hectic day?
+
+
+    Tailor this section.'
+  ui:
+    state: ''
+    tab_id: true
+    widget_id: true
+- id: w26
+  type: View
+  title: VM CPU Shares
+  coords:
+    w: 2
+    x: 1
+    h: 5
+    y: 41
+  description: The number of shares should map to the number of class of service (Gold, Silver, Bronze).
+  title_localized: VM CPU Shares
+  view_details: ''
+  view: VM Distribution by CPU Share
+  select_first_row: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+    traversal_spec: vSphere Hosts and Clusters-VMWARE-vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+- id: w27
+  type: View
+  title: VM Memory Share
+  coords:
+    w: 2
+    x: 3
+    h: 5
+    y: 41
+  description: ''
+  title_localized: VM Memory Share
+  view_details: ''
+  view: VM Distribution by Memory Share
+  select_first_row: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+    traversal_spec: vSphere Hosts and Clusters-VMWARE-vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+- id: w28
+  type: View
+  title: VM Tools Down
+  coords:
+    w: 2
+    x: 5
+    h: 5
+    y: 41
+  description: VMware Tools is essential as it provides visibility and drivers. You want it installed
+    and running.
+  title_localized: VM Tools Down
+  view_details: ''
+  view: VM Tools not running
+  select_first_row: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+    traversal_spec: vSphere Hosts and Clusters-VMWARE-vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+- id: w29
+  type: View
+  title: VM Tools Outdated or Missing
+  coords:
+    w: 2
+    x: 7
+    h: 5
+    y: 41
+  description: ''
+  title_localized: VM Tools Outdated or Missing
+  view_details: ''
+  view: VM Tools outdated
+  select_first_row: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+    traversal_spec: vSphere Hosts and Clusters-VMWARE-vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_widget_2ec3cc95-1a5c-4967-bd19-a38f56d1ddae_28cd3545-e0c0-44a2-8056-ddef55dce61e-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_widget_2ec3cc95-1a5c-4967-bd19-a38f56d1ddae_28cd3545-e0c0-44a2-8056-ddef55dce61e-column-summary%2525257Cruntime%2525257CpowerState1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_widget_2ec3cc95-1a5c-4967-bd19-a38f56d1ddae_28cd3545-e0c0-44a2-8056-ddef55dce61e-column-summary%2525257Cconfig%2525257CnumEthernetCards2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_widget_2ec3cc95-1a5c-4967-bd19-a38f56d1ddae_28cd3545-e0c0-44a2-8056-ddef55dce61e-column-net%2525253A4000%2525257Cip_address3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_widget_2ec3cc95-1a5c-4967-bd19-a38f56d1ddae_28cd3545-e0c0-44a2-8056-ddef55dce61e-column-net%2525253A4000%2525257Cmac_address4%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_widget_2ec3cc95-1a5c-4967-bd19-a38f56d1ddae_28cd3545-e0c0-44a2-8056-ddef55dce61e-column-summary%2525257CparentDatacenter5%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_widget_2ec3cc95-1a5c-4967-bd19-a38f56d1ddae_28cd3545-e0c0-44a2-8056-ddef55dce61e-column-summary%2525257CparentCluster6%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_widget_2ec3cc95-1a5c-4967-bd19-a38f56d1ddae_28cd3545-e0c0-44a2-8056-ddef55dce61e-column-summary%2525257Cguest%2525257CfullName7%25255Ehidden%25253Db%2525253A0
+    widget_id: true
+- id: w30
+  type: View
+  title: Large Snapshots
+  coords:
+    w: 2
+    x: 9
+    h: 5
+    y: 41
+  description: The larger the disk space taken up by snapshot files, the higher the risk of VM disk latency.
+  title_localized: Large Snapshots
+  view_details: ''
+  view: VM with large Snapshot
+  select_first_row: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+    traversal_spec: vSphere Hosts and Clusters-VMWARE-vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+- id: w31
+  type: View
+  title: Outdated VMX
+  coords:
+    w: 2
+    x: 11
+    h: 5
+    y: 41
+  description: Outdated VM hardware version. Configure the filter to suit your environment. They are part
+    of tech debt.
+  title_localized: Outdated VMX
+  view_details: ''
+  view: VM Outdated Hardware Version
+  select_first_row: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+    traversal_spec: vSphere Hosts and Clusters-VMWARE-vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+- id: w32
+  type: Heatmap
+  title: Monster VM
+  coords:
+    w: 12
+    x: 1
+    h: 6
+    y: 46
+  description: 'While you''re bound to have large VM, they should be minimized as they can impact both
+    capacity and performance.
+
+    The heat map shows the large VM. Each box represents a VM, grouped by vSphere Cluster so you can see
+    where they are. The box size represents the relative vCPU configured size among the VM, while the
+    color represents the configured. memory.
+
+    Pro Tip: configure the threshold'
+  title_localized: Monster VM
+  view_details: ''
+  mode: all
+  depth: 10
+  self_provider: true
+  configs:
+  - name: VM
+    adapter_kind: VMWARE
+    resource_kind: VirtualMachine
+    color_by:
+      metric_key: mem|guest_provisioned
+      label: Memory|Total Capacity (KB)
+    size_by:
+      metric_key: cpu|corecount_provisioned
+      label: CPU|Provisioned vCPU(s) (vCPUs)
+    group_by:
+      adapter_kind: VMWARE
+      resource_kind: ClusterComputeResource
+      text: Cluster Compute Resource
+      parent_text: vCenter
+    color:
+      thresholds:
+        values:
+        - 0
+        - 50
+        - 100
+        colors:
+        - '#41800E'
+        - '#FFC60A'
+        - '#E02200'
+    solid_coloring: false
+    focus_on_groups: true
+    name_localized: VM
+    name_orig: VM
+    tag_filter: null
+    custom_filter:
+    - adapter_kind: VMWARE
+      resource_kind: VirtualMachine
+      conditions:
+      - filter_type: metrics
+        metric_key: cpu|corecount_provisioned
+        metric_name: CPU|Provisioned vCPU(s)
+        condition: GREATER_THAN
+        value: 8
+        string_metric: false
+        metric_unit: vCPUs
+    omit:
+    - color_min_value
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: perm_HeatMap_
+      value: o%3A
+    widget_id: true
+interactions: []

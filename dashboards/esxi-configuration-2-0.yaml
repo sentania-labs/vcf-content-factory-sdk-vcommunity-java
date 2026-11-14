@@ -1,0 +1,425 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/esxi configuration 2.0/ESXi Configuration 2.0.json
+id: b1b3ede5-32f2-4c49-a1a8-443dc23bd993
+name: ESXi Configuration 2.0
+description: Highlight ESXi Host configurations that need your attention. Use this dashboard to fix incorrect
+  settings, update outdated components and reduce overall cost by optimizing your environment. The dashboard
+  is organized top down, where configuration that needs your attention is shown first. No data on a chart
+  means the configuration is optimized.
+name_path: vCommunity
+shared: true
+hidden: true
+doc_center_key: vcom_522
+widgets:
+- id: w0
+  type: View
+  title: BIOS Version
+  coords:
+    w: 3
+    x: 4
+    h: 5
+    y: 6
+  view: ESXi BIOS version distribution
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 267
+    legacy_xy:
+      x: 3
+      y: 2
+- id: w1
+  type: View
+  title: CPU Model
+  coords:
+    w: 3
+    x: 7
+    h: 5
+    y: 1
+  view: ESXi CPU Models
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 267
+    legacy_xy:
+      x: 2
+      y: 1
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w2
+  type: View
+  title: All ESXi Configuration
+  coords:
+    w: 12
+    x: 1
+    h: 13
+    y: 21
+  view: ESXi Configuration List
+  select_first_row: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+    traversal_spec: vSphere Hosts and Clusters-VMWARE-vSphere World
+  ui:
+    height: 723
+    legacy_xy:
+      x: 4
+      y: 1
+    states:
+    - key: permSelectedDate_
+      value: s%3A%7B%22minType%22%3A%22.TimeIntervalControl%22%2C%22advancedTimeMode%22%3Afalse%2C%22fromTime%22%3Anull%2C%22unit%22%3A%22DAYS%22%2C%22count%22%3A7%2C%22priorUnit%22%3Anull%2C%22priorCount%22%3Anull%2C%22startSubUnit%22%3Anull%2C%22startPeriod%22%3Anull%2C%22toTime%22%3Anull%2C%22endUnit%22%3Anull%2C%22endCount%22%3Anull%2C%22endSubUnit%22%3Anull%2C%22endPeriod%22%3Anull%2C%22isRealTimeData%22%3Anull%2C%22mondayHours%22%3Anull%2C%22tuesdayHours%22%3Anull%2C%22wednesdayHours%22%3Anull%2C%22thursdayHours%22%3Anull%2C%22fridayHours%22%3Anull%2C%22saturdayHours%22%3Anull%2C%22sundayHours%22%3Anull%7D
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-hardware%2525257Cvendor1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-hardware%2525257CvendorModel2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Cproduct%2525257CapiVersion3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Cversion4%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-hardware%2525257CbiosVersion5%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-cpu%2525257CcpuModel6%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-hardware%2525257CcpuInfo%2525257CnumCpuPackages7%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-hardware%2525257CcpuInfo%2525257Chz8%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-hardware%2525257CcpuInfo%2525257CnumCpuCores9%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257ChyperThread%2525257Cactive10%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257ChyperThread%2525257Cavailable11%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-mem%2525257CtotalCapacity_average12%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-hardware%2525257CpowerManagementTechnoloy13%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-hardware%2525257CpowerManagementPolicy14%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-sys%2525257CvmotionEnabled15%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Csecurity%2525257Cservice%2525253ANTP%25252520Daemon%2525257CisRunning16%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Csecurity%2525257Cservice%2525253ASNMP%25252520Server%2525257CisRunning17%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Csecurity%2525257Cservice%2525253ASSH%2525257CisRunning18%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CstorageDevice%2525257CmultipathInfo%2525257CnumberofActivePath19%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CstorageDevice%2525257CmultipathInfo%2525257CmultipathPolicy20%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CstorageDevice%2525257CmultipathInfo%2525257CnumberofActivePath21%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CstorageDevice%2525257CplugStoreTopology%2525257CnumberofPath22%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-runtime%2525257CcryptoState23%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Cnetwork%2525257Cnnic24%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Cnetwork%2525257Clinkspeed25%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257CparentCluster26%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257CparentDatacenter27%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257CparentVcenter28%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Cnetwork%2525257Cportgroup%2525257Callow_promiscuous_rollup29%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Cnetwork%2525257Cportgroup%2525257Cforged_transmits_rollup30%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Cnetwork%2525257Cportgroup%2525257Cmac_changes_rollup31%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-hardware%2525257CbiosReleaseDate32%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-hardware%2525257CenclosureSerialNumberTag33%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-hardware%2525257CserialNumberTag34%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-hardware%2525257CserviceTag35%25255Ehidden%25253Db%2525253A0
+- id: w3
+  type: View
+  title: NIC Speeds (Mbps)
+  coords:
+    w: 3
+    x: 7
+    h: 4
+    y: 17
+  view: ESXi Distribution by NIC Speed
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 210
+- id: w4
+  type: View
+  title: Hyper Threading enabled?
+  coords:
+    w: 3
+    x: 4
+    h: 4
+    y: 17
+  view: ESXi HyperThread Capability
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 210
+- id: w5
+  type: View
+  title: Active Storage Paths
+  coords:
+    w: 3
+    x: 1
+    h: 4
+    y: 17
+  view: ESXi Distribution by Storage Path Counts
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 210
+- id: w6
+  type: View
+  title: CPU Throughput (GHz)
+  coords:
+    w: 4
+    x: 5
+    h: 6
+    y: 11
+  view: ESXi Distribution by CPU GHz
+  chart_view_items:
+  - labels
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 324
+- id: w7
+  type: View
+  title: Memory Capacity (TB)
+  coords:
+    w: 4
+    x: 9
+    h: 6
+    y: 11
+  view: ESXi Distribution by Memory Size
+  chart_view_items:
+  - labels
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 324
+    legacy_xy:
+      x: 1
+      y: 2
+- id: w8
+  type: View
+  title: CPU Capacity (cores)
+  coords:
+    w: 4
+    x: 1
+    h: 6
+    y: 11
+  view: ESXi Distribution by Core Counts
+  chart_view_items:
+  - labels
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 324
+    legacy_xy:
+      x: 1
+      y: 2
+- id: w9
+  type: View
+  title: ESXi Versions
+  coords:
+    w: 3
+    x: 1
+    h: 5
+    y: 6
+  view: ESXi Distribution by Versions
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 267
+    legacy_xy:
+      x: 1
+      y: 2
+- id: w10
+  type: View
+  title: CPU Sockets
+  coords:
+    w: 3
+    x: 4
+    h: 5
+    y: 1
+  view: ESXi Distribution by CPU Socket
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 267
+    legacy_xy:
+      x: 2
+      y: 1
+- id: w11
+  type: View
+  title: Power Management (BIOS)
+  coords:
+    w: 3
+    x: 10
+    h: 5
+    y: 6
+  view: ESXi Power Management (BIOS)
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 267
+    legacy_xy:
+      x: 2
+      y: 1
+    states:
+    - key: perm_isDashboardTime_
+      value: b%3A0
+- id: w12
+  type: View
+  title: Power Management (ESXi)
+  coords:
+    w: 3
+    x: 7
+    h: 5
+    y: 6
+  view: ESXi Power Management
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 267
+    legacy_xy:
+      x: 2
+      y: 1
+    states:
+    - key: perm_isDashboardTime_
+      value: b%3A0
+- id: w13
+  type: View
+  title: Select a DC or World
+  coords:
+    w: 3
+    x: 1
+    h: 5
+    y: 1
+  view: vSphere Data Centers Inventory
+  select_first_row: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+    traversal_spec: vSphere Hosts and Clusters-VMWARE-vSphere World
+  ui:
+    height: 267
+    states:
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Ctotal_number_clusters1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Ctotal_number_hosts2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Ctotal_number_datastores3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Ctotal_number_vms4%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257CparentVcenter5%25255Ehidden%25253Db%2525253A0
+- id: w14
+  type: View
+  title: Network Interfaces
+  coords:
+    w: 3
+    x: 1
+    h: 6
+    y: 34
+  view: ESXi Network Interfaces
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 324
+    states:
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A1%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-Instance%25252520Name1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-net%2525253Avmk0%2525257Cip_address2%25255Ehidden%25253Db%2525253A0
+- id: w15
+  type: View
+  title: Storage Adapters
+  coords:
+    w: 3
+    x: 7
+    h: 6
+    y: 34
+  view: ESXi Storage Adapters
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 324
+    states:
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-Instance%25252520Name1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-storageAdapter%2525253Avmhba0%2525257ChbaDriver2%25255Ehidden%25253Db%2525253A0
+- id: w16
+  type: View
+  title: NIC Counts
+  coords:
+    w: 3
+    x: 10
+    h: 4
+    y: 17
+  view: ESXi Distribution by NIC Count
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 210
+- id: w17
+  type: View
+  title: Security Policies
+  coords:
+    w: 3
+    x: 10
+    h: 6
+    y: 34
+  view: ESXi Security Policy List
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 324
+    states:
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A1%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-Instance%25252520Name1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Csecurity%2525257Cservice%2525253ADirect%25252520Console%25252520UI%2525257Cpolicy2%25255Ehidden%25253Db%2525253A0
+- id: w18
+  type: View
+  title: CPU Speed (GHz)
+  coords:
+    w: 3
+    x: 10
+    h: 5
+    y: 1
+  view: ESXi CPU Speed
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 266
+    states:
+    - key: perm_isDashboardTime_
+      value: b%3A0
+- id: w19
+  type: View
+  title: Network Cards
+  coords:
+    w: 3
+    x: 4
+    h: 6
+    y: 34
+  view: ESXi Network Cards List
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 324
+    states:
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A1%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-Instance%25252520Name1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-net%2525253Avmnic0%2525257Cspeed2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-net%2525253Avmnic0%2525257CconfiguredSpeed3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-net%2525253Avmnic0%2525257CnicDriver4%25255Ehidden%25253Db%2525253A0
+interactions:
+- from: w2
+  to: w14
+  type: resourceId
+- from: w2
+  to: w15
+  type: resourceId
+- from: w13
+  to: w10
+  type: resourceId
+- from: w13
+  to: w0
+  type: resourceId
+- from: w13
+  to: w9
+  type: resourceId
+- from: w13
+  to: w1
+  type: resourceId
+- from: w13
+  to: w4
+  type: resourceId
+- from: w13
+  to: w11
+  type: resourceId
+- from: w13
+  to: w12
+  type: resourceId
+- from: w13
+  to: w8
+  type: resourceId
+- from: w13
+  to: w6
+  type: resourceId
+- from: w13
+  to: w7
+  type: resourceId
+- from: w13
+  to: w3
+  type: resourceId
+- from: w13
+  to: w5
+  type: resourceId
+- from: w13
+  to: w2
+  type: resourceId
+- from: w13
+  to: w16
+  type: resourceId
+- from: w2
+  to: w17
+  type: resourceId
+- from: w13
+  to: w18
+  type: resourceId
+- from: w2
+  to: w19
+  type: resourceId

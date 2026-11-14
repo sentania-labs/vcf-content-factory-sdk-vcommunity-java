@@ -1,0 +1,9 @@
+view	Guest OS Distribution	VM Distribution by Guest OS Name
+view	Guest OS Memory Paging Trend	Guest OS Page In and Page Out Trend
+view	Guest OS Partition List	Guest OS Root Partition Usage List
+view	vSphere Cluster Performance Profiling	vSphere Cluster Worst-Case Contention Profile
+view	vSphere ESXi Memory Utilization	vSphere ESXi Memory Capacity and Use Trend
+view	vSphere Performance Profiling	vSphere VM 99th Percentile Performance Profile
+view	VCF Management Services Nodes View	VCF Management Services Node Resource List
+view	VCF Management Services Volumes View	VCF Management Services Volume Usage List
+view	VCF Management Services Components View	VCF Management Services Component Health List

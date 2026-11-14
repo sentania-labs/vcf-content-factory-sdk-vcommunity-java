@@ -1,0 +1,55 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 8140bbaf-f202-4e0d-b66e-778ed9061722
+name: VM Disk Latency Distribution
+description: 'Bar chart placing virtual machines in four buckets by 99th percentile peak disk latency
+  over one week: under 25 ms, 25 to 50, 50 to 100 and above 100 ms.'
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+time_window:
+  unit: WEEKS
+  count: 1
+columns:
+- attribute: virtualDisk|20_sec_peak_totalLatency_average
+  display_name: .
+  unit: msec
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 99
+  omit:
+  - add_timestamp_as_column
+buckets:
+  dynamic: false
+  ranges:
+  - start: 0
+    end: 25
+    color: 74B43B
+  - start: 25
+    end: 50
+    color: ECC33E
+  - start: 50
+    end: 100
+    color: ED891F
+  - start: 100
+    end: 9999
+    color: DE3F30
+  min_value: 0
+  max_value: 0
+  is_sum: false
+additional_columns:
+- attribute: virtualDisk|20_sec_peak_totalLatency_average
+  localized_name: Virtual Disk|Peak Latency within collection cycle (ms)
+  display_name: Latency at 95th percentile
+  unit: msec
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+  show_relative_timestamp: false
+omit:
+- include_resource_creation_time

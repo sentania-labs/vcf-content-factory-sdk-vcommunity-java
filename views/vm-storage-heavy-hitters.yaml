@@ -1,0 +1,74 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: a54e74b2-06dc-4645-a64d-5040e5ba4c3d
+name: VM Storage Heavy Hitters
+description: Lists virtual machines whose average disk IOPS exceeds 10 over the last week, with peak IOPS
+  and throughput at 5-minute and 1-hour granularity, plus datacenter. Highest 5-minute IOPS first.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  filter:
+  - - filter_type: metrics
+      metric_key: virtualDisk:Aggregate of all instances|commandsAveraged_average
+      condition: GREATER_THAN
+      value: 10
+      transform: AVG
+      business_hours: false
+time_window:
+  unit: WEEKS
+  count: 1
+columns:
+- attribute: virtualDisk:Aggregate of all instances|commandsAveraged_average
+  display_name: IOPS (5 minute Max)
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MAX
+  sort: desc
+  yellow_bound: 2500
+  orange_bound: 10000
+  red_bound: 25000
+  ascending_range: false
+- attribute: virtualDisk:Aggregate of all instances|commandsAveraged_average
+  display_name: IOPS (1 hour Max)
+  roll_up_type: AVG
+  roll_up_unit: HOURS
+  roll_up_count: 1
+  transformation: MAX
+  yellow_bound: 1000
+  orange_bound: 5000
+  red_bound: 15000
+  ascending_range: false
+- attribute: virtualDisk:Aggregate of all instances|usage
+  display_name: Throughput (5 minute Max)
+  unit: mbps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MAX
+  yellow_bound: 250
+  orange_bound: 1000
+  red_bound: 2000
+  ascending_range: false
+- attribute: virtualDisk:Aggregate of all instances|usage
+  display_name: Throughput (1 hour Max)
+  unit: mbps
+  roll_up_type: AVG
+  roll_up_unit: HOURS
+  roll_up_count: 1
+  transformation: MAX
+  yellow_bound: 100
+  orange_bound: 250
+  red_bound: 500
+  ascending_range: false
+- attribute: summary|parentDatacenter
+  display_name: Datacenter
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

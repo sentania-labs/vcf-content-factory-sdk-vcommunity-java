@@ -1,0 +1,76 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: ff519731-cd08-4cff-bdb9-dc29cd7d6e88
+name: 'Report: VM Size Distribution'
+description: "Part of a report covering configuration. Designed to be run on a weekly basis, and be compared\
+  \ with previous report. \nWorking with a VCF expert, tailor the dashboard and widget to the specific\
+  \ requirements.\nNo data on a chart means the configuration is optimized."
+name_path: VCF Optimization Assessment
+shared: false
+hidden: true
+disabled: true
+doc_center_key: vcom_524
+widgets:
+- id: w0
+  type: View
+  title: VM Memory distribution
+  coords:
+    w: 6
+    x: 1
+    h: 8
+    y: 8
+  view: VM Memory Size Distribution
+  chart_view_items:
+  - labels
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 437
+    legacy_xy:
+      x: 2
+      y: 1
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w1
+  type: View
+  title: VM Virtual Disks
+  coords:
+    w: 6
+    x: 7
+    h: 8
+    y: 8
+  view: VM Virtual Disks counts
+  chart_view_items:
+  - labels
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 437
+    legacy_xy:
+      x: 1
+      y: 1
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w2
+  type: View
+  title: VM CPU distribution
+  coords:
+    w: 12
+    x: 1
+    h: 7
+    y: 1
+  view: VM CPU Size Distribution
+  chart_view_items:
+  - labels
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 381
+    legacy_xy:
+      x: 1
+      y: 1
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+interactions: []

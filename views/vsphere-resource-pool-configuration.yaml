@@ -1,0 +1,131 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: f31188cc-6862-4885-9bfc-67c644a12cba
+name: vSphere Resource Pool Configuration
+description: 'Table of resource pool settings: CPU and memory limits, reservations, expandable flags and
+  shares, running and total VM counts, and tag.'
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ResourcePool
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: config|cpuAllocation|limit
+  display_name: CPU Limit
+  unit: ghz
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0
+  orange_bound: 1
+  red_bound: 2
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|cpuAllocation|reservation
+  display_name: CPU Reservation
+  unit: ghz
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 1
+  orange_bound: 100
+  red_bound: 200
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|cpuAllocation|expandableReservation
+  display_name: Expandable CPU Reservation
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.2
+  orange_bound: 0.1
+  red_bound: 0
+  ascending_range: true
+  omit:
+  - roll_up_type
+- attribute: config|cpuAllocation|shares|shares
+  display_name: CPU Shares
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 1999
+  orange_bound: 3999
+  red_bound: 7999
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|memoryAllocation|limit
+  display_name: Memory Limit
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0
+  orange_bound: 1
+  red_bound: 2
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|memoryAllocation|reservation
+  display_name: Memory Reservation
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 10
+  orange_bound: 100
+  red_bound: 1000
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|memoryAllocation|expandableReservation
+  display_name: Expandable Memory Reservation
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.2
+  orange_bound: 0.1
+  red_bound: 0
+  ascending_range: true
+  omit:
+  - roll_up_type
+- attribute: config|memoryAllocation|shares|shares
+  display_name: Memory Shares
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|number_running_vms
+  display_name: Running VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 2
+  orange_bound: 1
+  red_bound: 0
+  ascending_range: true
+- attribute: summary|total_number_vms
+  display_name: Total VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 5
+  orange_bound: 3
+  red_bound: 1
+  ascending_range: true
+- attribute: summary|tag
+  display_name: vSphere Tag
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+omit:
+- include_resource_creation_time

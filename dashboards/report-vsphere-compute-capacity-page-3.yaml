@@ -1,0 +1,129 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: b43f77c4-2fa7-4446-9222-30f664ab9cac
+name: 'Report: vSphere Compute Capacity (page 3)'
+description: "Part of a report covering capacity. Designed to be run on a weekly basis, and be compared\
+  \ with previous week result. \nWorking with a VCF expert, tailor the dashboard and widget to the specific\
+  \ requirements."
+name_path: VCF Optimization Assessment
+shared: false
+hidden: true
+disabled: true
+doc_center_key: vcom_522
+widgets:
+- id: w0
+  type: ParetoAnalysis
+  title: 'Top-15 Clusters: Memory Utilization'
+  coords:
+    w: 3
+    x: 7
+    h: 15
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  metric_key: mem|workload
+  metric_name: Memory|Workload (%)
+  mode: all
+  top_n: 15
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Demand / Usable Capacity
+  refresh_content: false
+  relationship_mode: children
+  max_value: 100
+  metric_unit:
+    id: percent
+    name: '%'
+  yellow_bound: 70
+  orange_bound: 80
+  red_bound: 90
+  ui:
+    height: 837
+- id: w1
+  type: ParetoAnalysis
+  title: 'Top-15 Clusters: CPU Utilization'
+  coords:
+    w: 3
+    x: 1
+    h: 15
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  metric_key: cpu|workload
+  metric_name: CPU|Workload (%)
+  mode: all
+  top_n: 15
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Demand / Usable Capacity
+  refresh_content: false
+  relationship_mode: children
+  max_value: 100
+  metric_unit:
+    id: percent
+    name: '%'
+  yellow_bound: 70
+  orange_bound: 80
+  red_bound: 90
+  ui:
+    height: 836
+- id: w2
+  type: ParetoAnalysis
+  title: 'Top-15 Clusters: CPU Reservation'
+  coords:
+    w: 3
+    x: 4
+    h: 15
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  metric_key: vCommunity|Cluster Risk|Highest ESXi CPU Reservation
+  metric_name: vCommunity|Cluster Risk|Highest ESXi CPU Reservation
+  mode: all
+  top_n: 15
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Reservation
+  refresh_content: false
+  relationship_mode: children
+  max_value: 100
+  metric_unit:
+    id: percent
+    name: '%'
+  yellow_bound: 50
+  orange_bound: 70
+  red_bound: 90
+  ui:
+    height: 837
+- id: w3
+  type: ParetoAnalysis
+  title: 'Top-15 Clusters: Memory Reservation'
+  coords:
+    w: 3
+    x: 10
+    h: 15
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  metric_key: vCommunity|Cluster Risk|Highest ESXi Memory Reservation
+  metric_name: vCommunity|Cluster Risk|Highest ESXi Memory Reservation
+  mode: all
+  top_n: 15
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Reservation
+  refresh_content: false
+  relationship_mode: children
+  yellow_bound: 40
+  orange_bound: 60
+  red_bound: 80
+  ui:
+    height: 837
+interactions: []

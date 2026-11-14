@@ -1,0 +1,93 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: c59b828f-5840-4aa7-8bda-2b3639323a89
+name: VM Capacity Consumption
+description: 'List of VM and their footprint on the cluster. Used in cluster capacity analysis to figure
+  out which VMs have largest reservation and utilization. Both the VM CPU and memory are shown. '
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: config|hardware|numCpu
+  display_name: CPU
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+  yellow_bound: 8
+  orange_bound: 16
+  red_bound: 24
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|cpuAllocation|reservation
+  display_name: Reservation
+  unit: ghz
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 10
+  orange_bound: 20
+  red_bound: 40
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|hardware|memoryKB
+  display_name: Memory
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+  yellow_bound: 64
+  orange_bound: 128
+  red_bound: 256
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|memoryAllocation|reservation
+  display_name: Reservation
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 24
+  orange_bound: 48
+  red_bound: 96
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: mem|vmMemoryDemand
+  display_name: Utilization
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: mem|consumed_average
+  display_name: Consumed
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 32
+  orange_bound: 64
+  red_bound: 128
+  ascending_range: false
+summary:
+- display_name: Sum
+  aggregation: SUM
+  columns:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+page_size: 50
+top_n: 50
+omit:
+- include_resource_creation_time

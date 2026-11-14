@@ -1,0 +1,63 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/vm details vcommunity/VM Details vCommunity.xml
+id: f12d5911-bcd2-48c9-b7b9-5ae57eef8a41
+name: VM Details vCommunity
+description: VM Details vCommunity
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+time_window:
+  unit: DAYS
+  count: 30
+columns:
+- attribute: summary|runtime|powerState
+  display_name: Power State
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  red_bound: Powered Off
+  ascending_range: true
+  omit:
+  - roll_up_type
+- attribute: summary|guest|ipAddress
+  display_name: IP
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|guest|fullName
+  display_name: OS
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|hardware|num_Cpu
+  display_name: vCPU
+  unit: '7004'
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: config|hardware|memoryKB
+  display_name: Memory
+  unit: auto
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|hardware|diskSpace
+  display_name: Disk
+  unit: auto
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+omit:
+- include_resource_creation_time

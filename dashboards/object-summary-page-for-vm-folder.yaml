@@ -1,0 +1,78 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/VMFolder/dashboard.json
+id: d22b04d0-1eb2-496e-8944-a143e94187d5
+name: . Object Summary Page for VM Folder
+description: ''
+name_path: ''
+omit:
+- name_path
+shared: false
+hidden: false
+disabled: true
+edit_allowed: true
+column_count: 0
+summary_for: VMWARE:VMFolder
+widgets:
+- id: w0
+  type: View
+  title: Virtual Disks
+  coords:
+    w: 6
+    x: 1
+    h: 6
+    y: 10
+  description: ''
+  view_details: ''
+  view: VM Virtual Disks
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+    view_type: LIST
+- id: w1
+  type: View
+  title: Virtual Machines
+  coords:
+    w: 12
+    x: 1
+    h: 9
+    y: 1
+  description: ''
+  view_details: ''
+  view: VM Configuration
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+    view_type: LIST
+- id: w2
+  type: View
+  title: Virtual Network
+  coords:
+    w: 6
+    x: 7
+    h: 6
+    y: 10
+  description: ''
+  view_details: ''
+  view: VM Network Card Configuration
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+    view_type: LIST
+interactions:
+- from: w1
+  to: w0
+  type: resourceId
+- from: w1
+  to: w2
+  type: resourceId

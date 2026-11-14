@@ -1,0 +1,84 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: 3c9878e2-f570-4309-8093-8b8de7c5c81b
+name: vSphere Cluster Worst-Case Contention Profile
+description: 'Top 20 clusters with running VMs over the last month: worst VM CPU ready and memory contention
+  at the percentile, share of VMs affected by each, and average running VMs. Has an average row.'
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  filter:
+  - - filter_type: metrics
+      metric_key: summary|number_running_vms
+      condition: GREATER_THAN
+      value: 0
+      transform: CURRENT
+      business_hours: false
+time_window:
+  unit: MONTHS
+  count: 1
+columns:
+- attribute: cpu|max_cpu_ready
+  display_name: Worst VM CPU Ready
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 99
+  sort: desc
+  yellow_bound: 4
+  orange_bound: 8
+  red_bound: 16
+  ascending_range: false
+- attribute: mem|max_vm_mem_contention
+  display_name: Worst VM Memory Contention
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 99
+  yellow_bound: 2
+  orange_bound: 4
+  red_bound: 8
+  ascending_range: false
+- attribute: cpu|percentage_of_vms_facing_cpu_ready
+  display_name: '% VMs facing CPU Ready (%)'
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: AVG
+  sort: desc
+  yellow_bound: 5
+  orange_bound: 10
+  red_bound: 20
+  ascending_range: false
+- attribute: mem|percentage_of_vms_facing_memory_contention
+  display_name: '% VMs facing Memory Contention'
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: AVG
+  yellow_bound: 5
+  orange_bound: 10
+  red_bound: 20
+  ascending_range: false
+- attribute: summary|number_running_vms
+  display_name: Average Running VMs
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: AVG
+  sort: desc
+summary:
+- display_name: Average
+  aggregation: AVG
+  columns:
+  - 0
+  - 1
+  - 2
+  - 3
+page_size: 50
+distribution_color: 6870C4
+top_n: 20
+omit:
+- include_resource_creation_time

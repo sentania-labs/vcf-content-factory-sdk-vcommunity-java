@@ -1,0 +1,57 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/HostFolder/dashboard.json
+id: 7e3e9266-b325-4225-b2ad-9198b801ff43
+name: . Object Summary Page for Compute Folder
+description: ''
+name_path: ''
+omit:
+- name_path
+shared: false
+hidden: false
+disabled: true
+edit_allowed: true
+column_count: 0
+summary_for: VMWARE:HostFolder
+widgets:
+- id: w0
+  type: View
+  title: Clusters
+  coords:
+    w: 12
+    x: 1
+    h: 7
+    y: 1
+  description: ''
+  view_details: ''
+  view: d3487e74-223e-402c-9e90-6b6d5987a541
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+    view_type: LIST
+- id: w1
+  type: View
+  title: ESXi Hosts
+  coords:
+    w: 12
+    x: 1
+    h: 9
+    y: 8
+  description: ''
+  title_localized: ESXi Hosts
+  view_details: ''
+  view: e3321b7e-033e-4a5e-820f-796d38b268f5
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+    view_type: LIST
+interactions:
+- from: w0
+  to: w1
+  type: resourceId

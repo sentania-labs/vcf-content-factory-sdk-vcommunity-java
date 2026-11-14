@@ -1,0 +1,72 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: caa77302-9958-4ac0-bcf0-aefcc386b634
+name: Guest OS List of Services
+description: 'List of Operating System processes or services, along with basic information.
+
+
+
+  Note: this requires Service Discovery adapter.'
+data_type: list
+presentation: list
+subject:
+  adapter_kind: APPLICATIONDISCOVERY
+  resource_kind: Services
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|incomingConnectionCount
+  display_name: Incoming Connections
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|outgoingConnectionCount
+  display_name: Outgoing Connections
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: DynamicPort
+  display_name: Dynamic Port?
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: Port
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - display_name
+  - roll_up_type
+- attribute: Status
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - display_name
+  - roll_up_type
+- attribute: Version
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - display_name
+  - roll_up_type
+- attribute: summary|Pid
+  display_name: Process ID
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: InstallPath
+  display_name: Installation Path
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+omit:
+- include_resource_creation_time

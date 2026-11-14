@@ -1,0 +1,203 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: c32894fc-f375-4f4d-b486-9f10473dc82b
+name: 'Report: VM Inventory (page 2)'
+description: "Part of a report covering inventory (what items you have where). Designed to be run on a\
+  \ weekly basis, and be compared with previous week result. \nWorking with a VCF expert, tailor the dashboard\
+  \ and widget to the specific requirements."
+name_path: VCF Optimization Assessment
+shared: false
+hidden: false
+disabled: true
+time_range: last7Days
+column_proportion: 1-1
+widgets:
+- id: w0
+  type: HealthChart
+  title: VM Deletion
+  coords:
+    w: 4
+    x: 1
+    h: 6
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vmop|inventoryChange|numDestroy_latest
+  metric_name: Number of VM Operations|Inventory|VM Delete
+  metric_full_name: Number of VM Operations|Inventory|VM Delete
+  mode: all
+  depth: 1
+  chart_height: 190
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 10
+  orange_bound: 20
+  red_bound: 40
+  show_resource_name: false
+  ui:
+    height: 324
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w1
+  type: HealthChart
+  title: VM Reconfiguration
+  coords:
+    w: 4
+    x: 9
+    h: 6
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vmop|inventoryChange|numReconfigure_latest
+  metric_name: Number of VM Operations|Inventory|VM Reconfigure
+  metric_full_name: Number of VM Operations|Inventory|VM Reconfigure
+  mode: all
+  depth: 1
+  chart_height: 190
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 10
+  orange_bound: 20
+  red_bound: 40
+  show_resource_name: false
+  ui:
+    height: 324
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    - key: perm_toolbarVisible_
+      value: b%3A1
+- id: w2
+  type: HealthChart
+  title: VM Power Off
+  coords:
+    w: 4
+    x: 5
+    h: 6
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vmop|stateChange|numPoweroff_latest
+  metric_name: Number of VM Operations|State|VM Power Off
+  metric_full_name: Number of VM Operations|State|VM Power Off
+  mode: all
+  depth: 1
+  chart_height: 190
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 10
+  orange_bound: 20
+  red_bound: 40
+  show_resource_name: false
+  ui:
+    height: 323
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+- id: w3
+  type: Heatmap
+  title: VM Distribution by CPU Size. Color = On
+  coords:
+    w: 6
+    x: 1
+    h: 10
+    y: 7
+  mode: all
+  depth: 10
+  relationship_mode: children
+  configs:
+  - name: 'CPU '
+    adapter_kind: VMWARE
+    resource_kind: VirtualMachine
+    color_by:
+      metric_key: sys|poweredOn
+      label: System|Powered ON
+    size_by:
+      metric_key: cpu|corecount_provisioned
+      label: CPU|Provisioned vCPU(s) (vCPUs)
+    group_by:
+      adapter_kind: VMWARE
+      resource_kind: ClusterComputeResource
+      text: Cluster Compute Resource
+      parent_text: vCenter
+    color:
+      thresholds:
+        values:
+        - 0
+        - 100
+        colors:
+        - '#5F5E5F'
+        - '#5F5E5F'
+        - '#83AF50'
+      min_value: 0
+      max_value: 1
+    solid_coloring: true
+    focus_on_groups: true
+    omit:
+    - tag_filter
+    - custom_filter
+  ui:
+    height: 552
+    states:
+    - key: permBtn_showTextBtn_perm_HeatMap_
+      value: b%3A0
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    - key: perm_HeatMap_
+      value: o%3A
+- id: w4
+  type: Heatmap
+  title: VM Distribution by Memory Size. Color =  On
+  coords:
+    w: 6
+    x: 7
+    h: 10
+    y: 7
+  mode: all
+  depth: 10
+  relationship_mode: children
+  configs:
+  - name: Memory
+    adapter_kind: VMWARE
+    resource_kind: VirtualMachine
+    color_by:
+      metric_key: sys|poweredOn
+      label: System|Powered ON
+    size_by:
+      metric_key: mem|guest_provisioned
+      label: Memory|Total Capacity (KB)
+    group_by:
+      adapter_kind: VMWARE
+      resource_kind: ClusterComputeResource
+      text: Cluster Compute Resource
+      parent_text: vCenter
+    color:
+      thresholds:
+        values:
+        - 0
+        - 100
+        colors:
+        - '#5F5E5F'
+        - '#5F5E5F'
+        - '#83AF50'
+      min_value: 0
+      max_value: 1
+    solid_coloring: true
+    focus_on_groups: true
+    omit:
+    - tag_filter
+    - custom_filter
+  ui:
+    height: 552
+    states:
+    - key: permBtn_showTextBtn_perm_HeatMap_
+      value: b%3A0
+    - key: perm_HeatMap_
+      value: o%3A
+    - key: perm_toolbarVisible_
+      value: b%3A0
+interactions: []

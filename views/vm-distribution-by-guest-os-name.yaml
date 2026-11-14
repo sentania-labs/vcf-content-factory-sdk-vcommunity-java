@@ -1,0 +1,43 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: 3dae7fec-9531-45df-8e0b-8e6615e235e6
+name: VM Distribution by Guest OS Name
+description: Donut chart showing how many virtual machines run each guest operating system name, one slice
+  per name.
+data_type: distribution
+presentation: donut-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+usage:
+- dashboard
+- report
+- content
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|guest|fullName
+  display_name: .
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  omit:
+  - roll_up_type
+  - transformation
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  is_sum: false
+additional_columns:
+- attribute: config|guestFullName
+  localized_name: Configuration|Guest OS from vCenter
+  display_name: Guest OS from vCenter
+  is_string_attribute: true
+  is_property: true
+  roll_up_count: 0
+omit:
+- include_resource_creation_time

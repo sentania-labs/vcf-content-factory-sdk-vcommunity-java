@@ -1,0 +1,114 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: f6d0ed4e-9a22-4129-8d5c-150846b6a37b
+name: VM Storage Configuration
+description: "List of VMs and their storage related configuration. \n\nIf you want to export to CSV, use\
+  \ the CSV report. All the CSV reports have many more columns as they are purpose built for export."
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: config|hardware|diskSpace
+  display_name: Disk Size
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 250
+  orange_bound: 500
+  red_bound: 1000
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|numVMDKs
+  display_name: Number of Disks
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 5
+  orange_bound: 10
+  red_bound: 15
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: config|numRDMs
+  display_name: RDM Disk
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 1
+  orange_bound: 2
+  red_bound: 4
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: diskspace|snapshot|snapshotAge
+  display_name: Snapshot Age
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 2
+  orange_bound: 5
+  red_bound: 10
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: summary|snapshot_space_used
+  display_name: Snapshot Size
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.1
+  orange_bound: 4
+  red_bound: 16
+  ascending_range: false
+- attribute: summary|snapshot_count
+  display_name: Number of Snapshots
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 1
+  orange_bound: 2
+  red_bound: 4
+  ascending_range: false
+- attribute: summary|datastore
+  display_name: Datastore
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|parentCluster
+  display_name: Parent Cluster
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|parentDatacenter
+  display_name: Parent Cluster
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|parentFolder
+  display_name: Parent Folder
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+hide_object_name: true
+omit:
+- include_resource_creation_time

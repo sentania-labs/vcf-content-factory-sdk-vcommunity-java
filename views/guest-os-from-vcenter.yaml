@@ -1,0 +1,55 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: 202efe69-762e-4934-8cbf-779b56b0a2cb
+name: Guest OS from vCenter
+description: 'Displays the guest operating system name as shown in the vCenter UI. Compare this with the
+  name from vCenter UI. Notes the 2 names may not be identical.
+
+
+  Keep the number of variations minimal, as they complicate operations.
+
+
+  '
+data_type: distribution
+presentation: donut-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+usage:
+- dashboard
+- report
+- content
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: config|guestFullName
+  display_name: Guest OS from vCenter
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  omit:
+  - roll_up_type
+  - transformation
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  is_sum: false
+additional_columns:
+- attribute: summary|guest|fullName
+  localized_name: Summary|Guest Operating System|Guest OS from Tools
+  display_name: Guest OS from Tools
+  is_string_attribute: true
+  is_property: true
+  roll_up_count: 0
+- attribute: summary|guest|guestFamily
+  localized_name: Summary|Guest Operating System|Guest Family
+  display_name: Family
+  is_string_attribute: true
+  is_property: true
+  roll_up_count: 0
+omit:
+- include_resource_creation_time

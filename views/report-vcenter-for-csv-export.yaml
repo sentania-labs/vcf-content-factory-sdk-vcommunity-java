@@ -1,0 +1,171 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/report - voa - vcenter for csv export/Report - VOA - vCenter for CSV Export.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: c5f9d0b8-07e5-488e-b4ec-bece54158bb0
+name: 'Report: vCenter for CSV Export'
+description: "A simple table for export as a CSV file. Used in report only, hence it has no formatting.\
+  \ Just like the rest of the report, it is designed for weekly, not daily nor monthly. \n\nSchedule it\
+  \ to run end of the week, such as Sunday 23:59"
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VMwareAdapter Instance
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|total_number_clusters
+  display_name: Clusters
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+  omit:
+  - subject
+- attribute: summary|total_number_hosts
+  display_name: ESXi Hosts
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+  omit:
+  - subject
+- attribute: summary|total_number_datastores
+  display_name: Datastores
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - subject
+- attribute: summary|total_number_vms
+  display_name: VMs
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - subject
+- attribute: summary|number_running_vms
+  display_name: Running VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|capacity_provisioned
+  display_name: CPU Total Capacity
+  unit: ghz
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|corecount_provisioned
+  display_name: CPU Total Cores
+  unit: '7001'
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|vcpus_allocated_on_all_vms
+  display_name: CPU Allocated to All VMs
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|vcpus_allocated_on_all_powered_on_vms
+  display_name: CPU Allocated to Running VMs
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: gpu|numberOfGPUs
+  display_name: GPU
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: mem|host_provisioned
+  display_name: Memory Total Capacity
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: mem|haTotalCapacity_average
+  display_name: Memory Usable Capacity
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: diskspace|total_capacity
+  display_name: Disk Total Capacity
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: disk|commandsAveraged_average
+  display_name: Disk Total IOPS
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: disk|usage_average
+  display_name: Disk Total Throughput
+  unit: mbps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: net:physical|usage_average
+  display_name: Physical Network Ussage
+  unit: gbitsps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: net:virtual|usage_average
+  display_name: Virtual Network Usage
+  unit: gbitsps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: vmop|inventoryChange|numCreate_latest
+  display_name: VM Created
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|inventoryChange|numDestroy_latest
+  display_name: VM Deleted
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|inventoryChange|numReconfigure_latest
+  display_name: VM Reconfigure
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|stateChange|numRebootGuest_latest
+  display_name: Guest Reboot
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|stateChange|numPoweroff_latest
+  display_name: VM Power Off
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|stateChange|numReset_latest
+  display_name: VM Reset
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|stateChange|numSuspend_latest
+  display_name: VM Suspend
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|locationChange|numVMotion_latest
+  display_name: vMotion
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|locationChange|numSVMotion_latest
+  display_name: Storage vMotion
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

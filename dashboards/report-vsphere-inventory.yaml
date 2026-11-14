@@ -1,0 +1,338 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: e750120d-c5b6-4fda-8e98-dc00e1f3f39c
+name: 'Report: vSphere Inventory'
+description: "Part of a report covering inventory (what items you have where). Designed to be run on a\
+  \ weekly basis, and be compared with previous week result. \nWorking with a VCF expert, tailor the dashboard\
+  \ and widget to the specific requirements."
+name_path: VCF Optimization Assessment
+shared: false
+hidden: true
+disabled: true
+doc_center_key: vcom_559
+widgets:
+- id: w0
+  type: Scoreboard
+  title: Summary
+  coords:
+    w: 12
+    x: 1
+    h: 3
+    y: 1
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: summary|total_number_datacenters
+    metric_name: Summary|Total Number of Datacenters
+    color_method: 2
+    unit: ''
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+    - handle_old_coloring
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: summary|total_number_clusters
+    metric_name: Summary|Total Number of Clusters
+    color_method: 2
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+    - handle_old_coloring
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: summary|total_number_hosts
+    metric_name: Summary|Total Number of Hosts
+    color_method: 2
+    unit: ''
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+    - handle_old_coloring
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: summary|total_number_datastores
+    metric_name: Summary|Total Number of Datastores
+    color_method: 2
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+    - handle_old_coloring
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: summary|numberKubernetesClusters
+    metric_name: Summary|Number of Kubernetes clusters
+    color_method: 2
+    unit: ''
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: VMwareAdapter Instance
+    metric_key: summary|total_number_clusters
+    metric_name: Summary|Total Number of Clusters
+    color_method: 2
+    unit: ''
+    resource_kind_name: vCenter
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: VMwareAdapter Instance
+    metric_key: summary|total_number_datacenters
+    metric_name: Summary|Total Number of Datacenters
+    color_method: 2
+    resource_kind_name: vCenter
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: VMwareAdapter Instance
+    metric_key: summary|total_number_datastores
+    metric_name: Summary|Total Number of Datastores
+    color_method: 2
+    resource_kind_name: vCenter
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: VMwareAdapter Instance
+    metric_key: summary|total_number_hosts
+    metric_name: Summary|Total Number of Hosts
+    color_method: 2
+    resource_kind_name: vCenter
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: VMwareAdapter Instance
+    metric_key: summary|numberKubernetesClusters
+    metric_name: Summary|Number of Kubernetes clusters
+    color_method: 2
+    resource_kind_name: vCenter
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: Datacenter
+    metric_key: summary|total_number_hosts
+    metric_name: Summary|Total Number of Hosts
+    color_method: 2
+    resource_kind_name: Datacenter
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: Datacenter
+    metric_key: summary|total_number_datastores
+    metric_name: Summary|Total Number of Datastores
+    color_method: 2
+    resource_kind_name: Datacenter
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: Datacenter
+    metric_key: summary|total_number_clusters
+    metric_name: Summary|Total Number of Clusters
+    color_method: 2
+    resource_kind_name: Datacenter
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: Datacenter
+    metric_key: summary|numberKubernetesClusters
+    metric_name: Summary|Number of Kubernetes clusters
+    color_method: 2
+    resource_kind_name: Datacenter
+    omit:
+    - max_value
+    - unit
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 5
+  value_size: 24
+  label_size: 12
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: false
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  refresh_content: true
+  old_metric_values: false
+  ui:
+    height: 153
+- id: w1
+  type: View
+  title: Server Vendor
+  coords:
+    w: 4
+    x: 1
+    h: 5
+    y: 4
+  view: ESXi Hardware Model
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 267
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    - key: perm_isDashboardTime_
+      value: b%3A0
+- id: w2
+  type: View
+  title: Server Model
+  coords:
+    w: 4
+    x: 5
+    h: 5
+    y: 4
+  view: ESXi Distribution by Hardware Model
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 267
+    states:
+    - key: perm_isDashboardTime_
+      value: b%3A0
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w3
+  type: View
+  title: Datastore Type
+  coords:
+    w: 4
+    x: 9
+    h: 5
+    y: 4
+  view: Datastore Type
+  chart_view_items:
+  - legend
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 266
+    states:
+    - key: perm_isDashboardTime_
+      value: b%3A0
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w4
+  type: Heatmap
+  title: 'Datastores: Color by VM Count. Size by Total Capacity'
+  coords:
+    w: 6
+    x: 7
+    h: 8
+    y: 9
+  mode: all
+  depth: 10
+  configs:
+  - name: Datastore
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+    color_by:
+      metric_key: summary|total_number_vms
+      label: Summary|Total Number of VMs
+    size_by:
+      metric_key: diskspace|capacity
+      label: Disk Space|Total Capacity (GB)
+    group_by:
+      adapter_kind: VMWARE
+      resource_kind: Datacenter
+      text: Datacenter
+      parent_text: vCenter
+    color:
+      thresholds:
+        values:
+        - 0
+        - 50
+        - 100
+        colors:
+        - '#74B43B'
+        - '#ECC33E'
+        - '#DE3F30'
+      min_value: 0
+      max_value: 500
+    solid_coloring: false
+    focus_on_groups: true
+    model_id: true
+    omit:
+    - tag_filter
+    - custom_filter
+  ui:
+    height: 438
+    states:
+    - key: perm_HeatMap_
+      value: o%3A
+    - key: permBtn_showTextBtn_perm_HeatMap_
+      value: b%3A0
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w5
+  type: Heatmap
+  title: Distributed Port Group. Color by VM Count. Size fixed
+  coords:
+    w: 6
+    x: 1
+    h: 8
+    y: 9
+  mode: all
+  depth: 10
+  configs:
+  - name: port group
+    adapter_kind: VMWARE
+    resource_kind: DistributedVirtualPortgroup
+    color_by:
+      metric_key: Super Metric|sm_3ec095da-c812-4baf-b0fa-3c2413392518
+      label: Super Metrics|Number of VM
+    size_by:
+      metric_key: null
+      label: ''
+    group_by:
+      adapter_kind: VMWARE
+      resource_kind: Datacenter
+      text: Datacenter
+      parent_text: vCenter
+    color:
+      thresholds:
+        values:
+        - 0
+        - 50
+        - 100
+        colors:
+        - '#74B43B'
+        - '#ECC33E'
+        - '#DE3F30'
+      min_value: 0
+      max_value: 500
+    solid_coloring: false
+    focus_on_groups: true
+    omit:
+    - tag_filter
+    - custom_filter
+  ui:
+    height: 438
+    states:
+    - key: perm_HeatMap_
+      value: o%3A
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    - key: permBtn_showTextBtn_perm_HeatMap_
+      value: b%3A0
+interactions:
+- from: w0
+  to: w1
+  type: resourceId
+- from: w0
+  to: w2
+  type: resourceId
+- from: w0
+  to: w3
+  type: resourceId

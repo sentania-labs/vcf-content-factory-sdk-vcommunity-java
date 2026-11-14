@@ -1,0 +1,47 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: e77a32c0-16f4-4d3e-aabe-0d1354154d4b
+name: ESXi Network Cards List
+description: List the summary of the network properties associated with the Distributed Virtual Switch
+  for the selected Host System in your environment.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- instanced_group:
+    name: GROUP_net
+    show_instance_name: true
+    keep_instance_summary: false
+  omit:
+  - display_name
+- attribute: net:vmnic0|speed
+  display_name: Actual Speed
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: net:vmnic0|configuredSpeed
+  display_name: Configured Speed
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: net:vmnic0|nicDriver
+  display_name: Driver
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+distribution_color: 6870C4
+hide_object_name: true
+omit:
+- include_resource_creation_time

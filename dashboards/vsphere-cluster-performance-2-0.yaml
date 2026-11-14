@@ -1,0 +1,2113 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/vsphere cluster performance 2.0/vSphere Cluster Performance 2.0.json
+id: 325fd7c9-b8a9-48f2-a018-be070f49e1b5
+name: vSphere Cluster Performance 2.0
+description: Monitor the performance of vSphere Clusters. Both the contention and utilization counters
+  are shown. It lists all the clusters with their key performance indicators.
+name_path: vCommunity
+shared: true
+hidden: true
+time_range: last6Hour
+edit_allowed: true
+doc_center_key: vcom_636
+column_proportion: 1-1
+widgets:
+- id: w0
+  type: View
+  title: vSphere Clusters
+  coords:
+    w: 4
+    x: 1
+    h: 10
+    y: 1
+  title_localized: vSphere Clusters
+  navigations:
+  - dashboard_id: a64a48ae-8992-4571-971c-210f0ae87740
+  - dashboard_id: a10e7aaa-8fa7-4373-8ebb-87a9cc7daaec
+    widget_ids:
+    - 584b09f3-b41a-4634-896f-9f3eceba017b
+  - dashboard_id: d5a11c85-618d-4e75-90f2-d5fcf0721cb8
+    widget_ids:
+    - 4c7accdb-86aa-44f6-bd9b-8caa07640009
+  - dashboard_id: 96aac8fc-0163-44cd-a582-793159fda34c
+    widget_ids:
+    - 2479bc78-9b31-46a9-8208-8c7935df6342
+  - dashboard_id: 18eb3df1-c8d0-4d59-b8a1-204c83444d7d
+    widget_ids:
+    - 7f154bb8-78d2-4ccd-abab-5cead0830bd4
+  - dashboard_id: 90bdd1da-19b8-42b3-83ee-e5403512afb1
+    widget_ids:
+    - 83ed8326-b875-49bd-a62d-550c8e0a0cec
+  - dashboard_id: 2e1e59eb-4cc8-4ae0-a0ca-cb44358fab5b
+    widget_ids:
+    - f9a03896-fee0-4592-aed4-8d8453a91ef6
+  view: d8a3767e-9d5e-4bf2-b613-9e3bef977502
+  select_first_row: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+    traversal_spec: vSphere Hosts and Clusters-VMWARE-vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-vCommunity%2525257CCluster%25252520Performance%2525257CCluster%25252520Performance%25252520Score1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-vCommunity%2525257CCluster%25252520Performance%2525257CCluster%25252520Performance%25252520Score2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-vCommunity%2525257CCluster%25252520Performance%2525257CWorst%25252520VM%25252520CPU%25252520Ready3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-vCommunity%2525257CCluster%25252520Performance%2525257CWorst%25252520VM%25252520Memory%25252520Latency4%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-vCommunity%2525257CCluster%25252520Performance%2525257CWorst%25252520VM%25252520Disk%25252520Latency5%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-net%2525257Cerror_packets_sum6%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-net%2525253Aphysical%2525257Cdropped_sum7%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Cnumber_running_hosts8%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Cnumber_running_vms9%25255Ehidden%25253Db%2525253A0
+    - key: perm_isDashboardTime_
+      value: b%3A0
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w1
+  type: HealthChart
+  title: Performance (%)
+  coords:
+    w: 8
+    x: 5
+    h: 4
+    y: 1
+  title_localized: Performance (%)
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  metric_key: vCommunity|Cluster Performance|Cluster Performance Score
+  metric_name: vCommunity|Cluster Performance|Cluster Performance Score
+  metric_full_name: Super Metrics|vSphere Cluster Performance (%)
+  mode: all
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  show_resource_name: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    undefined: []
+    custom_filter_mode: tagPicker
+- id: w2
+  type: Scoreboard
+  title: CPU Performance
+  coords:
+    w: 8
+    x: 5
+    h: 5
+    y: 5
+  description: ''
+  title_localized: CPU Performance
+  view_details: ''
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Performance|Worst VM CPU Ready
+    metric_name: vCommunity|Cluster Performance|Worst VM CPU Ready
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Performance|Worst VM CPU Co-Stop
+    metric_name: vCommunity|Cluster Performance|Worst VM CPU Co-Stop
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Performance|90th Percentile VM CPU Ready
+    metric_name: vCommunity|Cluster Performance|90th Percentile VM CPU Ready
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Performance|90th Percentile VM CPU Co-Stop
+    metric_name: vCommunity|Cluster Performance|90th Percentile VM CPU Co-Stop
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Consumption|Cluster-wide ESXi CPU Thread Utilization
+    metric_name: vCommunity|Cluster Consumption|Cluster-wide ESXi CPU Thread Utilization
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Risk|Highest ESXi CPU Thread Utilization
+    metric_name: vCommunity|Cluster Risk|Highest ESXi CPU Thread Utilization
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Risk|Worst ESXi CPU Imbalance
+    metric_name: vCommunity|Cluster Risk|Worst ESXi CPU Imbalance
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Risk|Highest ESXi CPU Overcommit Ratio
+    metric_name: vCommunity|Cluster Risk|Highest ESXi CPU Overcommit Ratio
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Risk|Highest ESXi CPU Reservation
+    metric_name: vCommunity|Cluster Risk|Highest ESXi CPU Reservation
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Risk|Highest CPU Monster VM to Host Ratio
+    metric_name: vCommunity|Cluster Risk|Highest CPU Monster VM to Host Ratio
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 5
+  value_size: 24
+  label_size: 16
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: true
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  period_length: dashboardTime
+  refresh_content: false
+  old_metric_values: false
+  show_remaining: false
+  show_percent_text: false
+  focus_on_percent: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+    gauge_switches: true
+- id: w3
+  type: Scoreboard
+  title: Memory Performance
+  coords:
+    w: 8
+    x: 5
+    h: 5
+    y: 10
+  description: ''
+  title_localized: Memory Performance
+  view_details: ''
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Performance|90th Percentile VM Memory Latency
+    metric_name: vCommunity|Cluster Performance|90th Percentile VM Memory Latency
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Performance|Worst VM Memory Latency
+    metric_name: vCommunity|Cluster Performance|Worst VM Memory Latency
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Risk|Worst ESXi Memory Ballooned
+    metric_name: vCommunity|Cluster Risk|Worst ESXi Memory Ballooned
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Risk|Worst ESXi Memory Zip Swap
+    metric_name: vCommunity|Cluster Risk|Worst ESXi Memory Zip Swap
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Risk|Highest ESXi Memory Consumed
+    metric_name: vCommunity|Cluster Risk|Highest ESXi Memory Consumed
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: mem|swapinRate_average
+    metric_name: Memory|Swap In Rate
+    color_method: 0
+    yellow_bound: 0.5
+    orange_bound: 2.5
+    red_bound: 10
+    label: Swap In Rate
+    unit_id: mbps
+    unit: MBps
+    label_localized: Swap In Rate
+    label_orig: Swap In Rate
+    metric_unit: MBps
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: mem|swapoutRate_average
+    metric_name: Memory|Swap Out Rate
+    color_method: 0
+    yellow_bound: 0.5
+    orange_bound: 2.5
+    red_bound: 10
+    label: Swap Out Rate
+    unit_id: mbps
+    unit: MBps
+    label_localized: Swap Out Rate
+    label_orig: Swap Out Rate
+    metric_unit: MBps
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: mem|swapout_average
+    metric_name: Memory|Swap Out
+    color_method: 0
+    yellow_bound: 0.5
+    orange_bound: 2.5
+    red_bound: 10
+    label: Swap Out
+    unit_id: gb
+    unit: GB
+    label_localized: Swap Out
+    label_orig: Swap Out
+    metric_unit: GB
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 4
+  value_size: 24
+  label_size: 16
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: true
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  period_length: dashboardTime
+  refresh_content: false
+  old_metric_values: false
+  show_remaining: false
+  show_percent_text: false
+  focus_on_percent: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+    gauge_switches: true
+- id: w4
+  type: AlertList
+  title: Performance Alerts
+  coords:
+    w: 4
+    x: 1
+    h: 7
+    y: 11
+  title_localized: Performance Alerts
+  criticality:
+  - 2
+  - 3
+  - 4
+  alert_types:
+  - '15_19'
+  - '16_19'
+  - '17_19'
+  - '18_19'
+  - '19_19'
+  status: []
+  state: []
+  alert_impact: []
+  alert_action: []
+  mode: all
+  depth: 1
+  relationship_mode:
+  - children
+  - self
+  omit:
+  - alert_definitions
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permViewMode_
+      value: s%3ADEFINITION
+    - key: permDateFilter_
+      value: s%3A%7B%22dateRange%22%3A%22last30Days%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    custom_filter_mode: tagPicker
+- id: w5
+  type: Scoreboard
+  title: Disk Performance
+  coords:
+    w: 8
+    x: 5
+    h: 3
+    y: 15
+  description: ''
+  title_localized: Disk Performance
+  view_details: ''
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Performance|Worst VM Disk Latency
+    metric_name: vCommunity|Cluster Performance|Worst VM Disk Latency
+    color_method: 0
+    yellow_bound: 20
+    orange_bound: 40
+    red_bound: 80
+    unit: ''
+    label_localized: ''
+    label_orig: ''
+    metric_unit: ''
+    resource_kind_name: Cluster Compute Resource
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Performance|90th Percentile VM Disk Latency
+    metric_name: vCommunity|Cluster Performance|90th Percentile VM Disk Latency
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: disk|numberWriteAveraged_average
+    metric_name: Disk|Write IOPS
+    color_method: 2
+    label: Write IOPS
+    unit: ''
+    label_localized: Write IOPS
+    label_orig: Write IOPS
+    metric_unit: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: disk|numberReadAveraged_average
+    metric_name: Disk|Read IOPS
+    color_method: 2
+    label: Read IOPS
+    unit: ''
+    label_localized: Read IOPS
+    label_orig: Read IOPS
+    metric_unit: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: disk|read_average
+    metric_name: Disk|Read Throughput
+    color_method: 2
+    label: Read Throughput
+    unit_id: gbitsps
+    unit: Gbps
+    label_localized: Read Throughput
+    label_orig: Read Throughput
+    metric_unit: Gbps
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: disk|write_average
+    metric_name: Disk|Write Throughput
+    color_method: 2
+    label: Write Throughput
+    unit_id: gbitsps
+    unit: Gbps
+    label_localized: Write Throughput
+    label_orig: Write Throughput
+    metric_unit: Gbps
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 6
+  value_size: 24
+  label_size: 16
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: true
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  period_length: dashboardTime
+  refresh_content: false
+  old_metric_values: false
+  show_remaining: false
+  show_percent_text: false
+  focus_on_percent: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+    gauge_switches: true
+- id: w6
+  type: View
+  title: Memory Shares Distribution
+  coords:
+    w: 2
+    x: 1
+    h: 4
+    y: 18
+  title_localized: Memory Shares Distribution
+  view: VM Distribution by Memory Share
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: perm_isDashboardTime_
+      value: b%3A0
+- id: w7
+  type: View
+  title: CPU Shares Distribution
+  coords:
+    w: 2
+    x: 3
+    h: 4
+    y: 18
+  title_localized: CPU Shares Distribution
+  view: VM Distribution by CPU Share
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: perm_isDashboardTime_
+      value: b%3A0
+- id: w8
+  type: Scoreboard
+  title: Network Performance
+  coords:
+    w: 8
+    x: 5
+    h: 5
+    y: 18
+  description: ''
+  title_localized: Network Performance
+  view_details: ''
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: net|error_packets
+    metric_name: Network|Error Packets
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 10
+    red_bound: 100
+    unit_id: packets
+    unit: packets
+    label_localized: ''
+    label_orig: ''
+    metric_unit: packets
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: net:physical|droppedPct
+    metric_name: Network:physical|Packets Dropped
+    color_method: 0
+    yellow_bound: 0.5
+    orange_bound: 1
+    red_bound: 2
+    label: 'Physical: Packets Dropped'
+    unit_id: -1
+    unit: Auto
+    label_localized: 'Physical: Packets Dropped'
+    label_orig: 'Physical: Packets Dropped'
+    metric_unit: Auto
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: net:virtual|droppedPct
+    metric_name: Network:virtual|Packets Dropped
+    color_method: 0
+    yellow_bound: 0.5
+    orange_bound: 1
+    red_bound: 2
+    label: 'Virtual: Packets Dropped'
+    unit_id: -1
+    unit: Auto
+    label_localized: 'Virtual: Packets Dropped'
+    label_orig: 'Virtual: Packets Dropped'
+    metric_unit: Auto
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: net:physical|received_average
+    metric_name: Network:physical|Data Receive Rate
+    color_method: 2
+    label: 'Physical: Receive Throughput'
+    unit_id: gbitsps
+    unit: Gbps
+    label_localized: 'Physical: Receive Throughput'
+    label_orig: 'Physical: Receive Throughput'
+    metric_unit: Gbps
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: net:physical|transmitted_average
+    metric_name: Network:physical|Data Transmit Rate
+    color_method: 2
+    label: 'Physical: Transmit Throughput'
+    unit_id: gbitsps
+    unit: Gbps
+    label_localized: 'Physical: Transmit Throughput'
+    label_orig: 'Physical: Transmit Throughput'
+    metric_unit: Gbps
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: net:virtual|received_average
+    metric_name: Network:virtual|Data Receive Rate
+    color_method: 2
+    label: 'Virtual: Receive Throughput'
+    unit_id: gbitsps
+    unit: Gbps
+    label_localized: 'Virtual: Receive Throughput'
+    label_orig: 'Virtual: Receive Throughput'
+    metric_unit: Gbps
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: net:virtual|transmitted_average
+    metric_name: Network:virtual|Data Transmit Rate
+    color_method: 2
+    label: 'Virtual: Transmit Throughput'
+    unit_id: gbitsps
+    unit: Gbps
+    label_localized: 'Virtual: Transmit Throughput'
+    label_orig: 'Virtual: Transmit Throughput'
+    metric_unit: Gbps
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: vCommunity|Cluster Performance|Highest ESXi Bad Network Packets
+    metric_name: vCommunity|Cluster Performance|Highest ESXi Bad Network Packets
+    color_method: 1
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - label
+    - max_value
+    - unit
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 4
+  value_size: 24
+  label_size: 16
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: true
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  period_length: dashboardTime
+  refresh_content: false
+  old_metric_values: false
+  show_remaining: false
+  show_percent_text: false
+  focus_on_percent: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    widget_id: true
+    gauge_switches: true
+- id: w9
+  type: View
+  title: Resource Pools by Memory Shares
+  coords:
+    w: 2
+    x: 1
+    h: 4
+    y: 22
+  title_localized: Resource Pools by Memory Shares
+  navigations:
+  - dashboard_id: a10e7aaa-8fa7-4373-8ebb-87a9cc7daaec
+  view: 421ac1e1-91a0-4752-a0fd-5cebad574041
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    - key: perm_isDashboardTime_
+      value: b%3A0
+- id: w10
+  type: View
+  title: Resource Pools by CPU Shares
+  coords:
+    w: 2
+    x: 3
+    h: 4
+    y: 22
+  title_localized: Resource Pools by CPU Shares
+  view: 12fd58e7-82bf-402d-a173-60702566a124
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: perm_isDashboardTime_
+      value: b%3A0
+- id: w11
+  type: Scoreboard
+  title: Other KPIs
+  coords:
+    w: 8
+    x: 5
+    h: 3
+    y: 23
+  title_localized: Other KPIs
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: System Attributes|alert_count_critical
+    metric_name: vRealize Operations Generated|Alert Count Critical
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 2
+    red_bound: 4
+    label: Critical Alerts
+    unit: ''
+    label_localized: Critical Alerts
+    label_orig: Critical Alerts
+    metric_unit: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: summary|drs_unhappy_vms
+    metric_name: Summary|DRS Unhappy VMs
+    color_method: 2
+    label: DRS Unhappy VMs
+    unit: ''
+    label_localized: DRS Unhappy VMs
+    label_orig: DRS Unhappy VMs
+    metric_unit: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: summary|number_drs_vmotion
+    metric_name: Summary|DRS Initiated vMotion Count
+    color_method: 2
+    label: DRS Initiated vMotion
+    unit: ''
+    label_localized: DRS Initiated vMotion
+    label_orig: DRS Initiated vMotion
+    metric_unit: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: clusterServices|total_imbalance
+    metric_name: Cluster Services|Total Imbalance
+    color_method: 2
+    label: 'Cluster Imbalance '
+    unit: ''
+    label_localized: 'Cluster Imbalance '
+    label_orig: 'Cluster Imbalance '
+    metric_unit: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 4
+  value_size: 24
+  label_size: 16
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: true
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  period_length: dashboardTime
+  refresh_content: false
+  old_metric_values: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+- id: w12
+  type: Scoreboard
+  title: Properties of Selected Cluster
+  coords:
+    w: 12
+    x: 1
+    h: 1
+    y: 26
+  collapsed: true
+  title_localized: Properties of Selected Cluster
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: configuration|dasConfig|enabled
+    metric_name: Cluster Configuration|DAS Configuration|HA Enabled
+    is_string_metric: true
+    color_method: 0
+    yellow_bound: '1'
+    orange_bound: '1'
+    red_bound: 'false'
+    unit: ''
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: configuration|drsconfig|enabled
+    metric_name: Cluster Configuration|DRS Configuration|Enabled
+    is_string_metric: true
+    color_method: 0
+    yellow_bound: '1'
+    orange_bound: '1'
+    red_bound: 'false'
+    label: DRS Enabled
+    unit: ''
+    label_localized: DRS Enabled
+    label_orig: DRS Enabled
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: configuration|dpmConfiginfo|enabled
+    metric_name: Cluster Configuration|DPM Configuration|DPM Enabled
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: configuration|drsconfig|affinityRules
+    metric_name: Cluster Configuration|DRS Configuration|Affinity Rules
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: configuration|drsconfig|defaultVmBehavior
+    metric_name: Cluster Configuration|DRS Configuration|Default DRS Behaviour
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: configuration|drsconfig|vmotionRate
+    metric_name: Cluster Configuration|DRS Configuration|DRS Migration Threshold
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: configuration|drsconfig|pctIdleMBInMemDemand
+    metric_name: Cluster Configuration|DRS Configuration|Idle Consumed Memory
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: configuration|drsconfig|targetBalance
+    metric_name: Cluster Configuration|DRS Configuration|Tolerable imbalance threshold
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: summary|drsTunable
+    metric_name: Summary|DRS Tunable
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: summary|type
+    metric_name: Summary|Type
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: summary|tag
+    metric_name: Summary|vSphere Tag
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    metric_key: summary|number_running_vms
+    metric_name: Summary|Number of Running VMs
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Cluster Compute Resource
+    omit:
+    - max_value
+    - unit
+  visual_theme: 4
+  layout_mode: fixedSize
+  box_columns: 6
+  box_height: 63
+  value_size: 14
+  label_size: 12
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: false
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: true
+  refresh_content: false
+  old_metric_values: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+- id: w13
+  type: View
+  title: Resource Pools in the cluster
+  coords:
+    w: 12
+    x: 1
+    h: 5
+    y: 27
+  title_localized: Resource Pools in the cluster
+  navigations:
+  - dashboard_id: a10e7aaa-8fa7-4373-8ebb-87a9cc7daaec
+    widget_ids:
+    - 584b09f3-b41a-4634-896f-9f3eceba017b
+  view: vSphere Resource Pool List
+  select_first_row: false
+  traversal_spec_id: vSphere Hosts and Clusters-VMWARE-vSphere World
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permSelectedDate_
+      value: s%3A%7B%22minType%22%3A%22.TimeIntervalControl%22%2C%22advancedTimeMode%22%3Afalse%2C%22fromTime%22%3Anull%2C%22unit%22%3A%22DAYS%22%2C%22count%22%3A7%2C%22priorUnit%22%3Anull%2C%22priorCount%22%3Anull%2C%22startSubUnit%22%3Anull%2C%22startPeriod%22%3Anull%2C%22toTime%22%3Anull%2C%22endUnit%22%3Anull%2C%22endCount%22%3Anull%2C%22endSubUnit%22%3Anull%2C%22endPeriod%22%3Anull%2C%22isRealTimeData%22%3Anull%2C%22mondayHours%22%3A%5B%5D%2C%22tuesdayHours%22%3A%5B%5D%2C%22wednesdayHours%22%3A%5B%5D%2C%22thursdayHours%22%3A%5B%5D%2C%22fridayHours%22%3A%5B%5D%2C%22saturdayHours%22%3A%5B%5D%2C%22sundayHours%22%3A%5B%5D%7D
+    - key: perm_toolbarVisible_
+      value: b%3A1
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Cnumber_running_vms1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-cpu%2525257Ccapacity_contentionPct2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CcpuAllocation%2525257Climit3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CcpuAllocation%2525257Creservation4%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CcpuAllocation%2525257Cshares%2525257Cshares5%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-cpu%2525257Cusagemhz_average6%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-cpu%2525257Ceffective_limit7%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CcpuAllocation%2525257CexpandableReservation8%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-mem%2525257Chost_contentionPct9%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CmemoryAllocation%2525257Climit10%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CmemoryAllocation%2525257Creservation11%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CmemoryAllocation%2525257Cshares%2525257Cshares12%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CmemoryAllocation%2525257CexpandableReservation13%25255Ehidden%25253Db%2525253A0
+    - key: perm_isDashboardTime_
+      value: b%3A0
+    - key: permPageSize_
+      value: n%3A50
+- id: w14
+  type: View
+  title: ESXi Hosts in the Selected Cluster
+  coords:
+    w: 4
+    x: 1
+    h: 9
+    y: 32
+  title_localized: ESXi Hosts in the Selected Cluster
+  navigations:
+  - dashboard_id: a10e7aaa-8fa7-4373-8ebb-87a9cc7daaec
+    widget_ids:
+    - 584b09f3-b41a-4634-896f-9f3eceba017b
+  view: 653ba701-c9df-4f98-9dd1-8b1d6b57612e
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A1
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-performance%2525257Ckpi_pct1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-performance%2525257Ckpi_pct2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-cpu%2525257Cmax_cpu_ready3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-mem%2525257Cmax_vm_mem_contention4%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-cpu%2525257Cpercentage_of_vms_facing_cpu_ready5%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-mem%2525257Cpercentage_of_vms_facing_memory_contention6%25255Ehidden%25253Db%2525253A0
+    - key: perm_isDashboardTime_
+      value: b%3A0
+- id: w15
+  type: HealthChart
+  title: KPI
+  coords:
+    w: 8
+    x: 5
+    h: 4
+    y: 32
+  title_localized: KPI
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  metric_key: performance|kpi_pct
+  metric_name: Performance|KPI (%)
+  metric_full_name: Performance|KPI (%)
+  mode: all
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 99
+  orange_bound: 97
+  red_bound: 95
+  show_resource_name: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    undefined:
+    - name: '%'
+      id: percent
+    custom_filter_mode: tagPicker
+- id: w16
+  type: Scoreboard
+  title: CPU Performance
+  coords:
+    w: 8
+    x: 5
+    h: 3
+    y: 36
+  title_localized: CPU Performance
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: cpu|max_cpu_ready
+    metric_name: CPU|Worst VM CPU Ready
+    color_method: 0
+    yellow_bound: 2.5
+    orange_bound: 5
+    red_bound: 7.5
+    unit_id: -1
+    unit: Auto
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: cpu|max_cpu_costop
+    metric_name: CPU|Worst VM CPU Co-Stop
+    color_method: 0
+    yellow_bound: 2.5
+    orange_bound: 5
+    red_bound: 7.5
+    unit_id: -1
+    unit: Auto
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: cpu|max_cpu_overlap
+    metric_name: CPU|Worst VM CPU Overlap
+    color_method: 0
+    yellow_bound: 2.5
+    orange_bound: 5
+    red_bound: 7.5
+    unit_id: -1
+    unit: Auto
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: cpu|percentage_of_vms_facing_cpu_ready
+    metric_name: CPU|Percentage of VMs facing CPU Ready
+    color_method: 0
+    yellow_bound: 2.5
+    orange_bound: 5
+    red_bound: 7.5
+    label: VMs facing CPU Ready
+    unit_id: -1
+    unit: Auto
+    label_localized: VMs facing CPU Ready
+    label_orig: VMs facing CPU Ready
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: cpu|percentage_of_vms_facing_cpu_costop
+    metric_name: CPU|Percentage of VMs facing CPU Co-Stop
+    color_method: 0
+    yellow_bound: 2.5
+    orange_bound: 5
+    red_bound: 7.5
+    label: VMs facing CPU Co-Stop
+    unit_id: -1
+    unit: Auto
+    label_localized: VMs facing CPU Co-Stop
+    label_orig: VMs facing CPU Co-Stop
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: cpu|peak_cpu_core_usage
+    metric_name: CPU|Highest CPU Core Usage of all instances
+    color_method: 2
+    label: 'Highest CPU Core Usage '
+    unit_id: -1
+    unit: Auto
+    label_localized: 'Highest CPU Core Usage '
+    label_orig: 'Highest CPU Core Usage '
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: cpu|usage_average
+    metric_name: CPU|Usage
+    color_method: 2
+    unit_id: -1
+    unit: Auto
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 7
+  value_size: 24
+  label_size: 16
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: true
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  period_length: dashboardTime
+  refresh_content: false
+  old_metric_values: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+- id: w17
+  type: Scoreboard
+  title: Memory Performance
+  coords:
+    w: 8
+    x: 5
+    h: 3
+    y: 39
+  title_localized: Memory Performance
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: mem|max_vm_mem_contention
+    metric_name: Memory|Worst VM Memory Contention
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 2
+    red_bound: 5
+    unit_id: -1
+    unit: Auto
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: mem|percentage_of_vms_facing_memory_contention
+    metric_name: Memory|Percentage of VMs facing Memory Contention
+    color_method: 0
+    yellow_bound: 2.5
+    orange_bound: 5
+    red_bound: 10
+    label: VMs facing Memory Contention
+    unit_id: -1
+    unit: Auto
+    label_localized: VMs facing Memory Contention
+    label_orig: VMs facing Memory Contention
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: mem|compressed_average
+    metric_name: Memory|Compressed
+    color_method: 0
+    yellow_bound: 0.5
+    orange_bound: 1
+    red_bound: 2
+    unit_id: gb
+    unit: GB
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: mem|swapout_average
+    metric_name: Memory|Swap Out
+    color_method: 0
+    yellow_bound: 0.5
+    orange_bound: 1
+    red_bound: 2
+    unit_id: gb
+    unit: GB
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: mem|swapinRate_average
+    metric_name: Memory|Swap In Rate
+    color_method: 0
+    yellow_bound: 0.5
+    orange_bound: 1
+    red_bound: 2
+    unit_id: mbps
+    unit: MBps
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: mem|swapoutRate_average
+    metric_name: Memory|Swap Out Rate
+    color_method: 0
+    yellow_bound: 0.5
+    orange_bound: 1
+    red_bound: 2
+    unit_id: mbps
+    unit: MBps
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: mem|vmmemctl_average
+    metric_name: Memory|Balloon
+    color_method: 2
+    unit_id: gb
+    unit: GB
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: mem|consumed_average
+    metric_name: Memory|Consumed
+    color_method: 2
+    unit_id: gb
+    unit: GB
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: mem|usage_average
+    metric_name: Memory|Usage
+    color_method: 2
+    unit_id: percent
+    unit: '%'
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 9
+  value_size: 24
+  label_size: 16
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: true
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  period_length: dashboardTime
+  refresh_content: false
+  old_metric_values: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+- id: w18
+  type: Scoreboard
+  title: Properties of selected ESXi
+  coords:
+    w: 4
+    x: 1
+    h: 1
+    y: 41
+  collapsed: true
+  title_localized: Properties of selected ESXi
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: config|hyperThread|active
+    metric_name: Configuration|Hyperthreading|Active
+    is_string_metric: true
+    color_method: 2
+    unit: ''
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: config|hyperThread|available
+    metric_name: Configuration|Hyperthreading|Available
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: config|network|nnic
+    metric_name: Configuration|Network|Number of NICs
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: config|network|linkspeed
+    metric_name: Configuration|Network|Average Physical NIC Speed
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: config|product|productLineId
+    metric_name: Configuration|Product|Product Line ID
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: config|storageDevice|multipathInfo|multipathPolicy
+    metric_name: Configuration|Storage Device|MultiPath Info|Multipath Policy
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: config|storageDevice|multipathInfo|numberofActivePath
+    metric_name: Configuration|Storage Device|MultiPath Info|Total number of Active Path
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: config|security|tlsDisabledProtocols
+    metric_name: Configuration|Security|TLS Disabled Protocols
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: config|storageDevice|plugStoreTopology|numberofPath
+    metric_name: Configuration|Storage Device|PlugStore Topology|Total number of Path
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: cpu|cpuModel
+    metric_name: CPU|CPU Model
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: hardware|powerManagementTechnoloy
+    metric_name: Hardware|BIOS Power Management Setting
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: hardware|powerManagementPolicy
+    metric_name: Hardware|ESXi Power Management Setting
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: hardware|cpuInfo|numCpuCores
+    metric_name: Hardware|CPU Information|Number of CPU Cores
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: hardware|vendorModel
+    metric_name: Hardware|Model
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: summary|version
+    metric_name: Summary|Version
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: summary|tag
+    metric_name: Summary|vSphere Tag
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: sys|build
+    metric_name: System|Build Number
+    is_string_metric: true
+    color_method: 2
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+    - unit
+  visual_theme: 4
+  layout_mode: fixedSize
+  box_columns: 3
+  value_size: 14
+  label_size: 10
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: false
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: true
+  refresh_content: false
+  old_metric_values: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+- id: w19
+  type: AlertList
+  title: Performance Alerts
+  coords:
+    w: 4
+    x: 1
+    h: 6
+    y: 42
+  title_localized: Performance Alerts
+  criticality:
+  - 2
+  - 3
+  - 4
+  alert_types:
+  - '15_19'
+  - '16_19'
+  - '17_19'
+  - '18_19'
+  - '19_19'
+  status: []
+  state: []
+  alert_impact: []
+  alert_action: []
+  mode: all
+  depth: 1
+  relationship_mode:
+  - children
+  - self
+  omit:
+  - alert_definitions
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateFilter_
+      value: s%3A%7B%22dateRange%22%3A%22last30Days%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    - key: permViewMode_
+      value: s%3ADEFINITION
+    custom_filter_mode: tagPicker
+- id: w20
+  type: Scoreboard
+  title: Disk Performance
+  coords:
+    w: 8
+    x: 5
+    h: 3
+    y: 42
+  title_localized: Disk Performance
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: storage|max_vm_disk_latency
+    metric_name: Storage|Worst VM Disk Latency
+    color_method: 0
+    yellow_bound: 10
+    orange_bound: 20
+    red_bound: 40
+    unit_id: msec
+    unit: ms
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: storageAdapter|peak_adapter_readLatency
+    metric_name: Storage Adapter|Highest Read Latency of all instances
+    color_method: 0
+    yellow_bound: 5
+    orange_bound: 10
+    red_bound: 15
+    label: Adapter Read Latency
+    unit_id: msec
+    unit: ms
+    label_localized: Adapter Read Latency
+    label_orig: Adapter Read Latency
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: storageAdapter|peak_adapter_writeLatency
+    metric_name: Storage Adapter|Highest Write Latency of all instances
+    color_method: 0
+    yellow_bound: 5
+    orange_bound: 10
+    red_bound: 15
+    label: Adapter Write Latency
+    unit_id: msec
+    unit: ms
+    label_localized: Adapter Write Latency
+    label_orig: Adapter Write Latency
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: datastore|peak_datastore_readLatency
+    metric_name: Datastore|Highest Read Latency of all instances
+    color_method: 0
+    yellow_bound: 5
+    orange_bound: 10
+    red_bound: 15
+    label: 'Datastore Read Latency '
+    unit_id: msec
+    unit: ms
+    label_localized: 'Datastore Read Latency '
+    label_orig: 'Datastore Read Latency '
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: datastore|peak_datastore_writeLatency
+    metric_name: Datastore|Highest Write Latency of all instances
+    color_method: 0
+    yellow_bound: 5
+    orange_bound: 10
+    red_bound: 15
+    label: 'Datastore Write Latency '
+    unit_id: msec
+    unit: ms
+    label_localized: 'Datastore Write Latency '
+    label_orig: 'Datastore Write Latency '
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: datastore|demand_oio
+    metric_name: Datastore|Outstanding IO requests
+    color_method: 1
+    label: 'Outstanding IO '
+    unit_id: -1
+    unit: Auto
+    label_localized: 'Outstanding IO '
+    label_orig: 'Outstanding IO '
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: storage|numberWriteAveraged_average
+    metric_name: Storage|Write IOPS
+    color_method: 2
+    unit: ''
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: storage|numberReadAveraged_average
+    metric_name: Storage|Read IOPS
+    color_method: 2
+    unit: ''
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: storage|read_average
+    metric_name: Storage|Read Throughput
+    color_method: 2
+    unit_id: gbitsps
+    unit: Gbps
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: storage|write_average
+    metric_name: Storage|Write Throughput
+    color_method: 2
+    unit_id: gbitsps
+    unit: Gbps
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 10
+  value_size: 24
+  label_size: 16
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: true
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  period_length: dashboardTime
+  refresh_content: false
+  old_metric_values: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+- id: w21
+  type: Scoreboard
+  title: Network Performance
+  coords:
+    w: 8
+    x: 5
+    h: 3
+    y: 45
+  title_localized: Network Performance
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: net:Aggregate of all instances|droppedPct
+    metric_name: Network:Aggregate of all instances|Packets Dropped
+    color_method: 0
+    yellow_bound: 0.1
+    orange_bound: 1
+    red_bound: 2
+    unit_id: -1
+    unit: Auto
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: net|errorsRx_summation_sum
+    metric_name: Network|Total Error Packets Received
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 10
+    red_bound: 100
+    label: Error Packets Received
+    unit: ''
+    label_localized: Error Packets Received
+    label_orig: Error Packets Received
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: net|errorsTx_summation_sum
+    metric_name: Network|Total Error Packets Transmitted
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 10
+    red_bound: 100
+    label: Error Packets Transmitted
+    unit: ''
+    label_localized: Error Packets Transmitted
+    label_orig: Error Packets Transmitted
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: net|droppedTx_summation_sum
+    metric_name: Network|Total Transmitted Packets Dropped
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 10
+    red_bound: 100
+    label: Transmitted Packets Dropped
+    unit: ''
+    label_localized: Transmitted Packets Dropped
+    label_orig: Transmitted Packets Dropped
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: net|transmitted_average
+    metric_name: Network|Data Transmit Rate
+    color_method: 2
+    unit_id: gbitsps
+    unit: Gbps
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    metric_key: net|received_average
+    metric_name: Network|Data Receive Rate
+    color_method: 2
+    unit_id: gbitsps
+    unit: Gbps
+    label_localized: ''
+    label_orig: ''
+    resource_kind_name: Host System
+    omit:
+    - max_value
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 6
+  value_size: 24
+  label_size: 16
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: true
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  period_length: dashboardTime
+  refresh_content: false
+  old_metric_values: false
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+- id: w22
+  type: TextDisplay
+  title: Read Me
+  coords:
+    w: 1
+    x: 1
+    h: 7
+    y: 48
+  title_localized: Read Me
+  html: <div>Use this table to check if the cluster or host performance problem were caused by VM configuration
+    and usage. <br></div><br><div>Note that it is possible that the VM was not on the same host at the
+    time of problem, due to vMotion.</div><div><div><br></div><div>To drill down into a VM, select it
+    and click the double arrow before the widget title.</div></div>
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+- id: w23
+  type: View
+  title: Running VMs in the selected Cluster or ESXi
+  coords:
+    w: 11
+    x: 2
+    h: 7
+    y: 48
+  title_localized: Running VMs in the selected Cluster or ESXi
+  navigations:
+  - dashboard_id: a10e7aaa-8fa7-4373-8ebb-87a9cc7daaec
+    widget_ids:
+    - 584b09f3-b41a-4634-896f-9f3eceba017b
+  view: c9fe7a11-79e3-4e98-9cba-8d732b15d150
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Chardware%2525257CnumCpu1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-cpu%2525257Cusagemhz_average2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CcpuAllocation%2525257Climit3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Chardware%2525257CmemoryKB4%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CmemoryAllocation%2525257Climit5%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-mem%2525257CballoonPct6%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-mem%2525257Cconsumed_average7%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-mem%2525257Ccompressed_average8%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-net%2525257Cusage_average9%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-virtualDisk%2525253AAggregate%25252520of%25252520all%25252520instances%2525257Cusage10%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-virtualDisk%2525253AAggregate%25252520of%25252520all%25252520instances%2525257CcommandsAveraged_average11%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Cguest%2525257CfullName12%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Cversion13%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Cguest%2525257CtoolsRunningStatus14%25255Ehidden%25253Db%2525253A0
+    - key: perm_isDashboardTime_
+      value: b%3A0
+    - key: perm_toolbarVisible_
+      value: b%3A1
+    - key: permSelectedDate_
+      value: s%3A%7B%22minType%22%3A%22.TimeIntervalControl%22%2C%22advancedTimeMode%22%3Afalse%2C%22fromTime%22%3Anull%2C%22unit%22%3A%22DAYS%22%2C%22count%22%3A1%2C%22priorUnit%22%3Anull%2C%22priorCount%22%3Anull%2C%22startSubUnit%22%3Anull%2C%22startPeriod%22%3Anull%2C%22toTime%22%3Anull%2C%22endUnit%22%3Anull%2C%22endCount%22%3Anull%2C%22endSubUnit%22%3Anull%2C%22endPeriod%22%3Anull%2C%22isRealTimeData%22%3Anull%2C%22mondayHours%22%3A%5B%5D%2C%22tuesdayHours%22%3A%5B%5D%2C%22wednesdayHours%22%3A%5B%5D%2C%22thursdayHours%22%3A%5B%5D%2C%22fridayHours%22%3A%5B%5D%2C%22saturdayHours%22%3A%5B%5D%2C%22sundayHours%22%3A%5B%5D%7D
+- id: w24
+  type: TextDisplay
+  title: Read Me
+  coords:
+    w: 1
+    x: 1
+    h: 6
+    y: 55
+  title_localized: Read Me
+  html: <div>Note that if a datastore is shared by &gt;1 cluster, the counter at the datastore could be
+    influenced by other clusters. <br></div><div><br></div><div>To drill down into a datastore, select
+    it and click on the double arrow before the widget title.<br></div>
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+- id: w25
+  type: View
+  title: Shared Datastores in the Cluster
+  coords:
+    w: 11
+    x: 2
+    h: 6
+    y: 55
+  title_localized: Shared Datastores in the Cluster
+  view: b963d4b9-12ba-41a2-86df-9e294a1c5f66
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-devices%2525253AAggregate%25252520of%25252520all%25252520instances%2525257CtotalLatency_average1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-devices%2525253AAggregate%25252520of%25252520all%25252520instances%2525257CtotalReadLatency_average2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-devices%2525253AAggregate%25252520of%25252520all%25252520instances%2525257CtotalWriteLatency_average3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-devices%2525253AAggregate%25252520of%25252520all%25252520instances%2525257Cusage_average4%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-devices%2525253AAggregate%25252520of%25252520all%25252520instances%2525257CcommandsAveraged_average5%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-datastore%2525257Chostcount6%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Ctotal_number_vms7%25255Ehidden%25253Db%2525253A0
+    - key: perm_isDashboardTime_
+      value: b%3A0
+    - key: perm_toolbarVisible_
+      value: b%3A1
+    empty_navigations: true
+interactions:
+- from: w0
+  to: w1
+  type: resourceId
+- from: w0
+  to: w2
+  type: resourceId
+- from: w0
+  to: w3
+  type: resourceId
+- from: w0
+  to: w5
+  type: resourceId
+- from: w0
+  to: w11
+  type: resourceId
+- from: w0
+  to: w14
+  type: resourceId
+- from: w14
+  to: w21
+  type: resourceId
+- from: w14
+  to: w17
+  type: resourceId
+- from: w0
+  to: w7
+  type: resourceId
+- from: w0
+  to: w6
+  type: resourceId
+- from: w0
+  to: w12
+  type: resourceId
+- from: w14
+  to: w16
+  type: resourceId
+- from: w14
+  to: w20
+  type: resourceId
+- from: w0
+  to: w10
+  type: resourceId
+- from: w14
+  to: w15
+  type: resourceId
+- from: w0
+  to: w9
+  type: resourceId
+- from: w14
+  to: w18
+  type: resourceId
+- from: w0
+  to: w4
+  type: resourceId
+- from: w14
+  to: w19
+  type: resourceId
+- from: w0
+  to: w23
+  type: resourceId
+- from: w14
+  to: w23
+  type: resourceId
+- from: w9
+  to: w23
+  type: resourceId
+- from: w10
+  to: w23
+  type: resourceId
+- from: w7
+  to: w23
+  type: resourceId
+- from: w6
+  to: w23
+  type: resourceId
+- from: w0
+  to: w8
+  type: resourceId
+- from: w13
+  to: w23
+  type: resourceId
+- from: w0
+  to: w13
+  type: resourceId
+- from: w0
+  to: w25
+  type: resourceId

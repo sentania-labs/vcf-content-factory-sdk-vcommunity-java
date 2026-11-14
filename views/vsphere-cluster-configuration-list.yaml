@@ -1,0 +1,175 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: 23c3c66b-cc72-4070-a67b-326841e7e5dd
+name: vSphere Cluster Configuration List
+description: Per-cluster configuration table covering type, host and datastore counts, HA and admission
+  control settings, DRS enablement, automation, affinity rules, migration and imbalance thresholds, plus
+  profile and workload management flags. Has a totals row.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+time_window:
+  unit: MINUTES
+  count: 7
+columns:
+- attribute: summary|type
+  display_name: Type
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|total_number_hosts
+  display_name: Hosts
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+  yellow_bound: 6
+  orange_bound: 4
+  red_bound: 2
+  ascending_range: true
+- attribute: summary|total_number_datastores
+  display_name: Datastores
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 2
+  orange_bound: 4
+  red_bound: 6
+  ascending_range: false
+- attribute: configuration|dasConfig|enabled
+  display_name: HA Enabled?
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 'false'
+  orange_bound: 'false'
+  red_bound: 'false'
+  ascending_range: true
+- attribute: configuration|dasConfig|admissionControlEnabled
+  display_name: Admission Control Enabled?
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 'false'
+  orange_bound: '1'
+  red_bound: '2'
+  ascending_range: true
+- attribute: configuration|dasConfig|admissionControlPolicyId
+  display_name: HA Admission Control Policy
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: configuration|dasConfig|activeAdmissionControlPolicy
+  display_name: Active Admission Control
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: configuration|drsconfig|enabled
+  display_name: DRS Enabled?
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 'false'
+  orange_bound: 'false'
+  red_bound: 'false'
+  ascending_range: true
+- attribute: configuration|drsconfig|defaultVmBehavior
+  display_name: DRS Automation Level
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: configuration|drsconfig|enabledAndFullyAutomated
+  display_name: DRS Fully Automated
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  red_bound: 0
+  ascending_range: true
+- attribute: configuration|drsconfig|affinityRules
+  display_name: DRS Affinity Rules
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: configuration|drsconfig|defaultVmBehavior
+  display_name: DRS Behaviour
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: configuration|drsconfig|vmotionRate
+  display_name: DRS Migration Threshold
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: configuration|drsconfig|targetBalance
+  display_name: Imbalance Threshold
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|drsTunable
+  display_name: DRS Tunable
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|vcp|enabled
+  display_name: Configuration Profiled
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: configuration|wpConfiguration|wpEnabled
+  display_name: Workload Management Enabled
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+summary:
+- display_name: Total
+  aggregation: SUM
+  columns:
+  - 0
+  - 1
+  - 2
+  - 5
+  - 6
+  - 9
+  - 10
+  - 12
+  - 13
+  - 14
+  - 15
+  - 16
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

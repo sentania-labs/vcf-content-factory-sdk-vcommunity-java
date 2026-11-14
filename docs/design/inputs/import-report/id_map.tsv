@@ -1,0 +1,254 @@
+type	old_id	new_id	name	source_name	file
+supermetric	99152539-e2c3-473d-a4bf-26fc56988f50	99152539-e2c3-473d-a4bf-26fc56988f50	CPU Usable Capacity Utilization		supermetrics/cpu-usable-capacity-utilization.yaml
+supermetric	3ec095da-c812-4baf-b0fa-3c2413392518	3ec095da-c812-4baf-b0fa-3c2413392518	Number of VM		supermetrics/number-of-vm.yaml
+view	d0002f17-5acb-46dd-b69f-4a89f31f0c3b	d0002f17-5acb-46dd-b69f-4a89f31f0c3b	ESXi Host Details vCommunity		views/esxi-host-details-vcommunity.yaml
+view	8342e94a-ffdd-4630-9384-0d876026b520	8342e94a-ffdd-4630-9384-0d876026b520	ESXi Host Hardware vCommunity		views/esxi-host-hardware-vcommunity.yaml
+view	810958f4-e511-4e44-afaa-c04956768daf	810958f4-e511-4e44-afaa-c04956768daf	ESXi Host License Information vCommunity		views/esxi-host-license-information-vcommunity.yaml
+view	2a1ce101-dea2-4866-adb0-16516dae9217	2a1ce101-dea2-4866-adb0-16516dae9217	ESXi Host Maintenance Mode vCommunity		views/esxi-host-maintenance-mode-vcommunity.yaml
+view	59c6f945-e83b-4668-a6a3-d789b9d05166	59c6f945-e83b-4668-a6a3-d789b9d05166	ESXi Host NIC Details		views/esxi-host-nic-details.yaml
+view	56f47a85-150b-4bfe-b693-a42337bf1985	56f47a85-150b-4bfe-b693-a42337bf1985	ESXi Host Power State vCommunity		views/esxi-host-power-state-vcommunity.yaml
+view	8a6d966f-76f4-4cd0-8e33-97fa3c6c0e0d	8a6d966f-76f4-4cd0-8e33-97fa3c6c0e0d	ESXi Host Versions vCommunity		views/esxi-host-versions-vcommunity.yaml
+view	5de4b799-4532-4b31-84c8-aa41840858bf	5de4b799-4532-4b31-84c8-aa41840858bf	ESXi Packages		views/esxi-packages.yaml
+view	f66bed30-c7fd-4072-8bf8-1b0e4bce1ce7	f66bed30-c7fd-4072-8bf8-1b0e4bce1ce7	Report: Datastore for CSV export		views/report-datastore-for-csv-export.yaml
+view	9e7dc458-f39f-4520-85bf-c87c525e061b	9e7dc458-f39f-4520-85bf-c87c525e061b	Report: Distributed Port Groups for CSV export		views/report-distributed-port-groups-for-csv-export.yaml
+view	da229455-b8ec-440b-a890-48db49fcf57e	da229455-b8ec-440b-a890-48db49fcf57e	Report: Distributed Switch for CSV export		views/report-distributed-switch-for-csv-export.yaml
+view	fc838325-c254-4212-95a5-1ae3bbdf1865	fc838325-c254-4212-95a5-1ae3bbdf1865	Report: ESXi Hosts for CSV Export		views/report-esxi-hosts-for-csv-export.yaml
+view	f872c0eb-4db4-43bf-85ee-4332387352a9	f872c0eb-4db4-43bf-85ee-4332387352a9	Report: Namespace for CSV export		views/report-namespace-for-csv-export.yaml
+view	9b448057-cc98-4daa-9d08-6e25213acea8	9b448057-cc98-4daa-9d08-6e25213acea8	Report: Supervisor Cluster for CSV export		views/report-supervisor-cluster-for-csv-export.yaml
+view	c5f9d0b8-07e5-488e-b4ec-bece54158bb0	c5f9d0b8-07e5-488e-b4ec-bece54158bb0	Report: vCenter for CSV Export		views/report-vcenter-for-csv-export.yaml
+view	5bf51a21-b981-4823-b8a5-02297aa40be4	5bf51a21-b981-4823-b8a5-02297aa40be4	Report: Virtual Machines for CSV export		views/report-virtual-machines-for-csv-export.yaml
+view	f778d977-0007-414f-bc0c-4b373bfd5025	f778d977-0007-414f-bc0c-4b373bfd5025	Report: vSphere Clusters for CSV Export		views/report-vsphere-clusters-for-csv-export.yaml
+view	7dbe89b5-3ad1-4bf4-92da-20517356bcef	7dbe89b5-3ad1-4bf4-92da-20517356bcef	Report: vSphere Data Center for CSV export		views/report-vsphere-data-center-for-csv-export.yaml
+view	e2ccf269-9772-4d07-a71c-1df10d69285c	e2ccf269-9772-4d07-a71c-1df10d69285c	Report: vSphere Pod for CSV export		views/report-vsphere-pod-for-csv-export.yaml
+view	181c5479-8b1b-40e7-ae36-9aee36746eda	181c5479-8b1b-40e7-ae36-9aee36746eda	VCF Management Services Component Health List	VCF Management Services Components View	views/vcf-management-services-component-health-list.yaml
+view	5950ce2d-c619-49de-b854-06c4110e9197	5950ce2d-c619-49de-b854-06c4110e9197	VCF Management Services Node Resource List	VCF Management Services Nodes View	views/vcf-management-services-node-resource-list.yaml
+view	1a7a6700-bdfe-4918-9600-16adcccf063a	1a7a6700-bdfe-4918-9600-16adcccf063a	VCF Management Services Volume Usage List	VCF Management Services Volumes View	views/vcf-management-services-volume-usage-list.yaml
+view	9170baca-1e15-4a8e-be52-8bed7ef73f72	9170baca-1e15-4a8e-be52-8bed7ef73f72	VCF Management Services		views/vcf-management-services.yaml
+view	189af936-64df-40f2-bf4f-61c23de0fcbe	189af936-64df-40f2-bf4f-61c23de0fcbe	nfnic VIB Vendor Distribution		views/nfnic-vib-vendor-distribution.yaml
+view	9599d437-6495-42f4-9530-bdd52d82dfd1	9599d437-6495-42f4-9530-bdd52d82dfd1	nfnic VIB Version Distribution		views/nfnic-vib-version-distribution.yaml
+view	ada5a50b-6261-4068-a761-c6a48e20e2bf	ada5a50b-6261-4068-a761-c6a48e20e2bf	nenic VIB Version Distribution		views/nenic-vib-version-distribution.yaml
+view	b4c1708e-611d-4db0-bccb-b6a381ee2b0b	b4c1708e-611d-4db0-bccb-b6a381ee2b0b	VIB Info		views/vib-info.yaml
+view	ebf5961e-c67a-4662-a6bf-c52ad8d450f4	ebf5961e-c67a-4662-a6bf-c52ad8d450f4	nenic VIB Vendor Distribution		views/nenic-vib-vendor-distribution.yaml
+view	09c901e7-d651-46dc-8dd0-c2b8dcd6b192	09c901e7-d651-46dc-8dd0-c2b8dcd6b192	VM CPU Allocation Trend		views/vm-cpu-allocation-trend.yaml
+view	1190d0fc-a95d-434b-84c5-d932a66ab1ea	1190d0fc-a95d-434b-84c5-d932a66ab1ea	ESXi Distribution by Versions	ESXi Distribution by Versions 	views/esxi-distribution-by-versions.yaml
+view	1be018ca-1588-40c4-9bc4-9dfc4849d6a5	1be018ca-1588-40c4-9bc4-9dfc4849d6a5	vSphere Port Group Configuration	vSphere Port Group Configuration 	views/vsphere-port-group-configuration.yaml
+view	203336f6-7ecf-46b6-bfd1-1f746e6ce117	203336f6-7ecf-46b6-bfd1-1f746e6ce117	ESXi Distribution by Memory Size	ESXi Distribution by Memory Size 	views/esxi-distribution-by-memory-size.yaml
+view	217aafe0-9e16-4f47-b98b-31f99273312c	217aafe0-9e16-4f47-b98b-31f99273312c	VM Distribution by CPU Size	VM Distribution by CPU Size 	views/vm-distribution-by-cpu-size.yaml
+view	23acd23f-1310-46ce-88fd-9ee7a5783635	23acd23f-1310-46ce-88fd-9ee7a5783635	ESXi Distribution by Hardware Model		views/esxi-distribution-by-hardware-model.yaml
+view	25c8dd87-54b1-47b2-9de1-766253da9f01	25c8dd87-54b1-47b2-9de1-766253da9f01	vSphere Cluster Resource Management		views/vsphere-cluster-resource-management.yaml
+view	2a643d45-6706-43f4-86d6-d68419f9b9e4	2a643d45-6706-43f4-86d6-d68419f9b9e4	ESXi Distribution by CPU Socket	ESXi Distribution by CPU Socket 	views/esxi-distribution-by-cpu-socket.yaml
+view	2b76463b-40e5-41ea-b575-8d03736239ee	2b76463b-40e5-41ea-b575-8d03736239ee	vSphere Data Centers Inventory		views/vsphere-data-centers-inventory.yaml
+view	31b26c6d-5c86-46db-b6be-0385af92bafc	31b26c6d-5c86-46db-b6be-0385af92bafc	ESXi Distribution by Storage Path Counts		views/esxi-distribution-by-storage-path-counts.yaml
+view	36f0222e-a1b2-4260-a286-b17fdbdc6c9e	36f0222e-a1b2-4260-a286-b17fdbdc6c9e	VM Distribution by CPU to add		views/vm-distribution-by-cpu-to-add.yaml
+view	39b1dc9d-2218-4ade-8fd7-a75f07dda262	39b1dc9d-2218-4ade-8fd7-a75f07dda262	ESXi Network Interfaces		views/esxi-network-interfaces.yaml
+view	39e00d79-920b-4d6a-bf44-e7eb2eb69df8	39e00d79-920b-4d6a-bf44-e7eb2eb69df8	ESXi Distribution by NIC Count		views/esxi-distribution-by-nic-count.yaml
+view	43b5a59e-d45b-4cef-b5a3-debb9a4e566f	43b5a59e-d45b-4cef-b5a3-debb9a4e566f	ESXi Distribution by CPU GHz		views/esxi-distribution-by-cpu-ghz.yaml
+view	43b5dc53-b296-4eb7-87fa-7a435386488f	43b5dc53-b296-4eb7-87fa-7a435386488f	vSphere Data Center Network List		views/vsphere-data-center-network-list.yaml
+view	4c8fbab0-9d2c-40de-9fe1-8a530f2ffb9c	4c8fbab0-9d2c-40de-9fe1-8a530f2ffb9c	Datastores Distribution by VM Count		views/datastores-distribution-by-vm-count.yaml
+view	4e41a54d-a13c-409b-8c97-06e028f72bcc	4e41a54d-a13c-409b-8c97-06e028f72bcc	ESXi NTP Running		views/esxi-ntp-running.yaml
+view	506b9eae-b51c-4467-abfb-890bbd824117	506b9eae-b51c-4467-abfb-890bbd824117	VM with Hot Add CPU		views/vm-with-hot-add-cpu.yaml
+view	65ad9e7b-a972-48f4-9d0f-f59e03f27d99	65ad9e7b-a972-48f4-9d0f-f59e03f27d99	VM Memory to reclaim (idle)		views/vm-memory-to-reclaim-idle.yaml
+view	69ec6689-a037-447b-926d-6efc4b1ba6db	69ec6689-a037-447b-926d-6efc4b1ba6db	VM Configured Size Summary		views/vm-configured-size-summary.yaml
+view	72a85fd6-5824-444f-9ae9-f91408e4fcbe	72a85fd6-5824-444f-9ae9-f91408e4fcbe	VM Distribution by Disk Size		views/vm-distribution-by-disk-size.yaml
+view	7609bc5e-ef78-414e-9d6c-7f7119545bf6	7609bc5e-ef78-414e-9d6c-7f7119545bf6	VM with no Guest counters		views/vm-with-no-guest-counters.yaml
+view	76e2cd25-11ac-4923-a4a2-0deb5ed794a7	76e2cd25-11ac-4923-a4a2-0deb5ed794a7	VM Memory Contention Distribution for Profiling		views/vm-memory-contention-distribution-for-profiling.yaml
+view	7cec1e92-feb7-40a5-996f-ccc06bff1581	7cec1e92-feb7-40a5-996f-ccc06bff1581	vSphere Cluster Distribution by CPU Reservation		views/vsphere-cluster-distribution-by-cpu-reservation.yaml
+view	8140bbaf-f202-4e0d-b66e-778ed9061722	8140bbaf-f202-4e0d-b66e-778ed9061722	VM Disk Latency Distribution		views/vm-disk-latency-distribution.yaml
+view	825a660e-b021-46ad-b905-f88a519dab8d	825a660e-b021-46ad-b905-f88a519dab8d	vSphere Cluster DRS Status		views/vsphere-cluster-drs-status.yaml
+view	8b84e50a-7040-4648-93b5-a4012ab39062	8b84e50a-7040-4648-93b5-a4012ab39062	VM with Hot Remove CPU		views/vm-with-hot-remove-cpu.yaml
+view	8f50f651-58b8-4545-9711-ba8fd07e003c	8f50f651-58b8-4545-9711-ba8fd07e003c	VM Network Top Talkers		views/vm-network-top-talkers.yaml
+view	9b1f2a63-57bb-4eb3-8420-af311d165bf5	9b1f2a63-57bb-4eb3-8420-af311d165bf5	vSphere Distributed Switch Inventory		views/vsphere-distributed-switch-inventory.yaml
+view	9ebf801c-6e49-4aab-a462-3db925de984e	9ebf801c-6e49-4aab-a462-3db925de984e	vSphere Cluster HA Status		views/vsphere-cluster-ha-status.yaml
+view	a2f50231-b339-4cd0-98dd-8ed4a25a57a9	a2f50231-b339-4cd0-98dd-8ed4a25a57a9	Local Datastore with VM		views/local-datastore-with-vm.yaml
+view	ae763586-1fb7-4328-9c0a-d9290114766c	ae763586-1fb7-4328-9c0a-d9290114766c	vSphere Port Group Promiscuous Mode Allowed		views/vsphere-port-group-promiscuous-mode-allowed.yaml
+view	b1d06f85-bef9-42c2-89ca-bddf5a5613ef	b1d06f85-bef9-42c2-89ca-bddf5a5613ef	VM Distribution by Reclaimable Memory		views/vm-distribution-by-reclaimable-memory.yaml
+view	bc0cd2ec-f609-4c91-8ff6-2c87e37de38a	bc0cd2ec-f609-4c91-8ff6-2c87e37de38a	ESXi Distribution by Core Counts		views/esxi-distribution-by-core-counts.yaml
+view	c2a9ba5f-747d-4284-a09b-d63b40a49728	c2a9ba5f-747d-4284-a09b-d63b40a49728	VM Distribution by Memory Reservation		views/vm-distribution-by-memory-reservation.yaml
+view	c92c7819-bd0c-4ba7-94ab-f6c0980da959	c92c7819-bd0c-4ba7-94ab-f6c0980da959	VM Shares by RP		views/vm-shares-by-rp.yaml
+view	caa77302-9958-4ac0-bcf0-aefcc386b634	caa77302-9958-4ac0-bcf0-aefcc386b634	Guest OS List of Services		views/guest-os-list-of-services.yaml
+view	cb5ca3cc-1fda-4216-99e3-72d5565bfd59	cb5ca3cc-1fda-4216-99e3-72d5565bfd59	vSphere Cluster Memory Reservation		views/vsphere-cluster-memory-reservation.yaml
+view	d78a2e36-e12f-4d98-9b49-71c8043822fa	d78a2e36-e12f-4d98-9b49-71c8043822fa	VM Distribution by Snapshots Age		views/vm-distribution-by-snapshots-age.yaml
+view	dcafd7ee-a0f7-4963-bbb1-b30f4043511a	dcafd7ee-a0f7-4963-bbb1-b30f4043511a	VM Distribution by CPU Share		views/vm-distribution-by-cpu-share.yaml
+view	dde0721f-7e54-4233-a29c-5558636b5301	dde0721f-7e54-4233-a29c-5558636b5301	ESXi Unavailable		views/esxi-unavailable.yaml
+view	ded11263-20b6-48fc-9879-87cc5790cd30	ded11263-20b6-48fc-9879-87cc5790cd30	VM Virtual Disks counts		views/vm-virtual-disks-counts.yaml
+view	e8c8b1c6-02de-438f-973d-f64ba76c7d5f	e8c8b1c6-02de-438f-973d-f64ba76c7d5f	vSphere VMs Context		views/vsphere-vms-context.yaml
+view	eadc211b-772e-4178-863a-b1fe018929ae	eadc211b-772e-4178-863a-b1fe018929ae	VM Distribution by Reclaimable Disk		views/vm-distribution-by-reclaimable-disk.yaml
+view	eefb0c9f-31d1-4971-800e-00f480abc919	eefb0c9f-31d1-4971-800e-00f480abc919	VM Distribution by Memory Share		views/vm-distribution-by-memory-share.yaml
+view	f0a5f04e-17c3-4c6d-817c-eb65e296c9cd	f0a5f04e-17c3-4c6d-817c-eb65e296c9cd	VM Configuration	VM Configuration 	views/vm-configuration.yaml
+view	f1096f58-89ab-464e-beab-c81738a706e3	f1096f58-89ab-464e-beab-c81738a706e3	vSphere Cluster DRS Automation Status		views/vsphere-cluster-drs-automation-status.yaml
+view	f3dc056c-bd52-42f4-b821-bd8e37bd092b	f3dc056c-bd52-42f4-b821-bd8e37bd092b	ESXi on Maintenance Mode		views/esxi-on-maintenance-mode.yaml
+view	182a4bfa-b9c9-448d-a41a-5982673f33dc	182a4bfa-b9c9-448d-a41a-5982673f33dc	ESXi Distribution by NIC Speed		views/esxi-distribution-by-nic-speed.yaml
+view	2c7a6092-6c3f-427f-87c5-5a7a2cccb9cf	2c7a6092-6c3f-427f-87c5-5a7a2cccb9cf	VM Distribution by Memory to add		views/vm-distribution-by-memory-to-add.yaml
+view	3ebeebb7-6df6-4e7d-a57f-db20b3fdf29d	3ebeebb7-6df6-4e7d-a57f-db20b3fdf29d	Datastores Distribution by Size		views/datastores-distribution-by-size.yaml
+view	68de2830-eeaf-49df-aeda-a60fadc2b9e9	68de2830-eeaf-49df-aeda-a60fadc2b9e9	VM Distribution by Reclaimable CPU		views/vm-distribution-by-reclaimable-cpu.yaml
+view	88914dd5-ad98-45d9-85e0-6dd1bb8f5f5a	88914dd5-ad98-45d9-85e0-6dd1bb8f5f5a	VM Distribution by CPU Reservation		views/vm-distribution-by-cpu-reservation.yaml
+view	8f46e7de-d976-45c4-b7ad-b2477cc96da3	8f46e7de-d976-45c4-b7ad-b2477cc96da3	VM Memory Allocation Trend		views/vm-memory-allocation-trend.yaml
+view	02184055-983a-4242-b105-a04d94999ada	02184055-983a-4242-b105-a04d94999ada	VM CPU Ready Distribution		views/vm-cpu-ready-distribution.yaml
+view	224daf12-865a-44da-9763-55a2841c8bab	224daf12-865a-44da-9763-55a2841c8bab	ESXi Power Management		views/esxi-power-management.yaml
+view	26d914f9-06d9-4126-9357-887261117d99	26d914f9-06d9-4126-9357-887261117d99	ESXi High Memory Trend		views/esxi-high-memory-trend.yaml
+view	62f0a9c3-bef0-4c27-8f3c-da3f08b169b8	62f0a9c3-bef0-4c27-8f3c-da3f08b169b8	VM Memory Distribution		views/vm-memory-distribution.yaml
+view	b669d11e-3eb1-41b1-9f56-b5a5823ba385	b669d11e-3eb1-41b1-9f56-b5a5823ba385	Guest OS Utilization List		views/guest-os-utilization-list.yaml
+view	ba5453bc-3da3-4b4c-b63a-ad3649fcd8a0	ba5453bc-3da3-4b4c-b63a-ad3649fcd8a0	VM Performance List		views/vm-performance-list.yaml
+view	e6404a9a-40b2-4687-9d41-f23b79bc7f93	e6404a9a-40b2-4687-9d41-f23b79bc7f93	vSphere Cluster Utilization	vSphere Cluster Utilization 	views/vsphere-cluster-utilization.yaml
+view	fef92c3c-3c4f-4313-b457-ea93668ee64b	fef92c3c-3c4f-4313-b457-ea93668ee64b	VM CPU Size Distribution		views/vm-cpu-size-distribution.yaml
+view	093a55c0-332c-486a-a346-4b549fc63a21	093a55c0-332c-486a-a346-4b549fc63a21	VM Memory Contention Distribution		views/vm-memory-contention-distribution.yaml
+view	0babc727-6938-4e90-b91d-5e13a3d8b564	0babc727-6938-4e90-b91d-5e13a3d8b564	Guest OS Root Partition Usage List	Guest OS Partition List	views/guest-os-root-partition-usage-list.yaml
+view	1045bd7c-eae6-441b-99c8-ac2fc102336f	1045bd7c-eae6-441b-99c8-ac2fc102336f	vSphere VM 99th Percentile Performance Profile	vSphere Performance Profiling	views/vsphere-vm-99th-percentile-performance-profile.yaml
+view	1304ea60-5615-4a71-9454-68140418006f	1304ea60-5615-4a71-9454-68140418006f	VM Network Card Configuration		views/vm-network-card-configuration.yaml
+view	18dae631-fa3f-4a08-9cf5-00d89878ca29	18dae631-fa3f-4a08-9cf5-00d89878ca29	vSphere Cluster Allocation		views/vsphere-cluster-allocation.yaml
+view	21302225-dc45-4938-9123-f1422480cdca	21302225-dc45-4938-9123-f1422480cdca	ESXi BIOS Versions		views/esxi-bios-versions.yaml
+view	2322a154-f818-4161-9a9d-4ed8421c3e1e	2322a154-f818-4161-9a9d-4ed8421c3e1e	vSphere Port Group Forged Transmit		views/vsphere-port-group-forged-transmit.yaml
+view	23c3c66b-cc72-4070-a67b-326841e7e5dd	23c3c66b-cc72-4070-a67b-326841e7e5dd	vSphere Cluster Configuration List		views/vsphere-cluster-configuration-list.yaml
+view	28042bb1-5d32-455c-86c0-b65af38c02ac	28042bb1-5d32-455c-86c0-b65af38c02ac	vSphere ESXi Memory Capacity and Use Trend	vSphere ESXi Memory Utilization	views/vsphere-esxi-memory-capacity-and-use-trend.yaml
+view	38896046-e276-47f0-9c78-fd0e1c74b364	38896046-e276-47f0-9c78-fd0e1c74b364	ESXi CPU Models		views/esxi-cpu-models.yaml
+view	3ab2df38-8a5e-40df-912c-a354b5526d3f	3ab2df38-8a5e-40df-912c-a354b5526d3f	VM with RDM disks		views/vm-with-rdm-disks.yaml
+view	3af58d7d-168f-4edf-be3e-857cfb5c4d8e	3af58d7d-168f-4edf-be3e-857cfb5c4d8e	ESXi HyperThread Active		views/esxi-hyperthread-active.yaml
+view	3c9878e2-f570-4309-8093-8b8de7c5c81b	3c9878e2-f570-4309-8093-8b8de7c5c81b	vSphere Cluster Worst-Case Contention Profile	vSphere Cluster Performance Profiling	views/vsphere-cluster-worst-case-contention-profile.yaml
+view	415075d8-dadd-4f7a-890f-b49ee1674344	415075d8-dadd-4f7a-890f-b49ee1674344	VMware Tools Version	VMware Tools Version 	views/vmware-tools-version.yaml
+view	44fe1b68-813f-4381-a74f-74432b97c1e7	44fe1b68-813f-4381-a74f-74432b97c1e7	ESXi CPU Speed		views/esxi-cpu-speed.yaml
+view	4e1d6191-5a75-4e7f-b8c5-c48a5576347e	4e1d6191-5a75-4e7f-b8c5-c48a5576347e	vSphere Cluster HA Admission Control status		views/vsphere-cluster-ha-admission-control-status.yaml
+view	4f798a43-fc5b-4760-b744-1b159644f9a9	4f798a43-fc5b-4760-b744-1b159644f9a9	VM Memory Size Distribution		views/vm-memory-size-distribution.yaml
+view	561d5ce1-c473-401a-bfc6-47472a305412	561d5ce1-c473-401a-bfc6-47472a305412	VM Virtual Disk Distribution		views/vm-virtual-disk-distribution.yaml
+view	6ec4c367-a145-420e-b205-95247739a82c	6ec4c367-a145-420e-b205-95247739a82c	VM Tools States		views/vm-tools-states.yaml
+view	6f55b53b-5d64-4ee8-9f7f-0969d6d3d090	6f55b53b-5d64-4ee8-9f7f-0969d6d3d090	VM Snapshot Size		views/vm-snapshot-size.yaml
+view	77cb575f-e70d-4549-9779-281203327307	77cb575f-e70d-4549-9779-281203327307	VM Snapshot by Size		views/vm-snapshot-by-size.yaml
+view	79879a4a-e36e-4854-9c61-d21332a2ddab	79879a4a-e36e-4854-9c61-d21332a2ddab	Guest OS Page In and Page Out Trend	Guest OS Memory Paging Trend	views/guest-os-page-in-and-page-out-trend.yaml
+view	82883181-5199-4666-aa3e-4c5521086ab1	82883181-5199-4666-aa3e-4c5521086ab1	vSphere Port Group Inventory		views/vsphere-port-group-inventory.yaml
+view	a4c37007-25d1-4ab8-a197-e2418142cc06	a4c37007-25d1-4ab8-a197-e2418142cc06	VM CPU Ready Distribution for Profiling		views/vm-cpu-ready-distribution-for-profiling.yaml
+view	a54e74b2-06dc-4645-a64d-5040e5ba4c3d	a54e74b2-06dc-4645-a64d-5040e5ba4c3d	VM Storage Heavy Hitters		views/vm-storage-heavy-hitters.yaml
+view	a7131dd9-a7e0-460e-b372-69150892a7e7	a7131dd9-a7e0-460e-b372-69150892a7e7	ESXi Utilization List		views/esxi-utilization-list.yaml
+view	ac9078f7-cca4-402c-a837-66531a1e83e8	ac9078f7-cca4-402c-a837-66531a1e83e8	Guest OS CPU Queue Trend		views/guest-os-cpu-queue-trend.yaml
+view	ae50759f-16c4-4465-a735-36043f7e9767	ae50759f-16c4-4465-a735-36043f7e9767	vSphere Cluster Performance List 1		views/vsphere-cluster-performance-list-1.yaml
+view	b0ce23da-35a1-4c11-89cd-eec7efc5303f	b0ce23da-35a1-4c11-89cd-eec7efc5303f	vSAN Host Distribution		views/vsan-host-distribution.yaml
+view	b33aa854-8314-450b-ac66-a86f2f891af4	b33aa854-8314-450b-ac66-a86f2f891af4	vSphere Cluster Memory Utilization		views/vsphere-cluster-memory-utilization.yaml
+view	bfe9ee51-4b55-448f-ab45-9ef42c7370f4	bfe9ee51-4b55-448f-ab45-9ef42c7370f4	Datastore Type		views/datastore-type.yaml
+view	c87c6499-8beb-4caa-89c4-b6865d5692ea	c87c6499-8beb-4caa-89c4-b6865d5692ea	vSphere Cluster Admission Control Policy		views/vsphere-cluster-admission-control-policy.yaml
+view	c97499b0-cef8-4eff-a70c-dc14b867d8ab	c97499b0-cef8-4eff-a70c-dc14b867d8ab	VM Growth Trend		views/vm-growth-trend.yaml
+view	cbc201a7-8e51-4e97-8736-6e6550352cad	cbc201a7-8e51-4e97-8736-6e6550352cad	vSphere Cluster CPU Utilization		views/vsphere-cluster-cpu-utilization.yaml
+view	cc809d78-008b-4715-a603-4a43d4c274da	cc809d78-008b-4715-a603-4a43d4c274da	ESXi HyperThread Capability		views/esxi-hyperthread-capability.yaml
+view	d204cfc6-c31e-480f-9d12-008fb57a3dfa	d204cfc6-c31e-480f-9d12-008fb57a3dfa	ESXi Power Management (BIOS)		views/esxi-power-management-bios.yaml
+view	d53cbf8a-6b5a-4ce2-8f0f-15babc4a6e30	d53cbf8a-6b5a-4ce2-8f0f-15babc4a6e30	vSphere Distributed Switch Configuration	vSphere Distributed Switch Configuration 	views/vsphere-distributed-switch-configuration.yaml
+view	d94478fc-f741-4508-87f9-962ad34ae8ed	d94478fc-f741-4508-87f9-962ad34ae8ed	VM with many Network Cards		views/vm-with-many-network-cards.yaml
+view	e77a32c0-16f4-4d3e-aabe-0d1354154d4b	e77a32c0-16f4-4d3e-aabe-0d1354154d4b	ESXi Network Cards List		views/esxi-network-cards-list.yaml
+view	eb16757e-5f8d-46c3-a990-f84c22273f74	eb16757e-5f8d-46c3-a990-f84c22273f74	vSphere Cluster DPM Status		views/vsphere-cluster-dpm-status.yaml
+view	ec868fe4-b7b4-4620-8e20-38f23667b21f	ec868fe4-b7b4-4620-8e20-38f23667b21f	VM Hardware Version		views/vm-hardware-version.yaml
+view	f31188cc-6862-4885-9bfc-67c644a12cba	f31188cc-6862-4885-9bfc-67c644a12cba	vSphere Resource Pool Configuration		views/vsphere-resource-pool-configuration.yaml
+view	f62618d5-7f91-47cf-a3b1-172d7da0b7da	f62618d5-7f91-47cf-a3b1-172d7da0b7da	ESXi Switch property		views/esxi-switch-property.yaml
+view	f9047c09-a372-4f0a-95c2-7bc0eefaace4	f9047c09-a372-4f0a-95c2-7bc0eefaace4	VM Disk Latency Distribution for Profiling		views/vm-disk-latency-distribution-for-profiling.yaml
+view	16b9b05c-c0e0-4c1c-b7d5-7232d0a64687	16b9b05c-c0e0-4c1c-b7d5-7232d0a64687	ESXi Cluster Settings		views/esxi-cluster-settings.yaml
+view	202efe69-762e-4934-8cbf-779b56b0a2cb	202efe69-762e-4934-8cbf-779b56b0a2cb	Guest OS from vCenter		views/guest-os-from-vcenter.yaml
+view	223a2177-e1a6-4e2b-a207-b28db8339245	223a2177-e1a6-4e2b-a207-b28db8339245	VM Memory Limit		views/vm-memory-limit.yaml
+view	2d600ae5-36cc-489f-88aa-4825b93c964b	2d600ae5-36cc-489f-88aa-4825b93c964b	vSphere Clusters by datastores count		views/vsphere-clusters-by-datastores-count.yaml
+view	34fd21d0-0853-4f9c-b3f2-e52216842d91	34fd21d0-0853-4f9c-b3f2-e52216842d91	ESXi Configuration List		views/esxi-configuration-list.yaml
+view	3bd0917a-f9cb-4097-a640-d81dc24da94a	3bd0917a-f9cb-4097-a640-d81dc24da94a	ESXi Hardware Model		views/esxi-hardware-model.yaml
+view	3dae7fec-9531-45df-8e0b-8e6615e235e6	3dae7fec-9531-45df-8e0b-8e6615e235e6	VM Distribution by Guest OS Name	Guest OS Distribution	views/vm-distribution-by-guest-os-name.yaml
+view	4b68ff93-9213-418c-8b7a-ee389e360979	4b68ff93-9213-418c-8b7a-ee389e360979	vSphere Switch Version		views/vsphere-switch-version.yaml
+view	58383fdc-6074-4310-aa1e-b0aa577e23df	58383fdc-6074-4310-aa1e-b0aa577e23df	vSphere Clusters distribution by ESXi count		views/vsphere-clusters-distribution-by-esxi-count.yaml
+view	5f3896e4-6823-4a66-9aa0-d477f2182dc1	5f3896e4-6823-4a66-9aa0-d477f2182dc1	vSphere Cluster distribution by VM count		views/vsphere-cluster-distribution-by-vm-count.yaml
+view	6acf33b5-1247-4969-8837-e104ec0b3c8b	6acf33b5-1247-4969-8837-e104ec0b3c8b	vSphere Port Group MAC Address		views/vsphere-port-group-mac-address.yaml
+view	6db76c99-efb6-4643-9ff2-4501ccecc7f4	6db76c99-efb6-4643-9ff2-4501ccecc7f4	ESXi BIOS version distribution		views/esxi-bios-version-distribution.yaml
+view	7ae0e346-6f45-41e6-84df-8bfd94f04223	7ae0e346-6f45-41e6-84df-8bfd94f04223	VM Snapshots List		views/vm-snapshots-list.yaml
+view	7ccaaa23-fb7c-4d4d-9258-e2f018681d60	7ccaaa23-fb7c-4d4d-9258-e2f018681d60	VM Virtual Disks	VM Virtual Disks 	views/vm-virtual-disks.yaml
+view	8069cc3c-0866-4b7a-850d-1b82ab5f080e	8069cc3c-0866-4b7a-850d-1b82ab5f080e	ESXi Storage Adapters		views/esxi-storage-adapters.yaml
+view	818ca87d-feb3-4b3c-8534-ba47cfeaf610	818ca87d-feb3-4b3c-8534-ba47cfeaf610	vSphere Cluster DRS Automation Level		views/vsphere-cluster-drs-automation-level.yaml
+view	a746c425-7fd0-4106-bdb1-c7684081d1ba	a746c425-7fd0-4106-bdb1-c7684081d1ba	vSphere Resource Pool List		views/vsphere-resource-pool-list.yaml
+view	b69238ce-fc85-40a7-80c7-800549985196	b69238ce-fc85-40a7-80c7-800549985196	VM with Hot Add Memory		views/vm-with-hot-add-memory.yaml
+view	c0f64b55-a79f-4b79-9fcd-87f3099c7102	c0f64b55-a79f-4b79-9fcd-87f3099c7102	vSphere Port Group Promiscuous Mode		views/vsphere-port-group-promiscuous-mode.yaml
+view	c59b828f-5840-4aa7-8bda-2b3639323a89	c59b828f-5840-4aa7-8bda-2b3639323a89	VM Capacity Consumption		views/vm-capacity-consumption.yaml
+view	c91284fc-127a-483f-8ed2-84cc161c44ad	c91284fc-127a-483f-8ed2-84cc161c44ad	ESXi Security Policy List		views/esxi-security-policy-list.yaml
+view	cc508013-e7d0-4fbf-98e2-d22c881b7812	cc508013-e7d0-4fbf-98e2-d22c881b7812	Guest OS from Tools		views/guest-os-from-tools.yaml
+view	cd47bb2a-0514-468d-b79c-b2ca3ee969c6	cd47bb2a-0514-468d-b79c-b2ca3ee969c6	VM CPU Utilization		views/vm-cpu-utilization.yaml
+view	d5410074-fc36-48bb-93e2-197d2f276b20	d5410074-fc36-48bb-93e2-197d2f276b20	ESXi vMotion Status		views/esxi-vmotion-status.yaml
+view	dd0b0eb1-f968-423f-914f-515d5629fc95	dd0b0eb1-f968-423f-914f-515d5629fc95	VM CPU Limit		views/vm-cpu-limit.yaml
+view	f0c282da-d769-459b-9f95-10abcd1669f3	f0c282da-d769-459b-9f95-10abcd1669f3	ESXi CPU Core Distribution		views/esxi-cpu-core-distribution.yaml
+view	f22f2ab7-f504-4718-9bb8-9d24d51e72ba	f22f2ab7-f504-4718-9bb8-9d24d51e72ba	VM Network Configuration		views/vm-network-configuration.yaml
+view	f6d0ed4e-9a22-4129-8d5c-150846b6a37b	f6d0ed4e-9a22-4129-8d5c-150846b6a37b	VM Storage Configuration		views/vm-storage-configuration.yaml
+view	f12d5911-bcd2-48c9-b7b9-5ae57eef8a41	f12d5911-bcd2-48c9-b7b9-5ae57eef8a41	VM Details vCommunity		views/vm-details-vcommunity.yaml
+view	a694a0d6-0bfa-4129-a19c-2bad4e49e639	a694a0d6-0bfa-4129-a19c-2bad4e49e639	VM Outdated Hardware Version		views/vm-outdated-hardware-version.yaml
+view	35584e40-c780-48c2-8b7a-7a8db67a78c5	35584e40-c780-48c2-8b7a-7a8db67a78c5	VM Tools not running		views/vm-tools-not-running.yaml
+view	75d99f2b-4f61-49df-ab8f-952689728ae6	75d99f2b-4f61-49df-ab8f-952689728ae6	VM Tools outdated		views/vm-tools-outdated.yaml
+view	5f2b8152-2e2e-4fc9-8fd6-62c6c946b541	5f2b8152-2e2e-4fc9-8fd6-62c6c946b541	VM with large Snapshot		views/vm-with-large-snapshot.yaml
+view	ca5859dc-1574-4c4a-88c6-b45beceff0f2	ca5859dc-1574-4c4a-88c6-b45beceff0f2	VM with old Snapshots	VM with old Snapshots 	views/vm-with-old-snapshots.yaml
+view	1368320e-8ad7-4b01-a84e-85f510c293dc	1368320e-8ad7-4b01-a84e-85f510c293dc	vSphere Clusters Capacity List		views/vsphere-clusters-capacity-list.yaml
+view	ae751947-1782-466f-b560-9a950be3c1f9	ae751947-1782-466f-b560-9a950be3c1f9	Windows Services vCommunity		views/windows-services-vcommunity.yaml
+dashboard	9c6b664a-04af-4271-a2ac-23795bfe0365	9c6b664a-04af-4271-a2ac-23795bfe0365	. Object Summary Page for Storage Folder		dashboards/object-summary-page-for-storage-folder.yaml
+dashboard	f0a8e1da-6b23-4cc7-8392-37a44162db52	f0a8e1da-6b23-4cc7-8392-37a44162db52	. Object Summary Page for Distributed Port Groups		dashboards/object-summary-page-for-distributed-port-groups.yaml
+dashboard	7e3e9266-b325-4225-b2ad-9198b801ff43	7e3e9266-b325-4225-b2ad-9198b801ff43	. Object Summary Page for Compute Folder		dashboards/object-summary-page-for-compute-folder.yaml
+dashboard	6740d93c-c8c3-4189-8bcb-7436da044fff	6740d93c-c8c3-4189-8bcb-7436da044fff	. Object Summary Page for Network Folder		dashboards/object-summary-page-for-network-folder.yaml
+dashboard	1c12139f-3663-43af-aa6a-34a097249d59	1c12139f-3663-43af-aa6a-34a097249d59	Report: vSphere Compute Capacity (page 2)		dashboards/report-vsphere-compute-capacity-page-2.yaml
+dashboard	1fa82396-68ad-4eef-a1f2-3fce6df8274d	1fa82396-68ad-4eef-a1f2-3fce6df8274d	Report: VM Inventory		dashboards/report-vm-inventory.yaml
+dashboard	36940b83-1744-42ba-b8fd-c23f15644b17	36940b83-1744-42ba-b8fd-c23f15644b17	Report: VM Performance (page 2)		dashboards/report-vm-performance-page-2.yaml
+dashboard	413bc905-4980-4704-bf44-662c5018a8a8	413bc905-4980-4704-bf44-662c5018a8a8	Report: Executive Summary (page 4)		dashboards/report-executive-summary-page-4.yaml
+dashboard	46054d7d-335f-4c11-a3e5-18cf47a9f1f0	46054d7d-335f-4c11-a3e5-18cf47a9f1f0	Report: Executive Summary (page 3)		dashboards/report-executive-summary-page-3.yaml
+dashboard	5f8539a1-d022-414d-95ca-81c888e869a8	5f8539a1-d022-414d-95ca-81c888e869a8	Report: Executive Summary (page 5)		dashboards/report-executive-summary-page-5.yaml
+dashboard	6a61ab77-3d45-4c93-b932-1c67640e29b1	6a61ab77-3d45-4c93-b932-1c67640e29b1	Report: VM Inventory (page 3)		dashboards/report-vm-inventory-page-3.yaml
+dashboard	6e64e4e0-e484-434a-9cde-7a18964be2bc	6e64e4e0-e484-434a-9cde-7a18964be2bc	Report: Executive Summary (page 2)		dashboards/report-executive-summary-page-2.yaml
+dashboard	749dd1b7-0a04-4502-93db-8cf1492b2723	749dd1b7-0a04-4502-93db-8cf1492b2723	Report: VM Performance		dashboards/report-vm-performance.yaml
+dashboard	8119d513-b05d-4142-8df6-caa8f38f1d7d	8119d513-b05d-4142-8df6-caa8f38f1d7d	Report: vSphere Storage Performance		dashboards/report-vsphere-storage-performance.yaml
+dashboard	8915da4d-0193-45da-83c1-4ef616a2e71d	8915da4d-0193-45da-83c1-4ef616a2e71d	Report: VM Capacity		dashboards/report-vm-capacity.yaml
+dashboard	8e075ab3-8f69-4060-8760-df40e78def71	8e075ab3-8f69-4060-8760-df40e78def71	Report: vSphere Storage Capacity (page 2)		dashboards/report-vsphere-storage-capacity-page-2.yaml
+dashboard	8edbf859-2b36-4ea3-8fe5-68c44d7343f6	8edbf859-2b36-4ea3-8fe5-68c44d7343f6	Report: Guest OS Configuration		dashboards/report-guest-os-configuration.yaml
+dashboard	985e7ad8-11d3-4aeb-88bd-49b2c8c03dde	985e7ad8-11d3-4aeb-88bd-49b2c8c03dde	Report: vSphere Compute Performance		dashboards/report-vsphere-compute-performance.yaml
+dashboard	9c05826d-2695-487a-a10e-fb58997002dc	9c05826d-2695-487a-a10e-fb58997002dc	Report: vSphere Compute Performance (page 2)		dashboards/report-vsphere-compute-performance-page-2.yaml
+dashboard	a13b8278-83a4-435f-b2b6-309ab77e5017	a13b8278-83a4-435f-b2b6-309ab77e5017	Report: Executive Summary		dashboards/report-executive-summary.yaml
+dashboard	a36f514e-f544-4a89-88f1-2a85887b01cb	a36f514e-f544-4a89-88f1-2a85887b01cb	Report: vSphere Storage Performance (page 2)		dashboards/report-vsphere-storage-performance-page-2.yaml
+dashboard	a3b87c13-3965-443a-bdc9-a69d402e3cec	a3b87c13-3965-443a-bdc9-a69d402e3cec	Report: Reclamable Capacity		dashboards/report-reclamable-capacity.yaml
+dashboard	aa9e3a20-1083-4411-ad11-511e5c93fe52	aa9e3a20-1083-4411-ad11-511e5c93fe52	Report: VM Configuration		dashboards/report-vm-configuration.yaml
+dashboard	ab480d7b-d33d-4488-8bf3-0d926972b89e	ab480d7b-d33d-4488-8bf3-0d926972b89e	Report: vSphere Network Configuration		dashboards/report-vsphere-network-configuration.yaml
+dashboard	aba3330a-fca1-430d-851c-cbb7e1be75bf	aba3330a-fca1-430d-851c-cbb7e1be75bf	Report: vSphere Inventory (page 2)		dashboards/report-vsphere-inventory-page-2.yaml
+dashboard	ac7f0897-e75c-4072-91b7-af565c1ddb37	ac7f0897-e75c-4072-91b7-af565c1ddb37	Report: VM Capacity (page 3)		dashboards/report-vm-capacity-page-3.yaml
+dashboard	b349c744-6008-4067-8ad0-b2817ad8fe7e	b349c744-6008-4067-8ad0-b2817ad8fe7e	Report: vSphere Compute Capacity		dashboards/report-vsphere-compute-capacity.yaml
+dashboard	b43f77c4-2fa7-4446-9222-30f664ab9cac	b43f77c4-2fa7-4446-9222-30f664ab9cac	Report: vSphere Compute Capacity (page 3)		dashboards/report-vsphere-compute-capacity-page-3.yaml
+dashboard	c32894fc-f375-4f4d-b486-9f10473dc82b	c32894fc-f375-4f4d-b486-9f10473dc82b	Report: VM Inventory (page 2)		dashboards/report-vm-inventory-page-2.yaml
+dashboard	c6b3909f-f1ec-4691-b22c-70b7175e0c87	c6b3909f-f1ec-4691-b22c-70b7175e0c87	Report: VM Capacity (page 2)		dashboards/report-vm-capacity-page-2.yaml
+dashboard	caf7011d-59ca-4b87-993b-8199c461de40	caf7011d-59ca-4b87-993b-8199c461de40	Report: vSphere Storage Capacity (page 3)		dashboards/report-vsphere-storage-capacity-page-3.yaml
+dashboard	d0d182c9-2d83-48e1-9891-46905631c057	d0d182c9-2d83-48e1-9891-46905631c057	Report: ESXi Hardware Configuration		dashboards/report-esxi-hardware-configuration.yaml
+dashboard	d477baf3-b84b-4e3c-8d9e-fa6dc7ad05e0	d477baf3-b84b-4e3c-8d9e-fa6dc7ad05e0	Report: VM Configuration (page 2)		dashboards/report-vm-configuration-page-2.yaml
+dashboard	e750120d-c5b6-4fda-8e98-dc00e1f3f39c	e750120d-c5b6-4fda-8e98-dc00e1f3f39c	Report: vSphere Inventory		dashboards/report-vsphere-inventory.yaml
+dashboard	ed71f901-bb66-46da-8a30-de49fda0e133	ed71f901-bb66-46da-8a30-de49fda0e133	Report: vSphere Cluster Configuration		dashboards/report-vsphere-cluster-configuration.yaml
+dashboard	f09dd003-2131-4766-b6a5-c92448cba2c0	f09dd003-2131-4766-b6a5-c92448cba2c0	Report: vSphere Storage Capacity		dashboards/report-vsphere-storage-capacity.yaml
+dashboard	f6efe3e2-c905-4f22-afa2-bcb1fad9227f	f6efe3e2-c905-4f22-afa2-bcb1fad9227f	Report: ESXi Software Configuration		dashboards/report-esxi-software-configuration.yaml
+dashboard	ff519731-cd08-4cff-bdb9-dc29cd7d6e88	ff519731-cd08-4cff-bdb9-dc29cd7d6e88	Report: VM Size Distribution		dashboards/report-vm-size-distribution.yaml
+dashboard	d22b04d0-1eb2-496e-8944-a143e94187d5	d22b04d0-1eb2-496e-8944-a143e94187d5	. Object Summary Page for VM Folder		dashboards/object-summary-page-for-vm-folder.yaml
+dashboard	4a295d27-a93d-4011-bf18-0bb70b0cbe86	4a295d27-a93d-4011-bf18-0bb70b0cbe86	. Object Summary Page for Distributed Switch		dashboards/object-summary-page-for-distributed-switch.yaml
+dashboard	d1dd41f6-3bf3-492c-af43-2858ec923a14	d1dd41f6-3bf3-492c-af43-2858ec923a14	Critical Business Applications		dashboards/critical-business-applications.yaml
+dashboard	b1b3ede5-32f2-4c49-a1a8-443dc23bd993	b1b3ede5-32f2-4c49-a1a8-443dc23bd993	ESXi Configuration 2.0		dashboards/esxi-configuration-2-0.yaml
+dashboard	bacf36d9-fb4d-49ff-ad97-e55b1fe9a4b2	bacf36d9-fb4d-49ff-ad97-e55b1fe9a4b2	VCF Management Service		dashboards/vcf-management-service.yaml
+dashboard	4e036192-7592-4a78-a5ad-276f2bfa5980	4e036192-7592-4a78-a5ad-276f2bfa5980	VM Capacity (new)		dashboards/vm-capacity-new.yaml
+dashboard	4439d7b2-c758-4eca-ad49-42f3e0280d35	4439d7b2-c758-4eca-ad49-42f3e0280d35	VM Performance 2.0		dashboards/vm-performance-2-0.yaml
+dashboard	c80749d8-25a1-4867-a3fc-f64f92db9e95	c80749d8-25a1-4867-a3fc-f64f92db9e95	VM Storage Configuration		dashboards/vm-storage-configuration.yaml
+dashboard	d1941adc-5664-421e-af12-84736f76aa76	d1941adc-5664-421e-af12-84736f76aa76	vSphere Cluster Configuration 2.0		dashboards/vsphere-cluster-configuration-2-0.yaml
+dashboard	325fd7c9-b8a9-48f2-a018-be070f49e1b5	325fd7c9-b8a9-48f2-a018-be070f49e1b5	vSphere Cluster Performance 2.0		dashboards/vsphere-cluster-performance-2-0.yaml
+dashboard	769d7441-2926-413a-99cc-7641c0c78b63	769d7441-2926-413a-99cc-7641c0c78b63	vSphere Network Configuration 2.0		dashboards/vsphere-network-configuration-2-0.yaml
+dashboard	3dff5e2d-5db1-4eec-97c7-b2b7c545ff3c	3dff5e2d-5db1-4eec-97c7-b2b7c545ff3c	vSphere Resource Management		dashboards/vsphere-resource-management.yaml
+report	4b261385-71b8-4527-91eb-9c808036dbc0	4b261385-71b8-4527-91eb-9c808036dbc0	VOA - Capacity		reports/voa-capacity.yaml
+report	da0ac475-1776-4dc8-8c9c-12ba40424158	da0ac475-1776-4dc8-8c9c-12ba40424158	VOA - Configuration		reports/voa-configuration.yaml
+report	82f6005c-26f5-4b45-a4d8-1d62366f172c	82f6005c-26f5-4b45-a4d8-1d62366f172c	VOA - Datastores for CSV Export		reports/voa-datastores-for-csv-export.yaml
+report	771756d2-9575-40a9-b65b-1364333d9c6c	771756d2-9575-40a9-b65b-1364333d9c6c	VOA - Distributed Port Groups for CSV Export		reports/voa-distributed-port-groups-for-csv-export.yaml
+report	5cf28f19-88ea-4406-aac9-8d1a0163e6ab	5cf28f19-88ea-4406-aac9-8d1a0163e6ab	VOA - Distributed Switch for CSV Export		reports/voa-distributed-switch-for-csv-export.yaml
+report	98254a97-55e5-4419-86d1-844a485b28bb	98254a97-55e5-4419-86d1-844a485b28bb	VOA - ESXi Hosts CSV Export		reports/voa-esxi-hosts-csv-export.yaml
+report	1d913c66-229c-4fb0-82bb-6dbea32e2e3b	1d913c66-229c-4fb0-82bb-6dbea32e2e3b	VOA - Executive Summary		reports/voa-executive-summary.yaml
+report	d39f4796-f20c-4b36-8525-4759febb4daa	d39f4796-f20c-4b36-8525-4759febb4daa	VOA - Inventory		reports/voa-inventory.yaml
+report	25c49a25-4664-4be2-ad8e-47b3cb0471bf	25c49a25-4664-4be2-ad8e-47b3cb0471bf	VOA - vSphere Namespace for CSV Export		reports/voa-vsphere-namespace-for-csv-export.yaml
+report	f0abb428-1773-460a-b0da-3070a976ccf0	f0abb428-1773-460a-b0da-3070a976ccf0	VOA - Performance		reports/voa-performance.yaml
+report	1f031062-ec6f-4dad-9669-b0836f4114a6	1f031062-ec6f-4dad-9669-b0836f4114a6	VOA - vSphere Supervisor for CSV export		reports/voa-vsphere-supervisor-for-csv-export.yaml
+report	11063635-cdc4-4a9f-8689-9f34ff08c41b	11063635-cdc4-4a9f-8689-9f34ff08c41b	VOA - vCenter for CSV Export		reports/voa-vcenter-for-csv-export.yaml
+report	1951d2a9-5816-4017-8aa7-91099096b067	1951d2a9-5816-4017-8aa7-91099096b067	VOA - Virtual Machine CSV Export		reports/voa-virtual-machine-csv-export.yaml
+report	b0ecf459-4660-462f-8990-1dead6b94a87	b0ecf459-4660-462f-8990-1dead6b94a87	VOA - vSphere Clusters CSV Export		reports/voa-vsphere-clusters-csv-export.yaml
+report	8b19ed05-35a0-42df-ba34-0b92451f9123	8b19ed05-35a0-42df-ba34-0b92451f9123	VOA - vSphere Data Centers CSV Export		reports/voa-vsphere-data-centers-csv-export.yaml
+report	33ffc523-2bd1-4e87-b9df-3fe804544122	33ffc523-2bd1-4e87-b9df-3fe804544122	VOA - vSphere Pod for CSV Export		reports/voa-vsphere-pod-for-csv-export.yaml
+symptom	SymptomDefinition-dc3a1b70-0df7-4872-bf47-ca34ce799478	SymptomDefinition-dc3a1b70-0df7-4872-bf47-ca34ce799478	vCommunity Collection Warnings		symptoms/vcommunity-collection-warnings.yaml
+symptom	SymptomDefinition-7a5c6ce4-9444-4cdd-a050-0fe3bca6e7c9	SymptomDefinition-7a5c6ce4-9444-4cdd-a050-0fe3bca6e7c9	Condition_d2f954fc-3121-49db-bb9a-33c04afb8de2		symptoms/condition-d2f954fc-3121-49db-bb9a-33c04afb8de2.yaml
+symptom	SymptomDefinition-9803e6a3-d41c-47f7-8a21-1504a5a99821	SymptomDefinition-9803e6a3-d41c-47f7-8a21-1504a5a99821	Condition_c6a38afa-6d69-4c73-a88c-c764e66db49b		symptoms/condition-c6a38afa-6d69-4c73-a88c-c764e66db49b.yaml
+symptom	SymptomDefinition-a3587501-0d08-4786-af15-feb353279e67	SymptomDefinition-a3587501-0d08-4786-af15-feb353279e67	Condition_191895ee-451e-43f5-9237-3c24344ffe70		symptoms/condition-191895ee-451e-43f5-9237-3c24344ffe70.yaml
+symptom	SymptomDefinition-b0d54ebb-12df-464e-89a1-b3934a93072f	SymptomDefinition-b0d54ebb-12df-464e-89a1-b3934a93072f	Condition_b8e3e3de-2a06-4dbd-9829-a12ffe048677		symptoms/condition-b8e3e3de-2a06-4dbd-9829-a12ffe048677.yaml
+symptom	SymptomDefinition-c6e76934-1b3c-4991-b57c-9d713c64d31c	SymptomDefinition-c6e76934-1b3c-4991-b57c-9d713c64d31c	Condition_b9573d67-e858-44b2-afa5-d04d757dab0c		symptoms/condition-b9573d67-e858-44b2-afa5-d04d757dab0c.yaml
+symptom	SymptomDefinition-e0fbe746-272c-4b51-8d93-bc59124f8f7d	SymptomDefinition-e0fbe746-272c-4b51-8d93-bc59124f8f7d	Condition_eefdbe0c-98aa-49a0-ba96-e398864ea68e		symptoms/condition-eefdbe0c-98aa-49a0-ba96-e398864ea68e.yaml
+symptom	SymptomDefinition-ff8e08f4-5af5-4f93-bb5d-4bdb3ff07070	SymptomDefinition-ff8e08f4-5af5-4f93-bb5d-4bdb3ff07070	Condition_93e95c4e-63aa-4e04-b332-cc27317966e2		symptoms/condition-93e95c4e-63aa-4e04-b332-cc27317966e2.yaml
+symptom	SymptomDefinition-c8d1e671-d0ea-489f-acc4-46e34cc246b6	SymptomDefinition-c8d1e671-d0ea-489f-acc4-46e34cc246b6	ESXi Host NIC Disconnected		symptoms/esxi-host-nic-disconnected.yaml
+symptom	SymptomDefinition-7675759b-2ca0-4847-87ed-e3e23acdf7a5	SymptomDefinition-7675759b-2ca0-4847-87ed-e3e23acdf7a5	Windows Service Status Down		symptoms/windows-service-status-down.yaml
+recommendation	vCommunityCollectionWarnings	vCommunityCollectionWarnings	vCommunityCollectionWarnings		recommendations/vcommunitycollectionwarnings.yaml
+alert	AlertDefinition-e5da6dcc-0e22-46da-a405-8bb514ff4f1b	AlertDefinition-e5da6dcc-0e22-46da-a405-8bb514ff4f1b	vCommunity Collection Warnings		alerts/vcommunity-collection-warnings.yaml
+alert	AlertDefinition-3ec480a2-49a0-4e9d-b745-5ab5923a2c9f	AlertDefinition-3ec480a2-49a0-4e9d-b745-5ab5923a2c9f	ESXi Host License Expiring		alerts/esxi-host-license-expiring.yaml
+alert	AlertDefinition-1e5a233a-36ef-4961-8e35-499de49390ee	AlertDefinition-1e5a233a-36ef-4961-8e35-499de49390ee	ESXi Host NIC Disconnected		alerts/esxi-host-nic-disconnected.yaml
+alert	AlertDefinition-07dcccaa-eac3-4501-9dfc-34deccb963e9	AlertDefinition-07dcccaa-eac3-4501-9dfc-34deccb963e9	Windows Service Down		alerts/windows-service-down.yaml

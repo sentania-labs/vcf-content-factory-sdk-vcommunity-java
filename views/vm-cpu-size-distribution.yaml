@@ -1,0 +1,58 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: fef92c3c-3c4f-4313-b457-ea93668ee64b
+name: VM CPU Size Distribution
+description: Bar chart counting virtual machines by configured vCPU count, in buckets of 8 up to 32, then
+  48, 64 and larger.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+time_window:
+  unit: MINUTES
+  count: 1
+columns:
+- attribute: config|hardware|numCpu
+  display_name: .
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+  omit:
+  - roll_up_type
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: false
+  ranges:
+  - start: 0
+    end: 8
+  - start: 8
+    end: 16
+  - start: 16
+    end: 24
+  - start: 24
+    end: 32
+  - start: 32
+    end: 48
+  - start: 48
+    end: 64
+  - start: 64
+    end: 999
+  min_value: 0
+  max_value: 0
+  is_sum: false
+distribution_color: 37B3EB
+additional_columns:
+- attribute: config|hardware|memoryKB
+  localized_name: Configuration|Hardware|Memory (GB)
+  display_name: Memory
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+omit:
+- include_resource_creation_time

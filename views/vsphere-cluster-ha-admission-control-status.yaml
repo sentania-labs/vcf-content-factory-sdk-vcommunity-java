@@ -1,0 +1,39 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: 4e1d6191-5a75-4e7f-b8c5-c48a5576347e
+name: vSphere Cluster HA Admission Control status
+description: Donut chart showing how many clusters have HA admission control enabled, using a window from
+  the previous 7 days to now.
+data_type: distribution
+presentation: donut-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  types:
+  - descendant
+usage:
+- dashboard
+- report
+- content
+time_window:
+  unit: DAYS
+  count: 7
+  advanced_time_mode: true
+  start_period: PREVIOUS
+  end_period: NOW
+columns:
+- attribute: configuration|dasConfig|admissionControlEnabled
+  display_name: HA Admission Control Enabled
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  omit:
+  - roll_up_type
+  - transformation
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  is_sum: false
+omit:
+- include_resource_creation_time

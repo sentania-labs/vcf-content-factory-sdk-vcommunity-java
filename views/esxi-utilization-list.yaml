@@ -1,0 +1,130 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: a7131dd9-a7e0-460e-b372-69150892a7e7
+name: ESXi Utilization List
+description: Per-host table over the last day of core and thread CPU utilization, memory consumed and
+  demand, ballooned, compressed and swapped memory, VM co-stop and ready percentages, and worst co-stop
+  and ready values. Sorted by core utilization, highest first.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+time_window:
+  unit: DAYS
+  count: 1
+columns:
+- attribute: cpu|coreUtilization_average
+  display_name: Core Utilization
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+  sort: desc
+  yellow_bound: 85
+  orange_bound: 90
+  red_bound: 95
+  ascending_range: false
+- attribute: cpu|utilization_average
+  display_name: Thread Utilization
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+  yellow_bound: 55
+  orange_bound: 70
+  red_bound: 85
+  ascending_range: false
+- attribute: mem|consumed_average
+  display_name: Memory Consumed
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: mem|total_need
+  display_name: Utilization
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: mem|vmmemctl_average
+  display_name: Ballooned
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 1
+  orange_bound: 5
+  red_bound: 25
+  ascending_range: false
+- attribute: mem|compressed_average
+  display_name: Zipped
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.5
+  orange_bound: 2
+  red_bound: 8
+  ascending_range: false
+- attribute: mem|swapout_average
+  display_name: Swapped
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.5
+  orange_bound: 2
+  red_bound: 8
+  ascending_range: false
+- attribute: cpu|percentage_of_vms_facing_cpu_costop
+  display_name: '% VM with Co-Stop'
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+  yellow_bound: 2.5
+  orange_bound: 5
+  red_bound: 10
+  ascending_range: false
+- attribute: cpu|percentage_of_vms_facing_cpu_ready
+  display_name: '% VM with Ready'
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+  yellow_bound: 2.5
+  orange_bound: 5
+  red_bound: 10
+  ascending_range: false
+- attribute: cpu|max_cpu_costop
+  display_name: Max CPU Co-Stop
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+  yellow_bound: 2
+  orange_bound: 4
+  red_bound: 8
+  ascending_range: false
+- attribute: cpu|max_cpu_ready
+  display_name: Max CPU Ready
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+  yellow_bound: 4
+  orange_bound: 8
+  red_bound: 16
+  ascending_range: false
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

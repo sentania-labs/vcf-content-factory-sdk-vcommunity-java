@@ -1,0 +1,64 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 43b5dc53-b296-4eb7-87fa-7a435386488f
+name: vSphere Data Center Network List
+description: Per-datacenter table of peak total, physical and virtual network throughput in Gbit/s, running
+  VMs and running hosts, highest throughput first. Has an average row.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: Datacenter
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: net|usage_average
+  display_name: Max Throughput
+  unit: gbitsps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MAX
+  sort: desc
+  yellow_bound: 10
+  orange_bound: 100
+  red_bound: 1000
+  ascending_range: false
+- attribute: net:physical|usage_average
+  display_name: Physical Network
+  unit: gbitsps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MAX
+- attribute: net:virtual|usage_average
+  display_name: Virtual Network
+  unit: gbitsps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MAX
+- attribute: summary|number_running_vms
+  display_name: Running VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - subject
+- attribute: summary|number_running_hosts
+  display_name: ESXi Host
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - subject
+summary:
+- display_name: Summary
+  aggregation: AVG
+  columns:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

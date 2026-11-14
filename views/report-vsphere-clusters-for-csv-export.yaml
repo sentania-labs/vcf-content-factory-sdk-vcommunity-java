@@ -1,0 +1,402 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/report - voa - vsphere clusters for csv export/Report - VOA - vSphere Clusters for CSV Export.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: f778d977-0007-414f-bc0c-4b373bfd5025
+name: 'Report: vSphere Clusters for CSV Export'
+description: "A simple table for export as a CSV file. Used in report only, hence it has no formatting.\
+  \ Just like the rest of the report, it is designed for weekly, not daily nor monthly. \n\nSchedule it\
+  \ to run end of the week, such as Sunday 23:59"
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+time_window:
+  unit: MINUTES
+  count: 7
+columns:
+- attribute: summary|type
+  display_name: Type
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|total_number_hosts
+  display_name: Hosts
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+  yellow_bound: 6
+  orange_bound: 4
+  red_bound: 2
+  ascending_range: true
+- attribute: summary|number_running_hosts
+  display_name: Running Hosts
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|total_number_datastores
+  display_name: Datastores
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 2
+  orange_bound: 4
+  red_bound: 6
+  ascending_range: false
+- attribute: configuration|dasConfig|enabled
+  display_name: HA Enabled?
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 'false'
+  orange_bound: 'false'
+  red_bound: 'false'
+  ascending_range: true
+- attribute: configuration|dasConfig|admissionControlEnabled
+  display_name: HA Admission Control?
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 'false'
+  orange_bound: '1'
+  red_bound: '2'
+  ascending_range: true
+- attribute: configuration|dasConfig|admissionControlPolicyId
+  display_name: HA Admission Control Policy
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: configuration|dasConfig|activeAdmissionControlPolicy
+  display_name: HA Active Admission Control
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: configuration|drsconfig|enabled
+  display_name: DRS Enabled?
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 'false'
+  orange_bound: 'false'
+  red_bound: 'false'
+  ascending_range: true
+- attribute: configuration|drsconfig|defaultVmBehavior
+  display_name: DRS Automation Level
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: configuration|drsconfig|enabledAndFullyAutomated
+  display_name: DRS Fully Automated
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  red_bound: 0
+  ascending_range: true
+- attribute: configuration|drsconfig|affinityRules
+  display_name: DRS Affinity Rules
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: configuration|drsconfig|defaultVmBehavior
+  display_name: DRS Behaviour
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: configuration|drsconfig|vmotionRate
+  display_name: DRS Migration Threshold
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: configuration|drsconfig|targetBalance
+  display_name: DRS Imbalance Threshold
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|vcp|enabled
+  display_name: Configuration Profiled
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: cpu|corecount_provisioned
+  display_name: CPU Core
+  unit: '7001'
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|vcpus_allocated_on_all_powered_on_vms
+  display_name: CPU Allocated on Running VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|vcpus_to_cores_allocation_ratio
+  display_name: CPU Overcommit Ratio
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|capacity_provisioned
+  display_name: CPU Total Capacity
+  unit: ghz
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|haTotalCapacity_average
+  display_name: CPU Usable Capacity
+  unit: ghz
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: mem|host_provisioned
+  display_name: Memory Total Capacity
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: mem|haTotalCapacity_average
+  display_name: Memory Usable Capacity
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: mem|virtual_to_physical_memory_allocation_ratio
+  display_name: Memory Overcommit Ratio
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: mem|vmmemctl_average
+  display_name: Ballooned
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: mem|compressed_average
+  display_name: Zipped
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: mem|consumed_average
+  display_name: Consumed
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: mem|total_need
+  display_name: Utilization
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: diskspace|total_capacity
+  display_name: Disk Space Total Capacity
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: disk|commandsAveraged_average
+  display_name: Disk Total IOPS
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: summary|number_running_vms
+  display_name: Running VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|total_number_vms
+  display_name: Total VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: reclaimable|idle_vms|mem
+  display_name: Reclaimable Memory from Idle VM
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: reclaimable|poweredOff_vms|diskspace
+  display_name: Reclaimable Disk Space from Powered Off VM
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: OnlineCapacityAnalytics|timeRemaining
+  display_name: Time Remaining
+  unit: auto
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: net:physical|usage_average
+  display_name: Physical Network Usage
+  unit: gbitsps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: net:physical|transmitted_average
+  display_name: 'Physical Network: Transmit'
+  unit: gbitsps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: net:physical|received_average
+  display_name: 'Physical Network: Receive'
+  unit: gbitsps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: net:virtual|usage_average
+  display_name: Virtual Network Usage
+  unit: gbitsps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: net:virtual|transmitted_average
+  display_name: 'Virtual Network: Transmit'
+  unit: gbitsps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: net:virtual|received_average
+  display_name: 'Virtual Network: Receive'
+  unit: gbitsps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: vmop|inventoryChange|numCreate_latest
+  display_name: VM Created
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|inventoryChange|numDestroy_latest
+  display_name: VM Deleted
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|inventoryChange|numReconfigure_latest
+  display_name: VM Reconfigured
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|stateChange|numRebootGuest_latest
+  display_name: Guest OS Reboot
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|stateChange|numPoweroff_latest
+  display_name: VM Powered Off
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|stateChange|numReset_latest
+  display_name: VM Reset
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: summary|parentDatacenter
+  display_name: Data Center
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|parentVcenter
+  display_name: vCenter
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|tag
+  display_name: vSphere Tag
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+summary:
+- display_name: Total
+  aggregation: SUM
+  columns:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 6
+  - 7
+  - 10
+  - 11
+  - 13
+  - 14
+  - 15
+  - 16
+  - 17
+  - 18
+  - 19
+  - 20
+  - 21
+  - 22
+  - 23
+  - 24
+  - 25
+  - 26
+  - 27
+  - 28
+  - 29
+  - 30
+  - 31
+  - 32
+  - 33
+  - 34
+  - 35
+  - 36
+  - 37
+  - 38
+  - 39
+  - 40
+  - 41
+  - 42
+  - 43
+  - 44
+  - 45
+  - 46
+  - 47
+  - 48
+  - 49
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

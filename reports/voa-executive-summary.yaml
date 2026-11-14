@@ -1,0 +1,35 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/report - voa - executive summary/Report - VOA - Executive Summary.xml
+id: 1d913c66-229c-4fb0-82bb-6dbea32e2e3b
+name: VOA - Executive Summary
+description: "This report is part of VCF Optimization Assessment. It's not a standalone report. Use it\
+  \ together with the other VOA reports and Performance suite of dashboards. \n\nIt's designed for a VCF\
+  \ Consultant to explain and walkthrough with customers, as part of health review. It's not a DIY report\
+  \ to be read on a regular basis and compare with previous run.\n\nRun this against vSphere World object\
+  \ to get the complete environment\n\nTailor this report to highlight items that need attention. One\
+  \ way to do is by applying filters on relevant widgets. Filter out up to date settings, or only show\
+  \ outdated versions."
+subject_types: []
+sections:
+- type: CoverPage
+  colorize: false
+  font_color: '000000'
+- type: TableOfContents
+- type: Dashboard
+  dashboard: 'Report: Executive Summary'
+  orientation: Landscape
+- type: Dashboard
+  dashboard: 'Report: Executive Summary (page 2)'
+  orientation: Landscape
+- type: Dashboard
+  dashboard: 'Report: Executive Summary (page 3)'
+  orientation: Landscape
+- type: Dashboard
+  dashboard: 'Report: Executive Summary (page 4)'
+  orientation: Landscape
+- type: Dashboard
+  dashboard: 'Report: Executive Summary (page 5)'
+  orientation: Landscape
+settings:
+  show_page_footer: true
+  output_formats:
+  - pdf

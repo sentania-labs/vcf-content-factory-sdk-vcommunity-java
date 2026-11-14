@@ -1,0 +1,86 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: c6b3909f-f1ec-4691-b22c-70b7175e0c87
+name: 'Report: VM Capacity (page 2)'
+description: "Part of a report covering capacity. Designed to be run on a weekly basis, and be compared\
+  \ with previous week result. \nWorking with a VCF expert, tailor the dashboard and widget to the specific\
+  \ requirements."
+name_path: VCF Optimization Assessment
+shared: false
+hidden: true
+disabled: true
+time_range: last7Days
+doc_center_key: vcom_556
+widgets:
+- id: w0
+  type: View
+  title: VM counts by CPU to reclaim
+  coords:
+    w: 6
+    x: 1
+    h: 8
+    y: 1
+  view: VM Distribution by Reclaimable CPU
+  chart_view_items:
+  - labels
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 438
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w1
+  type: View
+  title: VM counts by Memory to reclaim
+  coords:
+    w: 6
+    x: 7
+    h: 8
+    y: 1
+  view: VM Distribution by Reclaimable Memory
+  chart_view_items:
+  - labels
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 438
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w2
+  type: View
+  title: VM counts by CPU to add
+  coords:
+    w: 6
+    x: 1
+    h: 8
+    y: 9
+  view: VM Distribution by CPU to add
+  chart_view_items:
+  - labels
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 438
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w3
+  type: View
+  title: VM counts by Memory to add
+  coords:
+    w: 6
+    x: 7
+    h: 8
+    y: 9
+  view: VM Distribution by Memory to add
+  chart_view_items:
+  - labels
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 438
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+interactions: []

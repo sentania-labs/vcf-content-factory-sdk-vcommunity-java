@@ -1,0 +1,379 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/report - voa - virtual machines for csv export/Report - VOA - Virtual Machines for CSV export.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: 5bf51a21-b981-4823-b8a5-02297aa40be4
+name: 'Report: Virtual Machines for CSV export'
+description: "A simple table for export as a CSV file. Used in report only, hence it has no formatting.\
+  \ Just like the rest of the report, it is designed for weekly, not daily nor monthly. \n\nSchedule it\
+  \ to run end of the week, such as Sunday 23:59"
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|guest|hostName
+  display_name: Hostname
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|guest|ipAddress
+  display_name: IP Address
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|createDate
+  display_name: Creation Date
+  unit: auto
+  is_property: true
+  roll_up_count: 0
+  transformation: TIMESTAMP
+  omit:
+  - roll_up_type
+  - add_timestamp_as_column
+- attribute: config|version
+  display_name: HW Version
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|guest|fullName
+  display_name: Guest OS from Tools
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: config|guestFullName
+  display_name: Guest OS from vCenter
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|running
+  display_name: Running?
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|guest|toolsRunningStatus
+  display_name: Tools Running
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|guest|toolsVersion
+  display_name: Tools Version
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|guest|toolsVersionStatus2
+  display_name: Tools Version Status
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|hardware|numCpu
+  display_name: CPU
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: cpu|vm_capacity_provisioned
+  display_name: CPU Capacity
+  unit: ghz
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: config|cpuAllocation|reservation
+  display_name: CPU Reservation
+  unit: ghz
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|cpuAllocation|limit
+  display_name: CPU Limit
+  unit: ghz
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|extraConfig|vcpu_hotadd
+  display_name: CPU Hot Add
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|extraConfig|vcpu_hotremove
+  display_name: CPU Hot Remove
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: guest|20_sec_peak_contextSwapRate_latest
+  display_name: CPU Context Switch
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: guest|20_sec_peak_cpu_queue
+  display_name: CPU Queue
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: cpu|net_run
+  display_name: CPU Run
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: cpu|vcpu_usage_disparity
+  display_name: CPU Usage Disparity
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|20_sec_peak_readyPct
+  display_name: CPU Ready
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: cpu|20_sec_peak_costopPct
+  display_name: CPU CoStop
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: config|hardware|memoryKB
+  display_name: Memory Capacity
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|memoryAllocation|limit
+  display_name: Memory Limit
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|memoryAllocation|reservation
+  display_name: Memory Reservation
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|extraConfig|mem_hotadd
+  display_name: Memory Hot Add
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: guest|20_sec_peak_page.outRate_latest
+  display_name: Memory Paging Rate
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: guest|mem.free_latest
+  display_name: Memory Free
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 5
+- attribute: vsan|policy|compliance
+  display_name: Storage Policy Compliance
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|numVMDKsOnly
+  display_name: VMDK
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|numRDMs
+  display_name: RDM
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|hardware|diskSpace
+  display_name: Disk Space
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: guestfilesystem|percentage_total
+  display_name: Filesystem Utilization
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: guest|disk_queue
+  display_name: Disk Queue
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: virtualDisk:Aggregate of all instances|numberReadAveraged_average
+  display_name: Reads/sec
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: virtualDisk:Aggregate of all instances|numberWriteAveraged_average
+  display_name: Writes/sec
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: virtualDisk:Aggregate of all instances|totalReadLatency_average
+  display_name: Read Latency
+  unit: msec
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: virtualDisk:Aggregate of all instances|totalWriteLatency_average
+  display_name: Write Latency
+  unit: msec
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: virtualDisk:Aggregate of all instances|usage
+  display_name: Throughput
+  unit: mbps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: summary|config|numEthernetCards
+  display_name: NIC Count
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: net|20_sec_peak_usage_average
+  display_name: Net Usage
+  unit: gbitsps
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: vmop|vmotion|total_successes
+  display_name: vMotion
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: OnlineCapacityAnalytics|capacityRemainingPercentage
+  display_name: Capacity Remaining
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: OnlineCapacityAnalytics|timeRemaining
+  display_name: Time Remaining
+  unit: day
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: config|boot_options_efi_secure_boot_enabled
+  display_name: EFI Secure Boot
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|datastore
+  display_name: Datastore
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|tag
+  display_name: vSphere Tag
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|folder
+  display_name: Folder
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|parentCluster
+  display_name: Parent Cluster
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|parentDatacenter
+  display_name: Parent Datacenter
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

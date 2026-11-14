@@ -1,0 +1,15 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/alertdefs/Collection Warnings.xml
+id: dc3a1b70-0df7-4872-bf47-ca34ce799478
+name: vCommunity Collection Warnings
+adapter_kind: VMWARE
+resource_kind: VMwareAdapter Instance
+severity: WARNING
+wait_cycles: 2
+cancel_cycles: 2
+disable_in_base_policy: true
+condition:
+  type: metric_static
+  key: vCommunity|Collection Health|Warnings in Last Cycle
+  operator: GT
+  value: 0
+  instanced: false

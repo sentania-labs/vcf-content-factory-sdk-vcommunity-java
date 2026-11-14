@@ -1,0 +1,95 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: ae50759f-16c4-4465-a735-36043f7e9767
+name: vSphere Cluster Performance List 1
+description: Top 20 clusters over the last day by performance score (current, minimum and percentile),
+  with worst CPU ready, worst co-stop, VM memory contention, running VM count and vSAN flag. Lowest score
+  first.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+time_window:
+  unit: DAYS
+  count: 1
+columns:
+- attribute: vCommunity|Cluster Performance|Cluster Performance Score
+  display_name: Cluster Performance Score
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  ascending_range: true
+- attribute: vCommunity|Cluster Performance|Cluster Performance Score
+  display_name: Cluster Performance Score
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MIN
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  ascending_range: true
+- attribute: vCommunity|Cluster Performance|Cluster Performance Score
+  display_name: Cluster Performance Score
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  ascending_range: true
+- attribute: cpu|max_cpu_ready
+  display_name: Worst CPU Ready
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 2.5
+  orange_bound: 5
+  red_bound: 10
+  ascending_range: false
+- attribute: cpu|max_cpu_costop
+  display_name: Worst CPU Co-Stop
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 2.5
+  orange_bound: 5
+  red_bound: 10
+  ascending_range: false
+- attribute: mem|max_vm_mem_contention
+  display_name: VM Memory Contention
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 1
+  orange_bound: 2
+  red_bound: 4
+  ascending_range: false
+- attribute: summary|number_running_vms
+  display_name: Running VMs
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: configuration|vSANEnabled
+  display_name: vSAN?
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+distribution_color: 6870C4
+top_n: 20
+omit:
+- include_resource_creation_time

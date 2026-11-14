@@ -1,0 +1,45 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: bc0cd2ec-f609-4c91-8ff6-2c87e37de38a
+name: ESXi Distribution by Core Counts
+description: Bar chart counting ESXi hosts by physical core count, using fixed buckets that run from 0
+  to 100 cores and a final open-ended bucket for larger hosts.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+  types:
+  - descendant
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: hardware|cpuInfo|numCpuCores
+  display_name: .
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+  omit:
+  - roll_up_type
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: false
+  ranges:
+  - start: 0
+    end: 25
+  - start: 25
+    end: 50
+  - start: 50
+    end: 75
+  - start: 75
+    end: 100
+  - start: 100
+    end: 1000
+  min_value: 0
+  max_value: 0
+  is_sum: false
+distribution_color: 37B3EB
+omit:
+- include_resource_creation_time

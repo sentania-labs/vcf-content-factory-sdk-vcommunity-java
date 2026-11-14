@@ -1,0 +1,11 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/alertdefs/Collection Warnings.xml
+name: vCommunityCollectionWarnings
+id: vCommunityCollectionWarnings
+description: 'The vCommunity Management Pack wrote warnings or errors in its last collection cycle. Some
+  values were not collected. Find the cause as follows. (1) Open the vCenter object and read the property
+  ''vCommunity|Collection Health|First Warning'': it is the first warning of the cycle. (2) Search adapter.log,
+  on the Cloud Proxy that runs this adapter instance, for these keywords. ''Failed to'': one value could
+  not be read for one object. ''Skipping'': one object was left out of this cycle. ''Unexpected collection
+  error'': the whole cycle failed, and the traceback follows it. The log line shows the object and the
+  reason. The alert clears by itself when a cycle has no warnings.'
+adapter_kind: VMWARE

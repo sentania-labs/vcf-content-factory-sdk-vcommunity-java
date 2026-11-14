@@ -1,0 +1,50 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: 82883181-5199-4666-aa3e-4c5521086ab1
+name: vSphere Port Group Inventory
+description: Inventory table for distributed port groups showing uplink, active uplinks, port count, VM
+  count and used ports.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: DistributedVirtualPortgroup
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: config|uplink
+  display_name: Uplink
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|active_uplink_ports
+  display_name: Active Uplinks
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|max_num_ports
+  display_name: No of Ports
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: supermetric:"Number of VM"
+  display_name: VMs
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|used_num_ports
+  display_name: Used Ports
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - show_relative_timestamp
+page_size: 50
+omit:
+- include_resource_creation_time

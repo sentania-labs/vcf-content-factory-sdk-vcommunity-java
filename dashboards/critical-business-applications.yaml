@@ -1,0 +1,263 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/critical business applications/Critical Business Applications.json
+id: d1dd41f6-3bf3-492c-af43-2858ec923a14
+name: Critical Business Applications
+description: It shows Multi-tier Business Applications, focusing on their performance and availability.
+name_path: vCommunity
+shared: true
+hidden: false
+time_range: last6Hour
+column_proportion: 1-1
+widgets:
+- id: w0
+  type: HealthChart
+  title: Tiers in the selected Applications
+  coords:
+    w: 4
+    x: 5
+    h: 13
+    y: 6
+  navigations:
+  - dashboard_id: a10e7aaa-8fa7-4373-8ebb-87a9cc7daaec
+    widget_ids:
+    - 584b09f3-b41a-4634-896f-9f3eceba017b
+  - dashboard_id: 69ab9c94-6b00-4af2-ad43-92bd38446bab
+    widget_ids:
+    - 7c2a4c54-faa1-4272-bf73-3d23c228540e
+  adapter_kind: Container
+  resource_kind: Manual Application
+  metric_key: vCommunity|Business Application|Tier Performance
+  metric_name: vCommunity|Business Application|Tier Performance
+  metric_full_name: vCommunity|Business Application|Tier Performance
+  mode: all
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  show_resource_name: true
+  relationship_mode: children
+  ui:
+    height: 723
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    - key: perm_toolbarVisible_
+      value: b%3A1
+- id: w1
+  type: HealthChart
+  title: Virtual Machines in selected Tier
+  coords:
+    w: 4
+    x: 9
+    h: 13
+    y: 6
+  navigations:
+  - dashboard_id: dbc48f7d-ef63-4874-9752-58edc8ebdda0
+    widget_ids:
+    - a1c6479e-8500-4357-ab5e-a27db452f4bd
+  - dashboard_id: a10e7aaa-8fa7-4373-8ebb-87a9cc7daaec
+    widget_ids:
+    - 584b09f3-b41a-4634-896f-9f3eceba017b
+  - dashboard_id: 1d19810f-ff4d-489c-b7f3-afd35645937d
+    widget_ids:
+    - 88c0471a-a2af-4fa3-9a79-efba5c35b799
+  - dashboard_id: 69ab9c94-6b00-4af2-ad43-92bd38446bab
+    widget_ids:
+    - 7c2a4c54-faa1-4272-bf73-3d23c228540e
+  - dashboard_id: 847d404f-eebb-4c77-ae47-063f99715485
+    widget_ids:
+    - 16cda8f3-5f8e-4e51-92c1-2a1fc0c57009
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  metric_key: vCommunity|VM Guest OS KPI
+  metric_name: vCommunity|VM Guest OS KPI
+  metric_full_name: Super Metrics|OYW VM KPI (%)
+  mode: all
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: desc
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  show_resource_name: true
+  relationship_mode: children
+  tag_filter:
+    resource_kinds:
+    - adapter_kind: VMWARE
+      resource_kind: VirtualMachine
+  ui:
+    height: 723
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+- id: w2
+  type: View
+  title: All VMs in the selected Applications
+  coords:
+    w: 8
+    x: 1
+    h: 11
+    y: 19
+  navigations:
+  - dashboard_id: a10e7aaa-8fa7-4373-8ebb-87a9cc7daaec
+    widget_ids:
+    - 584b09f3-b41a-4634-896f-9f3eceba017b
+  - dashboard_id: 1d19810f-ff4d-489c-b7f3-afd35645937d
+    widget_ids:
+    - 88c0471a-a2af-4fa3-9a79-efba5c35b799
+  - dashboard_id: 847d404f-eebb-4c77-ae47-063f99715485
+    widget_ids:
+    - 16cda8f3-5f8e-4e51-92c1-2a1fc0c57009
+  view: vSphere VMs Context
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 609
+    states:
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Cguest%2525257CfullName1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Cguest%2525257CipAddress2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-Guest%25252520OS%25252520Services%2525257CmkServiceCount3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Chardware%2525257CnumCpu4%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-cpu%2525257Cusagemhz_average5%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Chardware%2525257CmemoryKB6%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CcpuAllocation%2525257Climit7%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257CmemoryAllocation%2525257Climit8%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-mem%2525257CballoonPct9%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-mem%2525257Cconsumed_average10%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-mem%2525257Ccompressed_average11%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-net%2525257Cusage_average12%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-virtualDisk%2525253AAggregate%25252520of%25252520all%25252520instances%2525257Cusage13%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-virtualDisk%2525253AAggregate%25252520of%25252520all%25252520instances%2525257CcommandsAveraged_average14%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-config%2525257Cversion15%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Cguest%2525257CtoolsRunningStatus16%25255Ehidden%25253Db%2525253A0
+    - key: perm_toolbarVisible_
+      value: b%3A1
+    - key: perm_isDashboardTime_
+      value: b%3A0
+    - key: permSelectedDate_
+      value: s%3A%7B%22minType%22%3A%22.TimeIntervalControl%22%2C%22advancedTimeMode%22%3Afalse%2C%22fromTime%22%3Anull%2C%22unit%22%3A%22DAYS%22%2C%22count%22%3A1%2C%22priorUnit%22%3Anull%2C%22priorCount%22%3Anull%2C%22startSubUnit%22%3Anull%2C%22startPeriod%22%3Anull%2C%22toTime%22%3Anull%2C%22endUnit%22%3Anull%2C%22endCount%22%3Anull%2C%22endSubUnit%22%3Anull%2C%22endPeriod%22%3Anull%2C%22isRealTimeData%22%3Anull%2C%22mondayHours%22%3A%5B%5D%2C%22tuesdayHours%22%3A%5B%5D%2C%22wednesdayHours%22%3A%5B%5D%2C%22thursdayHours%22%3A%5B%5D%2C%22fridayHours%22%3A%5B%5D%2C%22saturdayHours%22%3A%5B%5D%2C%22sundayHours%22%3A%5B%5D%7D
+- id: w3
+  type: HealthChart
+  title: Average of all Business Applications Performance
+  coords:
+    w: 12
+    x: 1
+    h: 5
+    y: 1
+  adapter_kind: Container
+  resource_kind: Enterprise
+  metric_key: vCommunity|Business Application|Business Applications Performance
+  metric_name: vCommunity|Business Application|Business Applications Performance
+  metric_full_name: vCommunity|Business Application|Business Applications Performance
+  mode: resource
+  depth: 1
+  chart_height: 190
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: Container
+    resource_kind: Enterprise
+    name: Entire Enterprise Applications
+  ui:
+    height: 267
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+- id: w4
+  type: HealthChart
+  title: Business Applications
+  coords:
+    w: 4
+    x: 1
+    h: 13
+    y: 6
+  navigations:
+  - dashboard_id: a10e7aaa-8fa7-4373-8ebb-87a9cc7daaec
+    widget_ids:
+    - 584b09f3-b41a-4634-896f-9f3eceba017b
+  - dashboard_id: 69ab9c94-6b00-4af2-ad43-92bd38446bab
+    widget_ids:
+    - 7c2a4c54-faa1-4272-bf73-3d23c228540e
+  - dashboard_id: 5e7c2510-dc74-42e5-8bf3-616f1d14e382
+    widget_ids:
+    - 5883a28d-dea9-406b-ace6-b900afa6e43f
+    - a99a1a93-da09-4fd1-ac85-ec9e48b750e5
+  - dashboard_id: 2519417f-ccab-4648-9e02-0db92cebaa7f
+    widget_ids:
+    - 7b2e1be5-eec6-4fdd-8cd8-401174c432a8
+  - dashboard: VM Capacity (new)
+    widgets: []
+  adapter_kind: Container
+  resource_kind: BusinessService
+  metric_key: vCommunity|Business Application|Business Application Performance
+  metric_name: vCommunity|Business Application|Business Application Performance
+  metric_full_name: vCommunity|Business Application|Business Application Performance
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  show_resource_name: true
+  self_provider: true
+  pin:
+    adapter_kind: Container
+    resource_kind: Enterprise
+    name: Entire Enterprise Applications
+  relationship_mode: children
+  ui:
+    height: 723
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    - key: perm_toolbarVisible_
+      value: b%3A1
+- id: w5
+  type: View
+  title: OS Services
+  coords:
+    w: 4
+    x: 9
+    h: 11
+    y: 19
+  view: Guest OS List of Services
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 609
+    states:
+    - key: perm_isDashboardTime_
+      value: b%3A0
+    - key: permSelectedDate_
+      value: s%3A%7B%22minType%22%3A%22.TimeIntervalControl%22%2C%22advancedTimeMode%22%3Afalse%2C%22fromTime%22%3Anull%2C%22unit%22%3A%22DAYS%22%2C%22count%22%3A7%2C%22priorUnit%22%3Anull%2C%22priorCount%22%3Anull%2C%22startSubUnit%22%3Anull%2C%22startPeriod%22%3Anull%2C%22toTime%22%3Anull%2C%22endUnit%22%3Anull%2C%22endCount%22%3Anull%2C%22endSubUnit%22%3Anull%2C%22endPeriod%22%3Anull%2C%22isRealTimeData%22%3Anull%2C%22mondayHours%22%3A%5B%5D%2C%22tuesdayHours%22%3A%5B%5D%2C%22wednesdayHours%22%3A%5B%5D%2C%22thursdayHours%22%3A%5B%5D%2C%22fridayHours%22%3A%5B%5D%2C%22saturdayHours%22%3A%5B%5D%2C%22sundayHours%22%3A%5B%5D%7D
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257CincomingConnectionCount1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257CoutgoingConnectionCount2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-DynamicPort3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-Port4%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-Status5%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-Version6%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257CPid7%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-InstallPath8%25255Ehidden%25253Db%2525253A0
+interactions:
+- from: w0
+  to: w1
+  type: resourceId
+- from: w0
+  to: w2
+  type: resourceId
+- from: w4
+  to: w0
+  type: resourceId
+- from: w4
+  to: w1
+  type: resourceId
+- from: w4
+  to: w2
+  type: resourceId
+- from: w4
+  to: w5
+  type: resourceId
+- from: w0
+  to: w5
+  type: resourceId
+- from: w1
+  to: w5
+  type: resourceId
+- from: w2
+  to: w5
+  type: resourceId
+- from: w3
+  to: w2
+  type: resourceId

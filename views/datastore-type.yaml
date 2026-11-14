@@ -1,0 +1,37 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: bfe9ee51-4b55-448f-ab45-9ef42c7370f4
+name: Datastore Type
+description: Donut chart that splits non-local datastores by their storage type property, with one slice
+  per type found. Datastores flagged as local are left out.
+data_type: distribution
+presentation: donut-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: Datastore
+  types:
+  - descendant
+  filter:
+  - - filter_type: properties
+      metric_key: summary|isLocal
+      condition: NOT_EQUALS
+      value: 'true'
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|type
+  display_name: .
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  omit:
+  - roll_up_type
+  - transformation
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  is_sum: false
+omit:
+- include_resource_creation_time

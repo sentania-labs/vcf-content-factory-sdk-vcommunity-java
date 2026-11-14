@@ -1,0 +1,44 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: b33aa854-8314-450b-ac66-a86f2f891af4
+name: vSphere Cluster Memory Utilization
+description: "Trend line of cluster memory utilization. \n\nIt's used in Capacity Management context,\
+  \ hence it's showing 3 months time horizon and the value is hourly averaged. The counter consumed is\
+  \ used instead of active, because consumed is used to trigger balloon."
+data_type: trend
+presentation: line-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+time_window:
+  unit: MONTHS
+  count: 3
+transformations:
+- NONE
+columns:
+- attribute: mem|host_provisioned
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  omit:
+  - display_name
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: mem|host_usable
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  omit:
+  - display_name
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: mem|consumed_average
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  omit:
+  - display_name
+  - add_timestamp_as_column
+  - show_relative_timestamp
+page_size: 25
+omit:
+- metadata
