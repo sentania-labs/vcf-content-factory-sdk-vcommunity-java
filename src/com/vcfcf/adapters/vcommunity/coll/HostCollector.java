@@ -53,7 +53,10 @@ public final class HostCollector {
                 .path("hardware.pciDevice", PathSpec.keepingInElements("id", "vendorId", "deviceId",
                         "subVendorId", "vendorName", "deviceName"))
                 .path("capability.storageVMotionSupported")
-                .path("configManager.imageConfigManager");
+                .path("configManager.imageConfigManager")
+                // for the cluster membership and the port group count (P4); not keys of their own
+                .path("parent", PathSpec.shallow())
+                .path("config.network.portgroup", PathSpec.keepingInElements("spec.name"));
     }
 
     /** The option read: only the options these keys use are kept, the rest of each host's list is skipped. */

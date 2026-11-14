@@ -77,6 +77,8 @@ public final class VmCollector {
         for (String p : SCALARS) r.path(p);
         // the VM Template objects are built from the same read (design 4.11)
         for (String p : TemplateScan.PATHS) r.path(p);
+        // the host the VM runs on, for the cluster and host figures (P4); not a key of its own
+        r.path("runtime.host", PathSpec.shallow());
         if (!Quirks.TOOLS_ALWAYS_NONE) {
             for (String p : TOOLS_PATHS) r.path(p);
         }

@@ -69,6 +69,8 @@ public final class PropertyCollection {
     public static final String C_VM = "vm";
     public static final String C_DATASTORE = "datastore";
     public static final String C_VCENTER = "vcenter";
+    /** The Datacenters' membership and distributed port groups (P4); their figures are the derived phase's. */
+    public static final String C_DATACENTER = "datacenter";
 
     static final int POOL = 4;
     static final int HOST_POOL = 8;
@@ -106,6 +108,8 @@ public final class PropertyCollection {
         public Map<String, String> datastoreNames;
         /** Folder MoRef value to name for the templates' parents; null when that read failed. */
         public Map<String, String> folderNames;
+        /** Who is in what, as this cycle's reads say it (P4); each part carries whether its read finished. */
+        public Membership membership;
         private Runnable afterCleanPush = () -> { };
 
         /** Remember what was sent; call it once, after a clean push. */
@@ -131,10 +135,22 @@ public final class PropertyCollection {
         this.clock = clock;
     }
 
+    /** This vCenter's Ops resource map of a kind as the last cycle left it, or null when there is none. */
+    public OpsResourceMap opsMap(String kind, String vcid) {
+        return vcid == null ? null : maps.current(kind, vcid);
+    }
+
+    /** A read that used this kind's list failed: the list may name an object that is gone, so read it next cycle. */
+    public void markStale(String kind) {
+        maps.failed(kind);
+    }
+
     // ------------------------------------------------------------------ the phase
 
     public Result run(Input in) throws InterruptedException {
         Result res = new Result();
+        final Membership members = new Membership();
+        res.membership = members;
         if (in.vim == null || in.vim.refs() == null) return res;
         newSession(in.about, in.vim.generation());
         final List<String> advSettings = items(in, ListKind.ESXI_SETTINGS);
@@ -151,11 +167,13 @@ public final class PropertyCollection {
                     mapTasks.put(kind, pool.submit(() -> loadMap(in, kind, mapFailure)));
                 }
             }
-            Future<List<ObjectOut>> fCluster = pool.submit(() -> clusters(in));
-            Future<HostResult> fHost = pool.submit(() -> hosts(in, advSettings, pkgList));
+            Future<List<ObjectOut>> fCluster = pool.submit(() -> clusters(in, members));
+            Future<HostResult> fHost = pool.submit(() -> hosts(in, advSettings, pkgList, members));
             TemplateScan scan = new TemplateScan();
             Map<String, String> dsNames = new ConcurrentHashMap<>();
-            Future<List<ObjectOut>> fVm = pool.submit(() -> vms(in, vmParams, vmOptions, scan));
+            Future<List<ObjectOut>> fVm = pool.submit(() -> vms(in, vmParams, vmOptions, scan, members));
+            Future<Boolean> fPools = pool.submit(() -> pools(in, members));
+            Future<Boolean> fDc = pool.submit(() -> datacenters(in, members));
             Future<List<ObjectOut>> fDs = pool.submit(() -> datastores(in, dsNames));
             Future<Map<String, List<HostCollector.Assignment>>> fLic = pool.submit(() -> licenses(in));
             Future<Map<String, String>> fOpt = pool.submit(() -> vcenterSettings(in));
@@ -183,6 +201,10 @@ public final class PropertyCollection {
             Map<String, List<HostCollector.Assignment>> lic = await(fLic, in, res, C_HOST,
                     "the license read");
             Map<String, String> settings = await(fOpt, in, res, C_VCENTER, "the vCenter settings read");
+            Boolean poolsOk = await(fPools, in, res, C_CLUSTER, "the resource pool read");
+            Boolean dcOk = await(fDc, in, res, C_DATACENTER, "the Datacenter read");
+            members.done(cluster != null, host != null, vm != null, Boolean.TRUE.equals(dcOk),
+                    Boolean.TRUE.equals(poolsOk));
             if (vm != null) {
                 // the templates came with the VM read; their names come with the datastore and folder reads
                 res.templates = scan;
@@ -332,8 +354,11 @@ public final class PropertyCollection {
         return t.bad > 0 && t.ok == 0;
     }
 
-    private List<ObjectOut> clusters(Input in) {
-        return simpleRead(in, C_CLUSTER, ClusterCollector.request(), ClusterCollector::collect);
+    private List<ObjectOut> clusters(Input in, Membership members) {
+        return simpleRead(in, C_CLUSTER, ClusterCollector.request(), row -> {
+            members.cluster(row);
+            return ClusterCollector.collect(row);
+        });
     }
 
     private List<ObjectOut> datastores(Input in, Map<String, String> names) {
@@ -419,7 +444,7 @@ public final class PropertyCollection {
         final List<ObjectOut> objects = new ArrayList<>();
     }
 
-    private HostResult hosts(Input in, List<String> advSettings, List<String> pkgList) {
+    private HostResult hosts(Input in, List<String> advSettings, List<String> pkgList, Membership members) {
         Map<String, ObjectOut> byMoref = new LinkedHashMap<>();
         Map<String, MoRef> imageMgr = new HashMap<>();
         // hosts whose image manager was read and is unset (upstream: install date "null"); a host whose
@@ -428,6 +453,7 @@ public final class PropertyCollection {
         List<MoRef> refs = new ArrayList<>();
         Tally tally = new Tally();
         RetrieveStats st = read(in, C_HOST, HostCollector.request(), row -> {
+            members.host(row);
             ObjectOut o = guarded(HostCollector::collectRow, row, in.failures, C_HOST, HostCollector.READ, tally);
             if (o == null) return;
             byMoref.put(row.obj.value, o);
@@ -761,13 +787,14 @@ public final class PropertyCollection {
 
     // ---- virtual machines
 
-    private List<ObjectOut> vms(Input in, List<String> vmParams, List<String> vmOptions, TemplateScan scan) {
+    private List<ObjectOut> vms(Input in, List<String> vmParams, List<String> vmOptions, TemplateScan scan,
+            Membership members) {
         List<String> accepted = acceptedOptions(in, vmOptions);
         Set<String> nonScalar = ConcurrentHashMap.newKeySet();
         List<ObjectOut> out = new ArrayList<>();
         Tally tally = new Tally();
         String[] fault = new String[1];
-        RetrieveStats st = readVms(in, vmParams, accepted, nonScalar, out, tally, fault, scan);
+        RetrieveStats st = readVms(in, vmParams, accepted, nonScalar, out, tally, fault, scan, members);
         if (st == null && !accepted.isEmpty() && ("TooLarge".equals(fault[0]) || "Parse".equals(fault[0]))) {
             // An entry whose value is huge or deeply nested (a whole config, a snapshot tree) can fail the
             // page. The base VM keys are never lost to an Options entry (5.5 rule 3): read again without
@@ -779,7 +806,7 @@ public final class PropertyCollection {
             nonScalar.clear();
             tally = new Tally();
             accepted = Collections.emptyList();
-            st = readVms(in, vmParams, accepted, nonScalar, out, tally, fault, scan);
+            st = readVms(in, vmParams, accepted, nonScalar, out, tally, fault, scan, members);
         }
         if (st == null || allFailed(tally)) return null;
         for (String p : st.droppedPaths()) {
@@ -798,15 +825,70 @@ public final class PropertyCollection {
     }
 
     private RetrieveStats readVms(Input in, List<String> vmParams, List<String> accepted, Set<String> nonScalar,
-            List<ObjectOut> out, Tally tally, String[] fault, TemplateScan scan) {
+            List<ObjectOut> out, Tally tally, String[] fault, TemplateScan scan, Membership members) {
         RetrieveRequest req = VmCollector.request(!vmParams.isEmpty(), new HashSet<>(vmParams), accepted);
         scan.reset(); // a page that failed is read again from the start, never added to
+        members.resetVms();
         return read(in, C_VM, req, row -> {
             ObjectOut o = guarded(rw -> VmCollector.collect(rw, vmParams, accepted, nonScalar), row,
                     in.failures, C_VM, VmCollector.READ, tally);
             if (o != null) out.add(o);
             scan.take(row);
+            members.vm(row);
         }, fault);
+    }
+
+    // ---- resource pools and Datacenters (P4: only their structure; the figures are the derived phase's)
+
+    /** True when every resource pool was read with its parent. */
+    private Boolean pools(Input in, Membership members) {
+        boolean[] unreadable = new boolean[1];
+        members.resetPools();
+        RetrieveStats st = read(in, C_CLUSTER, new RetrieveRequest("R-RP", "ResourcePool", 500, null)
+                .path("parent", PathSpec.shallow()), row -> {
+                    if (!row.readable("parent")) unreadable[0] = true;
+                    members.pool(row);
+                });
+        return st != null && !unreadable[0];
+    }
+
+    /**
+     * Each Datacenter with the hosts under it and its distributed port groups, a container view of each. False
+     * when any part failed: a Datacenter with a part missing is incomplete, and what needs it is withheld.
+     */
+    private Boolean datacenters(Input in, Membership members) {
+        List<MoRef[]> dcs = new ArrayList<>(); // {datacenter, network folder}
+        RetrieveStats st = read(in, C_DATACENTER, new RetrieveRequest("R-DC", "Datacenter", 100, null)
+                .path("networkFolder", PathSpec.shallow()), row -> {
+                    members.datacenter(row.obj.value, row.name());
+                    XmlNode nf = row.val("networkFolder");
+                    dcs.add(new MoRef[] {row.obj, nf == null || nf.text().isEmpty() ? null
+                        : new MoRef(nf.attr("type") == null ? "Folder" : nf.attr("type"), nf.text())});
+                });
+        if (st == null) return false;
+        boolean ok = true;
+        for (MoRef[] d : dcs) {
+            if (stopNow(in)) return false;
+            Membership.Datacenter dc = members.datacenterOf(d[0].value);
+            Set<String> hosts = ConcurrentHashMap.newKeySet();
+            RetrieveStats h = read(in, C_DATACENTER, new RetrieveRequest("R-DC-HOSTS", "HostSystem", 100, null)
+                    .inContainer(d[0]), row -> hosts.add(row.obj.value));
+            if (h != null) dc.hosts = hosts; else ok = false;
+            if (d[1] == null) {
+                // a Datacenter that names no network folder has no distributed port groups to read
+                dc.dvPortGroups = new HashSet<>();
+                continue;
+            }
+            Set<String> names = ConcurrentHashMap.newKeySet();
+            boolean[] nameless = new boolean[1];
+            RetrieveStats g = read(in, C_DATACENTER, new RetrieveRequest("R-DC-DVPG",
+                    "DistributedVirtualPortgroup", 100, null).inContainer(d[1]), row -> {
+                        String n = row.name();
+                        if (n == null) nameless[0] = true; else names.add(n);
+                    });
+            if (g != null && !nameless[0]) dc.dvPortGroups = names; else ok = false;
+        }
+        return ok;
     }
 
     // ---- folders of the templates

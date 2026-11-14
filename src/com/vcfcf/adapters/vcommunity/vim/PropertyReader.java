@@ -97,7 +97,8 @@ public final class PropertyReader {
                     return VimResult.fault("Parse", "the vCenter did not name its view manager "
                             + "or root folder", null, 0, null);
                 }
-                VimResult<MoRef> v = createView(refs, req.type, stats);
+                VimResult<MoRef> v = createView(refs, req.type, req.container() == null ? refs.rootFolder
+                        : req.container(), stats);
                 if (!v.isOk()) {
                     return VimResult.fault(v.faultClass(), v.message(), v.invalidPropertyPath(),
                             stats.bytes, v.cause());
@@ -294,12 +295,12 @@ public final class PropertyReader {
 
     // ------------------------------------------------------------------ bodies
 
-    private VimResult<MoRef> createView(ServiceRefs refs, String type, RetrieveStats stats) {
+    private VimResult<MoRef> createView(ServiceRefs refs, String type, MoRef container, RetrieveStats stats) {
         stats.calls++;
         VimResult<XmlNode> r = vim.call("<CreateContainerView xmlns=\"urn:vim25\">"
                 + "<_this type=\"ViewManager\">" + VimSoapClient.xml(refs.viewManager.value) + "</_this>"
-                + "<container type=\"" + VimSoapClient.xml(refs.rootFolder.type) + "\">"
-                + VimSoapClient.xml(refs.rootFolder.value) + "</container>"
+                + "<container type=\"" + VimSoapClient.xml(container.type) + "\">"
+                + VimSoapClient.xml(container.value) + "</container>"
                 + "<type>" + VimSoapClient.xml(type) + "</type><recursive>true</recursive>"
                 + "</CreateContainerView>", "CreateContainerView", SHORT_READ_MS);
         if (!r.isOk()) {

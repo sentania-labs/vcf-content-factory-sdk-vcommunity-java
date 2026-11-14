@@ -20,6 +20,7 @@ public final class RetrieveRequest {
     private final Map<String, PathSpec> paths = new LinkedHashMap<>();
     private boolean firstPageOnly;
     private boolean withoutName;
+    private MoRef container;
 
     /** @param label the read's id for messages ({@code R-HO}); never sent */
     public RetrieveRequest(String label, String type, int maxObjects, List<MoRef> objects) {
@@ -36,6 +37,20 @@ public final class RetrieveRequest {
     public RetrieveRequest withoutName() {
         this.withoutName = true;
         return this;
+    }
+
+    /**
+     * Read the objects of the type under this container (a Datacenter, a folder) instead of under the root
+     * folder: the view is made on it. Ignored when the request lists its objects.
+     */
+    public RetrieveRequest inContainer(MoRef container) {
+        this.container = container;
+        return this;
+    }
+
+    /** The container of the view, or null for the root folder. */
+    public MoRef container() {
+        return container;
     }
 
     public boolean asksName() {
