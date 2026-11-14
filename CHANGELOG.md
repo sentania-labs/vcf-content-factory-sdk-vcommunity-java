@@ -3,6 +3,24 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.14 (Unreleased)
+
+Phase P6: content (design section 10).
+
+- feat(adapter): the content ships in the pak: 170 views, 52 dashboards, 16 reports, 2 super metrics, 10 symptoms, 4 alerts and 1
+  recommendation, converted from the source pack's content files by the factory's offline importer (`docs/design/inputs/import-report/`).
+  101 views are re-authored (new ids, new descriptions), nine of them retitled (`docs/design/inputs/view_rename.tsv`); 19 views that only
+  renamed a built-in view are not shipped and are referenced by the built-in's id. Names are unprefixed.
+- feat(adapter): `adapter.yaml` `bundled_content`; `content_foreign_adapter_kinds` is `[VMWARE]` (all 10 symptoms and 4 alerts are on VMWARE
+  objects; Container, VMSP and APPLICATIONDISCOVERY are named only by views and dashboards, which the builder does not check against it).
+- feat(adapter): "Overall Daily Check" and "vSphere Cluster Capacity 2.0" ship without their Section rows (`section_fallback: omit`) while the
+  floor is below VCF Operations 9.1.1; the build prints `SECTIONS OMITTED`.
+- feat(adapter): the six check-list files under `content/files/solutionconfig/` (`esxi_advanced_system_settings.xml`, `esxi_packages.xml`,
+  `vm_advanced_parameters.xml`, `vm_options.xml`, `windows_service_list.xml`, `windows_event_list.xml`): own header text, every entry commented out,
+  examples one per line. Test `CheckListTest.shipped` pins six files, zero active entries, no warning, and valid examples once switched on.
+- docs: installing (Content, check-list files and what an upgrade does to them), overview, README, NOTICE (the content derives from the source
+  pack's content files; its terms need the owner's confirmation), `docs/design/inputs/carried-text-report.md`.
+
 ## 1.0.0.13 (Unreleased)
 
 Review of build 12 (`docs/reviews/p5-guest-review.md`) and the third live differential; design 8.9.
