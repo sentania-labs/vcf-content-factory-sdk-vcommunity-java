@@ -20,9 +20,9 @@ datastores and the vCenter, phase 3 the three own kinds, phase 4 the derived
 metrics: the cluster, host and VM scores, availability, network speed, shares,
 port groups, resource pools, the periodic cluster check, the vSphere World
 roll-ups and the Business Application figures. `docs/p2-key-coverage.tsv`,
-`docs/p3-key-coverage.tsv` and `docs/p4-key-coverage.tsv` list every key of the key
+`docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv` and `docs/p5-key-coverage.tsv` list every key of the key
 map with whether this build collects it and the test that proves it; the
-guest checks and the content come in later phases.
+guest checks (off by default) are in this build, the content comes in a later phase.
 The design is in `docs/design/` (start with `vcommunity-java-port-design.md`).
 
 ## Documentation

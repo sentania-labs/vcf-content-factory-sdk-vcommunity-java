@@ -21,10 +21,12 @@ description: >
   datastores and the vCenter, delivers the content libraries, their items and
   the VM templates as objects of its own, and computes the derived metrics
   (the cluster, host and VM scores, availability, network speed, the periodic
-  cluster check, the vSphere World and Business Application figures); the
-  guest checks and the content come in later phases.
+  cluster check, the vSphere World and Business Application figures), and,
+  when switched on in the account (both are off by default), asks the Windows
+  guests of the vCenter for their operating system, their services and their
+  event logs and sends the events; the content comes in a later phase.
 version: 1.0.0
-build_number: 11
+build_number: 12
 tier: 2
 released: false
 
@@ -38,12 +40,13 @@ content_naming: unprefixed
 content_foreign_adapter_kinds: [VMWARE, Container]
 
 # Where the keys land. Documentation only: the groups are the exact prefixes.
-# This build pushes the property keys (phase P2), the derived metrics (phase P4)
-# and the Collection Health keys; the rest are listed in the design and are filled
+# This build pushes the property keys (phase P2), the derived metrics (phase P4),
+# the guest keys of Windows VMs (phase P5, only when switched on) and the
+# Collection Health keys; the rest are listed in the design and are filled
 # in as the collectors arrive.
-# docs/p2-key-coverage.tsv, docs/p3-key-coverage.tsv and docs/p4-key-coverage.tsv
-# count every key of the key map against the tests (P3: the 26 keys of the three
-# own kinds; P4: the 74 derived rows).
+# docs/p2-key-coverage.tsv, docs/p3-key-coverage.tsv, docs/p4-key-coverage.tsv and
+# docs/p5-key-coverage.tsv count every key of the key map against the tests (P3:
+# the 26 keys of the three own kinds; P4: the 74 derived rows; P5: the 9 guest rows).
 stitch_targets:
   - adapter_kind: VMWARE
     resource_kind: VMwareAdapter Instance
@@ -86,6 +89,7 @@ stitch_targets:
     key_groups:
       - "vCommunity|Configuration|*"
       - "vCommunity|Guest|*"
+      - "vCommunity|Guest OS|*"
       - "vCommunity|Runtime|*"
       - "vCommunity|Summary|*"
       - "vCommunity|Network|Network Adapters:<label>|*"

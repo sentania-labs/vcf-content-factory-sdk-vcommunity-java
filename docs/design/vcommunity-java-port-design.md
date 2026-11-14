@@ -814,7 +814,7 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-42 | event criticality from localized `LevelDisplayName` (non-English: always INFO) | from the numeric level, message text unchanged | localization | correct severity on non-English guests |
 | DV-43 | guest budget 1800 s per cycle, serial, same VM order every cycle | until the cycle deadline, 4 guests in parallel, rotating cursor | a 5-minute cycle; starved VMs | every Windows VM eventually collected; a VM's guest keys may update every few cycles at scale (Q10) |
 | DV-44 | guest monitoring on without a Windows credential: an error per VM per cycle | guest phase skipped, one WARN, health `guest` = SKIPPED | noise | one clear message |
-| DV-45 | transfer URL with `*` as host used as is | `*` replaced by the ESXi host's name (only if G4 shows it occurs) | broken URL | guest transfers work behind such a setup |
+| DV-45 | transfer URL with `*` as host used as is | `*` replaced by the ESXi host's name (only if G4 shows it occurs; *built in P5 as a guard in `TransferUrl`*) | broken URL | guest transfers work behind such a setup |
 | DV-46 | any library REST failure drops all libraries | per-library and per-item isolation | isolation | one bad item no longer blanks every library |
 | DV-47 | VM Template objects only for templates the VMware adapter also models as VirtualMachine | for every template in vCenter (Q5) | the gate was an artefact of loop order | template objects appear even if the VMware adapter does not model templates (E5) |
 | DV-48 | template datastore and folder names read per object | from bulk reads | cost | none |
@@ -864,10 +864,19 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-91 | a request for a statistic gets whichever resources the platform names; the original reads resource ids from Ops properties by name | membership (VM to host, host to cluster, host to Datacenter) is the MoRef of this cycle's vCenter reads (DV-03 to DV-05, built in P4); a VM whose host could not be read withholds the host and cluster figures of every VM-dependent row | same-named objects stay apart | none unless names repeat **P4 review N3:** a VM whose `runtime.host` vCenter could not read is placed by the host name Operations holds (`summary|parentHost`), as upstream does, when exactly one host of the vCenter has that name; only a VM that cannot be placed that way withholds the VM-based host and cluster figures of the vCenter |
 | DV-92 | VM shares: a failed properties or statistics batch sends the VM no share (silently) | the two share keys of a VM whose properties or fallback statistics were not read are withheld and counted | report honestly | none |
 | DV-93 | a VM Options entry whose value is a list of references or a data object is published as pyVmomi prints it; an entry that is not a valid path fails the whole VM collection every cycle (`vmodl.query.InvalidProperty`, no VM data refreshed: seen in the second live differential, L5) | reproduced for what the live dumps show exactly: a list of managed objects under `datastore` (`(ManagedObject) [ 'vim.Datastore:datastore-7001' ]`, `[]` when empty, `, ` between elements) and the tools configuration under `config.tools` (`(vim.vm.ToolsConfigInfo) { dynamicType = , ... }`, the fifteen fields in declared order, the stored form: one space between tokens, the unset marker removed). Every other list or data object is **not reproduced**: pyVmomi prints a primitive list by an element type token (`(str)`, `(int)`...) and a managed-object list by the property's declared type, neither of which the SOAP answer carries, and a data object by its declared property order and unset markers, which need a type table per object (one is built for `config.tools` only, from the dump). Such an entry is skipped, reported and counted in `Check-List Entries Skipped` every cycle (L4); an invalid path is skipped and reported, the VM collection goes on (DV-26) | exact where the dump gives the form; no guessing elsewhere | one entry in a list that upstream would print costs that key, not the VM collection |
+| DV-94 | the event list is sent to the guest as the XML file and read by PowerShell | the list is validated in the collector (4.10) and sent as lines `log TAB id`; a log name the line cannot carry (a tab or other control character, spaces at either end, over 256 characters) and any entry past the 500th is left out, reported once and counted in `Check-List Entries Skipped` | no XML parsing in the guest; the names pass as data | none for a normal list |
+| DV-95 | Pinned with no recorded thumbprint: the transfer goes ahead unchecked with one warning per host | Pinned and Strict refuse a host with no usable thumbprint (`F-GUEST-TLS`, no connection made); a thumbprint of 40 (SHA-1), 64 (SHA-256) or 128 (SHA-512) hex digits is accepted, colons and case as vCenter writes them; Disabled is the only mode that accepts any certificate, with one warning a collection | a mode that checks nothing when it cannot check is not a mode that checks | a VM on a host vCenter has no thumbprint for is not asked until the mode is Disabled |
+| DV-96 | one budget of 1800 s for the cycle, a started VM is never cut, the process limit is 300 s | no VM starts after the cycle's deadline (interval minus 60 s); a VM being asked is stopped (program terminated, directory removed) at 45 s past it or at 600 s of its own; each program 300 s | the next cycle must start; a hung guest must not hold it | at scale some VMs are asked every few cycles (DV-43); a slow guest costs its own VM only |
+| DV-97 | the Windows account is tried on every VM on every cycle | after three refusals (`InvalidGuestLogin`, `GuestPermissionDenied`) in one collection no further VM is started, and the phase is skipped for the next 12 collections (health `SKIPPED`); editing the account starts it again at once | a wrong password on every VM of a fleet locks a directory account | guest keys stop updating for an hour after a wrong password |
+| DV-98 | an event seen again is sent again, and the platform's auto-cancel (watch 1, cancel 3) decides what is shown | an event (object plus message, which carries the record's time) is sent once, and not again for 30 minutes; the memory is a bounded table (50,000) of 64-bit hashes, filled only after a clean send, kept in memory only: after a restart the events still in the five-minute window are sent once more | no storm from the same window re-read every cycle; the lifecycle of a DIAGNOSTIC event for a general adapter is G5 | one event per record, not one per cycle; events do not refresh while in view |
+| DV-99 | output used as it came | output at most 1 MiB, 10,000 rows, 32 columns, 32 KiB per field, strict UTF-8; a property value at most 512 characters and an instance name at most 128, with no control character, line or paragraph separator or bidi override, and an instance with no `|`: a row that fails is left out and counted (`F-GUEST-ROW`); an event's text is cleaned of control characters (a line break stays one line feed) and cut at 2,000 characters | untrusted output (8.5) | a service whose display name holds `|` has no keys; a longer event message ends in `...` |
+| DV-100 | the guest keys, the events and the health keys are one result | the main push does not wait for the guest phase: the values, events and `Collector:guest|Status`, `|Failures`, `|Causes` follow in a push of their own; the vCenter's aggregate health keys of that cycle (`Reads Failed in Last Cycle`, `Values Withheld`, `First Failure`, `First Warning`) were sent before it ran; the account's `Collection|reads_failed`, `failure_causes` and `last_error` include it | a slow guest must not delay the other keys | look at the `Collector:guest|*` keys for guest failures |
+| DV-101 | a Windows VM whose tools are not OK is skipped in silence | a powered-on Windows VM whose tools are not OK is counted (`F-GUEST-TOOLS`, the collector is PARTIAL) | report honestly | health shows how many were not asked and why |
+| DV-102 | the script is uploaded as a file and started with `-Command`; the event list file is made with `CreateTemporaryFileInGuest` | no script file: the program is `-EncodedCommand` text (8.3); the input and the output are each a file the guest names (`CreateTemporaryFileInGuest`, our prefix and suffix, a name that must have the expected form), inside the directory the guest names (its path must have the expected form); the output file exists before the program runs, so the program always writes its header line and an output with no header is a failure (`F-GUEST-PARSE`), never "none found"; the sent input is checked by a listing of its name and size; the program's working directory is `C:\\Windows\\Temp`, so the directory can be removed after the program is stopped | nothing is written under a name chosen here, nothing a local user can swap for code; none found is told from did not run | none |
 
 Superseded by quirk Q9 (P2 live fixes, build 7): DV-08, DV-09, DV-11 (counts and sizes), DV-12, DV-14, DV-16, DV-18 and the text and figure parts of DV-17 and DV-13 (an unset patch level is `None`); by Q10: DV-15. DV-10 stands: a failed `installDate` call is withheld and counted, and no image manager or no date is `null`.
 
-93 rows (DV-55, DV-58 and DV-59 are conditional or retired; DV-33 is retired into quirk Q3; DV-17 is superseded for text by quirk Q8; DV-78 to DV-82 are the P3 additions, proposed; DV-86 to DV-93 are the P4 additions, proposed). DV-22 is superseded for a Datacenter whose reads worked by quirk Q12.
+102 rows (DV-55, DV-58 and DV-59 are conditional or retired; DV-33 is retired into quirk Q3; DV-17 is superseded for text by quirk Q8; DV-78 to DV-82 are the P3 additions, proposed; DV-86 to DV-93 are the P4 additions, proposed; DV-94 to DV-102 are the P5 additions, proposed). DV-22 is superseded for a Datacenter whose reads worked by quirk Q12.
 
 ### 5.8 Upstream quirks reproduced for the match (candidates to fix after the first differential)
 
@@ -882,7 +891,7 @@ the factory's local clone of it is 31 commits past that tag and already fixes Q1
 | Q1 | R105 Tools Sync Time, R106 Tools Upgrade Policy | reads `prop_dict.get("config.tools")`, a key its VM read never returns (it asks for the leaf paths), so it sends the text `None` for both on every VM. Exception not reproduced: a VM Options list that holds exactly `config.tools` | the values of `config.tools.syncTimeWithHost` and `toolsUpgradePolicy` (a boolean, `manual`/`upgradeAtPowerCycle`) | `Quirks.TOOLS_ALWAYS_NONE` (read in `VmCollector.tools` and `VmCollector.request`); false reads the two leaf paths and sends them **Edge reproduced (second live differential L1):** when `config.tools` is in the VM Options list, upstream's read holds it and the two keys carry the real values (`False`/`True`, `manual`); the port then reads `config.tools` (only its printed fields) and sends them, `None` for a VM with no tools configuration. Without it in the list, `None` on every VM |
 | Q2 | R124-R130 Virtual Disk keys (seven per disk) | `vm_disk.py` returns before the disk loop when the VM has no `VirtualEthernetCard`, so such a VM has no Virtual Disk key | the disk keys on every VM that has a disk | `Quirks.DISKS_NEED_A_VNIC` (read in `VmCollector.devices`) |
 | Q3 | R33, R34, R35 PCI Vendor, Device and SubVendor ID | `f"{v:04x}"` of the signed 16-bit id the API sends: 0x8086 (Intel) is `-7f7a`, -1 is `-001`, an id under 0x8000 is four digits | the unsigned id, `8086` | `Quirks.PCI_IDS_SIGNED` and `Quirks.pciId` |
-| Q4 | every string key that is present but blank, for example R3/R4 license key and edition (empty), R11 Max EVC, R21-R25 adapter fields, R28-R29, R31-R32, R36, R38 NIC fields, R40-R46 package fields, R110 Customization Status, R112-R118 Detailed Data, R122-R123 vNIC, R130 disk share level, R145 EVC Mode (and EVC Enabled for a mode of spaces), R226 Patch Level | pushes the empty string, or a value of spaces stripped to the empty string where upstream calls `.strip()`; an empty value where it tests truthiness is no key | nothing for a blank value | `Quirks.BLANK_STRINGS_PUSHED`, `Quirks.text`, `Quirks.strippedIfTruthy` |
+| Q4 | every string key that is present but blank, for example R3/R4 license key and edition (empty), R11 Max EVC, R21-R25 adapter fields, R28-R29, R31-R32, R36, R38 NIC fields, R40-R46 package fields, R110 Customization Status, R112-R118 Detailed Data, R122-R123 vNIC, R130 disk share level, R145 EVC Mode (and EVC Enabled for a mode of spaces), R226 Patch Level, and a blank cell of a guest's output (R72 to R80: an empty operating system value, service status or start type; the service's own `Name` too) | pushes the empty string, or a value of spaces stripped to the empty string where upstream calls `.strip()`; an empty value where it tests truthiness is no key | nothing for a blank value | `Quirks.BLANK_STRINGS_PUSHED`, `Quirks.text`, `Quirks.strippedIfTruthy` |
 | Q5 | R96 Op Notification Timeout | `max(0, int(v))`: a negative value read (-1, no timeout) is sent as `0` | the value read | `Quirks.NEGATIVE_OP_TIMEOUT_IS_ZERO` (read in `VmCollector.opNotificationTimeout`) |
 | Q6 | R112-R118 Detailed Data | the pattern `(\w+)=['"](.*?)['"]` ends a value at the first quote of either kind, so `prettyName='Windows "11" Pro'` is `Windows` | end a value at the quote that opened it | `DetailedDataParser.CUT_AT_FIRST_QUOTE` |
 | Q7 | R2-R6 Licensing | two assignments with the same license name on one host share one instance; their fields overwrite one another one by one, so keys of both can remain (a key the second lacks keeps the first's) | one instance per assignment (or per name and key) | `HostCollector.addLicenses` (the instance name is `a.name`) |
@@ -916,6 +925,8 @@ negative failover level slices the sorted host values the way Python's `values[:
 truncated to a whole number; a Close for Business sample is compared with 0 and 1 as the original compares it, so the
 average of two samples in one five-minute bucket (0.5) is neither a close nor an open. Two differences that cannot occur with valid settings or real answers: a zero monster memory size (upstream raises and loses that cluster's whole Risk family; the port leaves out the one row, `ClusterRisk.memoryMonster`), and a statistic sample that is not a number (upstream's `float()` aborts the whole read; the port fails the one batch, `OpsReads`).
 
+Reproduced in P5 without a seam, because the output is what the guest writes and nothing is in the way: the operating system keys take the last row of the output; two services with one display name share an instance and the later one wins; a process that is gone from the guest's process list counts as finished; no more than 100 events of one VM in a collection; the event message carries the guest's own level text (severity comes from the number, DV-42). An empty cell of the guest's output is the empty text, quirk Q4 (the design's first draft of 8.5 withheld it): its seam is `Quirks.BLANK_STRINGS_PUSHED`, read through `Quirks.text` in `GuestRows`. A column that is absent withholds the key (the service start type of a guest whose output has no `StartType` column, DV-41).
+
 Map corrections found while building P4 (the map is the cartographer's; these are for it): **M1** the map (D9) and design 7.1 say Close for Business bands are "red below 20, orange below 40"; upstream 0.8.1 (`periodic_cluster_check.py`, and its test `test_bands`) uses red below 25, orange below 50, yellow below 75 on the health, and the port follows the code. **M2** design Appendix A and "KPI limits (49 rows)" count the header line of `kpi_tables.tsv`: there are 48 rows (9 + 12 + 5 + 9 + 9 + 4); `KpiTest` pins every one to the source table. **M3** map D1 says the cluster rows read "one request per cluster"; the port reads each data set once for the vCenter, in batches of 500 (design 4.1).
 
 Not a quirk of upstream but a place where the port could not reproduce it: a VM Options list that holds exactly
@@ -938,6 +949,8 @@ of Q1.
 | Accepted VM Options paths, Ops resource maps, World id | none | memory (maps refreshed on the 12-cycle cadence; World id looked up every cycle) | rebuilt | rebuilt |
 | Check-list last good parse | none | memory | lost: a fetch failure on the first cycle after start means that list is empty for the cycle (reported) | same |
 | Guest cursor | none | memory | restarts at the first VM | same |
+| Events sent lately (DV-98) | none; the platform's auto-cancel | memory, hashes only, 30 minutes, 50,000 entries | empty: the events in view are sent once more | same |
+| Account pause (DV-97) | none | memory: collections left to skip after three refusals | cleared (a new engine, as an edit of the account makes) | same |
 
 Restart and failover need nothing persisted outside Ops: the cold-start read-backs reconstruct the two
 pieces of state upstream designed to survive (certificate, periodic check). Two pak instances on the same
@@ -1101,6 +1114,8 @@ R219 and R221 to R225 (74), each with a value assertion in `docs/p4-key-coverage
 and `winEventMonitoring` default `Disabled`, parity). It cannot be called done until the experiments in 8.7
 pass on a real hardened Windows guest and on all three platform lines.
 
+*Built in P5 (build 12), see 8.8; the experiments of 8.7 have not been run: `docs/p5-live-proof.md` is the procedure.*
+
 ### 8.1 Gate and plan (`GuestPlan`, SDK-free)
 
 - On when `serviceMonitoring == Enabled` (services and OS information) or `winEventMonitoring == Enabled` with
@@ -1138,9 +1153,9 @@ suffixes `-Services-TEMP`, `-OSInfo-TEMP`, `-EventLog-TEMP`.
 7. Finally `DeleteDirectoryInGuest(vm, auth, dir, recursive = true)`; failure logged at WARN once per cycle.
 
 Every step's fault is captured in the call's `VimResult` and becomes a `F-GUEST-<step>` cause for that VM;
-one VM's failure never affects another VM or the cycle.
+one VM's failure never affects another VM or the cycle. *Built in P5 with the changes of DV-94, DV-96, DV-97 and DV-102 (8.8).*
 
-### 8.3 The three scripts (rewritten; shipped as `conf/scripts/*.ps1` in the pak, read at configure)
+### 8.3 The three scripts (rewritten; *built in P5 as constants of `GuestScripts`, not as `conf/scripts/*.ps1` files, 8.8*)
 
 Invocation (`PsCommand`): `-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand <b64>`,
 where `<b64>` is Base64 of the UTF-16LE text of the script body with its two input paths and its output path
@@ -1193,7 +1208,8 @@ transfer).
   optional). A missing required column: nothing published for the script, `F-GUEST-HEADER`.
 - A row with fewer fields than the header: skipped and counted.
 - Publishing: OS information R72-R77, every data row, last wins (parity); services R78-R80 instance
-  `DisplayName` (a duplicate display name: last wins, parity); empty cells withheld.
+  `DisplayName` (a duplicate display name: last wins, parity); an empty cell is the empty text (quirk Q4, built in P5; the first
+  draft withheld it).
 
 ### 8.6 Events
 
@@ -1225,6 +1241,66 @@ transfer).
 | G7 | Guest operations from a Cloud Proxy collector reach ESXi 443 for transfers | transfer 200 |
 | G8 | 4 parallel guests per vCenter: any vCenter or Tools throttling? | no faults at 4 |
 | G9 | Events visible on the VM's timeline in the UI, on 8.18.7, 9.0.2, 9.1.1 | seen in a browser |
+
+### 8.8 Built in P5 (build 12)
+
+*Added in the P5 build; the rows it adds to the register are DV-94 to DV-102. Tests: `GuestOpsTest` (one VM through the
+real vim25 client and a real TLS transfer against a fake vCenter and ESXi host that answer under the exact wire names),
+`GuestEngineTest` (the cycle), `GuestUnitTest`; `docs/p5-key-coverage.tsv` (R72 to R80, one value assertion per row).*
+
+- **Code** (package `guest`, SDK-free): `GuestPlan` (the gate of 8.1), `GuestRoster` (the Windows VMs and the ESXi thumbprints,
+  filled by the VM and host reads; the extra paths `guest.toolsStatus`, `guest.guestFamily`, `runtime.powerState` and
+  `summary.config.sslThumbprint` are asked only when the phase is on), `GuestPhase` (four workers, cursor, hard stop, health,
+  events, the account pause), `GuestRunner` (one VM: the steps of 8.2), `GuestOpsClient` (`CreateTemporaryDirectoryInGuest`,
+  `InitiateFileTransferToGuest`, `InitiateFileTransferFromGuest`, `ListFilesInGuest`, `DeleteDirectoryInGuest`,
+  `StartProgramInGuest`, `ListProcessesInGuest`, `TerminateProcessInGuest`, exactly as vSphere names them, on the file and process
+  managers read from `GuestOperationsManager`), `GuestTrust` and `HttpsGuestHttp` (8.4), `GuestScripts` (8.3), `GuestCsv`,
+  `GuestRows` and `GuestText` (8.5), `WindowsEvents` and `EventMemory` (8.6). `OpsApi.pushEvents`, `OpsPort` over
+  `SuiteApiStitcher.pushEvents` (T2, landed with buildkit 1.0.27), and `ConfigProblemEvents` (4.10: one warning on the vCenter's
+  object for each check-list file that is absent, unreadable or unparseable, only when the object is resolved).
+- **When it runs:** after the cycle's main push (8.1). Its values, its events and its `Collector:guest|*` health keys go in a push
+  of their own (DV-100); `Collection|guest_vms_done` and `guest_vms_pending` are reported with the self metrics, and
+  `Collection|deadline_hit` is 1 when VMs were left unasked because the cycle's time was up.
+- **The programs** are constants of `GuestScripts`, written for this port from the columns the keys need and sent as command text
+  (`-EncodedCommand`, 8.3), not as `conf/scripts/*.ps1` files (no builder change was needed). What each reproduces of the original:
+
+  | Program | Published as the original publishes it | Reproduced behaviour |
+  |---|---|---|
+  | operating system | R72 to R77, the six values as the guest's CIM class and registry give them, in the guest's own text and date format | one row; the last row wins |
+  | services | R78 to R80, one instance per `DisplayName`, for each listed name that exists | a name that does not exist gives no row; a duplicate display name: the last wins; a row shorter than the header is left out |
+  | events | the message `[WindowsEvent-<Level> <Event>]`, `Event` = `[Timestamp=..] [Category=<log>] [EventID=..] [Source=..] [Message=..]` | the newest record of the last five minutes for each listed log and id; at most 100 per VM |
+
+  The scripts read their input from a line file, not from the XML (DV-94), so the event list is validated once, in the collector.
+- **Security properties and where they are enforced:**
+  - *Credentials:* the account and password are read in one place (`GuestAuth`), go only into the `auth` element of a vCenter
+    request, and are removed from every message that leaves the package (`GuestAuth.scrub`, plain and XML-escaped). The program's
+    arguments are the switches and the encoded program (no secret), no password is in a file or a file name, nothing is written to
+    the collector's disk. `GuestOpsTest.noSecretAnywhere` scans every request body, program text, argument string, failure
+    message and log line, with a server that echoes the account and password in its fault text.
+  - *Transfers:* `HttpsGuestHttp` connects (and so completes the handshake and the certificate check) before it writes a byte; the
+    URL must be HTTPS, with no user information (`TransferUrl`); `*` as host is replaced by the ESXi host's name; redirects are
+    off; the URL (it holds a ticket) is never in a message. A certificate other than the one vCenter recorded for the VM's
+    host sends nothing (the fake ESXi host sees no request).
+  - *Files in the guest:* a directory the guest names from our prefix and suffix, accepted only when its path has the expected
+    form (else nothing is run there and nothing is deleted); the input and the output are files the guest names inside it
+    (`CreateTemporaryFileInGuest`, a name of the expected form or nothing is sent), and a program that wrote no header at all
+    is a failure; the directory is removed on success, on
+    every failed step, on a timeout (the program is stopped first), on a cancel, and once more after a failed removal; a directory
+    that still cannot be removed (the guest is unreachable) is remembered, in memory, up to 10 per VM, and removed the next time
+    that VM is asked (`F-GUEST-CLEANUP` until then).
+  - *Output:* size, rows, columns and field length are bounded; strict UTF-8; a property value or an instance name with a
+    control character, a bidi override or (for an instance) a `|` is left out with its row and counted (`F-GUEST-ROW`); event text
+    is cleaned and cut (DV-99). Nothing a guest wrote is logged.
+  - *Concurrency and time:* four workers; each call 30 s, each program 300 s, each VM 600 s; no VM is started after the cycle's
+    deadline; at 45 s past it a VM still being asked is stopped (DV-96); an interrupt stops the phase, removes what it made and is
+    passed on.
+  - *Failures:* per VM, counted with their cause (`F-GUEST-TOOLS`, `-UNAVAILABLE`, `-AUTH`, `-TIMEOUT`, `-EXIT`, `-START`, `-UPLOAD`,
+    `-DOWNLOAD`, `-TLS`, `-TOOLARGE`, `-HEADER`, `-PARSE`, `-ROW`, `-DIRECTORY`, `-CLEANUP`); a failed program publishes nothing, and
+    nothing is ever "stopped" or "no events" because of a failure.
+- **Not built:** the explicit-cancel fallback for events if G5 shows no auto-cancel (8.6); a sweep of directories a crashed or
+  restarted collector left in a guest (the memory of leftovers is not kept across a restart); DV-55 (Q1 is still undecided, so the blank-once on switch-off is not implemented and the feature-off properties
+  keep their last value, as before P5); a per-VM backoff after a single refusal.
+- **Still to run:** G1 to G9 on a real guest (`docs/p5-live-proof.md`).
 
 ---
 
@@ -1374,7 +1450,7 @@ tolerance for timing-skewed KPIs); every difference must map to a DV id listed i
 | P2 Properties | 4.3-4.8 and 4.10 property rows, licensing mask, check lists, VM Options isolation | differential over the property rows: equal or registered; a deliberately bad VM Options entry costs only its key |
 | P3 Own objects | libraries, items, templates, relationship, traversal | objects, identifiers, Content Library > Library Item in the UI tree; differential on R227-R252. **Built in build 7** (4.11.1, `docs/p3-key-coverage.tsv`); the live proof is still to run |
 | P4 Derived metrics | section 7, 4.9, 4.12, Datacenter, resource pools, port groups, periodic check across one full window | fixture tests green; differential within tolerance over 24 hours with at least one periodic window and one Delta. **Built in build 10** (7.4, `docs/p4-key-coverage.tsv`); the live proof is still to run |
-| P5 Guest and events | section 8, T2 | experiments G1-G9 pass; keys and events on a Windows VM and on the hardened DC |
+| P5 Guest and events | section 8, T2 | experiments G1-G9 pass; keys and events on a Windows VM and on the hardened DC. **Built in build 12** (8.8, `docs/p5-key-coverage.tsv`); the live proof is `docs/p5-live-proof.md`, still to run |
 | P6 Content | section 10, after the tooling items land | stock-id guard clean on all three lines; dashboards counted after install (52); views render; alerts fire after two samples |
 | P7 Scale and release | 9.4 runs; sdk-adapter-reviewer gate; defect gate (RULE-012) | heap and deadline within budget; RULE-019 install record (installed and collecting, account state checked after the restart watch) on 8.18.7, 9.0.2 and 9.1.1 in `knowledge/context/reviews/`; `v1.0.0` tag through CI |
 
@@ -1434,7 +1510,7 @@ Each with a recommendation; none blocks P0-P1.
 | Id | Owner | Gap |
 |---|---|---|
 | T1 | tooling | `SuiteApiStitcher.post(path, jsonBody)` returning the body and throwing like `get` (non-2xx as `SuiteApiHttpException`), for the three query endpoints of E4. The facade has `get` only today. |
-| T2 | tooling | `SuiteApiStitcher.pushEvents(events)` to `POST /api/events/bulk` (8.6). |
+| T2 | tooling | `SuiteApiStitcher.pushEvents(events)` to `POST /api/events/bulk` (8.6). **Landed** (#355, buildkit 1.0.27); used by `OpsPort.pushEvents` since build 12. |
 | T3 | tooling | numeric property values in `pushPropertiesBatch` (R43). |
 | T4 | tooling | icon hints `content_library`, `library_item`, `vm_template` (2.3). |
 | T5 | tooling | key differential CLI across two Ops instances (section 11). |

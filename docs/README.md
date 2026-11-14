@@ -72,6 +72,7 @@ This pak pushes keys onto resource kinds owned by other management packs, throug
 |-----------|
 | `vCommunity\|Configuration\|*` |
 | `vCommunity\|Guest\|*` |
+| `vCommunity\|Guest OS\|*` |
 | `vCommunity\|Runtime\|*` |
 | `vCommunity\|Summary\|*` |
 | `vCommunity\|Network\|Network Adapters:<label>\|*` |
@@ -117,7 +118,7 @@ This pak pushes keys onto resource kinds owned by other management packs, throug
 ## Quick Reference
 
 - **Adapter kind:** `vcfcf_vcommunity`
-- **Version:** 0.0.0.11
+- **Version:** 0.0.0.12
 - **Traversal spec:** vCommunity Content Libraries
 - **Resource kinds:** 4
 - **Metrics pushed onto:** VMwareAdapter Instance (VMWARE), ClusterComputeResource (VMWARE), HostSystem (VMWARE), VirtualMachine (VMWARE), Datastore (VMWARE), Datacenter (VMWARE), vSphere World (VMWARE), Tier, BusinessService, Enterprise (Container) (see [Metrics Pushed Onto](#metrics-pushed-onto))

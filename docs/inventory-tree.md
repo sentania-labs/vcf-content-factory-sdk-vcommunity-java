@@ -1,6 +1,6 @@
 # Inventory Tree: VCF Content Factory vCommunity
 
-> Generated from `describe.xml` v0.0.0.11. Do not edit: regenerated on every build.
+> Generated from `describe.xml` v0.0.0.12. Do not edit: regenerated on every build.
 
 **Traversal Spec:** vCommunity Content Libraries
 
@@ -76,6 +76,7 @@ This pak pushes keys onto resource kinds owned by other management packs, throug
 |-----------|
 | `vCommunity\|Configuration\|*` |
 | `vCommunity\|Guest\|*` |
+| `vCommunity\|Guest OS\|*` |
 | `vCommunity\|Runtime\|*` |
 | `vCommunity\|Summary\|*` |
 | `vCommunity\|Network\|Network Adapters:<label>\|*` |

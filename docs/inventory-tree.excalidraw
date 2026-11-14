@@ -341,7 +341,7 @@
       "x": 2112,
       "y": 190,
       "width": 353,
-      "height": 209,
+      "height": 224,
       "angle": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fff7ed",
@@ -363,7 +363,7 @@
       "link": null,
       "locked": false,
       "label": {
-        "text": "VirtualMachine\n  VMWARE (external)\n  vCommunity|Configuration|*\n  vCommunity|Guest|*\n  vCommunity|Runtime|*\n  vCommunity|Summary|*\n  vCommunity|Network|Network Adapters:<label>|*\n  vCommunity|Virtual Disk:<label>|*\n  vCommunity|Options|*\n  vCommunity|VM Performance|*\n  vCommunity|Guest OS Performance|*\n  vCommunity|VM Guest OS KPI",
+        "text": "VirtualMachine\n  VMWARE (external)\n  vCommunity|Configuration|*\n  vCommunity|Guest|*\n  vCommunity|Guest OS|*\n  vCommunity|Runtime|*\n  vCommunity|Summary|*\n  vCommunity|Network|Network Adapters:<label>|*\n  vCommunity|Virtual Disk:<label>|*\n  vCommunity|Options|*\n  vCommunity|VM Performance|*\n  vCommunity|Guest OS Performance|*\n  vCommunity|VM Guest OS KPI",
         "fontSize": 13,
         "fontFamily": 1,
         "textAlign": "center",

@@ -8,7 +8,7 @@
   VCF Operations to receive the keys.
 - A vCenter account the pak logs in with. It needs read access to the inventory
   it collects; later phases state what each collector reads.
-- Optionally, a Windows account for the guest checks (a later phase).
+- Optionally, a Windows account for the guest checks (off by default; see Guest monitoring below).
 
 **Do not install it next to the original vCommunity pack on the same VCF
 Operations instance.** The two are different adapter kinds and would write the
@@ -27,8 +27,7 @@ date and the ESXi software packages need `Host.Config.Image` on the hosts (Host 
 Configuration > Image configuration): without it each is one failed read per cycle
 (`F-HOST-INSTALLDATE`, `F-HOST-PACKAGES`) that names the privilege, and those keys are not sent.
 The content libraries are listed only as far as the account may see them; a library the account
-may not read is skipped and counted (`F-REST-LIB`). Guest operations (a later phase,
-off by default) need the Windows account in the credential and the guest
+may not read is skipped and counted (`F-REST-LIB`). Guest operations (off by default) need the credential's Windows User Name and Windows Password and the guest
 operations privileges on the VMs it checks.
 
 ## Network Requirements
@@ -77,7 +76,7 @@ rest are under Advanced Settings.
 | Monster VM Memory Minimum (GB) | `monster_vm_memory_min_gb` | No | 256 | 1 or more. |
 | Windows Service Configuration File | `win_service_config_file` | No | `windows_service_list` | Check-list file naming the Windows services to check; read only when service monitoring is Enabled. |
 | Windows Event Log Configuration File | `win_event_config_file` | No | `windows_event_list` | Event log list for the guests; read only when event monitoring is Enabled. |
-| Guest OS Service Monitoring Status | `serviceMonitoring` | No | Disabled | Enabled or Disabled (case sensitive). Guest checks are a later phase. |
+| Guest OS Service Monitoring Status | `serviceMonitoring` | No | Disabled | Enabled or Disabled (case sensitive). Enabled reads the Windows service list and asks Windows guests for their operating system and the listed services. |
 | Guest File Transfer TLS Validation | `guest_tls_validation` | No | Pinned | Pinned, Strict or Disabled. A wrong value switches the guest phase off and the rest collects. |
 | Windows Event Log Monitoring Status | `winEventMonitoring` | No | Disabled | Enabled or Disabled (case sensitive). |
 
@@ -87,6 +86,49 @@ warning in the log. A blank value falls back silently.
 
 Credential (kind `vsphere_user`): vCenter User Name, vCenter Password, and
 optionally Windows User Name and Windows Password.
+
+## Guest monitoring (off by default)
+
+Both switches (Guest OS Service Monitoring Status, Windows Event Log Monitoring Status) are Disabled until
+you enable them, and with both Disabled no guest operation of any kind is made. To use them:
+
+1. Fill the credential's Windows User Name and Windows Password fields (a local or domain account that may log
+   on to the guests and read their services and event logs). The vCenter account needs the
+   `VirtualMachine.GuestOperations.Query`, `.Modify` and `.Execute` privileges on the VMs. The account is sent
+   to vCenter only, in the guest operations calls, over the vCenter connection you configured.
+2. Fill `windows_service_list` (service names, comma separated; only letters, digits, space and `_ . $ # @ ( ) + -`)
+   and, for events, `windows_event_list` (`<Events><Log Name="System"><EventID>7036</EventID></Log></Events>`).
+3. The Windows account is sent to vCenter inside the guest operations calls, over the vCenter connection. In Trust on First
+   Use mode that connection's certificate is not checked (the collector says so once in its log when guest monitoring runs):
+   use Pinned or Enabled for vCenter when guest monitoring is on.
+4. Leave the TLS setting for guest transfers on Pinned (or Strict). The file transfer goes to the VM's ESXi
+   host on port 443; the host's certificate must be the one vCenter has recorded for it. Pinned and Strict
+   refuse a host with no recorded thumbprint (the original went on unchecked); Disabled accepts any
+   certificate and is logged as a warning every collection.
+5. Read the result in the `Collector:guest|Status`, `|Failures` and `|Causes` keys of the vCenter object and
+   in `Collection|guest_vms_done` and `guest_vms_pending` of the adapter instance.
+
+The guest phase runs after the cycle's other keys are sent. Four VMs are asked at a time; a VM that is not
+reached before the cycle's time is up is the first one the next collection asks. What each failure cause
+means:
+
+| Cause | Meaning |
+|---|---|
+| `F-GUEST-TOOLS` | a powered-on Windows VM with its tools not running, or a VM in no state for guest operations |
+| `F-GUEST-AUTH` | the guest or vCenter refused the Windows account. After three refusals in one collection the phase stops and tries again after twelve collections (so a wrong password does not lock the account) |
+| `F-GUEST-UNAVAILABLE` | guest operations are not available on that VM |
+| `F-GUEST-TIMEOUT` | a call, a transfer or the program took too long (the program is stopped and its directory removed) |
+| `F-GUEST-EXIT`, `-START` | the program ended with a failure code, or could not be started |
+| `F-GUEST-UPLOAD`, `-DOWNLOAD`, `-TLS` | a file transfer failed; `-TLS` is a host certificate that is not the recorded one, or no recorded thumbprint |
+| `F-GUEST-TOOLARGE`, `-PARSE`, `-HEADER`, `-ROW` | the output is over 1 MiB, is not readable CSV, lacks a needed column, or had rows left out (too short, or text that cannot be a property or a key) |
+| `F-GUEST-DIRECTORY`, `-CLEANUP` | the guest named a directory the port does not use (nothing is run or deleted there), or the directory could not be removed |
+
+A VM that failed sends nothing for the failed program: a service is never shown as stopped, and a window is never
+shown as having no events, because a read failed. A service that does not exist has no key.
+
+Windows events are diagnostic events on the VM (its Events tab), not notifications and not alerts. Each is
+sent once while it stays in view (the program looks at the last five minutes), at most 100 per VM per
+collection; after a restart of the adapter the events still in view are sent once more.
 
 ## Check-list files
 

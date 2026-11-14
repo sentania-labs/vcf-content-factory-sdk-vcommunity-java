@@ -3,6 +3,30 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.12 (Unreleased)
+
+Phase P5: guest operations and events (design 8.8, `docs/p5-key-coverage.tsv`, `docs/p5-live-proof.md`).
+
+- feat(adapter): guest monitoring for Windows VMs, off by default (Guest OS Service Monitoring, Windows Event Log
+  Monitoring): the operating system (R72 to R77) and the listed services (R78 to R80) as properties, event log records
+  as diagnostic events on the VM, through the vSphere guest operations; four VMs at a time, a rotating cursor, a hard stop
+  45 s past the cycle's deadline, the directory in the guest removed on every path.
+- feat(adapter): security of the guest phase: the Windows account only in the `auth` element of a vCenter request and
+  scrubbed from every message; programs sent as `-EncodedCommand` with no secret; file transfer to the ESXi host over TLS
+  pinned to the thumbprint vCenter recorded (SHA-1, SHA-256 or SHA-512; Pinned and Strict refuse a host with none, DV-95;
+  Disabled is the only mode that accepts any certificate); output bounded and read as untrusted (DV-99); the account is not
+  tried on every VM after three refusals, and the phase pauses for 12 collections (DV-97).
+- feat(adapter): Windows events and the configuration warnings of an unusable check-list file go to Operations as DIAGNOSTIC
+  events (`OpsApi.pushEvents`, T2); an event is sent once while it stays in view (DV-98); health `Collector:guest|*`
+  and the self metrics `guest_vms_done` and `guest_vms_pending`.
+- chore(adapter): `PinnedTrustManager` accepts a 40 digit (SHA-1) pin for the ESXi hosts; the vCenter modes are unchanged.
+- test(adapter): `GuestOpsTest` (a fake vCenter guest operations service and ESXi host over real TLS: healthy, stopped,
+  missing and malformed services, event windows empty, large, duplicated, non-ASCII and hostile, timeouts, tools down,
+  refused account, wrong and missing certificates, cleanup after every failure and after a cancel, no secret anywhere),
+  `GuestEngineTest`, `GuestUnitTest`; `docs/p5-key-coverage.tsv` for R72 to R80 with a staleness test.
+- docs: design 8.8, DV-94 to DV-102, quirk Q4 extended to the guest output, `docs/p5-live-proof.md` (G1 to G9 on a real guest).
+  DV-55 (blank once on switch-off) is not built: Q1 is still undecided.
+
 ## 1.0.0.11 (Unreleased)
 
 Review of build 10 (`docs/reviews/p4-derived-review.md`) and the second live differential.

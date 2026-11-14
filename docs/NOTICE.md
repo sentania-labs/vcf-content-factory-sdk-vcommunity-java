@@ -11,7 +11,9 @@ account fields, the KPI tables, the content and the check-list files) comes from
   - e1-rahabok, VCF-vCommunity-Adapter (a continuation of vCommunity),
     https://github.com/e1-rahabok/VCF-vCommunity-Adapter
 
-No source code of those projects is copied into this pak.
+No source code of those projects is copied into this pak. That includes the PowerShell programs the guest phase sends
+to Windows guests: they are written for this pak (`GuestScripts`) from the columns the key map names, and produce the
+same keys and values; the column names and the registry and file paths they use are facts of Windows and of the key map.
 
 PLACEHOLDER: the final wording of this notice, and the licensing terms under
 which the original design material is reused, wait for the owner's licensing

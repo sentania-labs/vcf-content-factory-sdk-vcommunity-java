@@ -15,9 +15,13 @@ keys, the property keys of clusters, hosts, virtual machines, datastores and the
 vCenter, the three own kinds with their keys and relationship, and the derived
 metrics (scores, availability, network speed, shares, port groups, resource
 pools, the periodic cluster check, the vSphere World roll-ups and the Business
-Application figures). The guest checks and the content come in later phases;
-`p2-key-coverage.tsv`, `p3-key-coverage.tsv` and `p4-key-coverage.tsv` in this
-folder's parent (`docs/`) say, key by key, what this build collects.
+Application figures). When switched on in the account (both switches are off by
+default), it also asks the Windows guests for their operating system, their
+services and their event logs, and sends the events (see "Guest monitoring"
+below). The content comes in a later phase;
+`p2-key-coverage.tsv`, `p3-key-coverage.tsv`, `p4-key-coverage.tsv` and
+`p5-key-coverage.tsv` in this folder's parent (`docs/`) say, key by key, what this
+build collects.
 
 ### Resource kinds
 
@@ -148,12 +152,28 @@ pushes nothing onto the vCenter's objects.
   default; connects whatever the certificate), Enabled (the collector's trust,
   with the certificate name checked), Pinned (the vCenter thumbprint). See
   `installing.md`.
+- **Guest monitoring (off by default).** With Guest OS Service Monitoring or Windows
+  Event Log Monitoring set to Enabled and a Windows account in the credential, the
+  collector asks each Windows VM that has its tools running, four at a time and
+  as far as the cycle's time allows, through the vSphere guest operations: a
+  directory the guest names, a small PowerShell program sent as command text (no
+  script file, no secret in its arguments), the output read back and the directory
+  removed. Services and the operating system become properties of the VM; event log
+  records become diagnostic events on it, once each. Everything the guest writes is
+  checked before it is used (size, shape, characters), a failure of one VM is
+  counted with its cause (`F-GUEST-*`, in the `Collector:guest` health keys) and never
+  shown as a stopped service or as no events, and after three refusals of the
+  account the phase stops for twelve collections so the account is not locked. The
+  ESXi host's certificate is checked against the thumbprint vCenter has recorded
+  for it (Pinned and Strict). Nothing here has run on a real Windows guest yet:
+  `docs/p5-live-proof.md` is the run that proves it.
 - **Secrets stay out of logs and messages.** The vCenter and Windows passwords,
   session ids and tokens are never written to a log line or an error message.
 
 ## Known Limitations
 
-- This build collects the property keys, the three own kinds and the derived metrics; the guest checks and the content are later phases (`docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv`).
+- This build collects the property keys, the three own kinds, the derived metrics and, when switched on, the guest keys and Windows events; the content is a later phase (`docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv`, `docs/p5-key-coverage.tsv`).
+- Guest monitoring is built and tested against a fake vCenter and ESXi host only; it has not run on a real Windows guest (`docs/p5-live-proof.md` lists the experiments).
 - The Datacenter count of Network Speed Degradation matches the Datacenter object by MoRef plus vCenter UUID; whether Operations gives a Datacenter those identifiers is unproven (experiment E1). Until it is, a Datacenter without them gets no count and the objects-not-matched figure is unaffected.
 - Not yet proven on a live instance: the P4 differential over 24 hours (the design's phase table).
 - A new library, item or template is created at once and gets its values on the next collection (five minutes later). One that vCenter no longer has is marked not existing after 12 complete collections, and only when everything that could contain it was read.
