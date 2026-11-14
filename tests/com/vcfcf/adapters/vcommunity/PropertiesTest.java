@@ -1235,6 +1235,13 @@ public final class PropertiesTest {
 
     static final String CERT = "Certificate|";
 
+    /** The Suite API reads that ask for the certificate keys (the derived phase makes others of its own). */
+    static List<String> certPosts(Rig r) {
+        List<String> out = new ArrayList<>();
+        for (String p : r.ops.posts) if (p.contains("vCommunity|Certificate|")) out.add(p);
+        return out;
+    }
+
     static void certificate(FakeVc fake) throws Exception {
         // first sight, then unchanged, then changed (the previous one and the time are sent), through one engine
         FakeVcenter vc = dataset();
@@ -1243,13 +1250,13 @@ public final class PropertiesTest {
             eqAt(r, 0, VC, CERT + "Status", "Recorded"); // first sight
             eqAt(r, 0, VC, CERT + "SHA-256 Thumbprint", T1); // the thumbprint
             T.check(r.p(0, VC, V + CERT + "Previous SHA-256 Thumbprint") == null, "no previous");
-            T.eq(1, r.ops.posts.size(), "one read-back after the start");
-            T.contains(r.ops.posts.get(0), "/api/resources/properties/latest/query", "to the properties query");
-            T.contains(r.ops.posts.get(0), "\"vc-res\"", "of the vCenter object");
-            T.contains(r.ops.posts.get(0), "vCommunity|Certificate|Last Changed", "for the two keys");
+            T.eq(1, certPosts(r).size(), "one read-back after the start");
+            T.contains(certPosts(r).get(0), "/api/resources/properties/latest/query", "to the properties query");
+            T.contains(certPosts(r).get(0), "\"vc-res\"", "of the vCenter object");
+            T.contains(certPosts(r).get(0), "vCommunity|Certificate|Last Changed", "for the two keys");
             r.run();
             eqAt(r, 1, VC, CERT + "Status", "Unchanged"); // same certificate
-            T.eq(1, r.ops.posts.size(), "the read-back is not repeated: the state is in memory");
+            T.eq(1, certPosts(r).size(), "the read-back is not repeated: the state is in memory");
             r.presented = T2;
             r.run();
             eqAt(r, 2, VC, CERT + "Status", "Changed"); // a different certificate

@@ -201,7 +201,11 @@ final class FakeVc implements AutoCloseable {
     private static char[] randomPassword() {
         byte[] b = new byte[18];
         new SecureRandom().nextBytes(b);
-        return java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(b).toCharArray();
+        // hex: a URL-safe base64 password can start with a dash or hold an underscore, and keytool's launcher
+        // then reads it as an option or a class name (seen as "Could not find or load main class <password>")
+        StringBuilder hex = new StringBuilder("pw");
+        for (byte x : b) hex.append(String.format("%02x", x));
+        return hex.toString().toCharArray();
     }
 
     private static String javaTool(String name) {

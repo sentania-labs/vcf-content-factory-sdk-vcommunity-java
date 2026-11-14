@@ -188,7 +188,10 @@ final class Coverage {
                 }
             }
             if (reason != null) {
-                if (test != null) problems.add("R" + r.n + " is listed as not done but a test produced it");
+                // a P4 row is counted in docs/p4-key-coverage.tsv; the property scenarios may push it too
+                if (test != null && !phase(r.n).equals("P4")) {
+                    problems.add("R" + r.n + " is listed as not done but a test produced it");
+                }
                 b.append("R").append(r.n).append('\t').append(r.key).append('\t').append(r.kind)
                         .append("\tno\t\t").append(reason).append('\t').append(phase(r.n)).append('\n');
             } else if (test == null) {

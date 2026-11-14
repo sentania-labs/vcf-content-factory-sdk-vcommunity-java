@@ -31,6 +31,8 @@ final class P2Ops implements OpsApi {
     final List<Map<String, Map<String, Double>>> pushedStats = new ArrayList<>();
     final List<String> paths = new CopyOnWriteArrayList<>();
     final List<String> posts = new CopyOnWriteArrayList<>();
+    /** What Operations holds for the derived metrics (phase P4); null when a scenario does not use it. */
+    volatile P4Data data;
     /** Fail a kind's list read with this. */
     final Map<String, IOException> listFails = new HashMap<>();
 
@@ -40,6 +42,8 @@ final class P2Ops implements OpsApi {
             files.put(f, "<L></L>");
         }
         add("VMwareAdapter Instance", "vc-res", null, FakeVc.INSTANCE_UUID);
+        // the one vSphere World object every Operations has (the roll-ups of phase P4 push onto it)
+        add("vSphere World", "world-res", null, null);
     }
 
     P2Ops add(String kind, String id, String moref, String vcid) {
@@ -56,6 +60,11 @@ final class P2Ops implements OpsApi {
             if (r instanceof IOException) throw (IOException) r;
             if (r == null) throw new OpsHttpException("missing", 404, null);
             return (String) r;
+        }
+        P4Data d = data;
+        if (d != null) {
+            String r = d.get(path);
+            if (r != null) return r;
         }
         if (path.startsWith("/api/resources?")) {
             Matcher km = Pattern.compile("resourceKind=([^&]+)").matcher(path);
@@ -79,6 +88,11 @@ final class P2Ops implements OpsApi {
     @Override
     public String post(String path, String body) throws IOException {
         posts.add(path + " " + body);
+        P4Data d = data;
+        if (d != null && !body.contains("vCommunity|Certificate|")) {
+            String a = d.post(path, body);
+            if (a != null) return a;
+        }
         Object r = readBack;
         if (r instanceof IOException) throw (IOException) r;
         return (String) r;

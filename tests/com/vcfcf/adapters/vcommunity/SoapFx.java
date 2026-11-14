@@ -59,6 +59,10 @@ final class SoapFx {
         final String moid;
         final Map<String, String> vals = new LinkedHashMap<>();
         final java.util.List<String> missing = new java.util.ArrayList<>();
+        /** The containers (a Datacenter, a network folder) a container view made on them contains this object under. */
+        final java.util.Set<String> in = new java.util.HashSet<>();
+        /** The type the answer names the object by, when it is not the type it was asked for (a VirtualApp is a ResourcePool). */
+        String renderType;
 
         Obj(String type, String moid) {
             this.type = type;
@@ -74,6 +78,17 @@ final class SoapFx {
             return put("name", str(n));
         }
 
+        /** This object is under the container (for a view that is not made on the root folder). */
+        Obj in(String container) {
+            in.add(container);
+            return this;
+        }
+
+        Obj asType(String t) {
+            this.renderType = t;
+            return this;
+        }
+
         Obj missing(String path) {
             missing.add(path);
             return this;
@@ -81,7 +96,8 @@ final class SoapFx {
 
         /** The {@code objects} element for the paths asked for; an unasked or absent path is left out. */
         String render(java.util.Set<String> asked) {
-            StringBuilder b = new StringBuilder("<objects><obj type=\"" + type + "\">" + moid + "</obj>");
+            StringBuilder b = new StringBuilder("<objects><obj type=\"" + (renderType == null ? type : renderType)
+                    + "\">" + moid + "</obj>");
             for (Map.Entry<String, String> e : vals.entrySet()) {
                 if (asked.contains(e.getKey())) {
                     b.append("<propSet><name>").append(e.getKey()).append("</name>")

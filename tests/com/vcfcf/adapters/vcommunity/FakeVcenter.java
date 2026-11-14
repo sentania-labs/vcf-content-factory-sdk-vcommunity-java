@@ -132,8 +132,11 @@ final class FakeVcenter implements FakeVc.Handler {
             case "CreateContainerView": {
                 views.incrementAndGet();
                 String type = first(r.body, "<type>(\\w+)</type>");
+                String container = first(r.body, "<container[^>]*>([^<]*)</container>");
+                // a view on anything but the root folder carries its container in its name
+                String view = "view-" + type + (container == null || container.equals("group-d1") ? "" : "@" + container);
                 return ok("<CreateContainerViewResponse xmlns=\"urn:vim25\"><returnval type=\"ContainerView\">"
-                        + "view-" + type + "</returnval></CreateContainerViewResponse>");
+                        + view + "</returnval></CreateContainerViewResponse>");
             }
             case "DestroyView":
                 destroyed.incrementAndGet();
@@ -220,7 +223,11 @@ final class FakeVcenter implements FakeVc.Handler {
         int max = Integer.parseInt(first(body, "<maxObjects>(\\d+)</maxObjects>"));
         List<SoapFx.Obj> all = byType.getOrDefault(type, new ArrayList<>());
         List<SoapFx.Obj> list = all;
-        if (!body.contains("<obj type=\"ContainerView\"")) {
+        String viewContainer = first(body, "<obj type=\"ContainerView\">view-\\w+@([^<]*)</obj>");
+        if (viewContainer != null) {
+            list = new ArrayList<>();
+            for (SoapFx.Obj o : all) if (o.in.contains(viewContainer)) list.add(o);
+        } else if (!body.contains("<obj type=\"ContainerView\"")) {
             list = new ArrayList<>();
             Matcher om = Pattern.compile("<objectSet><obj type=\"" + type + "\">([^<]*)</obj>").matcher(body);
             while (om.find()) {
