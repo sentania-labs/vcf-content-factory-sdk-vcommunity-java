@@ -26,7 +26,7 @@ description: >
   guests of the vCenter for their operating system, their services and their
   event logs and sends the events; the content comes in a later phase.
 version: 1.0.0
-build_number: 12
+build_number: 13
 tier: 2
 released: false
 

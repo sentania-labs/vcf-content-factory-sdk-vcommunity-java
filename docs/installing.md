@@ -90,17 +90,20 @@ optionally Windows User Name and Windows Password.
 ## Guest monitoring (off by default)
 
 Both switches (Guest OS Service Monitoring Status, Windows Event Log Monitoring Status) are Disabled until
-you enable them, and with both Disabled no guest operation of any kind is made. To use them:
+you enable them. With both Disabled no guest operation of any kind is made, the Windows password is not used (it is held with the
+rest of the account, as any credential field is) and the collector asks vCenter for nothing it needs only for guests. To use them:
 
-1. Fill the credential's Windows User Name and Windows Password fields (a local or domain account that may log
-   on to the guests and read their services and event logs). The vCenter account needs the
-   `VirtualMachine.GuestOperations.Query`, `.Modify` and `.Execute` privileges on the VMs. The account is sent
-   to vCenter only, in the guest operations calls, over the vCenter connection you configured.
-2. Fill `windows_service_list` (service names, comma separated; only letters, digits, space and `_ . $ # @ ( ) + -`)
-   and, for events, `windows_event_list` (`<Events><Log Name="System"><EventID>7036</EventID></Log></Events>`).
-3. The Windows account is sent to vCenter inside the guest operations calls, over the vCenter connection. In Trust on First
-   Use mode that connection's certificate is not checked (the collector says so once in its log when guest monitoring runs):
-   use Pinned or Enabled for vCenter when guest monitoring is on.
+1. Set **vCenter TLS Validation to Enabled or Pinned** (with the vCenter Thumbprint). In Trust on First Use, the default, guest
+   monitoring does not run: the Windows account would be sent to a vCenter whose certificate nobody checked. The
+   collector says so in `Collector:guest|Status` (`FAILED`, `F-GUEST-TLS-MODE`) and Test Connection warns. (The original sends
+   the account regardless; DV-103.)
+2. Fill the credential's Windows User Name and Windows Password fields. **Use an account made for this, never an account whose
+   lockout would hurt** (see "Account lockout" below). The vCenter account needs the
+   `VirtualMachine.GuestOperations.Query`, `.Modify` and `.Execute` privileges on the VMs. The Windows account is sent to vCenter only, in
+   the guest operations calls.
+3. Fill `windows_service_list` (service names, comma separated; only letters, digits, space and `_ . $ # @ ( ) + -`) and, for
+   events, `windows_event_list` (`<Events><Log Name="System"><EventID>7036</EventID></Log></Events>`). Only the services you list
+   are published, one row for each name.
 4. Leave the TLS setting for guest transfers on Pinned (or Strict). The file transfer goes to the VM's ESXi
    host on port 443; the host's certificate must be the one vCenter has recorded for it. Pinned and Strict
    refuse a host with no recorded thumbprint (the original went on unchecked); Disabled accepts any
@@ -108,27 +111,52 @@ you enable them, and with both Disabled no guest operation of any kind is made. 
 5. Read the result in the `Collector:guest|Status`, `|Failures` and `|Causes` keys of the vCenter object and
    in `Collection|guest_vms_done` and `guest_vms_pending` of the adapter instance.
 
-The guest phase runs after the cycle's other keys are sent. Four VMs are asked at a time; a VM that is not
-reached before the cycle's time is up is the first one the next collection asks. What each failure cause
-means:
+### Account lockout
+
+A wrong Windows password must not lock the account. Until a logon has worked since the adapter started, **one VM is asked alone**; a
+refused logon counts, and **the second one pauses guest monitoring for 24 hours** (or until the account is edited, which starts the adapter
+again). A VM that refused the account is not asked again for 24 hours. Once a logon has worked, four VMs are asked at a time; if two
+refuse in one collection the credential is taken for changed and the phase pauses the same way (the VMs already started may be
+refused too: up to five refused logons at most). A restart of the adapter forgets all this (the framework keeps no state for an
+adapter), so it starts again with one VM alone: a restart loop costs one refused logon per restart. Tell your directory
+administrators these numbers: a wrong password costs at most two refused logons per start of the adapter and per day after that,
+a credential changed behind the adapter's back costs at most five once. Windows records each refused logon as event 4625 on the
+guest (and 4771 / 4776 on the domain controllers); `vmtoolsd` may retry once per call.
+
+### Security products
+
+The programs run as `powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand <text>`, started by `vmtoolsd.exe` as the Windows
+account. That command line is what endpoint detection products look for. Allow it by its parent (`vmtoolsd.exe`), the account and the
+program's text (it holds no account or password; decode it with `[Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('<text>'))`):
+three fixed programs, each of which reads one file it was given and writes one file, in a directory under `C:\Windows\Temp` named
+`VCFOperationsvCommunity-<number>-<program>-TEMP`. PowerShell script-block logging (event 4104) will record the program text.
+
+### Failure causes
+
+The guest phase runs after the cycle's other keys are sent. Four VMs are asked at a time once the account has worked; a VM that is not
+reached before the cycle's time is up is the first one the next collection asks. What each cause means:
 
 | Cause | Meaning |
 |---|---|
+| `F-GUEST-TLS-MODE` | vCenter TLS Validation is Trust on First Use: nothing is sent (see step 1) |
 | `F-GUEST-TOOLS` | a powered-on Windows VM with its tools not running, or a VM in no state for guest operations |
-| `F-GUEST-AUTH` | the guest or vCenter refused the Windows account. After three refusals in one collection the phase stops and tries again after twelve collections (so a wrong password does not lock the account) |
+| `F-GUEST-AUTH` | the guest or vCenter refused the Windows account, or the phase is paused or leaves that VM alone after a refusal (see Account lockout) |
 | `F-GUEST-UNAVAILABLE` | guest operations are not available on that VM |
 | `F-GUEST-TIMEOUT` | a call, a transfer or the program took too long (the program is stopped and its directory removed) |
 | `F-GUEST-EXIT`, `-START` | the program ended with a failure code, or could not be started |
-| `F-GUEST-UPLOAD`, `-DOWNLOAD`, `-TLS` | a file transfer failed; `-TLS` is a host certificate that is not the recorded one, or no recorded thumbprint |
-| `F-GUEST-TOOLARGE`, `-PARSE`, `-HEADER`, `-ROW` | the output is over 1 MiB, is not readable CSV, lacks a needed column, or had rows left out (too short, or text that cannot be a property or a key) |
-| `F-GUEST-DIRECTORY`, `-CLEANUP` | the guest named a directory the port does not use (nothing is run or deleted there), or the directory could not be removed |
+| `F-GUEST-QUERY` | an event query could not be run in the guest (a log the account may not read, or one that is not there); named by its log, the events that were found are sent |
+| `F-GUEST-WINDOW` | the VM was last read more than an hour ago: the events before the last hour were not looked at |
+| `F-GUEST-UPLOAD`, `-DOWNLOAD`, `-TLS` | a file transfer failed; `-TLS` is a host certificate that is not the recorded one, no usable recorded thumbprint, or no SHA-1 in this JVM |
+| `F-GUEST-TOOLARGE`, `-PARSE`, `-HEADER`, `-ROW` | the output is over 1 MiB, is not readable CSV (or was cut short, or has no header), lacks a needed column, or had rows left out (too short, not asked for, or text that cannot be a property or a key) |
+| `F-GUEST-DIRECTORY`, `-CLEANUP` | the guest named a directory or file the port does not use (nothing is run or deleted there), or the directory could not be removed (it is tried again the next time that VM is asked) |
 
-A VM that failed sends nothing for the failed program: a service is never shown as stopped, and a window is never
-shown as having no events, because a read failed. A service that does not exist has no key.
+A VM that failed sends nothing for the failed program: a service is never shown as stopped because a read failed, and a window shown
+as having no events is one whose queries all ran. A service that does not exist has no key.
 
 Windows events are diagnostic events on the VM (its Events tab), not notifications and not alerts. Each is
-sent once while it stays in view (the program looks at the last five minutes), at most 100 per VM per
-collection; after a restart of the adapter the events still in view are sent once more.
+sent once and not again for two hours, at most 100 per VM per collection and no more than there are entries in the event list. The
+program looks back at least five minutes, and as far as the time since the VM was last read (an hour at most). After a restart of the
+adapter the events still in view are sent once more. The text is as the guest wrote it, line breaks included.
 
 ## Check-list files
 

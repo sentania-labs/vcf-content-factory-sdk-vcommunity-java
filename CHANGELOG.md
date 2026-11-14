@@ -3,6 +3,26 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.13 (Unreleased)
+
+Review of build 12 (`docs/reviews/p5-guest-review.md`) and the third live differential; design 8.9.
+
+- fix(adapter): B1 the Windows account is protected from locking: refusals are counted across collections; one VM alone until a logon works, a
+  cap of two refused logons, a 24 hour pause, a VM that refused is left alone for 24 hours, a restart is one VM alone (DV-97 rewritten).
+- fix(adapter): B2 only the services in the list are published, one row a name; no more events than queries (DV-99).
+- fix(adapter): B3 an event query that failed in the guest is `F-GUEST-QUERY` (the events found are still sent).
+- fix(adapter): W1 `[Category=...]` is the record's own log name; W2 event text as written (CRLF kept, cut only at 32 KiB); W3 an output cut
+  short is refused; W4 a fault text is scrubbed before it is cut; W6 SHA-1 checked once (`F-GUEST-TLS`); W7 a VM that moved is asked on its
+  new host; W8 no `-ExecutionPolicy`; W9 the directory path is matched without regard to case; W10 calls and transfers are bounded by the VM's
+  time, the grace is 20 s and the cleanup wait 10 s; W11 configuration warning events once; W12 the events window follows the time since the VM was last read.
+- feat(adapter): W5 the guest phase does not run while vCenter TLS Validation is Trust on First Use (`F-GUEST-TLS-MODE`, Test Connection warns; DV-103,
+  `GuestPlan.REQUIRE_CHECKED_VCENTER_TLS`).
+- fix(adapter): N4 to N9 (leftovers kept after a refusal, a host read that did not finish, `InvalidPowerState` and two more guest faults, a cut VM
+  loses its events too, the register text of DV-41, a blank display name).
+- fix(adapter): L2 the Cluster Delta counts are not published twice when the read-back lags a push (DV-105). L1: the formatter of
+  `Options|config.tools` already has the two spaces; the test now compares the Python dump's exact string, and the loss is after the push (design 5.8, note L1).
+- docs: the open note about two powered-off VMs (L3) is removed; installing (guest monitoring, account lockout, security products), overview, live proof.
+
 ## 1.0.0.12 (Unreleased)
 
 Phase P5: guest operations and events (design 8.8, `docs/p5-key-coverage.tsv`, `docs/p5-live-proof.md`).

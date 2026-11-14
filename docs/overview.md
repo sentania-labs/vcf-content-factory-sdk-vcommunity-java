@@ -153,19 +153,16 @@ pushes nothing onto the vCenter's objects.
   with the certificate name checked), Pinned (the vCenter thumbprint). See
   `installing.md`.
 - **Guest monitoring (off by default).** With Guest OS Service Monitoring or Windows
-  Event Log Monitoring set to Enabled and a Windows account in the credential, the
-  collector asks each Windows VM that has its tools running, four at a time and
-  as far as the cycle's time allows, through the vSphere guest operations: a
-  directory the guest names, a small PowerShell program sent as command text (no
-  script file, no secret in its arguments), the output read back and the directory
-  removed. Services and the operating system become properties of the VM; event log
-  records become diagnostic events on it, once each. Everything the guest writes is
-  checked before it is used (size, shape, characters), a failure of one VM is
-  counted with its cause (`F-GUEST-*`, in the `Collector:guest` health keys) and never
-  shown as a stopped service or as no events, and after three refusals of the
-  account the phase stops for twelve collections so the account is not locked. The
-  ESXi host's certificate is checked against the thumbprint vCenter has recorded
-  for it (Pinned and Strict). Nothing here has run on a real Windows guest yet:
+  Event Log Monitoring set to Enabled, a Windows account in the credential and vCenter TLS Validation set to
+  Enabled or Pinned, the collector asks each Windows VM that has its tools running, as far as the cycle's time allows,
+  through the vSphere guest operations: a directory the guest names, a small PowerShell program sent as command text (no
+  script file, no secret in its arguments), the output read back and the directory removed. Services (only the
+  ones listed) and the operating system become properties of the VM; event log records become diagnostic events on it,
+  once each. Everything the guest writes is checked before it is used (size, shape, characters, which services), a
+  failure of one VM is counted with its cause (`F-GUEST-*`, in the `Collector:guest` health keys) and never shown as a stopped
+  service or as no events. The Windows account is protected from locking: one VM alone until a logon has worked, two refused
+  logons pause the phase for 24 hours. The ESXi host's certificate is checked against the thumbprint vCenter has
+  recorded for it (Pinned and Strict). Nothing here has run on a real Windows guest yet:
   `docs/p5-live-proof.md` is the run that proves it.
 - **Secrets stay out of logs and messages.** The vCenter and Windows passwords,
   session ids and tokens are never written to a log line or an error message.

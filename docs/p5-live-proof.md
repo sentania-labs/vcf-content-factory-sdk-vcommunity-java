@@ -13,12 +13,12 @@ needs rights in the guest, and every run below leaves nothing in the guest that 
 
 | Item | Detail |
 |---|---|
-| Pak | build 12 or later (`0.0.0.12`), installed on 9.0.2 devel; the account described in `docs/installing.md` already collecting properties (P2 to P4) |
+| Pak | build 13 or later (`0.0.0.13`), installed on 9.0.2 devel; the account described in `docs/installing.md` already collecting properties (P2 to P4), with **vCenter TLS Validation set to Enabled or Pinned** (guest monitoring does not run in Trust on First Use) |
 | Windows VM A | Windows Server 2019 or 2022 or Windows 11, VMware Tools running, guest family shown as Windows by vCenter, on a vCenter host the collector can reach on port 443 |
 | Windows VM B | a hardened guest: a domain controller (or a member server) with a GPO setting PowerShell execution policy to AllSigned or Restricted at the MachinePolicy scope |
 | Windows VM C | a guest under AppLocker or WDAC in Constrained Language Mode (`$ExecutionContext.SessionState.LanguageMode` shows `ConstrainedLanguage`) |
 | Windows VM D | a guest with a non-English display language (German or Japanese) |
-| Windows account | a local or domain account that may log on to those guests and read the event logs and the service list. For VM B and C, the account guest operations use on them |
+| Windows account | a local or domain account made for this test that may log on to those guests and read the event logs and the service list. For VM B and C, the account guest operations use on them. Never an account whose lockout would hurt: the wrong-password steps need a throwaway local account on each guest |
 | vCenter privileges | on the account in the pak: `VirtualMachine.GuestOperations.Query`, `.Modify` and `.Execute` on the VMs |
 | Network | collector to the ESXi hosts of the VMs on 443 (file transfer); collector to vCenter 443 |
 | Collector log | read access to the adapter instance log on the collector, to search it for secrets |
@@ -65,8 +65,8 @@ Expected:
 
 - `vCommunity|Guest OS|Operating System|OS Name` is the Windows caption, for example `Microsoft Windows Server 2022
   Standard`; `OS Version`, `OS BuildNumber`, `OS Architecture` (`64-bit`), `OS Last Boot Up Time` (the guest's own
-  date text), `OS Release ID` are present. `OS Release ID` may be absent on a build that has no `ReleaseId` value in
-  the registry (an empty value sends nothing).
+  date text), `OS Release ID` are present. On a build with no `ReleaseId` value in the registry `OS Release ID` is the
+  empty text (quirk Q4: the program always writes the column and an empty cell is published as it is), not absent.
 - For each of `Spooler`, `W32Time`, `wuauserv` that exists: `vCommunity|Guest OS|Services:<display name>|Service
   Name`, `Service Status` (`Running` or `Stopped`) and `Service Start Type` (`Automatic`, `Manual` or `Disabled`).
   A stopped service shows `Stopped`. There is no key for `NoSuchService`.
@@ -150,13 +150,17 @@ Expected:
 
 Configuration warning events (design 4.10): rename `windows_event_list.xml` in the configuration files, wait one
 collection. Expected: the vCenter object's Events tab shows a warning `vCommunity configuration: Configuration file
-'windows_event_list.xml' ...`, and `Collector:check_lists|Status` is not OK. Restore the file: the warning stops.
+'windows_event_list.xml' ...`, and `Collector:check_lists|Status` is not OK. The warning is sent once and not again for two
+hours (DV-98), so count the events with that message after three collections: exactly one. G5 decides together with the
+Windows events whether the platform merges identical messages; if the single event ends after one collection while the
+file is still missing, record it (the problem is then said only at the start of each two hours). Restore the file: no
+further warning.
 
 ## 6. Failures that must be visible and harmless
 
 | Case | Steps | Expected |
 |---|---|---|
-| Wrong password | change the Windows password in the account to a wrong one; wait one collection | `Collector:guest|Status` `SKIPPED` or `PARTIAL`; `Causes` has `F-GUEST-AUTH`; at most a few failed logons per host appear in the Windows Security log (event 4625) for that collection (the phase stops after three refusals); the next 12 collections make no guest call (Security log shows no more 4625); after 12 collections the phase tries again. Put the right password back: it recovers |
+| Wrong password (throwaway account only) | **never use a production or domain account**: make a local account on each test guest for this, record the guest's and the domain's lockout threshold and observation window first, then set a wrong password in the pak's credential and save it; wait three collections | `Collector:guest|Status` `FAILED` then `SKIPPED`; `Causes` has `F-GUEST-AUTH`; the Security log of the guests shows event 4625 **once** in the first collection (one VM alone) and once more in the second at most (a different VM), then none for 24 hours (count 4625, and on a domain controller 4771, 4776 and 4740: no lockout). Restart the adapter instance (edit and save without change) and count again: one 4625 per restart. Put the right password back and save: the account works at once |
 | Tools not running | stop VMware Tools in VM A (`Stop-Service VMTools`) | `Causes` has `F-GUEST-TOOLS`; VM A's old guest properties stay as they were (no `Stopped`, no blank), and no event is invented |
 | Tools running, guest operations refused | a VM whose tools policy disables guest operations | `F-GUEST-UNAVAILABLE`; nothing published |
 | Unreachable guest, and the leftover directory | suspend VM A (vSphere client, Suspend) just after a collection starts, wait one collection, resume it | `F-GUEST-TIMEOUT` or `F-GUEST-TOOLS` for VM A in that collection, and no stopped service or empty event list is shown; if a directory `VCFOperationsvCommunity-*` was made and could not be removed (`F-GUEST-CLEANUP`), the next collection after the resume removes it (look in `C:\Windows\Temp`) |
@@ -172,7 +176,7 @@ collection. Expected: the vCenter object's Events tab shows a warning `vCommunit
    no log line holds the password. A vCenter operation fault text must show `***` if it carried either.
 2. On VM A, while a collection runs, list the processes with their command lines:
    `Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" | Select CommandLine`. The command line is
-   `... -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand <base64>`. Decode the text:
+   `... -NoLogo -NoProfile -NonInteractive -EncodedCommand <base64>`. Decode the text:
    `[Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('<base64>'))`. It holds the two paths and the program,
    and no account name and no password.
 3. After a collection and after a cancelled collection (restart the adapter instance while the phase runs):
@@ -180,7 +184,48 @@ collection. Expected: the vCenter object's Events tab shows a warning `vCommunit
    the collector (kill the collector service during a run) is not removed by the port: record it, and remove it by hand.
 4. On the collector, no file with the guest's output or the password exists on disk (the port writes none).
 
-## 8. Results
+## 8. Checks the review of build 12 added
+
+1. **One and two Windows VMs.** With exactly one Windows VM, then exactly two, with a wrong password on a throwaway account: count 4625 over
+   four collections. One VM: one. Two VMs: two. Then nothing.
+2. **Default off leaves no logon.** With both switches Disabled for three collections the Security log of a monitored guest shows **no**
+   4624 or 4625 for the account (the vCenter task list alone does not show it).
+3. **UAC and non-admin.** Use a local administrator that is not RID 500 (its logon may get a filtered token), and separately a non-admin
+   account, with `<Log Name="Security"><EventID>4625</EventID></Log>` in the event list. Record whether the query fails and
+   what the health says: it must be `F-GUEST-QUERY` naming Security, with the other events still sent, not an OK collector with no events.
+4. **A log that is not there.** List `<Log Name="Sytem">`: `F-GUEST-QUERY`. List `<Log Name="system">`: the event's text has
+   `[Category=System]`, the record's own name.
+5. **Services not asked for.** Create a service the list does not name: no key for it. Create two services with the same name in different
+   case (not possible on Windows: skip) or the same display name: the later row wins, as upstream.
+6. **Security products.** On a guest with Defender for Endpoint or the estate's EDR: record alerts and blocks over three collections for the
+   command line in installing.md. Confirm that allow-listing by `vmtoolsd.exe` as parent, the account and the program text works. A
+   block shows as `F-GUEST-EXIT` or `F-GUEST-START` and nothing is published.
+7. **Directory and file name forms.** Record exactly what `CreateTemporaryDirectoryInGuest` and `CreateTemporaryFileInGuest` return
+   (case, short names). Check the ACL (`icacls`) of the directory: `Users` must have no read and no list. As a low-privileged
+   user, try to plant a junction inside a live run's directory (the name is unknown unless it can be listed) and check whether
+   `DeleteDirectoryInGuest` deletes the junction target's contents.
+8. **Script-block logging.** On the hardened DC with ScriptBlock and Transcription logging on: event 4104 holds the program text and
+   no account name or password.
+9. **Long event messages.** A message of about 30 KB (`eventcreate` is limited to a short text: write the event with
+   `Write-EventLog` from a script): Operations accepts it, or find its maximum message length and set the bound
+   (`GuestText.MAX_EVENT`, DV-99) to it. Check that the CLM fallback writer (`Out-File`) does not wrap or cut a long line.
+10. **vMotion.** vMotion VM A as a collection starts: the transfer is asked again on the new host; no `F-GUEST-TLS` for it.
+11. **Interval.** With a slow guest at the end of the cycle's time: `Collection|cycle_seconds` stays under the interval and the next
+    collection starts on time (DV-96).
+12. **Upstream baseline on the same guest.** Run upstream 0.8.1 on the same Windows Server 2019 VM first: does it publish any OS or
+    service key at all (the byte order mark question: Windows PowerShell 5.1 writes a BOM with `Export-Csv -Encoding UTF8`)? Record it, so DV-40's effect is
+    measured. Compare `[Timestamp=...]` with `"$($e.TimeCreated)"` run in Windows PowerShell 5.1 on a localised guest.
+13. **FIPS.** On a 9.1.1 FIPS collector run sections 1 and 3: a missing SHA-1 shows as `F-GUEST-TLS` naming SHA-1, once, not as a
+    failed upload per VM.
+14. **vCenter TLS mode.** With vCenter TLS Validation on Trust on First Use and a guest switch on: `F-GUEST-TLS-MODE`, no
+    guest operation, no request with the Windows account (vCenter's task list shows none), and Test Connection warns.
+15. **Properties.** After a collection, read `vCommunity|Options|config.tools` of a VM that has it in its VM Options list and
+    compare its text with the Python pack's on the same VM: the last field ends `fault =  } }` (two spaces) in Python.
+    Record what Operations stores for the Java pak (note L1 in the design; a run of spaces lost after the push).
+16. **Cluster Delta once.** After a restart of the adapter across a window end, the two Cluster Delta counts are published
+    once in that window (L2, DV-105), not at two consecutive collections.
+
+## 9. Results
 
 | Step | Result (pass / finding) | Date, line (8.18.7 / 9.0.2 / 9.1.1) | Notes: values, `F-GUEST-*` causes, log lines |
 |---|---|---|---|
@@ -198,3 +243,4 @@ collection. Expected: the vCenter object's Events tab shows a warning `vCommunit
 | pinning positive / negative | | | |
 | wrong password and pause | | | |
 | secrets and clean-up | | | |
+| review checks 1 to 16 | | | |
