@@ -73,6 +73,39 @@ public final class Quirks {
      */
     public static final boolean REPEATED_ITEM_COUNTED_TWICE = true;
 
+    /**
+     * Q12, R197 Total Network Speed Degradation on a Datacenter: upstream counts the member hosts below 100 %
+     * and a host with no comparable NIC counts as none, so a Datacenter whose hosts all lack a value is
+     * published as {@code 0} (provided some host somewhere has NIC data). {@code true}: that 0, as upstream,
+     * when every read worked. {@code false}: nothing for a Datacenter with no member host that has a value
+     * (DV-22). A Datacenter with a member host whose read failed is never published, with either setting.
+     */
+    public static final boolean EMPTY_DATACENTER_COUNT_IS_ZERO = true;
+
+    /**
+     * Q13, every KPI input: upstream uses a latest statistic as it reads it, so the value {@code -1}
+     * (the platform's "no sample" marker for a counter) is scored as a reading, and scores a lower-is-better
+     * row as perfect. {@code true}: used as read. {@code false}: a latest statistic of exactly -1 is no
+     * sample, except the two usable-capacity statistics, which can legitimately be negative.
+     */
+    public static final boolean NEGATIVE_ONE_STAT_IS_A_VALUE = true;
+
+    /**
+     * Q14, R215-R217 Business Applications: the Business Application value is the HIGHER of its namespaces'
+     * performance values and the lowest of its tiers' values (upstream issue 6), so a healthy namespace hides
+     * an unhealthy tier. {@code true}: as upstream. {@code false}: the lowest of all the parts.
+     */
+    public static final boolean APPLICATION_TAKES_HIGHER = true;
+
+    /**
+     * Q15, R195, R196, R197, R212, R221: upstream publishes no availability for any host, cluster or vCenter
+     * when no host answered either read, and no Network Speed Degradation for any host or Datacenter when no
+     * host has any NIC speed ("No NIC speeds for any host"), instead of 0 %. {@code true}: nothing, as
+     * upstream, when the reads worked and answered nothing for any host. {@code false}: availability is
+     * computed with every host at 0 %.
+     */
+    public static final boolean NOTHING_WHEN_NO_HOST_HAS_DATA = true;
+
     /** The original's {@code str(None)}. */
     public static final String NONE = "None";
     /** The original's {@code NULL_STATUS}. */
