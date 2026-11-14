@@ -9,13 +9,15 @@ vCenter adapter already has in VCF Operations: hosts, clusters, virtual machines
 datastores, datacenters, the vCenter object and the vSphere World. It also
 creates three object kinds of its own.
 
-This build is the third phase of the port. It provides the account, the vCenter
+This build is the fourth phase of the port. It provides the account, the vCenter
 TLS modes, the session, Test Connection, the collection cycle with its health
 keys, the property keys of clusters, hosts, virtual machines, datastores and the
-vCenter, and the three own kinds with their keys and relationship. The derived
-metrics, the guest checks and the content come in later phases;
-`p2-key-coverage.tsv` and `p3-key-coverage.tsv` in this folder's parent (`docs/`)
-say, key by key, what this build collects.
+vCenter, the three own kinds with their keys and relationship, and the derived
+metrics (scores, availability, network speed, shares, port groups, resource
+pools, the periodic cluster check, the vSphere World roll-ups and the Business
+Application figures). The guest checks and the content come in later phases;
+`p2-key-coverage.tsv`, `p3-key-coverage.tsv` and `p4-key-coverage.tsv` in this
+folder's parent (`docs/`) say, key by key, what this build collects.
 
 ### Resource kinds
 
@@ -34,8 +36,8 @@ declare keys on another adapter's kinds, and a pushed key carries no label or
 unit of its own. `REFERENCE.md` lists what is declared; `adapter.yaml`
 (`stitch_targets`) lists where keys land.
 
-In this build the adapter pushes the property keys (see below) and its own
-health figures:
+In this build the adapter pushes the property keys and the derived metrics (see
+below) and its own health figures:
 
 - on the pak's adapter instance, the `Collection|` self metrics (cycle time,
   failed reads, values withheld, objects not matched, check-list entries
@@ -78,6 +80,25 @@ pushes nothing onto the vCenter's objects.
   `Quirks.UNSET_AS_UPSTREAM`, in `text/Quirks.java`, turns this off, and then an
   unset value is not sent. A key that is not sent keeps its last value in VCF
   Operations (a pushed key cannot be deleted).
+- **Derived metrics are read back from VCF Operations.** The scores, availability,
+  network speed and shares are computed from the statistics and properties the
+  VMware adapter already stores, read once per cycle in batches of 500, with the
+  membership (which VM is on which host, which host in which cluster and
+  Datacenter) taken from the vCenter by MoRef, never by name. A latest sample
+  older than 10 minutes (15 for the port group counts) is no data. A KPI is the
+  weighted mean of its rows; a row with no data is left out, and a KPI whose
+  inputs could not all be read is not sent (never a score over some of the rows).
+  The vSphere World and Business Application figures read the values stored by
+  the previous cycle, so they are one cycle behind. The Periodic Cluster Check
+  and the Cluster Delta counts are published once per window (the window ends at
+  the account's Cluster Check Time, UTC, every Cluster Check Period) from the
+  stored history; the pak keeps no state for them, so a restart or a second
+  collector neither loses nor repeats a window. Where the original publishes
+  something a careful reader would not (quirks Q12 to Q15: a Datacenter with no
+  comparable NIC is 0, a latest statistic of -1 is a reading, the Business
+  Application takes the higher of its namespaces and its lowest tier, nothing
+  is sent for any host when none answered), the pak does the same, each behind one
+  switch in `text/Quirks.java`.
 - **Privileges for the install date and the software packages.** Both calls need
   `Host.Config.Image` on the hosts. Without it every host's call is refused: that
   is one failed read per cycle (`F-HOST-INSTALLDATE`, `F-HOST-PACKAGES`) that
@@ -131,7 +152,9 @@ pushes nothing onto the vCenter's objects.
 
 ## Known Limitations
 
-- This build collects the property keys and the three own kinds; the derived metrics, the guest checks and the content are later phases (`docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`).
+- This build collects the property keys, the three own kinds and the derived metrics; the guest checks and the content are later phases (`docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv`).
+- The Datacenter count of Network Speed Degradation matches the Datacenter object by MoRef plus vCenter UUID; whether Operations gives a Datacenter those identifiers is unproven (experiment E1). Until it is, a Datacenter without them gets no count and the objects-not-matched figure is unaffected.
+- Not yet proven on a live instance: the P4 differential over 24 hours (the design's phase table).
 - A new library, item or template is created at once and gets its values on the next collection (five minutes later). One that vCenter no longer has is marked not existing after 12 complete collections, and only when everything that could contain it was read.
 - Trust on First Use sends the credentials before any certificate check, as the
   original pack did. The certificate it presents is compared after the login with

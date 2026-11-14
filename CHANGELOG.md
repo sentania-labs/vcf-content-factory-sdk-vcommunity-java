@@ -3,6 +3,35 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.10 (Unreleased)
+
+Phase P4, the derived metrics (design 7, 4.3 to 4.9, 4.12; rows R70, R71, R153 to R219, R221 to R225).
+
+- feat(adapter): the cluster, host and VM scores and their rows (Cluster Performance, Risk, Consumption, ESXi
+  Performance, VM Performance, Guest OS Performance, VM Guest OS KPI), computed from what the VMware adapter
+  already stores, read back once per data set in batches of 500; membership by MoRef (VM to host, host to
+  cluster, host to Datacenter).
+- feat(adapter): Operational Availability of hosts, clusters and the vCenter's worst cluster; Network Speed
+  Degradation of hosts and the Datacenter counts; the share per vCPU and per MB of memory; Number of Port Groups
+  and the resource pool counts from the vCenter's own lists.
+- feat(adapter): the Periodic Cluster Check (worst values and Close for Business once per window) and the Cluster
+  Delta counts, from the stored history; no state is held, so a restart or a second collector loses nothing and
+  publishes nothing twice.
+- feat(adapter): the vSphere World roll-ups (cluster summaries, availability, network, port groups, VMware Tools
+  counts) and the Business Application figures (Tier, Business Application, Enterprise), read back from the
+  previous cycle's stored values.
+- fix(framework): a read-back that fails (HTTP, network, malformed answer, a sample that is not a number)
+  withholds the figures that stood on it and is counted (`F-OPS-STATS-*`, `F-OPS-PROPS-*`, `F-OPS-HISTORY`,
+  `F-OPS-REL`); a KPI is never scored over some of its rows; the deadline and an interrupt stop between batches.
+- feat(adapter): the collectors `kpi`, `datacenter`, `world` and `business_applications` report their status,
+  failures and causes in Collection Health.
+- feat(adapter): quirks Q12 to Q15 registered with one seam each (`Quirks`); the map's Close for Business bands
+  (20 and 40) corrected to the code's (25 and 50, M1).
+- test: `KpiTest` (the worked examples of upstream and every limit pinned to its table), `OpsReadsTest`,
+  `DerivedTest` through the engine with a vCenter and an Operations that make their answers, `DerivedHeapTest`
+  (10,000 VMs in a 48 MB heap), `docs/p4-key-coverage.tsv` (74 rows, a value assertion each, stale-checked); the
+  keytool password of the fake vCenter is hex (a URL-safe one could start with a dash and fail the run).
+
 ## 1.0.0.9 (Unreleased)
 
 Review of builds 7 and 8 (`docs/reviews/p3-objects-review.md`).

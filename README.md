@@ -12,13 +12,17 @@ so the two are never an upgrade of each other (see `docs/installing.md`).
 
 ## Status
 
-Phase 2 of the port (properties). Phase 1 gave the account (the 19 fields and
+Phase 4 of the port (derived metrics). Phase 1 gave the account (the 19 fields and
 credential of the original pack), the three vCenter TLS modes, the vim25
 session, Test Connection and the cycle with its Collection Health keys and self
-metrics. Phase 2 adds the property keys of clusters, hosts, virtual machines,
-datastores and the vCenter. `docs/p2-key-coverage.tsv` lists every key of the key
+metrics. Phase 2 added the property keys of clusters, hosts, virtual machines,
+datastores and the vCenter, phase 3 the three own kinds, phase 4 the derived
+metrics: the cluster, host and VM scores, availability, network speed, shares,
+port groups, resource pools, the periodic cluster check, the vSphere World
+roll-ups and the Business Application figures. `docs/p2-key-coverage.tsv`,
+`docs/p3-key-coverage.tsv` and `docs/p4-key-coverage.tsv` list every key of the key
 map with whether this build collects it and the test that proves it; the
-derived metrics, own objects, guest checks and content come in later phases.
+guest checks and the content come in later phases.
 The design is in `docs/design/` (start with `vcommunity-java-port-design.md`).
 
 ## Documentation

@@ -85,7 +85,10 @@ Not declared here (another adapter's kind). Pushed when the vCenter object is ma
 | `vCommunity|Collection Health|Collector:<name>|Status` | property |
 | `vCommunity|Collection Health|Collector:<name>|Failures` | metric |
 
-`<name>` is a collector that exists in this build (`check_lists`). Other collectors report a status once they exist.
+`<name>` is a collector that exists in this build: `check_lists`, `cluster`, `host`, `vm`, `datastore`, `vcenter`,
+`template`, `library`, and for the derived metrics `kpi` (scores, availability, network speed, shares, the periodic
+check), `datacenter` (the Datacenters' structure and counts), `world` and `business_applications`. Other collectors
+report a status once they exist. A `Collector:<name>|Causes` property lists its failed reads by cause.
 
 ## Object Types
 

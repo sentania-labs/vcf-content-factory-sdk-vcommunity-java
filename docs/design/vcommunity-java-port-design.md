@@ -791,7 +791,7 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-19 | resource pool counts 0 for unmatched clusters or a silent empty query | nothing | report honestly | no false zeros |
 | DV-20 | Tools counts 0/0 on a silently empty query | nothing on failure | report honestly | no false "all tools fine" |
 | DV-21 | failed batch caps host availability at 75 | hosts and clusters of a failed batch withheld | report honestly | no false availability drops during Suite API trouble |
-| DV-22 | Datacenter count 0 with no host values | nothing | report honestly | no false 0 |
+| DV-22 | Datacenter count 0 with no host values | nothing (**superseded by quirk Q12 for a read that worked**: 0, as upstream; nothing only when a member host's read failed) | report honestly | no false 0 |
 | DV-23 | certificate `Recorded`/`Unknown` on failed read-back or probe; recorded thumbprint overwritten | withheld; recorded value never overwritten | a failed read must not reset trust history | no spurious `Recorded` after an Ops hiccup; a real change is never masked |
 | DV-24 | aggregates over partial batches | withheld unless all input reads succeeded | report honestly (issue 60) | fewer values during partial failures, none of them wrong |
 | DV-25 | full host license key published | masked to the last group | secret hygiene (owner decision) | views show `*****-...-MN90P` |
@@ -856,10 +856,17 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-84 | an item or library deleted between the list and its read aborts the whole collection (any non-2xx) | 404 is "gone": no object, not a failed read, the kind still read in full; any other status is a failed read (DV-46) | benign race | no WARN and no PARTIAL for a deletion during the read |
 | DV-85 | a refused call is one more debug line per host | a refusal for lack of `Host.Config.Image` is one failed read per cycle naming the privilege, not one per host; the values withheld are still counted per host | clear message | one WARN a cycle instead of one per host |
 | DV-82 | (unknown whether names follow vCenter) | `isResourceRenameAllowed()` is on and each own key is looked up before it is delivered, so a renamed library, item or template takes its new name | without it the SDK keeps the first name for good, and a renamed object would look gone to the vanished-object count | names follow vCenter (the unifi pak's build 18 does the same, live proven there) |
+| DV-86 | the Periodic Cluster Check holds no state: the latest sample time of its published keys, read every cycle, says what was done | the same: **no memory**, the design's "last window end published per cluster" is not kept (section 6 says memory with a cold-start read-back; this is the simpler form of the same rule) | a memory could say "done" for a window Operations lost (a failed push), or "not done" after a restart, a second collector or a skipped cycle; the read-back is one small request per 500 clusters | a restart, a reconfiguration, a second collector and a gap in the cycle count lose nothing and publish nothing twice (`DerivedTest`) |
+| DV-87 | every roll-up reads the lists of every vCenter's clusters, hosts and VMs afresh each cycle | the lists of clusters, hosts and VMs of all vCenters are the lists the Ops maps were built from (`OpsResourceMap.allIds`), refreshed on the maps' rules (12th cycle, a miss, a failure; a World read that fails on a gone VM marks the VM list for the next cycle); the vSphere World, VMwareAdapter Instance and Container lists are read every cycle | one read of the big lists, not two (a 10,000-VM Operations is 20 pages) | a new cluster or host of ANOTHER vCenter reaches the World roll-ups within 12 cycles, not at once; this vCenter's own are seen at once |
+| DV-88 | a failed or partial statistics read is not told from an empty one: the KPI is scored over the rows that have a value (upstream's own test "failed stats call still scores what the properties give": only the CPU monster row, so a KPI of 100 minus a small number) | a KPI whose rows could not all be computed is withheld, the rows that could be are sent; a family whose inputs failed (Cluster Risk, Consumption, Availability, the Datacenter count, port groups, pool counts) is withheld whole; counted | report honestly (5.1 rule 4, DV-24, DV-21) | during Suite API trouble a cluster shows fewer values, none of them a score over half the rows |
+| DV-89 | the Periodic Cluster Check works on every cluster Operations has for the adapter instance, so a cluster Operations still lists and vCenter no longer has stays due and is read every cycle | only the clusters this cycle's vCenter read names and Operations matches by MoRef | no history read for a ghost | none for a live cluster |
+| DV-90 | "now" is the time of each read (`time.time()`), for the 10-minute age of a latest sample, the Periodic Cluster Check window and the rotation | "now" is the cycle's start (injectable clock), the same time as the sample time of every value pushed | repeatable and testable | a sample on the 10-minute boundary can fall either side of upstream's; windows and rotations agree to the cycle |
+| DV-91 | a request for a statistic gets whichever resources the platform names; the original reads resource ids from Ops properties by name | membership (VM to host, host to cluster, host to Datacenter) is the MoRef of this cycle's vCenter reads (DV-03 to DV-05, built in P4); a VM whose host could not be read withholds the host and cluster figures of every VM-dependent row | same-named objects stay apart | none unless names repeat |
+| DV-92 | VM shares: a failed properties or statistics batch sends the VM no share (silently) | the two share keys of a VM whose properties or fallback statistics were not read are withheld and counted | report honestly | none |
 
 Superseded by quirk Q9 (P2 live fixes, build 7): DV-08, DV-09, DV-11 (counts and sizes), DV-12, DV-14, DV-16, DV-18 and the text and figure parts of DV-17 and DV-13 (an unset patch level is `None`); by Q10: DV-15. DV-10 stands: a failed `installDate` call is withheld and counted, and no image manager or no date is `null`.
 
-85 rows (DV-55, DV-58 and DV-59 are conditional or retired; DV-33 is retired into quirk Q3; DV-17 is superseded for text by quirk Q8; DV-78 to DV-82 are the P3 additions, proposed).
+92 rows (DV-55, DV-58 and DV-59 are conditional or retired; DV-33 is retired into quirk Q3; DV-17 is superseded for text by quirk Q8; DV-78 to DV-82 are the P3 additions, proposed; DV-86 to DV-92 are the P4 additions, proposed). DV-22 is superseded for a Datacenter whose reads worked by quirk Q12.
 
 ### 5.8 Upstream quirks reproduced for the match (candidates to fix after the first differential)
 
@@ -882,6 +889,19 @@ the factory's local clone of it is 31 commits past that tag and already fixes Q1
 | Q9 | every P2 property row built with `str(prop_dict.get(path))` or one of the original's placeholders: VM R82-R118 (Hot Add, Reboot PowerOff, Hardware Upgrade, App Status, Kernel Crash, DAS protection, Min Required EVC, Customization `null`, Detailed Data `null`), host R1, R7, R8-R9, R11-R25 (Install Date `null`, HBA count `0`, ATS `null`, Max EVC `[]`, DHCP and Search Domain `null`, BIOS Vendor `None`, HBA fields `null`, NIC PCI fields `N/A`, MAC `None`), cluster R132-R149 and R151 and R220 (HA and DRS `null`, EVC Mode `null`, DRS Score `0`), datastore R47, R50-R52, vCenter R60-R69 (`null`) and R226 (`None`), and the P3 figures R229, R230, R233, R244, R250-R252 (`0`, `0.0`) | a value that was read and is unset is published as the original prints it: the text `None`, `null`, `[]`, `N/A`, `Unknown`, or a 0. The first live differential (build 6, 2026-11-13): 383 keys Python published and Java withheld, of which 314 literal `None`/`null` texts | nothing for an unset value (DV-08 to DV-16, DV-11, DV-18) | `Quirks.UNSET_AS_UPSTREAM` and the helpers `Quirks.orNone`, `orNull`, `orText`, read where each key is built; `Vals.scalarOrNone`, `BulkRow.isUnset`. **A value whose READ FAILED is never one of these**: a refused path, a missing-set fault, a failed call is withheld and counted, with either setting (`BulkRow.readable`) |
 | Q10 | R39 NIC Duplex | `half-duplex` for a NIC with no link speed (link down) and for a link whose duplex flag is not true; `full-duplex` only when true | nothing for a link that is down (DV-15) | `Quirks.DUPLEX_HALF_WHEN_DOWN` |
 | Q11 | R249-R252 Content Library counts | an identifier the item list names twice is counted twice (`len(items)`, and the sums and flags with it), though it is one item | each item once | `Quirks.REPEATED_ITEM_COUNTED_TWICE` (read in `LibraryReader.idList`, `LibraryCollector.aggregates`) |
+| Q12 | R197 Total Network Speed Degradation on a Datacenter | counts the member hosts whose Network Speed Degradation is below 100; a host with no comparable NIC counts as none, so a Datacenter whose hosts all lack a value is published as `0` (while some host somewhere has NIC data; with none anywhere nothing is published, Q15) | nothing for a Datacenter with no member host that has a value (DV-22) | `Quirks.EMPTY_DATACENTER_COUNT_IS_ZERO` (read in `ObjectKpis.datacenters`); a Datacenter with a member host whose read FAILED is never published, with either setting |
+| Q13 | every KPI input (R153-R194, R195, R221 and the rows that read a latest statistic) | uses a latest statistic as read, so `-1` (the platform's "no sample" marker for a counter) scores as a reading, perfect on a lower-is-better row | a latest statistic of exactly -1 is no sample (the two usable-capacity statistics, which can be negative, are exempt) | `Quirks.NEGATIVE_ONE_STAT_IS_A_VALUE` (read in `OpsReads.latestStats`) |
+| Q14 | R216 Business Application Performance | the value is the HIGHER of its K8S Namespaces' performance values and the lowest of its Tiers' (upstream issue 6), so a healthy namespace hides an unhealthy tier | the lowest of all the parts, or whatever the owner decides | `Quirks.APPLICATION_TAKES_HIGHER` (read in `BusinessApps.application`) |
+| Q15 | R195, R196, R197, R212, R221 | publishes no availability for any host, cluster or vCenter when no host answered either of the two reads (a vCenter whose hosts are all unreported), and no Network Speed Degradation for any host or Datacenter when no host has any NIC speed ("No NIC speeds for any host"), instead of 0 % | with the answers read, availability of every host 0 % | `Quirks.NOTHING_WHEN_NO_HOST_HAS_DATA` (read in `ObjectKpis.hosts`); a failed read is never this case |
+
+Reproduced in P4 without a seam, because no realistic input makes them visible in a published value: a host whose DRAM
+capacity statistic is exactly 0 falls back to its provisioned memory; the age filter of a latest statistic applies only
+when the answer has one time per sample; the host count and the failover level are truncated to whole numbers, and a
+negative failover level slices the sorted host values the way Python's `values[:k]` does; the World's port group sum is
+truncated to a whole number; a Close for Business sample is compared with 0 and 1 as the original compares it, so the
+average of two samples in one five-minute bucket (0.5) is neither a close nor an open.
+
+Map corrections found while building P4 (the map is the cartographer's; these are for it): **M1** the map (D9) and design 7.1 say Close for Business bands are "red below 20, orange below 40"; upstream 0.8.1 (`periodic_cluster_check.py`, and its test `test_bands`) uses red below 25, orange below 50, yellow below 75 on the health, and the port follows the code. **M2** design Appendix A and "KPI limits (49 rows)" count the header line of `kpi_tables.tsv`: there are 48 rows (9 + 12 + 5 + 9 + 9 + 4); `KpiTest` pins every one to the source table. **M3** map D1 says the cluster rows read "one request per cluster"; the port reads each data set once for the vCenter, in batches of 500 (design 4.1).
 
 Not a quirk of upstream but a place where the port could not reproduce it: a VM Options list that holds exactly
 `config.tools` returns real values upstream (the path is then a key of its read); the port sends `None` for
@@ -895,7 +915,7 @@ of Q1.
 | State | Upstream | Java | Cold start (adapter start, reconfigure, failover to another collector) | First cycle ever |
 |---|---|---|---|---|
 | Certificate thumbprint, previous thumbprint, Last Changed, 24-hour Changed window | read back from the vCenter object every cycle | **memory**, `CertificateState` | read back `Certificate|SHA-256 Thumbprint` and `Last Changed` from the vCenter object (properties latest). Read failed: Status withheld, retried next cycle, never "Recorded" (DV-23) | read-back succeeded and empty: Status `Recorded`, thumbprint published |
-| Periodic Cluster Check "already published for window W" per cluster | latest timestamps of the 4 Periodic keys every cycle | **memory** map cluster id to last window end published | read back the latest timestamps of the 4 Periodic keys and 3 KPI keys for this vCenter's clusters (one request per 1,000) | parity: due at the first window end once KPI samples exist in the window |
+| Periodic Cluster Check "already published for window W" per cluster | latest timestamps of the 4 Periodic keys every cycle | **(built in P4: no memory, DV-86; the latest sample times are read back every cycle)** ~~memory map cluster id to last window end published~~ | read back the latest timestamps of the 4 Periodic keys and 3 KPI keys for this vCenter's clusters (one request per 1,000) | parity: due at the first window end once KPI samples exist in the window |
 | Periodic Cluster Check values | history of the 3 KPI keys | **read every time** (it is the data), `resources/stats/query` AVG, 5 minutes, window bounds, 100 clusters per request | same | partial first window gives values from what exists (parity) |
 | Cluster Delta once-per-window gate | World's two counts' timestamps | **read back while not done for the window** (another instance may have published it); memory remembers "done for W" after a read-back or own push | read back | parity: 0 and 0 once per window until two consecutive windows of Close for Business exist |
 | World roll-ups and Business Applications | read-backs of stored values, all vCenters | **read back every cycle** (other instances' outputs; cannot be memory) | same | not published until values exist (parity) |
@@ -919,8 +939,8 @@ timestamps on all three lines.
 
 ### 7.1 Engine specification
 
-Limits: Appendix A (49 rows, the facts from upstream's `kpi_tables.tsv`). `KpiTable` loads them from a
-bundled resource file `conf/kpi_tables.tsv` with the same columns; tests pin the row count and each row.
+Limits: Appendix A (48 rows, the facts from upstream's `kpi_tables.tsv`; the "49" of earlier drafts counted its header). `KpiTable` holds them as constants (built in P4); `KpiTest` pins every row
+to `docs/design/inputs/kpi_tables.tsv` and to Appendix A.
 
 `KpiScorer.score(value, limits)`:
 1. Round the value with `PyRound.round2` (Python `round(x, 2)`: exact binary value, half-even;
@@ -956,8 +976,8 @@ Periodic Cluster Check (`PeriodicWindow`, `PeriodicCheck`): window end = latest 
 before now (period divides 24), start = end minus one period; due test, 500-per-cycle rotation by
 `(cycles since window end x 500) mod due` over clusters sorted by Ops id, history read, Worst Performance =
 worst-percent from the low end of the Cluster Performance Score samples, Worst Risk and Worst Consumption =
-(100 - worst%)th percentile, Close for Business thresholds (red below 20, orange below 40 on health = value or
-100 - value): exactly the map's D9. Cluster Delta: the map's D10, with "any failed batch: nothing" kept.
+(100 - worst%)th percentile, Close for Business thresholds (red below 25, orange below 50 on health = value or
+100 - value; map correction M1): exactly the map's D9. Cluster Delta: the map's D10, with "any failed batch: nothing" kept.
 
 ### 7.2 Cycle-ordering dependencies
 
@@ -1023,6 +1043,40 @@ row and `expected` rewritten to the Java outcome, plus `upstream_expected` holdi
 register is tested. Upstream examples written against name joins are re-expressed with MoRef membership
 (`inventory`), same expected values. The illustrative numbers in the two blocks above are placeholders, not
 upstream data.
+
+### 7.4 Built in P4 (build 10)
+
+Code: `kpi/` (the arithmetic, SDK-free and pure), `ops/OpsReads` (the read-backs), `coll/DerivedPhase`
+(phase D, after the property phase, same push), `coll/ObjectKpis`, `PeriodicStage`, `WorldStage`,
+`BusinessStage`, `coll/Membership` (who is in what, from this cycle's vCenter reads). Rows: R70, R71, R153 to
+R219 and R221 to R225 (74), each with a value assertion in `docs/p4-key-coverage.tsv`.
+
+- **Reads.** Every data set is read once a cycle in batches of at most 500 resources: VM properties (power
+  state, vCPUs, memory, shares), VM statistics of the powered-on VMs (15 keys, the 4 contention keys first),
+  host statistics (23 keys: the Risk and Consumption statistics, the six packet counters, NVMe, `sys|poweredOn`),
+  host properties, host instance statistics (`net:<nic>|speed`), cluster statistics and properties. Ages are
+  measured from the cycle's start; a sample older than 10 minutes is no data, as upstream (15 for the port
+  groups). 10,000 VMs, 200 hosts, 20 clusters: 102 Suite API requests, 62,709 series, peak 46 MB sampled,
+  10 MB retained (`DerivedHeapTest`, `-Xmx48m`).
+- **Membership** is by MoRef (DV-03 to DV-05, DV-91): VM to host from `runtime.host`, host to cluster from
+  `parent`, host to Datacenter from a container view of each Datacenter (R-DC), the distributed port groups
+  from a view of its network folder, the pools from `ResourcePool.parent` (R-RP). The host and VM reads gained
+  the paths `parent`, `config.network.portgroup` and `runtime.host` (not keys of their own).
+- **Honest failure.** A batch that fails (HTTP, network, JSON, a sample that is not a number) fails its ids
+  and nothing else; a row whose inputs include a failed id is withheld, and a KPI is withheld unless every
+  row's inputs were read (DV-88). A resource an answer does not name, an empty answer and a stale sample are
+  readings (no row), not failures. The deadline and an interrupt stop a read between batches and fail the ids
+  it did not reach.
+- **State across cycles.** None is held (DV-86); the two lists of resource ids (Datacenters of this vCenter,
+  small kinds of all vCenters) are re-read every 12th cycle or after a failure.
+- **What a live differential may expect** (the same conditions as upstream's cycle): the values of the
+  following rows equal upstream's to two decimals when both read the same Operations data at the same time:
+  R70, R71, R153 to R196, R214, R218, R219, R221; R197 and R212 (R213) equal when Operations' and vCenter's
+  membership agree; the World rows (R198 to R211) and the Business Application rows (R215 to R217) are read
+  back from the previous cycle's stored values, so they equal upstream's from the second cycle on and differ by
+  one cycle of change while values move; R222 to R225, R199, R200 are published once per window, so the two
+  instances agree on the value, and on the sample time to within the cycle that first sees the window ended;
+  a KPI or row over a 10-minute boundary may differ when the two read at different seconds (DV-90).
 
 ---
 
@@ -1304,7 +1358,7 @@ tolerance for timing-skewed KPIs); every difference must map to a DV id listed i
 | P1 Skeleton and configuration parity | describe.xml (2.1-2.4), `VCommunityConfig`, TLS modes, probe, session, `vCommunityCollector`, Test Connection (login, Suite API reachability, each check-list file's outcome and item count in the result message), health keys, self metrics | account dialog on 9.0.2 matches 0.8.1 field for field (labels, defaults, enums, main vs Advanced) seen in a browser; Test Connection passes in all three TLS modes against a lab vCenter and fails with the right text for a wrong pin; collector object DATA_RECEIVING; self metrics present |
 | P2 Properties | 4.3-4.8 and 4.10 property rows, licensing mask, check lists, VM Options isolation | differential over the property rows: equal or registered; a deliberately bad VM Options entry costs only its key |
 | P3 Own objects | libraries, items, templates, relationship, traversal | objects, identifiers, Content Library > Library Item in the UI tree; differential on R227-R252. **Built in build 7** (4.11.1, `docs/p3-key-coverage.tsv`); the live proof is still to run |
-| P4 Derived metrics | section 7, 4.9, 4.12, Datacenter, resource pools, port groups, periodic check across one full window | fixture tests green; differential within tolerance over 24 hours with at least one periodic window and one Delta |
+| P4 Derived metrics | section 7, 4.9, 4.12, Datacenter, resource pools, port groups, periodic check across one full window | fixture tests green; differential within tolerance over 24 hours with at least one periodic window and one Delta. **Built in build 10** (7.4, `docs/p4-key-coverage.tsv`); the live proof is still to run |
 | P5 Guest and events | section 8, T2 | experiments G1-G9 pass; keys and events on a Windows VM and on the hardened DC |
 | P6 Content | section 10, after the tooling items land | stock-id guard clean on all three lines; dashboards counted after install (52); views render; alerts fire after two samples |
 | P7 Scale and release | 9.4 runs; sdk-adapter-reviewer gate; defect gate (RULE-012) | heap and deadline within budget; RULE-019 install record (installed and collecting, account state checked after the restart watch) on 8.18.7, 9.0.2 and 9.1.1 in `knowledge/context/reviews/`; `v1.0.0` tag through CI |
@@ -1408,7 +1462,7 @@ Each with a recommendation; none blocks P0-P1.
 
 ---
 
-## Appendix A: KPI limits (facts from upstream `kpi_tables.tsv`, 49 rows)
+## Appendix A: KPI limits (facts from upstream `kpi_tables.tsv`, 48 rows)
 
 Columns: kpi, sub_metric, unit, best, green, yellow, orange, zero_at, skip_when_green, published_by_pack.
 

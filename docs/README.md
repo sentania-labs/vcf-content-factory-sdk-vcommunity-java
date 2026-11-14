@@ -29,6 +29,8 @@ This pak pushes keys onto resource kinds owned by other management packs, throug
 | `vCommunity\|Certificate\|*` |
 | `vCommunity\|Configuration\|*` |
 | `vCommunity\|Collection Health\|*` |
+| `vCommunity\|Availability\|Worst Cluster Operational Availability` |
+| `vCommunity\|Number of Port Groups` |
 
 ### ClusterComputeResource (VMWARE)
 
@@ -37,6 +39,12 @@ This pak pushes keys onto resource kinds owned by other management packs, throug
 | Key group |
 |-----------|
 | `vCommunity\|Cluster Configuration\|*` |
+| `vCommunity\|Cluster Performance\|*` |
+| `vCommunity\|Cluster Risk\|*` |
+| `vCommunity\|Cluster Consumption\|*` |
+| `vCommunity\|Availability\|*` |
+| `vCommunity\|Periodic Cluster Check\|*` |
+| `vCommunity\|Resource Pools\|*` |
 
 ### HostSystem (VMWARE)
 
@@ -53,6 +61,8 @@ This pak pushes keys onto resource kinds owned by other management packs, throug
 | `vCommunity\|Runtime\|*` |
 | `vCommunity\|Hardware\|*` |
 | `vCommunity\|Capability\|*` |
+| `vCommunity\|ESXi Performance\|*` |
+| `vCommunity\|Availability\|*` |
 
 ### VirtualMachine (VMWARE)
 
@@ -67,6 +77,9 @@ This pak pushes keys onto resource kinds owned by other management packs, throug
 | `vCommunity\|Network\|Network Adapters:<label>\|*` |
 | `vCommunity\|Virtual Disk:<label>\|*` |
 | `vCommunity\|Options\|*` |
+| `vCommunity\|VM Performance\|*` |
+| `vCommunity\|Guest OS Performance\|*` |
+| `vCommunity\|VM Guest OS KPI` |
 
 ### Datastore (VMWARE)
 
@@ -77,10 +90,34 @@ This pak pushes keys onto resource kinds owned by other management packs, throug
 | `vCommunity\|Identifiers\|*` |
 | `vCommunity\|Summary\|*` |
 
+### Datacenter (VMWARE)
+
+- **Matched on:** VMEntityObjectID + VMEntityVCID (live-unproven: E1)
+
+| Key group |
+|-----------|
+| `vCommunity\|Network\|Total Network Speed Degradation` |
+
+### vSphere World (VMWARE)
+
+- **Matched on:** the one object of the kind; none or several: held back and counted
+
+| Key group |
+|-----------|
+| `vCommunity\|*` |
+
+### Tier, BusinessService, Enterprise (Container)
+
+- **Matched on:** the Suite API resource id from the Container tree
+
+| Key group |
+|-----------|
+| `vCommunity\|Business Application\|*` |
+
 ## Quick Reference
 
 - **Adapter kind:** `vcfcf_vcommunity`
-- **Version:** 0.0.0.9
+- **Version:** 0.0.0.10
 - **Traversal spec:** vCommunity Content Libraries
 - **Resource kinds:** 4
-- **Metrics pushed onto:** VMwareAdapter Instance (VMWARE), ClusterComputeResource (VMWARE), HostSystem (VMWARE), VirtualMachine (VMWARE), Datastore (VMWARE) (see [Metrics Pushed Onto](#metrics-pushed-onto))
+- **Metrics pushed onto:** VMwareAdapter Instance (VMWARE), ClusterComputeResource (VMWARE), HostSystem (VMWARE), VirtualMachine (VMWARE), Datastore (VMWARE), Datacenter (VMWARE), vSphere World (VMWARE), Tier, BusinessService, Enterprise (Container) (see [Metrics Pushed Onto](#metrics-pushed-onto))

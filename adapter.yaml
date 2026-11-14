@@ -18,11 +18,13 @@ description: >
   Yuzseven (github.com/vmbro/VCF-Operations-vCommunity) as continued by
   e1-rahabok (github.com/e1-rahabok/VCF-vCommunity-Adapter) 0.8.1.
   This build collects the property keys of clusters, hosts, virtual machines,
-  datastores and the vCenter, and delivers the content libraries, their items
-  and the VM templates as objects of its own; the derived metrics, the guest
-  checks and the content come in later phases.
+  datastores and the vCenter, delivers the content libraries, their items and
+  the VM templates as objects of its own, and computes the derived metrics
+  (the cluster, host and VM scores, availability, network speed, the periodic
+  cluster check, the vSphere World and Business Application figures); the
+  guest checks and the content come in later phases.
 version: 1.0.0
-build_number: 9
+build_number: 10
 tier: 2
 released: false
 
@@ -36,10 +38,12 @@ content_naming: unprefixed
 content_foreign_adapter_kinds: [VMWARE, Container]
 
 # Where the keys land. Documentation only: the groups are the exact prefixes.
-# This build pushes the property keys (phase P2) and the Collection Health keys;
-# the rest are listed in the design and are filled in as the collectors arrive.
-# docs/p2-key-coverage.tsv and docs/p3-key-coverage.tsv count every key of the key
-# map against the tests (P3: the 26 keys of the three own kinds).
+# This build pushes the property keys (phase P2), the derived metrics (phase P4)
+# and the Collection Health keys; the rest are listed in the design and are filled
+# in as the collectors arrive.
+# docs/p2-key-coverage.tsv, docs/p3-key-coverage.tsv and docs/p4-key-coverage.tsv
+# count every key of the key map against the tests (P3: the 26 keys of the three
+# own kinds; P4: the 74 derived rows).
 stitch_targets:
   - adapter_kind: VMWARE
     resource_kind: VMwareAdapter Instance
@@ -48,11 +52,19 @@ stitch_targets:
       - "vCommunity|Certificate|*"
       - "vCommunity|Configuration|*"
       - "vCommunity|Collection Health|*"
+      - "vCommunity|Availability|Worst Cluster Operational Availability"
+      - "vCommunity|Number of Port Groups"
   - adapter_kind: VMWARE
     resource_kind: ClusterComputeResource
     identity: "VMEntityObjectID + VMEntityVCID (the MoRef and the vCenter's instance UUID, never a name)"
     key_groups:
       - "vCommunity|Cluster Configuration|*"
+      - "vCommunity|Cluster Performance|*"
+      - "vCommunity|Cluster Risk|*"
+      - "vCommunity|Cluster Consumption|*"
+      - "vCommunity|Availability|*"
+      - "vCommunity|Periodic Cluster Check|*"
+      - "vCommunity|Resource Pools|*"
   - adapter_kind: VMWARE
     resource_kind: HostSystem
     identity: "VMEntityObjectID + VMEntityVCID"
@@ -66,6 +78,8 @@ stitch_targets:
       - "vCommunity|Runtime|*"
       - "vCommunity|Hardware|*"
       - "vCommunity|Capability|*"
+      - "vCommunity|ESXi Performance|*"
+      - "vCommunity|Availability|*"
   - adapter_kind: VMWARE
     resource_kind: VirtualMachine
     identity: "VMEntityObjectID + VMEntityVCID"
@@ -77,9 +91,27 @@ stitch_targets:
       - "vCommunity|Network|Network Adapters:<label>|*"
       - "vCommunity|Virtual Disk:<label>|*"
       - "vCommunity|Options|*"
+      - "vCommunity|VM Performance|*"
+      - "vCommunity|Guest OS Performance|*"
+      - "vCommunity|VM Guest OS KPI"
   - adapter_kind: VMWARE
     resource_kind: Datastore
     identity: "VMEntityObjectID + VMEntityVCID"
     key_groups:
       - "vCommunity|Identifiers|*"
       - "vCommunity|Summary|*"
+  - adapter_kind: VMWARE
+    resource_kind: Datacenter
+    identity: "VMEntityObjectID + VMEntityVCID (live-unproven: E1)"
+    key_groups:
+      - "vCommunity|Network|Total Network Speed Degradation"
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    identity: "the one object of the kind; none or several: held back and counted"
+    key_groups:
+      - "vCommunity|*"
+  - adapter_kind: Container
+    resource_kind: Tier, BusinessService, Enterprise
+    identity: "the Suite API resource id from the Container tree"
+    key_groups:
+      - "vCommunity|Business Application|*"
