@@ -61,19 +61,35 @@ pushes nothing onto the vCenter's objects.
 
 ## Notable Behaviors
 
-- **A failed read sends nothing.** A value that could not be read is never
-  replaced by a zero, `False`, `Unknown` or any other placeholder; it is counted
-  in `Collection|reads_failed` and `Collection|values_withheld`, and the first
-  cause is in `Collection|last_error`. A figure the cycle could not measure (for
-  example the number of series sent when a push failed) is not sent either.
-- **A value that is not there is not sent.** An unset property, a switched-off
-  feature (high availability, DRS, EVC), a link that is down, a license with no
-  expiry: the key is left out, where the original pack sent `None`, `null`,
-  `Unknown`, `N/A`, `0` or `half-duplex`. The key then keeps its last value in
-  VCF Operations (a pushed key cannot be deleted), so a view can show an old
-  setting for a feature that was since turned off; whether to blank such keys
-  once is an open owner question (Q1). A count of what was read and found empty
-  (no adapters, no extents on a VMFS datastore) is sent as `0`.
+- **A failed read sends nothing; an unset value is published as the original
+  prints it.** A value that could not be read (a path vCenter refused, a
+  property it could not read for that object, a call that failed, a content
+  library answer that did not come) is never replaced by a zero, `False`,
+  `Unknown` or any other placeholder: it is counted in `Collection|reads_failed`
+  and `Collection|values_withheld`, and the causes are in
+  `Collection|failure_causes` (every collector, with counts) and
+  `Collection Health|Collector:<name>|Causes`. A value that was read and is
+  simply not set is a reading, and is published the way the original pack prints
+  it (quirk Q9): the text `None` for an unset property, `null` for an unset EVC
+  mode, HA or DRS settings that are off, a missing vCenter setting or install
+  date, `[]` for no maximum EVC mode, `N/A` for a NIC with no PCI device, and
+  `0` for a count, a DRS score while DRS is off, or a figure that is missing. A
+  NIC whose link is down is `half-duplex` (Q10). One switch,
+  `Quirks.UNSET_AS_UPSTREAM`, in `text/Quirks.java`, turns this off, and then an
+  unset value is not sent. A key that is not sent keeps its last value in VCF
+  Operations (a pushed key cannot be deleted).
+- **Privileges for the install date and the software packages.** Both calls need
+  `Host.Config.Image` on the hosts. Without it every host's call is refused: that
+  is one failed read per cycle (`F-HOST-INSTALLDATE`, `F-HOST-PACKAGES`) that
+  names the privilege, and those keys are not sent.
+- **Deleted libraries, items and templates.** One that vCenter no longer has is
+  marked not existing after 12 complete collections, and only when everything that
+  could contain it was read. A role narrowed so that the account no longer sees
+  the libraries or the templates looks the same as their deletion (the API lists
+  only what the account may see), so a kind that had objects and reads as none is
+  not believed until it has read as none 12 collections in a row; grant the rights
+  back before then. After a restart the pak has no memory of earlier objects and
+  believes an empty list at once.
 - **Unmatched objects.** An object of the vCenter whose Ops resource cannot be
   found by instance UUID plus MoRef, or is claimed by two resources, gets no
   keys and is counted in `Collection|objects_unmatched`. The Ops lists are read

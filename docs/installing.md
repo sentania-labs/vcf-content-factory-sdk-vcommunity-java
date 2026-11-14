@@ -22,7 +22,12 @@ Read-only access to the vCenter inventory. The license assignments and the
 vCenter settings are read with the privileges of the account in the credential
 (Global > Licenses and Global > Settings in a custom role; a read-only role may
 not have them: a refused read is counted as `F-SOAP-R-LIC` or `F-SOAP-R-OPT` and
-withholds only those keys; this is not yet checked on a live vCenter). Guest operations (a later phase,
+withholds only those keys; this is not yet checked on a live vCenter). The host install
+date and the ESXi software packages need `Host.Config.Image` on the hosts (Host >
+Configuration > Image configuration): without it each is one failed read per cycle
+(`F-HOST-INSTALLDATE`, `F-HOST-PACKAGES`) that names the privilege, and those keys are not sent.
+The content libraries are listed only as far as the account may see them; a library the account
+may not read is skipped and counted (`F-REST-LIB`). Guest operations (a later phase,
 off by default) need the Windows account in the credential and the guest
 operations privileges on the VMs it checks.
 

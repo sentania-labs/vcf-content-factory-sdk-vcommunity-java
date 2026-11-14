@@ -3,6 +3,30 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.9 (Unreleased)
+
+Review of builds 7 and 8 (`docs/reviews/p3-objects-review.md`).
+
+- fix(adapter): a read that FAILED no longer gets a placeholder. The cluster DRS keys and DRS Score, the
+  host ATS options, the install date and every template figure and text now tell a path that was read and
+  is unset (the original's text) from one that vCenter refused or could not read (nothing sent, counted).
+  A host that left between the host read and the option read sends no ATS value. A test per family.
+- fix(adapter): a failed cycle fails every object of the account again, own objects included, so an
+  unreachable vCenter sets the account DOWN as in P1.
+- fix(adapter): `fetchSoftwarePackages` is lower case on the wire, like `installDate`; the ESXi package keys
+  were never collected. The fixture refuses the capitalised names.
+- fix(adapter): a refusal for lack of `Host.Config.Image` is one failed read per cycle naming the privilege.
+- fix(adapter): a kind that had objects and reads as none is believed only after 12 collections in a row (a
+  narrowed role must not delete history); an identifier listed twice counts twice (Q11); an item or library
+  deleted between the list and its read is gone, not a failed read; no worker outlives the logout.
+- fix(adapter): the DNS configuration without a dhcp flag is `None`; an object or list in a library answer
+  prints as Python's repr.
+- feat(adapter): `Collection Health|Collector:<name>|Causes` and `Collection|failure_causes` list the distinct
+  failure causes with counts, so a run can say which reads failed from the health keys alone.
+- docs: overview and installing rewritten for Q9/Q10, `Host.Config.Image` and the role guard; the design's
+  superseded rows marked inline.
+- test: the three timing candidates are polls or generous bounds.
+
 ## 1.0.0.8 (Unreleased)
 
 Fixes from the first live differential of build 6 (P2 against the Python 0.8.1 baseline).

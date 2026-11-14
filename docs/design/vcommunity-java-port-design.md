@@ -183,7 +183,9 @@ the 26 own keys get labels and units in the UI, which the 228 foreign keys canno
 
 `vCommunityCollector` is the cycle anchor, not a World: one object per adapter instance, discovered from the
 account values alone so it exists while vCenter is unreachable, and the whole cycle runs in its `collect()`
-(the vsanperf `VsanPerfCollector` pattern, `knowledge/designs/vsanperf-mp-v1.md` build 7 addendum). Without
+(the vsanperf `VsanPerfCollector` pattern, `knowledge/designs/vsanperf-mp-v1.md` build 7 addendum). *Since P3
+(DV-78, 4.11.1) the cycle runs in the enumeration that precedes the collects, the collector's `collect()` reports
+it, and a failed cycle fails every object's `collect()` as well, so that the account still goes DOWN.* Without
 it a cycle with zero libraries would have nothing to collect and an unreachable vCenter could not show DOWN.
 No World kind: the only own relationship is Content Library > Library Item, so a TraversalSpec
 `vCommunity Content Libraries` rooted at `Content Library` (`vcfcf_vcommunity::Content Library||vcfcf_vcommunity::Library Item::child`)
@@ -561,13 +563,16 @@ Plain-JDK tests cover every class outside the two SDK-marked ones, with fixtures
 - Isolation (DV-46): a failed list call fails all libraries (nothing sent, links kept); a failed library
   detail call skips that library; a failed item call withholds that item and the library's four aggregate
   metrics (R249-R252), other libraries proceed. Upstream aborted everything on any non-2xx.
-- Owns R234-R252. A JSON field absent: withheld; present and empty: sent as empty (DV-17). Counts R250-R251
-  withheld for a library when any of its items lacks the field (DV-18; E-L1 checks how often that happens).
+- Owns R234-R252. *Superseded by Q8 and Q9 (see 4.11.1 and 5.8):* a text field absent from an answer that was
+  read is the empty text, as upstream; a figure absent is 0, as upstream, and an item that lacks `cached` or
+  `security_compliance` counts as not stored / not compliant (E-L1 checks how often that happens). A field of
+  an answer that was not read (a failed item) sends nothing, and withholds its library's four counts.
   Sizes: `round(bytes / 1024^3, 2)` with `PyRound`.
 - Templates (R227-R233): every VM with `config.template = true` in R-VM becomes a `VM Template` own object
   (Q5, DV-47), identifiers MoRef and VCID. Datastore (R231) = `", ".join` of datastore names from R-DS in the
   VM's `datastore` order; Folder (R232) from R-FO (DV-48). Memory (GB) `str(round(MB/1024, 2))` via `PyText`;
-  absent sources withheld.
+  a source the read did not return is upstream's text or zero (Q8, Q9: `""`, `"0"`, `"0.0"`, 0.0), and one whose
+  read failed sends nothing.
 
 #### 4.11.1 Built in P3: where it runs, identity, and what proves an object gone
 
@@ -614,6 +619,18 @@ Plain-JDK tests cover every class outside the two SDK-marked ones, with fixtures
   vCenter leaves it for an inaccessible one, may be a template). A successful empty library list is a reading ("no
   libraries", 5.1 rule 3) and proves both library kinds. The collector kind is excluded and never marked. The
   framework marks an object after `notExistingMissedCycles()` (12) complete cycles, and never in a cycle that failed.
+- **A failed cycle fails every object.** The collector's `collect()` and each own object's `collect()` throw the
+  cycle's one exception (`CycleEngine.Result.failureException`), so the platform sees every object of the account
+  fail and sets the account DOWN (vCenter unreachable) or ERROR (login refused), as in P1; an own object that
+  returned quietly would show DATA_RECEIVING with nothing behind it. While vCenter is down the platform logs one
+  line per object per cycle.
+- **A narrowed role looks like a deletion (W3).** The REST list shows only the libraries the account may see, and
+  a VM read without folder rights shows no template. A kind the engine has seen objects of that reads as none is
+  not declared read in full until it has read as none 12 collections in a row (`CycleEngine.guardEmpty`), so the
+  platform's own 12 follow, bounded and logged once; the memory starts empty after a restart.
+- **Repeated identifiers (Q11) and deletions during the read (W4, W5).** An item identifier listed twice is counted
+  twice in R249-R252 as upstream's `len()` does (one object, one link); an item or library that answers 404 was
+  deleted since the list and is gone, not a failed read.
 - **Lag.** The framework collects the resources the platform listed when the cycle began; an object created by this
   cycle's enumeration is not among them, so its values start with the next cycle (DV-78).
 
@@ -673,6 +690,7 @@ Added on the same object (additive; alerts may use them):
 | `vCommunity|Collection Health|First Failure` | property | first rule-1 cause text; `None in the last cycle` when none |
 | `vCommunity|Collection Health|Collector:<name>|Status` | property | `OK`, `PARTIAL`, `FAILED`, `SKIPPED` (switched off or prerequisite failed), `NOT RUN` (deadline); `<name>` in `cluster, host, vm, datastore, vcenter, world, datacenter, library, template, business_applications, check_lists, guest, kpi` |
 | `vCommunity|Collection Health|Collector:<name>|Failures` | metric | rule-1 count for that collector |
+| `vCommunity|Collection Health|Collector:<name>|Causes` | property | the distinct failure causes of that collector with the number of failed reads of each, in the order first seen, at most 8 and 250 characters: `F-HOST-INSTALLDATE x1; F-HOST-PACKAGES x1`; `None in the last cycle` when none. *Added in build 9 so that a differential can say which reads failed from the health keys alone.* The account also carries every collector's causes in one line in `Collection|failure_causes` |
 
 When the vCenter object is not resolved these keys cannot land; the same figures always land on the adapter
 instance (2.4).
@@ -690,14 +708,14 @@ Failure cause catalogue (`FailureCause`, each with a fixed id used in logs and t
 | 1 | `str(None)` gives `"None"` for an absent path | nothing (rule 2) | DV-08 |
 | 2 | explicit `"null"` placeholders (VAAI, DHCP, search domain, HBA fields, HA off, DRS off, EVC mode, customization, Detailed Data, starts-connected, vCenter options) | nothing; feature-off transitions per Q1 | DV-09 |
 | 3 | failed `installDate()` gives `"null"` | nothing, counted `F-HOST-INSTALLDATE` | DV-10 |
-| 4 | counts read 0 when the source is missing (HBA, extents, SCSI, effective hosts, op notification timeout, template vCPU/memory/disk, library sizes) | nothing when the source is absent; `0` only for a returned empty collection | DV-11 |
+| 4 | counts read 0 when the source is missing (HBA, extents, SCSI, effective hosts, op notification timeout, template vCPU/memory/disk, library sizes) | **superseded by Q9: `0` (or `"0"`, `"0.0"`) when the read worked and the source is unset, as upstream; nothing when the read failed** | DV-11, Q9 |
 | 5 | Max EVC `"[]"` | nothing | DV-12 |
 | 6 | `"Unknown"` (license fields, Patch Level, disk share level, disk backing) | nothing | DV-13 |
 | 7 | `"N/A"` PCI fields with no PCI match | nothing | DV-14 |
 | 8 | NIC Status `"Disconnected"`, Duplex `"half-duplex"` on link down | Status kept (reading; Q2); Duplex nothing | DV-15 |
 | 9 | DRS Score 0 when DRS is off or negative | nothing | DV-16 |
 | 10 | empty strings (template guest OS, hardware version, datastore list, folder; library and item text) | the empty text, as upstream (Q8, P3: owner direction, one switch); nothing when a failed read left the source unknown | DV-17, Q8 |
-| 11 | library counts treat a missing `cached` / `security_compliance` as not stored / not compliant | the library's count withheld | DV-18 |
+| 11 | library counts treat a missing `cached` / `security_compliance` as not stored / not compliant | **superseded by Q9: counted as upstream counts them when the items were read; all four counts withheld when an item could not be read** | DV-18, Q9, DV-80 |
 | 12 | resource pool counts 0 for an unmatched cluster or a silently empty pool query | nothing; `0` for a matched cluster with no pools after a successful read | DV-19 |
 | 13 | VMware Tools counts 0/0 when the unscoped VM query silently returns nothing | nothing on a failed query; `0` only after a successful query | DV-20 |
 | 14 | host availability: failed stats batch drops hosts to at most 75; cluster pads missing hosts with 0 | failed batch: those hosts and their clusters withheld. Kept: a condition with no data after a successful read scores 0 for that condition, and hosts counted in N but absent from the successful reads are padded with 0 (the metric's definition) | DV-21 |
@@ -768,7 +786,7 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-14 | `"N/A"` PCI fields | nothing | report honestly | no `N/A` |
 | DV-15 | Duplex `"half-duplex"` on link down | nothing while down | a down link has no duplex | Duplex blank (or last real value, Q1) while the link is down |
 | DV-16 | DRS Score 0 when DRS off or negative | nothing | report honestly | no false 0 scores in DRS views |
-| DV-17 | empty strings for absent template and library fields | **text: superseded by quirk Q8 (P3, owner direction "match first"): the empty text is sent, as upstream.** Figures (vCPUs `"0"`, Memory `"0.0"`, Disk Used and sizes `0.0`) stay withheld (DV-11); a value a failed read left unknown is never sent | report honestly | blank stays blank, no overwrite of a real value with "" |
+| DV-17 | empty strings for absent template and library fields | **text: superseded by quirk Q8 (P3, owner direction "match first"): the empty text is sent, as upstream.** Figures (vCPUs `"0"`, Memory `"0.0"`, Disk Used and sizes `0.0`) follow Q9 too: upstream's zero when the read worked and the source is unset; a value a failed read left unknown is never sent | report honestly | blank stays blank, no overwrite of a real value with "" |
 | DV-18 | missing `cached` / `security_compliance` counted as not stored / not compliant | library count withheld | report honestly | the two counts may be absent for some libraries (E-L1) |
 | DV-19 | resource pool counts 0 for unmatched clusters or a silent empty query | nothing | report honestly | no false zeros |
 | DV-20 | Tools counts 0/0 on a silently empty query | nothing on failure | report honestly | no false "all tools fine" |
@@ -832,13 +850,16 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-77 | a collector exception is caught around one object's function and logged at WARNING | counted as `F-COLLECT-<read>` for that object (one withheld value), the read goes on; a read in which every object threw is a failed read of the type | W6, N1 | FAILED, not PARTIAL, for a broken collector |
 | DV-78 | all objects and values of a cycle in one result; a new object has its values at once | the cycle runs in `enumerateResources` and each own object's `collect()` hands over its values, so an object created by a cycle gets its values on the next one | the platform collects the resource list it had when the cycle began (`VcfCfAdapter.onCollect` iterates the argument), and the vanished-object count reads only the enumeration; found in P3 | a new library, item or template exists at once with its name and identifiers and has no keys for one interval (5 minutes), once. Whether same-cycle metric data for a just-registered resource would land is untested (E-N2) |
 | DV-79 | an object that vCenter no longer has is never deleted by the pack; a template converted back to a VM keeps its object; "ages out under the Operations object-removal policy" is inferred | the platform marks it not existing after 12 complete cycles (`kindsReadThisCycle`), only for a kind read in full (4.11.1); a failed or partial read, the deadline, an unknown VM, a failed login and an unreachable vCenter prove nothing | "no unbounded growth" (P3 brief); `vanished_object_lifecycle.md` | deleted libraries, items and templates disappear from VCF Operations after the platform's retention; before, they stayed with no data. Neither the START of a returned object nor deletion has been seen live (E-N3) |
-| DV-80 | library counts over whichever items answered (an item that failed aborted everything: DV-46); a missing size counts as 0 | all four counts (R249-R252) are withheld together when an item failed, had no name or was not reached, and `Total Size (GB)` is also withheld when any item has no `size` (DV-18 extended to the sum; DV-11) | report honestly (5.1 rule 4) | a library with a partial read has its properties and no counts |
+| DV-80 | library counts over whichever items answered (an item that failed aborted everything: DV-46); a missing size counts as 0 | all four counts (R249-R252) are withheld together when an item failed, had no name or was not reached, (*Superseded in part by Q9: an item that was read and has no `size`, `cached` or `security_compliance` counts as upstream counts it, a missing size as 0; only an item that could not be read withholds the counts.*) | report honestly (5.1 rule 4) | a library with a partial read has its properties and no counts |
 | DV-81 | an item, library or template with no name: a missing `name` aborts the whole library collection (`KeyError`), and a template with no name is named `Unknown` | no object for it, counted (`F-REST-ITEM`, `F-REST-LIB`, `F-SOAP-R-VM`), and the kind is not read in full | a name is half of an object's key | none unless vCenter sends one |
+| DV-83 | an empty list is whatever the API says; nothing is ever deleted by the pack | a kind that had objects and reads as none is believed only after 12 collections in a row (W3: a narrowed role looks like a deletion); then the platform's 12 | do not delete history on an access change | up to 24 collections between the last object going and its marking; after a restart an empty list is believed at once |
+| DV-84 | an item or library deleted between the list and its read aborts the whole collection (any non-2xx) | 404 is "gone": no object, not a failed read, the kind still read in full; any other status is a failed read (DV-46) | benign race | no WARN and no PARTIAL for a deletion during the read |
+| DV-85 | a refused call is one more debug line per host | a refusal for lack of `Host.Config.Image` is one failed read per cycle naming the privilege, not one per host; the values withheld are still counted per host | clear message | one WARN a cycle instead of one per host |
 | DV-82 | (unknown whether names follow vCenter) | `isResourceRenameAllowed()` is on and each own key is looked up before it is delivered, so a renamed library, item or template takes its new name | without it the SDK keeps the first name for good, and a renamed object would look gone to the vanished-object count | names follow vCenter (the unifi pak's build 18 does the same, live proven there) |
 
 Superseded by quirk Q9 (P2 live fixes, build 7): DV-08, DV-09, DV-11 (counts and sizes), DV-12, DV-14, DV-16, DV-18 and the text and figure parts of DV-17 and DV-13 (an unset patch level is `None`); by Q10: DV-15. DV-10 stands: a failed `installDate` call is withheld and counted, and no image manager or no date is `null`.
 
-82 rows (DV-55, DV-58 and DV-59 are conditional or retired; DV-33 is retired into quirk Q3; DV-17 is superseded for text by quirk Q8; DV-78 to DV-82 are the P3 additions, proposed).
+85 rows (DV-55, DV-58 and DV-59 are conditional or retired; DV-33 is retired into quirk Q3; DV-17 is superseded for text by quirk Q8; DV-78 to DV-82 are the P3 additions, proposed).
 
 ### 5.8 Upstream quirks reproduced for the match (candidates to fix after the first differential)
 
@@ -860,6 +881,7 @@ the factory's local clone of it is 31 commits past that tag and already fixes Q1
 | Q8 | R227, R228, R231, R232 (VM Template Guest OS, Hardware Version, Datastore, VM Folder; vCPUs and Memory are figures: DV-11), R234-R243 (Library Item texts), R245-R248 (Content Library texts) | `str(v or "")` / `_text()`: a field the answer or the read does not have is pushed as the empty string, so a local library has Subscription URL and Automatic Sync `""` and every item of one has Last Sync and Source Item ID `""` (the lab's Python baseline: 2 of the 4 library properties and 2 of the 10 item properties, on all 23 objects) | nothing for a field that was not returned (DV-17, the owner's "a missing read sends nothing") | `Quirks.ABSENT_OWN_TEXT_IS_EMPTY` and `Quirks.ownText` (read in `LibraryCollector` and `TemplateCollector`); `true` as shipped, `false` is DV-17 |
 | Q9 | every P2 property row built with `str(prop_dict.get(path))` or one of the original's placeholders: VM R82-R118 (Hot Add, Reboot PowerOff, Hardware Upgrade, App Status, Kernel Crash, DAS protection, Min Required EVC, Customization `null`, Detailed Data `null`), host R1, R7, R8-R9, R11-R25 (Install Date `null`, HBA count `0`, ATS `null`, Max EVC `[]`, DHCP and Search Domain `null`, BIOS Vendor `None`, HBA fields `null`, NIC PCI fields `N/A`, MAC `None`), cluster R132-R149 and R151 and R220 (HA and DRS `null`, EVC Mode `null`, DRS Score `0`), datastore R47, R50-R52, vCenter R60-R69 (`null`) and R226 (`None`), and the P3 figures R229, R230, R233, R244, R250-R252 (`0`, `0.0`) | a value that was read and is unset is published as the original prints it: the text `None`, `null`, `[]`, `N/A`, `Unknown`, or a 0. The first live differential (build 6, 2026-11-13): 383 keys Python published and Java withheld, of which 314 literal `None`/`null` texts | nothing for an unset value (DV-08 to DV-16, DV-11, DV-18) | `Quirks.UNSET_AS_UPSTREAM` and the helpers `Quirks.orNone`, `orNull`, `orText`, read where each key is built; `Vals.scalarOrNone`, `BulkRow.isUnset`. **A value whose READ FAILED is never one of these**: a refused path, a missing-set fault, a failed call is withheld and counted, with either setting (`BulkRow.readable`) |
 | Q10 | R39 NIC Duplex | `half-duplex` for a NIC with no link speed (link down) and for a link whose duplex flag is not true; `full-duplex` only when true | nothing for a link that is down (DV-15) | `Quirks.DUPLEX_HALF_WHEN_DOWN` |
+| Q11 | R249-R252 Content Library counts | an identifier the item list names twice is counted twice (`len(items)`, and the sums and flags with it), though it is one item | each item once | `Quirks.REPEATED_ITEM_COUNTED_TWICE` (read in `LibraryReader.idList`, `LibraryCollector.aggregates`) |
 
 Not a quirk of upstream but a place where the port could not reproduce it: a VM Options list that holds exactly
 `config.tools` returns real values upstream (the path is then a key of its read); the port sends `None` for
