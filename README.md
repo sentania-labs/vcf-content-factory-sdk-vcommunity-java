@@ -5,25 +5,32 @@ a vCenter over vim25 and pushes the `vCommunity|` keys onto the vCenter
 adapter's own objects through the VCF Operations Suite API, and adds three
 object kinds of its own (content libraries, library items and VM templates).
 It is a clean reimplementation: the key tree, the account fields and the
-check-list files follow the original pack, the code is new and MIT licensed.
+check-list files follow the original pack, the code is new and MIT licensed. The content
+(views, dashboards and the rest) is converted from the original pack's content files; `NOTICE` says
+what that means for its terms.
 
 Adapter kind `vcfcf_vcommunity`; distinct from the original Python pack's kind,
 so the two are never an upgrade of each other (see `docs/installing.md`).
 
 ## Status
 
-Phase 4 of the port (derived metrics). Phase 1 gave the account (the 19 fields and
+Phase 6 of the port (content). Phase 1 gave the account (the 19 fields and
 credential of the original pack), the three vCenter TLS modes, the vim25
 session, Test Connection and the cycle with its Collection Health keys and self
 metrics. Phase 2 added the property keys of clusters, hosts, virtual machines,
 datastores and the vCenter, phase 3 the three own kinds, phase 4 the derived
 metrics: the cluster, host and VM scores, availability, network speed, shares,
 port groups, resource pools, the periodic cluster check, the vSphere World
-roll-ups and the Business Application figures. `docs/p2-key-coverage.tsv`,
+roll-ups and the Business Application figures, phase 5 the guest checks (off by default)
+and Windows events. Phase 6 ships the content: 170 views, 52 dashboards, 16 reports,
+2 super metrics, 10 symptoms, 4 alerts with 1 recommendation, and the six check-list files
+(`docs/installing.md`, "Content"). `docs/p2-key-coverage.tsv`,
 `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv` and `docs/p5-key-coverage.tsv` list every key of the key
-map with whether this build collects it and the test that proves it; the
-guest checks (off by default) are in this build, the content comes in a later phase.
+map with whether this build collects it and the test that proves it.
 The design is in `docs/design/` (start with `vcommunity-java-port-design.md`).
+
+The content is converted from the original pack's content files (see `NOTICE`); the
+conversion report and the list of text carried as written are in `docs/design/inputs/`.
 
 ## Documentation
 
@@ -54,6 +61,8 @@ src/com/vcfcf/adapters/vcommunity/   # adapter source
   health/                            #   failure accounting, warning count, health keys
   json/                              #   small JSON reader and writer
 tests/com/vcfcf/adapters/vcommunity/ # plain-main tests, no SDK jar needed
+views/ dashboards/ reports/ supermetrics/ symptoms/ alerts/ recommendations/  # the content, as factory YAML
+content/files/solutionconfig/        # the six check-list files, packed as they are
 docs/design/                         # the approved design, the collection map, key tables
 .github/workflows/                   # tests on push; release build on a v* tag
 ci/run_java_tests.sh                 # runs every tests/**/*Test.java
@@ -259,11 +268,14 @@ This pak **never** carries `vrops-adapters-sdk` or any Broadcom jar:
 
 `.gitignore` ignores `lib/*.jar` so a stray jar can't be committed.
 
-## Bundled content (optional)
+## Bundled content
 
-For an adapter that ships dashboards/views, add a `bundled_content:` block to
-`adapter.yaml` and co-locate the YAML **in this repo** under `views/` and
-`dashboards/` (paths resolve relative to `adapter.yaml`).
+`adapter.yaml` lists the content in `bundled_content:`; the YAML lives in this repo under `views/`,
+`dashboards/`, `reports/`, `supermetrics/`, `symptoms/`, `alerts/` and `recommendations/` (paths resolve
+relative to `adapter.yaml`). The six check-list files are under `content/files/solutionconfig/` and are
+packed as they are. `content_foreign_adapter_kinds: [VMWARE]` lets the symptoms and alerts, which sit on
+vCenter adapter objects, build. The two Section dashboards carry `section_fallback: omit`: the build
+prints `SECTIONS OMITTED` for them while the floor is below VCF Operations 9.1.1.
 
 ## License
 

@@ -14,7 +14,12 @@
 Operations instance.** The two are different adapter kinds and would write the
 same keys. This pak is not an upgrade of the original: its objects are new
 objects with no history carried over, and uninstalling the original removes the
-built-in views it shipped. The migration guide arrives with the content phase.
+built-in views it shipped. The content of this pak (see "Content" below) keeps
+the original pack's ids for most views, and for every dashboard, report, super
+metric, symptom and alert, so the two paks also claim the same content ids; that
+is a second reason not to run both on one instance. Co-installing them, and the
+steps to move from the original to this pak, have not been tested and there is no
+migration guide yet.
 
 ## Permissions Required
 
@@ -158,15 +163,113 @@ sent once and not again for two hours, at most 100 per VM per collection and no 
 program looks back at least five minutes, and as far as the time since the VM was last read (an hour at most). After a restart of the
 adapter the events still in view are sent once more. The text is as the guest wrote it, line breaks included.
 
+## Content
+
+The pak installs the content of the original pack with it. After the install it
+holds:
+
+| Content | Count | Notes |
+|---|---:|---|
+| Views | 170 | Carried over from the original pack. 101 of them began as edited copies of VCF Operations' own views; they are installed under new ids with new descriptions (nine also have new titles, below). |
+| Dashboards | 52 | The original pack's, including the "Report:" and "Object Summary Page" dashboards. |
+| Reports | 16 | The "VOA" report templates (capacity, configuration, inventory, performance, executive summary and the CSV export reports). |
+| Super metrics | 2 | See "Super metrics" below. |
+| Symptom definitions | 10 | On ESXi hosts, virtual machines and the vCenter (VMwareAdapter Instance) objects. |
+| Alert definitions | 4 | ESXi Host NIC Disconnected, ESXi Host License Expiring, Windows Service Down and vCommunity Collection Warnings. One recommendation ships with the last. |
+| Check-list files | 6 | See "Check-list files" below. |
+
+Alert definitions that read a key the pak publishes on a new object start from the
+second collection, because a new key has no earlier value to compare.
+
+**Views that were renamed.** Nine views had a title equal to one of VCF
+Operations' own views (on 8.18.7, 9.0.2 or 9.1.1) and were retitled so the two
+can be told apart in the views list. `docs/design/inputs/view_rename.tsv` has the old and new
+title of each:
+
+| Old title | New title |
+|---|---|
+| Guest OS Distribution | VM Distribution by Guest OS Name |
+| Guest OS Memory Paging Trend | Guest OS Page In and Page Out Trend |
+| Guest OS Partition List | Guest OS Root Partition Usage List |
+| vSphere Cluster Performance Profiling | vSphere Cluster Worst-Case Contention Profile |
+| vSphere ESXi Memory Utilization | vSphere ESXi Memory Capacity and Use Trend |
+| vSphere Performance Profiling | vSphere VM 99th Percentile Performance Profile |
+| VCF Management Services Nodes View | VCF Management Services Node Resource List |
+| VCF Management Services Volumes View | VCF Management Services Volume Usage List |
+| VCF Management Services Components View | VCF Management Services Component Health List |
+
+**Built-in views used in place.** Nineteen views of the original pack only renamed
+a view VCF Operations already has. The pak does not install them: the dashboards
+and reports that used them point at the built-in view by its id
+(`docs/design/inputs/dropped.tsv` lists the 19). All 19 ids are in a clean
+export of each of 8.18.7, 9.0.2 and 9.1.1, as recorded in the factory's stock
+id baseline; they were not looked at on a running instance.
+
+**Two dashboards without Section rows.** "Overall Daily Check" (6 Section rows)
+and "vSphere Cluster Capacity 2.0" (2) use the Section widget, which VCF
+Operations imports only from 9.1.1. The pak is built for a floor below that, so
+these two install **without** their Section header rows and their other widgets
+as they were. A pak built for 9.1.1 and later keeps the Section rows; no content
+change is needed for that, only a build for that floor.
+
+**Super metrics.** "CPU Usable Capacity Utilization" (vSphere clusters) and
+"Number of VM" (distributed port groups and distributed switches) are on objects
+of the vCenter adapter. A super metric computes only for an object whose
+policy has it enabled: turn both on in whichever policy governs those objects,
+or they show no values. They stay super metrics, not computed metrics of this pak
+(a percentile has no form in a computed metric, and they are the original pack's
+own content).
+
+**Text from the original pack.** The names and descriptions that ship as the
+original pack wrote them are listed, by type and field, in
+`docs/design/inputs/carried-text-report.md`. The 101 re-authored views have
+descriptions written for this pak.
+
 ## Check-list files
 
-Each file is an XML document whose text is a comma separated list, stored in the
-VCF Operations configuration-file store under `SolutionConfig/<name>.xml`.
-Items are separated by commas, **not** by line breaks: two items on two lines
-with no comma between them are one item with a line break in it, which is
-skipped and reported. XML comments are ignored, so a file with every entry
-commented out is an empty list. Clone a reference file and enter the clone's
-name in the account; do not edit the reference file.
+Six files name what to collect (ESXi advanced system settings, ESXi packages,
+VM advanced parameters, VM options, Windows services, Windows event logs). Each is
+an XML document stored in the VCF Operations configuration-file store under
+`SolutionConfig/<name>.xml`, and the pak installs all six with these names, the
+names the account fields default to: `esxi_advanced_system_settings`,
+`esxi_packages`, `vm_advanced_parameters`, `vm_options`, `windows_service_list`
+and `windows_event_list` (each with `.xml`).
+
+As shipped, every entry in every file is commented out, so nothing is collected
+until you list something. Each file explains its own format in its header and
+gives examples, one per line.
+
+The list files (all but the event list) hold a comma separated list. Items are
+separated by commas, **not** by line breaks: two items on two lines with no comma
+between them are one item with a line break in it, which is skipped and reported.
+XML comments are ignored, so a file with every entry commented out is an empty
+list. The Windows event list is a different shape: an `Events` root with one `Log`
+element per event log and one `EventID` per number.
+
+**Clone a shipped file; do not edit it.** In VCF Operations 9.0 the files are under
+Infrastructure Operations, Configurations, Management Packs Configuration, in
+System Defined; clone one, give the copy a name that differs from the shipped one
+in more than letter case, edit the copy, and enter the copy's name (no `.xml`) in
+the account field. Why: what the platform does with these files when the pak is
+installed again is, as read from VCF Operations 9.0.2.0 (build 25137845):
+
+- an install or upgrade **without** "force content update" does not touch a file
+  that already exists in the store: the import of that file fails with an error
+  in the platform log ("The following file of the same name already exist"), the
+  rest of the install carries on, and your edit survives. The new version's file
+  text is not applied either;
+- an upgrade **with** force content update replaces the file unconditionally,
+  and an edit is lost;
+- uninstalling with the remove-content option deletes the files the pak
+  installed, edited or not.
+
+That is read from the platform's code on one 9.0.2 instance. It was not tested on
+8.18.7 or 9.1.x, and it was not tried with this pak. A clone under another name is
+outside all three cases.
+
+If the original vCommunity pack was installed on the instance before, its six files
+(the same names) are already in the store. A normal install of this pak then leaves
+them as they are (the first case above), and this pak reads them.
 
 ## Step-by-Step Installation
 

@@ -9,7 +9,7 @@ vCenter adapter already has in VCF Operations: hosts, clusters, virtual machines
 datastores, datacenters, the vCenter object and the vSphere World. It also
 creates three object kinds of its own.
 
-This build is the fourth phase of the port. It provides the account, the vCenter
+This build is the sixth phase of the port. It provides the account, the vCenter
 TLS modes, the session, Test Connection, the collection cycle with its health
 keys, the property keys of clusters, hosts, virtual machines, datastores and the
 vCenter, the three own kinds with their keys and relationship, and the derived
@@ -18,7 +18,9 @@ pools, the periodic cluster check, the vSphere World roll-ups and the Business
 Application figures). When switched on in the account (both switches are off by
 default), it also asks the Windows guests for their operating system, their
 services and their event logs, and sends the events (see "Guest monitoring"
-below). The content comes in a later phase;
+below). It also ships the content of the original pack (phase 6): 170 views, 52
+dashboards, 16 reports, 2 super metrics, 10 symptoms, 4 alerts with 1 recommendation,
+and the six check-list files (see "Content" below and `installing.md`);
 `p2-key-coverage.tsv`, `p3-key-coverage.tsv`, `p4-key-coverage.tsv` and
 `p5-key-coverage.tsv` in this folder's parent (`docs/`) say, key by key, what this
 build collects.
@@ -167,9 +169,38 @@ pushes nothing onto the vCenter's objects.
 - **Secrets stay out of logs and messages.** The vCenter and Windows passwords,
   session ids and tokens are never written to a log line or an error message.
 
+## Content
+
+The pak carries the content of the original pack as VCF Operations content, installed with it.
+
+| Content | Count |
+|---|---:|
+| Views | 170 |
+| Dashboards | 52 |
+| Reports | 16 |
+| Super metrics | 2 |
+| Symptom definitions | 10 |
+| Alert definitions | 4 (with 1 recommendation) |
+| Check-list files | 6 |
+
+- The content is converted from the original pack's content files by the factory's offline importer and
+  checked against them field by field (`docs/design/inputs/import-report/`). Most of it keeps the original's
+  ids and names. The 101 views that began as edited copies of VCF Operations' own views have new ids and
+  descriptions written for this pak, and nine of them new titles.
+- 19 views only renamed a built-in view; they are not shipped, and the dashboards and reports that used them
+  point at the built-in view by id.
+- Five views and two dashboards name objects of kinds other than the vCenter adapter's: four views (the VCF
+  management services lists) on VMSP, one view (Guest OS List of Services) on APPLICATIONDISCOVERY, and two
+  dashboards (Critical Business Applications, VCF Management Service) on Container and VMSP. The builder does not
+  check those kinds; it checks only symptoms and alerts, all of which are on VMWARE.
+- The two Section dashboards ("Overall Daily Check", "vSphere Cluster Capacity 2.0") install without their
+  Section rows while the pak's floor is below VCF Operations 9.1.1.
+- The two super metrics need enabling in the policy.
+- How the check-list files behave across an upgrade is in `installing.md`.
+
 ## Known Limitations
 
-- This build collects the property keys, the three own kinds, the derived metrics and, when switched on, the guest keys and Windows events; the content is a later phase (`docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv`, `docs/p5-key-coverage.tsv`).
+- This build collects the property keys, the three own kinds, the derived metrics and, when switched on, the guest keys and Windows events, and ships the converted content; none of the content has been installed and looked at on a live instance in this build (`docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv`, `docs/p5-key-coverage.tsv`).
 - Guest monitoring is built and tested against a fake vCenter and ESXi host only; it has not run on a real Windows guest (`docs/p5-live-proof.md` lists the experiments).
 - The Datacenter count of Network Speed Degradation matches the Datacenter object by MoRef plus vCenter UUID; whether Operations gives a Datacenter those identifiers is unproven (experiment E1). Until it is, a Datacenter without them gets no count and the objects-not-matched figure is unaffected.
 - Not yet proven on a live instance: the P4 differential over 24 hours (the design's phase table).
