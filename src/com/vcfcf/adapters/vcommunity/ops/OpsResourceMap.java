@@ -39,16 +39,18 @@ public final class OpsResourceMap {
 
     private final String kind;
     private final Map<String, String> byMoref;
+    private final List<String> allIds;
     private final Set<String> ambiguous;
     private final int rows;
     private final int otherVcenter;
     private final int notIndexed;
     private final int pages;
 
-    private OpsResourceMap(String kind, Map<String, String> byMoref, Set<String> ambiguous,
+    private OpsResourceMap(String kind, Map<String, String> byMoref, List<String> allIds, Set<String> ambiguous,
             int rows, int otherVcenter, int notIndexed, int pages) {
         this.kind = kind;
         this.byMoref = Collections.unmodifiableMap(byMoref);
+        this.allIds = Collections.unmodifiableList(allIds);
         this.ambiguous = Collections.unmodifiableSet(ambiguous);
         this.rows = rows;
         this.otherVcenter = otherVcenter;
@@ -63,6 +65,19 @@ public final class OpsResourceMap {
 
     public String kind() {
         return kind;
+    }
+
+    /**
+     * The id of every resource of this kind in Operations, of every vCenter (the list the map was built from):
+     * what the roll-ups over all vCenters read, so the big lists are read once, not twice.
+     */
+    public List<String> allIds() {
+        return allIds;
+    }
+
+    /** Every matched object of this vCenter: MoRef to resource id. */
+    public Map<String, String> byMoref() {
+        return byMoref;
     }
 
     public int size() {
@@ -99,8 +114,13 @@ public final class OpsResourceMap {
 
     /** The request path of one page of {@code kind}. */
     public static String path(String kind, int page) {
-        return "/api/resources?adapterKind=VMWARE&resourceKind=" + encode(kind) + "&pageSize="
-                + pageSize(kind) + "&page=" + page;
+        return path("VMWARE", kind, page);
+    }
+
+    /** The request path of one page of {@code kind} of one adapter kind (the Container kinds are not VMWARE's). */
+    public static String path(String adapterKind, String kind, int page) {
+        return "/api/resources?adapterKind=" + encode(adapterKind) + "&resourceKind=" + encode(kind)
+                + "&pageSize=" + pageSize(kind) + "&page=" + page;
     }
 
     private static int pageSize(String kind) {
@@ -133,6 +153,11 @@ public final class OpsResourceMap {
     /** Pages of one kind, each row handed to the visitor. Returns the page count. */
     private static int read(OpsApi ops, String kind, java.util.function.Consumer<Row> visit)
             throws IOException, InterruptedException {
+        return read(ops, "VMWARE", kind, visit);
+    }
+
+    private static int read(OpsApi ops, String adapterKind, String kind, java.util.function.Consumer<Row> visit)
+            throws IOException, InterruptedException {
         int rows = 0;
         int pagesRead = 0;
         for (int page = 0; ; page++) {
@@ -142,7 +167,7 @@ public final class OpsResourceMap {
             pagesRead++;
             Object root;
             try {
-                root = Json.parse(getPage(ops, kind, page));
+                root = Json.parse(getPage(ops, adapterKind, kind, page));
             } catch (IllegalArgumentException e) {
                 throw new IOException(kind + " list page " + page + " is not valid JSON");
             }
@@ -173,16 +198,32 @@ public final class OpsResourceMap {
         return pagesRead;
     }
 
-    private static String getPage(OpsApi ops, String kind, int page)
+    private static String getPage(OpsApi ops, String adapterKind, String kind, int page)
             throws IOException, InterruptedException {
         try {
-            return ops.get(path(kind, page), null);
+            return ops.get(path(adapterKind, kind, page), null);
         } catch (OpsHttpException e) {
             throw e;
         } catch (IOException e) {
             // an idle keep-alive connection can be dropped: one more try
-            return ops.get(path(kind, page), null);
+            return ops.get(path(adapterKind, kind, page), null);
         }
+    }
+
+    /**
+     * The ids of every resource of a kind in VCF Operations, of every adapter instance (the vSphere World
+     * roll-ups and the Business Applications read all vCenters, not only this one). A failed or short page
+     * throws: a partial list is never read as the whole.
+     */
+    public static List<String> listIds(OpsApi ops, String adapterKind, String kind)
+            throws IOException, InterruptedException {
+        List<String> ids = new java.util.ArrayList<>();
+        Set<String> seen = new java.util.HashSet<>();
+        read(ops, adapterKind, kind, row -> {
+            // offset paging over a changing list can return a row twice
+            if (row.id != null && !row.id.isEmpty() && seen.add(row.id)) ids.add(row.id);
+        });
+        return ids;
     }
 
     /**
@@ -198,9 +239,13 @@ public final class OpsResourceMap {
         }
         Map<String, String> byMoref = new HashMap<>();
         Set<String> ambiguous = new TreeSet<>();
+        List<String> all = new java.util.ArrayList<>();
+        Set<String> allSeen = new java.util.HashSet<>();
         int[] c = new int[3]; // rows, other, notIndexed
         int pages = read(ops, kind, row -> {
             c[0]++;
+            // offset paging over a changing list can return a row twice
+            if (row.id != null && !row.id.isEmpty() && allSeen.add(row.id)) all.add(row.id);
             String vc = row.identifiers.get(ID_VCID);
             String moref = row.identifiers.get(ID_MOREF);
             if (vc != null && !vc.isEmpty() && !vcid.equals(vc)) {
@@ -224,7 +269,7 @@ public final class OpsResourceMap {
             }
             byMoref.put(moref, row.id);
         });
-        return new OpsResourceMap(kind, byMoref, ambiguous, c[0], c[1], c[2], pages);
+        return new OpsResourceMap(kind, byMoref, all, ambiguous, c[0], c[1], c[2], pages);
     }
 
     /** The outcome of looking for this vCenter's own VMwareAdapter Instance object. */
