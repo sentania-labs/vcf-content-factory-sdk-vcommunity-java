@@ -7,10 +7,15 @@ It is generated, never written by hand:
 
   * the converted dashboards      dashboards/*.yaml
   * the importer's verification   docs/design/inputs/import-report/report.json
-                                  (50 dashboards, pak layout, target 8.18.7)
+                                  (50 dashboards, pak layout, target 8.18.7,
+                                  --ids mint --mint-namespace vcfcf_vcommunity)
                                   docs/design/inputs/import-report/
                                   section-dashboards-report.json
-                                  (the 2 Section dashboards, see its "note")
+                                  (the 2 Section dashboards, extracted from
+                                  section-dashboards-source-report.json, the
+                                  full third-party-layout run; see its "note")
+  * the id mapping                docs/design/inputs/import-report/id_map.tsv
+                                  (source id -> id minted in the pak's own namespace)
   * the built-in view drops       docs/design/inputs/dropped.tsv
 
 Per dashboard it prints the dashboard-level settings and the widgets. A
@@ -80,6 +85,13 @@ def load_reports(root):
             if d["type"] == "dashboard":
                 detail[d["file"]] = d
     return objs, detail
+
+
+def load_id_map(root):
+    """file -> (old_id, new_id) for every object in id_map.tsv (comment lines skipped)."""
+    p = root / "docs/design/inputs/import-report/id_map.tsv"
+    rows = [l for l in p.read_text().splitlines() if not l.startswith("#")]
+    return {r["file"]: (r["old_id"], r["new_id"]) for r in csv.DictReader(rows, delimiter="\t")}
 
 
 def load_builtin_ids(root):
@@ -198,6 +210,7 @@ def dash_key(path):
 def render(root):
     objs, detail = load_reports(root)
     builtin = load_builtin_ids(root)
+    idmap = load_id_map(root)
     names = view_names(root)
     files = sorted((root / "dashboards").glob("*.yaml"))
     out = []
@@ -210,6 +223,8 @@ def render(root):
     builtin_refs = collections.Counter()
     titles = collections.defaultdict(set)
     problems = []
+    n_unrecorded = sum(len(d["differences"]) for d in detail.values())
+    id_rows = {}  # file -> (source id, new id, where the pair is recorded)
 
     for f in files:
         rel = f"dashboards/{f.name}"
@@ -219,6 +234,16 @@ def render(root):
             continue
         obj, det = objs[rel], detail[rel]
         wl, dd, tgt, unknown = classify(obj, det)
+        if d["id"] != obj["id"]:
+            problems.append(f"{rel}: YAML id {d['id']} differs from the report's minted id {obj['id']}")
+        if rel in idmap:
+            if idmap[rel] != (obj["source_id"], d["id"]):
+                problems.append(f"{rel}: id_map.tsv {idmap[rel]} disagrees with the report/YAML ({obj['source_id']}, {d['id']})")
+            id_rows[rel] = (obj["source_id"], d["id"], "id_map.tsv")
+        else:
+            id_rows[rel] = (obj["source_id"], d["id"], "section-dashboards-report.json")
+        if obj["source_id"] == d["id"]:
+            problems.append(f"{rel}: id was not re-minted (source id == id)")
         if unknown:
             problems.append(f"{rel}: report shows unrecorded differences")
         widgets = d["widgets"]
@@ -253,7 +278,7 @@ def render(root):
         src_line = f.read_text().splitlines()[0]
         src = src_line.split("!", 1)[-1] if "!" in src_line else src_line
         out.append(f"### {cell(d['name'])}\n")
-        out.append(f"File `{rel}`; id `{d['id']}`; source `{src}`.\n")
+        out.append(f"File `{rel}`; id `{d['id']}` (newly minted; source id `{obj['source_id']}`); source `{src}`.\n")
         out.append(f"Importer verification: **{det['status']}** ({det['fields']} fields compared).\n")
         # dashboard-level settings
         out.append("Dashboard-level settings\n")
@@ -267,6 +292,7 @@ def render(root):
                 out.append(f"| `{k}` | `{v}` | added by the port, not a source key (owner decision {SIGNOFF_DATE}); no effect on a target that imports Section |")
                 continue
             out.append(f"| `{k}` | `{cell(v)}` | identical |")
+        out.append(f"| id | `{d['id']}` | **different**, intended: newly minted in the pak's own namespace; source id `{obj['source_id']}` |")
         out.append(f"| interactions | {len(d.get('interactions') or [])} | identical |")
         out.append(f"| name | `{cell(d['name'])}` | identical" + (" (name_path carried in `name_path`)" if d.get("name_path") else "") + " |")
         out.append(f"| description | {len(d.get('description') or '')} chars | identical" + (" (surrounding whitespace stripped by the loader: recorded loss)" if any("Description surrounding" in c for c in occ) else "") + " |")
@@ -356,27 +382,37 @@ def render(root):
     head.append(f"- Pack: {SOURCE['pack']}, version **{SOURCE['version']}**")
     head.append(f"- Pak file: `{SOURCE['pak_file']}`")
     head.append(f"- sha256: `{SOURCE['sha256']}`")
-    head.append("- Summary-tab binding: none. The source pak has no `dashboards.properties`, and neither has this pak; the six \"Object Summary Page for ...\" dashboards are plain dashboards (no `summary_for`).")
-    head.append("- Converted offline by `python3 -m vcfcf_extractor import-local` (pak layout, `--ids keep`, `--naming unprefixed`, `--target-min 8.18.7`) "
+    head.append("- Summary-tab binding: none. The source pak has no `dashboards.properties`, and neither has this pak; the six \"Object Summary Page for ...\" dashboards are plain dashboards (no `summary_for`). The importer no longer infers Summary bindings (the run report's `summary_bindings` is empty).")
+    head.append("- Converted offline by `python3 -m vcfcf_extractor import-local` (pak layout, `--ids mint --mint-namespace vcfcf_vcommunity`, `--naming unprefixed`, `--target-min 8.18.7`) "
                 "and verified by it: it renders each converted YAML through the factory renderer and compares it key by key with the source JSON. "
                 "The two Section dashboards the pak layout refuses below 9.1.1 were converted from the same pak in the third-party layout "
-                "(`--allow-partial`) and carry `section_fallback: omit`; their verification is `docs/design/inputs/import-report/section-dashboards-report.json`.")
-    head.append("- Dashboard ids are the source ids (`--ids keep`):\n")
-    head.append("| # | Dashboard | Id | File |")
-    head.append("|---|---|---|---|")
+                "(`--allow-partial`, same `--ids mint` namespace) and carry `section_fallback: omit`; their verification is `docs/design/inputs/import-report/section-dashboards-report.json`.")
+    head.append("- **Every dashboard id is newly minted in the pak's own namespace**: this is an intended change, not a defect. "
+                "Owner decision, 2026-11-14: the pak's symptoms and dashboards carry ids unique to it (namespace `vcfcf_vcommunity`, "
+                "uuid5 `5d8c5726-50f2-5afb-b27d-015fe871ae98`, deterministic: the same run mints the same ids) so they cannot collide with the "
+                "source pack's content, because the pak is to be labelled 3.0.x. The source id is shown beside each new id below; "
+                "the pairs for 50 dashboards are in `docs/design/inputs/import-report/id_map.tsv`, those for the two Section dashboards in "
+                "`section-dashboards-report.json` (`source_id`). Names, widget ids, and every other key are unchanged by the minting. "
+                "References to product (built-in) views by id (section 5) are not ours and are not re-minted.\n")
+    head.append("| # | Dashboard | New id (minted) | Source id | Pair recorded in | File |")
+    head.append("|---|---|---|---|---|---|")
     for i, f in enumerate(files, 1):
         d = yaml.safe_load(f.read_text())
-        head.append(f"| {i} | {cell(d['name'])} | `{d['id']}` | `dashboards/{f.name}` |")
+        r = id_rows.get(f"dashboards/{f.name}")
+        if r:
+            head.append(f"| {i} | {cell(d['name'])} | `{d['id']}` | `{r[0]}` | `{r[2]}` | `dashboards/{f.name}` |")
     head.append("")
     # summary
     nloss = len(summary["loss_widget"]) + len(summary["loss_dash_only"])
     head.append("## 2. Summary\n")
     head.append(f"- Dashboards: **{len(files)}**; widgets: **{all_widgets}** (Section widgets included).")
+    head.append(f"- Dashboard ids newly minted in the pak's own namespace (intended change, sign-off 2026-11-14): **{len(id_rows)}** of {len(files)}; "
+                f"pairs from `id_map.tsv`: {sum(1 for r in id_rows.values() if r[2] == 'id_map.tsv')}, from the Section-dashboards report: {sum(1 for r in id_rows.values() if r[2] != 'id_map.tsv')}.")
     head.append(f"- Zero differences, not even a forced target key: **{len(summary['zero'])}**")
     head.append(f"- Identical apart from forced target keys only (`omit: temporary` is not emitted for 8.18.7; the render carries `temporary` where the source has none): **{len(summary['forced_only'])}**")
     head.append(f"- Differences at recorded losses only: **{nloss}** (of which {len(summary['loss_widget'])} at widget level or with a layout difference, {len(summary['loss_dash_only'])} at dashboard level only, widgets all identical)")
     head.append(f"- Layout differences (widget count, grid rows): **{len(summary['layout'])}**, the two Section dashboards, sign-off {SIGNOFF_DATE} (section 3)")
-    head.append("- Unrecorded differences (importer `differ` count): **0**\n")
+    head.append(f"- Unrecorded differences (importer `differ` count, summed over both reports): **{n_unrecorded}**; every bucket above counts the intended id change aside\n")
     head.append("Recorded-loss kinds (a class the factory fidelity docs list as not modeled; each is a difference the importer recorded when it dropped or altered something):\n")
     head.append("| Kind | Dashboards | Occurrences | Level |")
     head.append("|---|---|---|---|")

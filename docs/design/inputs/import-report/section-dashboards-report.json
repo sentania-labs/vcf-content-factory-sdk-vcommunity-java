@@ -1,15 +1,16 @@
 {
- "note": "Verification of the two Section dashboards. The pak layout refuses a dashboard with a Section widget below 9.1.1, so import-local was re-run over the same source pak in the third-party layout with --target-min 8.18.7 --allow-partial (ids keep, naming unprefixed); the YAML it wrote for these two differs from dashboards/*.yaml only by the dashboard-level omit list, which the committed files do not carry (see dashboards-port-comparison.md). Extracted from that run report.json.",
+ "note": "Verification of the two Section dashboards, extracted from section-dashboards-source-report.json (the full report.json of the third-party run). The pak layout refuses a dashboard with a Section widget below 9.1.1, so import-local was run over the same source pak in the third-party layout with --target-min 8.18.7 --allow-partial --ids mint --mint-namespace vcfcf_vcommunity (naming unprefixed); the YAML it wrote for these two is the committed dashboards/*.yaml plus the dashboard-level section_fallback: omit key, which the importer does not write (see dashboards-port-comparison.md). The ids are the same deterministic uuid5 ids the pak-layout run mints for the other 50 dashboards (same namespace); these two source ids are not in id_map.tsv, they are the source_id fields below.",
  "layout": "third-party",
  "target_min": "8.18.7",
- "ids": "keep",
+ "ids": "mint",
+ "mint_namespace": "vcfcf_vcommunity",
  "naming": "unprefixed",
  "objects": [
   {
    "type": "dashboard",
    "file": "dashboards/overall-daily-check.yaml",
    "source_id": "555b7d86-b48e-4f26-ae9e-b19ba24369d4",
-   "id": "555b7d86-b48e-4f26-ae9e-b19ba24369d4",
+   "id": "12abae81-ce8b-5916-8126-298487728f37",
    "name": "Overall Daily Check",
    "source_name": "Overall Daily Check",
    "renamed": [],
@@ -72,13 +73,249 @@
     "widget w13 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)",
     "widget w21 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)",
     "widget w25 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)"
-   ]
+   ],
+   "verbatim_text": [
+    {
+     "field": "name",
+     "length": 19
+    },
+    {
+     "field": "description",
+     "length": 143
+    },
+    {
+     "field": "widget w0 title",
+     "length": 12
+    },
+    {
+     "field": "widget w0 description",
+     "length": 138
+    },
+    {
+     "field": "widget w1 title",
+     "length": 13
+    },
+    {
+     "field": "widget w1 description",
+     "length": 100
+    },
+    {
+     "field": "widget w2 title",
+     "length": 15
+    },
+    {
+     "field": "widget w3 title",
+     "length": 38
+    },
+    {
+     "field": "widget w4 title",
+     "length": 43
+    },
+    {
+     "field": "widget w5 title",
+     "length": 13
+    },
+    {
+     "field": "widget w5 description",
+     "length": 201
+    },
+    {
+     "field": "widget w6 title",
+     "length": 28
+    },
+    {
+     "field": "widget w6 description",
+     "length": 196
+    },
+    {
+     "field": "widget w7 title",
+     "length": 32
+    },
+    {
+     "field": "widget w7 description",
+     "length": 252
+    },
+    {
+     "field": "widget w8 title",
+     "length": 11
+    },
+    {
+     "field": "widget w8 description",
+     "length": 323
+    },
+    {
+     "field": "widget w9 title",
+     "length": 33
+    },
+    {
+     "field": "widget w10 title",
+     "length": 28
+    },
+    {
+     "field": "widget w11 title",
+     "length": 29
+    },
+    {
+     "field": "widget w12 title",
+     "length": 22
+    },
+    {
+     "field": "widget w13 title",
+     "length": 8
+    },
+    {
+     "field": "widget w13 description",
+     "length": 305
+    },
+    {
+     "field": "widget w14 title",
+     "length": 14
+    },
+    {
+     "field": "widget w14 description",
+     "length": 79
+    },
+    {
+     "field": "widget w15 title",
+     "length": 35
+    },
+    {
+     "field": "widget w16 title",
+     "length": 23
+    },
+    {
+     "field": "widget w16 description",
+     "length": 97
+    },
+    {
+     "field": "widget w17 title",
+     "length": 15
+    },
+    {
+     "field": "widget w17 description",
+     "length": 144
+    },
+    {
+     "field": "widget w18 title",
+     "length": 24
+    },
+    {
+     "field": "widget w18 description",
+     "length": 152
+    },
+    {
+     "field": "widget w19 title",
+     "length": 15
+    },
+    {
+     "field": "widget w19 description",
+     "length": 169
+    },
+    {
+     "field": "widget w20 title",
+     "length": 18
+    },
+    {
+     "field": "widget w20 description",
+     "length": 167
+    },
+    {
+     "field": "widget w21 title",
+     "length": 10
+    },
+    {
+     "field": "widget w21 description",
+     "length": 300
+    },
+    {
+     "field": "widget w22 title",
+     "length": 20
+    },
+    {
+     "field": "widget w22 description",
+     "length": 134
+    },
+    {
+     "field": "widget w23 title",
+     "length": 19
+    },
+    {
+     "field": "widget w23 description",
+     "length": 101
+    },
+    {
+     "field": "widget w24 title",
+     "length": 16
+    },
+    {
+     "field": "widget w24 description",
+     "length": 133
+    },
+    {
+     "field": "widget w25 title",
+     "length": 13
+    },
+    {
+     "field": "widget w25 description",
+     "length": 153
+    },
+    {
+     "field": "widget w26 title",
+     "length": 13
+    },
+    {
+     "field": "widget w26 description",
+     "length": 89
+    },
+    {
+     "field": "widget w27 title",
+     "length": 15
+    },
+    {
+     "field": "widget w28 title",
+     "length": 13
+    },
+    {
+     "field": "widget w28 description",
+     "length": 99
+    },
+    {
+     "field": "widget w29 title",
+     "length": 28
+    },
+    {
+     "field": "widget w30 title",
+     "length": 15
+    },
+    {
+     "field": "widget w30 description",
+     "length": 93
+    },
+    {
+     "field": "widget w31 title",
+     "length": 12
+    },
+    {
+     "field": "widget w31 description",
+     "length": 104
+    },
+    {
+     "field": "widget w32 title",
+     "length": 10
+    },
+    {
+     "field": "widget w32 description",
+     "length": 384
+    }
+   ],
+   "description_replaced": false,
+   "source_description_length": null
   },
   {
    "type": "dashboard",
    "file": "dashboards/vsphere-cluster-capacity-2-0.yaml",
    "source_id": "c608ccb8-218a-4834-8a9d-af9241e01de1",
-   "id": "c608ccb8-218a-4834-8a9d-af9241e01de1",
+   "id": "77e838ec-232b-5235-999e-9b47ceb95943",
    "name": "vSphere Cluster Capacity 2.0",
    "source_name": "vSphere Cluster Capacity 2.0",
    "renamed": [],
@@ -119,7 +356,103 @@
    "not_deliverable": [
     "widget w2 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)",
     "widget w12 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)"
-   ]
+   ],
+   "verbatim_text": [
+    {
+     "field": "name",
+     "length": 28
+    },
+    {
+     "field": "description",
+     "length": 69
+    },
+    {
+     "field": "widget w0 title",
+     "length": 21
+    },
+    {
+     "field": "widget w0 description",
+     "length": 59
+    },
+    {
+     "field": "widget w1 title",
+     "length": 21
+    },
+    {
+     "field": "widget w1 description",
+     "length": 59
+    },
+    {
+     "field": "widget w2 title",
+     "length": 16
+    },
+    {
+     "field": "widget w3 title",
+     "length": 17
+    },
+    {
+     "field": "widget w4 title",
+     "length": 14
+    },
+    {
+     "field": "widget w5 title",
+     "length": 7
+    },
+    {
+     "field": "widget w6 title",
+     "length": 8
+    },
+    {
+     "field": "widget w7 title",
+     "length": 15
+    },
+    {
+     "field": "widget w8 title",
+     "length": 11
+    },
+    {
+     "field": "widget w9 title",
+     "length": 10
+    },
+    {
+     "field": "widget w10 title",
+     "length": 4
+    },
+    {
+     "field": "widget w11 title",
+     "length": 22
+    },
+    {
+     "field": "widget w12 title",
+     "length": 27
+    },
+    {
+     "field": "widget w13 title",
+     "length": 25
+    },
+    {
+     "field": "widget w14 title",
+     "length": 22
+    },
+    {
+     "field": "widget w15 title",
+     "length": 19
+    },
+    {
+     "field": "widget w16 title",
+     "length": 23
+    },
+    {
+     "field": "widget w17 title",
+     "length": 23
+    },
+    {
+     "field": "widget w18 title",
+     "length": 26
+    }
+   ],
+   "description_replaced": false,
+   "source_description_length": null
   }
  ],
  "verify": {
@@ -128,7 +461,7 @@
     "type": "dashboard",
     "name": "Overall Daily Check",
     "file": "dashboards/overall-daily-check.yaml",
-    "fields": 1619,
+    "fields": 1620,
     "differences": [],
     "at_recorded_losses": [
      [
@@ -268,7 +601,7 @@
     "type": "dashboard",
     "name": "vSphere Cluster Capacity 2.0",
     "file": "dashboards/vsphere-cluster-capacity-2-0.yaml",
-    "fields": 1390,
+    "fields": 1391,
     "differences": [],
     "at_recorded_losses": [
      [

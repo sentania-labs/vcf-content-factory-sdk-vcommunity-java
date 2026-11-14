@@ -9,6 +9,7 @@ hidden: false
 time_range: lastHour
 edit_allowed: true
 column_count: 0
+section_fallback: omit
 widgets:
 - id: w0
   type: Section

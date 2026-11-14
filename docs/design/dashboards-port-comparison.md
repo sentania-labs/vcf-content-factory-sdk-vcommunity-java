@@ -9,73 +9,74 @@ Location: this note lives in the pak repository (`docs/design/`), which is a sep
 - Pack: vCommunity (Onur Yuzseven / vmbro), as continued by e1-rahabok, version **0.8.1**
 - Pak file: `vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak`
 - sha256: `7cc81338614a185bf3546f1d9112eb2e1a9c19c5a507eddad64a637339b05780`
-- Summary-tab binding: none. The source pak has no `dashboards.properties`, and neither has this pak; the six "Object Summary Page for ..." dashboards are plain dashboards (no `summary_for`).
-- Converted offline by `python3 -m vcfcf_extractor import-local` (pak layout, `--ids keep`, `--naming unprefixed`, `--target-min 8.18.7`) and verified by it: it renders each converted YAML through the factory renderer and compares it key by key with the source JSON. The two Section dashboards the pak layout refuses below 9.1.1 were converted from the same pak in the third-party layout (`--allow-partial`) and carry `section_fallback: omit`; their verification is `docs/design/inputs/import-report/section-dashboards-report.json`.
-- Dashboard ids are the source ids (`--ids keep`):
+- Summary-tab binding: none. The source pak has no `dashboards.properties`, and neither has this pak; the six "Object Summary Page for ..." dashboards are plain dashboards (no `summary_for`). The importer no longer infers Summary bindings (the run report's `summary_bindings` is empty).
+- Converted offline by `python3 -m vcfcf_extractor import-local` (pak layout, `--ids mint --mint-namespace vcfcf_vcommunity`, `--naming unprefixed`, `--target-min 8.18.7`) and verified by it: it renders each converted YAML through the factory renderer and compares it key by key with the source JSON. The two Section dashboards the pak layout refuses below 9.1.1 were converted from the same pak in the third-party layout (`--allow-partial`, same `--ids mint` namespace) and carry `section_fallback: omit`; their verification is `docs/design/inputs/import-report/section-dashboards-report.json`.
+- **Every dashboard id is newly minted in the pak's own namespace**: this is an intended change, not a defect. Owner decision, 2026-11-14: the pak's symptoms and dashboards carry ids unique to it (namespace `vcfcf_vcommunity`, uuid5 `5d8c5726-50f2-5afb-b27d-015fe871ae98`, deterministic: the same run mints the same ids) so they cannot collide with the source pack's content, because the pak is to be labelled 3.0.x. The source id is shown beside each new id below; the pairs for 50 dashboards are in `docs/design/inputs/import-report/id_map.tsv`, those for the two Section dashboards in `section-dashboards-report.json` (`source_id`). Names, widget ids, and every other key are unchanged by the minting. References to product (built-in) views by id (section 5) are not ours and are not re-minted.
 
-| # | Dashboard | Id | File |
-|---|---|---|---|
-| 1 | Critical Business Applications | `d1dd41f6-3bf3-492c-af43-2858ec923a14` | `dashboards/critical-business-applications.yaml` |
-| 2 | ESXi Configuration 2.0 | `b1b3ede5-32f2-4c49-a1a8-443dc23bd993` | `dashboards/esxi-configuration-2-0.yaml` |
-| 3 | . Object Summary Page for Compute Folder | `7e3e9266-b325-4225-b2ad-9198b801ff43` | `dashboards/object-summary-page-for-compute-folder.yaml` |
-| 4 | . Object Summary Page for Distributed Port Groups | `f0a8e1da-6b23-4cc7-8392-37a44162db52` | `dashboards/object-summary-page-for-distributed-port-groups.yaml` |
-| 5 | . Object Summary Page for Distributed Switch | `4a295d27-a93d-4011-bf18-0bb70b0cbe86` | `dashboards/object-summary-page-for-distributed-switch.yaml` |
-| 6 | . Object Summary Page for Network Folder | `6740d93c-c8c3-4189-8bcb-7436da044fff` | `dashboards/object-summary-page-for-network-folder.yaml` |
-| 7 | . Object Summary Page for Storage Folder | `9c6b664a-04af-4271-a2ac-23795bfe0365` | `dashboards/object-summary-page-for-storage-folder.yaml` |
-| 8 | . Object Summary Page for VM Folder | `d22b04d0-1eb2-496e-8944-a143e94187d5` | `dashboards/object-summary-page-for-vm-folder.yaml` |
-| 9 | Overall Daily Check | `555b7d86-b48e-4f26-ae9e-b19ba24369d4` | `dashboards/overall-daily-check.yaml` |
-| 10 | Report: ESXi Hardware Configuration | `d0d182c9-2d83-48e1-9891-46905631c057` | `dashboards/report-esxi-hardware-configuration.yaml` |
-| 11 | Report: ESXi Software Configuration | `f6efe3e2-c905-4f22-afa2-bcb1fad9227f` | `dashboards/report-esxi-software-configuration.yaml` |
-| 12 | Report: Executive Summary (page 2) | `6e64e4e0-e484-434a-9cde-7a18964be2bc` | `dashboards/report-executive-summary-page-2.yaml` |
-| 13 | Report: Executive Summary (page 3) | `46054d7d-335f-4c11-a3e5-18cf47a9f1f0` | `dashboards/report-executive-summary-page-3.yaml` |
-| 14 | Report: Executive Summary (page 4) | `413bc905-4980-4704-bf44-662c5018a8a8` | `dashboards/report-executive-summary-page-4.yaml` |
-| 15 | Report: Executive Summary (page 5) | `5f8539a1-d022-414d-95ca-81c888e869a8` | `dashboards/report-executive-summary-page-5.yaml` |
-| 16 | Report: Executive Summary | `a13b8278-83a4-435f-b2b6-309ab77e5017` | `dashboards/report-executive-summary.yaml` |
-| 17 | Report: Guest OS Configuration | `8edbf859-2b36-4ea3-8fe5-68c44d7343f6` | `dashboards/report-guest-os-configuration.yaml` |
-| 18 | Report: Reclamable Capacity | `a3b87c13-3965-443a-bdc9-a69d402e3cec` | `dashboards/report-reclamable-capacity.yaml` |
-| 19 | Report: VM Capacity (page 2) | `c6b3909f-f1ec-4691-b22c-70b7175e0c87` | `dashboards/report-vm-capacity-page-2.yaml` |
-| 20 | Report: VM Capacity (page 3) | `ac7f0897-e75c-4072-91b7-af565c1ddb37` | `dashboards/report-vm-capacity-page-3.yaml` |
-| 21 | Report: VM Capacity | `8915da4d-0193-45da-83c1-4ef616a2e71d` | `dashboards/report-vm-capacity.yaml` |
-| 22 | Report: VM Configuration (page 2) | `d477baf3-b84b-4e3c-8d9e-fa6dc7ad05e0` | `dashboards/report-vm-configuration-page-2.yaml` |
-| 23 | Report: VM Configuration | `aa9e3a20-1083-4411-ad11-511e5c93fe52` | `dashboards/report-vm-configuration.yaml` |
-| 24 | Report: VM Inventory (page 2) | `c32894fc-f375-4f4d-b486-9f10473dc82b` | `dashboards/report-vm-inventory-page-2.yaml` |
-| 25 | Report: VM Inventory (page 3) | `6a61ab77-3d45-4c93-b932-1c67640e29b1` | `dashboards/report-vm-inventory-page-3.yaml` |
-| 26 | Report: VM Inventory | `1fa82396-68ad-4eef-a1f2-3fce6df8274d` | `dashboards/report-vm-inventory.yaml` |
-| 27 | Report: VM Performance (page 2) | `36940b83-1744-42ba-b8fd-c23f15644b17` | `dashboards/report-vm-performance-page-2.yaml` |
-| 28 | Report: VM Performance | `749dd1b7-0a04-4502-93db-8cf1492b2723` | `dashboards/report-vm-performance.yaml` |
-| 29 | Report: VM Size Distribution | `ff519731-cd08-4cff-bdb9-dc29cd7d6e88` | `dashboards/report-vm-size-distribution.yaml` |
-| 30 | Report: vSphere Cluster Configuration | `ed71f901-bb66-46da-8a30-de49fda0e133` | `dashboards/report-vsphere-cluster-configuration.yaml` |
-| 31 | Report: vSphere Compute Capacity (page 2) | `1c12139f-3663-43af-aa6a-34a097249d59` | `dashboards/report-vsphere-compute-capacity-page-2.yaml` |
-| 32 | Report: vSphere Compute Capacity (page 3) | `b43f77c4-2fa7-4446-9222-30f664ab9cac` | `dashboards/report-vsphere-compute-capacity-page-3.yaml` |
-| 33 | Report: vSphere Compute Capacity | `b349c744-6008-4067-8ad0-b2817ad8fe7e` | `dashboards/report-vsphere-compute-capacity.yaml` |
-| 34 | Report: vSphere Compute Performance (page 2) | `9c05826d-2695-487a-a10e-fb58997002dc` | `dashboards/report-vsphere-compute-performance-page-2.yaml` |
-| 35 | Report: vSphere Compute Performance | `985e7ad8-11d3-4aeb-88bd-49b2c8c03dde` | `dashboards/report-vsphere-compute-performance.yaml` |
-| 36 | Report: vSphere Inventory (page 2) | `aba3330a-fca1-430d-851c-cbb7e1be75bf` | `dashboards/report-vsphere-inventory-page-2.yaml` |
-| 37 | Report: vSphere Inventory | `e750120d-c5b6-4fda-8e98-dc00e1f3f39c` | `dashboards/report-vsphere-inventory.yaml` |
-| 38 | Report: vSphere Network Configuration | `ab480d7b-d33d-4488-8bf3-0d926972b89e` | `dashboards/report-vsphere-network-configuration.yaml` |
-| 39 | Report: vSphere Storage Capacity (page 2) | `8e075ab3-8f69-4060-8760-df40e78def71` | `dashboards/report-vsphere-storage-capacity-page-2.yaml` |
-| 40 | Report: vSphere Storage Capacity (page 3) | `caf7011d-59ca-4b87-993b-8199c461de40` | `dashboards/report-vsphere-storage-capacity-page-3.yaml` |
-| 41 | Report: vSphere Storage Capacity | `f09dd003-2131-4766-b6a5-c92448cba2c0` | `dashboards/report-vsphere-storage-capacity.yaml` |
-| 42 | Report: vSphere Storage Performance (page 2) | `a36f514e-f544-4a89-88f1-2a85887b01cb` | `dashboards/report-vsphere-storage-performance-page-2.yaml` |
-| 43 | Report: vSphere Storage Performance | `8119d513-b05d-4142-8df6-caa8f38f1d7d` | `dashboards/report-vsphere-storage-performance.yaml` |
-| 44 | VCF Management Service | `bacf36d9-fb4d-49ff-ad97-e55b1fe9a4b2` | `dashboards/vcf-management-service.yaml` |
-| 45 | VM Capacity (new) | `4e036192-7592-4a78-a5ad-276f2bfa5980` | `dashboards/vm-capacity-new.yaml` |
-| 46 | VM Performance 2.0 | `4439d7b2-c758-4eca-ad49-42f3e0280d35` | `dashboards/vm-performance-2-0.yaml` |
-| 47 | VM Storage Configuration | `c80749d8-25a1-4867-a3fc-f64f92db9e95` | `dashboards/vm-storage-configuration.yaml` |
-| 48 | vSphere Cluster Capacity 2.0 | `c608ccb8-218a-4834-8a9d-af9241e01de1` | `dashboards/vsphere-cluster-capacity-2-0.yaml` |
-| 49 | vSphere Cluster Configuration 2.0 | `d1941adc-5664-421e-af12-84736f76aa76` | `dashboards/vsphere-cluster-configuration-2-0.yaml` |
-| 50 | vSphere Cluster Performance 2.0 | `325fd7c9-b8a9-48f2-a018-be070f49e1b5` | `dashboards/vsphere-cluster-performance-2-0.yaml` |
-| 51 | vSphere Network Configuration 2.0 | `769d7441-2926-413a-99cc-7641c0c78b63` | `dashboards/vsphere-network-configuration-2-0.yaml` |
-| 52 | vSphere Resource Management | `3dff5e2d-5db1-4eec-97c7-b2b7c545ff3c` | `dashboards/vsphere-resource-management.yaml` |
+| # | Dashboard | New id (minted) | Source id | Pair recorded in | File |
+|---|---|---|---|---|---|
+| 1 | Critical Business Applications | `6bba4252-5714-5bf8-a957-24822d5ac3f1` | `d1dd41f6-3bf3-492c-af43-2858ec923a14` | `id_map.tsv` | `dashboards/critical-business-applications.yaml` |
+| 2 | ESXi Configuration 2.0 | `95801204-ecfe-53c3-9f03-b578db431833` | `b1b3ede5-32f2-4c49-a1a8-443dc23bd993` | `id_map.tsv` | `dashboards/esxi-configuration-2-0.yaml` |
+| 3 | . Object Summary Page for Compute Folder | `8472cb2c-c63d-5f61-a5de-0b9fc4e3e990` | `7e3e9266-b325-4225-b2ad-9198b801ff43` | `id_map.tsv` | `dashboards/object-summary-page-for-compute-folder.yaml` |
+| 4 | . Object Summary Page for Distributed Port Groups | `01f7ff2e-2819-5c96-b06c-a72cc0ffe32a` | `f0a8e1da-6b23-4cc7-8392-37a44162db52` | `id_map.tsv` | `dashboards/object-summary-page-for-distributed-port-groups.yaml` |
+| 5 | . Object Summary Page for Distributed Switch | `ae3629f3-f038-51a3-afd4-6360a6f45d2a` | `4a295d27-a93d-4011-bf18-0bb70b0cbe86` | `id_map.tsv` | `dashboards/object-summary-page-for-distributed-switch.yaml` |
+| 6 | . Object Summary Page for Network Folder | `74f1299f-aa3e-5820-b71a-9d6708e058a1` | `6740d93c-c8c3-4189-8bcb-7436da044fff` | `id_map.tsv` | `dashboards/object-summary-page-for-network-folder.yaml` |
+| 7 | . Object Summary Page for Storage Folder | `d5b1cd58-b57d-5b61-99a7-7101fdd16dab` | `9c6b664a-04af-4271-a2ac-23795bfe0365` | `id_map.tsv` | `dashboards/object-summary-page-for-storage-folder.yaml` |
+| 8 | . Object Summary Page for VM Folder | `a1ba283a-b469-5042-aefc-3f8e3a3bcfe4` | `d22b04d0-1eb2-496e-8944-a143e94187d5` | `id_map.tsv` | `dashboards/object-summary-page-for-vm-folder.yaml` |
+| 9 | Overall Daily Check | `12abae81-ce8b-5916-8126-298487728f37` | `555b7d86-b48e-4f26-ae9e-b19ba24369d4` | `section-dashboards-report.json` | `dashboards/overall-daily-check.yaml` |
+| 10 | Report: ESXi Hardware Configuration | `1a5701f8-26bb-598d-b551-ffa1aeef3faf` | `d0d182c9-2d83-48e1-9891-46905631c057` | `id_map.tsv` | `dashboards/report-esxi-hardware-configuration.yaml` |
+| 11 | Report: ESXi Software Configuration | `1b58d631-8491-5b4e-baf5-8e4fec841cd2` | `f6efe3e2-c905-4f22-afa2-bcb1fad9227f` | `id_map.tsv` | `dashboards/report-esxi-software-configuration.yaml` |
+| 12 | Report: Executive Summary (page 2) | `ccf00daa-3d1d-51ae-a9e7-e24504fe0e0c` | `6e64e4e0-e484-434a-9cde-7a18964be2bc` | `id_map.tsv` | `dashboards/report-executive-summary-page-2.yaml` |
+| 13 | Report: Executive Summary (page 3) | `cc06106f-a504-5ddf-8e7c-d2c117d1b3ba` | `46054d7d-335f-4c11-a3e5-18cf47a9f1f0` | `id_map.tsv` | `dashboards/report-executive-summary-page-3.yaml` |
+| 14 | Report: Executive Summary (page 4) | `1be5507a-d028-58a6-8a68-912d2ae61d9a` | `413bc905-4980-4704-bf44-662c5018a8a8` | `id_map.tsv` | `dashboards/report-executive-summary-page-4.yaml` |
+| 15 | Report: Executive Summary (page 5) | `17c1f4bd-1fd1-560f-a81c-de279bb91d9d` | `5f8539a1-d022-414d-95ca-81c888e869a8` | `id_map.tsv` | `dashboards/report-executive-summary-page-5.yaml` |
+| 16 | Report: Executive Summary | `d209b327-255a-5478-8e56-a76506d98028` | `a13b8278-83a4-435f-b2b6-309ab77e5017` | `id_map.tsv` | `dashboards/report-executive-summary.yaml` |
+| 17 | Report: Guest OS Configuration | `23709e89-81de-5326-8481-5a1ebdd93f0b` | `8edbf859-2b36-4ea3-8fe5-68c44d7343f6` | `id_map.tsv` | `dashboards/report-guest-os-configuration.yaml` |
+| 18 | Report: Reclamable Capacity | `afd4e974-e0cf-5222-a838-5c343c2c8378` | `a3b87c13-3965-443a-bdc9-a69d402e3cec` | `id_map.tsv` | `dashboards/report-reclamable-capacity.yaml` |
+| 19 | Report: VM Capacity (page 2) | `078dddf2-39d0-57b9-af49-cb94e3480bb1` | `c6b3909f-f1ec-4691-b22c-70b7175e0c87` | `id_map.tsv` | `dashboards/report-vm-capacity-page-2.yaml` |
+| 20 | Report: VM Capacity (page 3) | `b14f32fa-50e8-58ac-a05a-bc4c6b305cde` | `ac7f0897-e75c-4072-91b7-af565c1ddb37` | `id_map.tsv` | `dashboards/report-vm-capacity-page-3.yaml` |
+| 21 | Report: VM Capacity | `a47e40b8-5368-55d8-a933-bd0c82cbb49d` | `8915da4d-0193-45da-83c1-4ef616a2e71d` | `id_map.tsv` | `dashboards/report-vm-capacity.yaml` |
+| 22 | Report: VM Configuration (page 2) | `ac79e341-c9dd-55ba-95a6-e3a95c940456` | `d477baf3-b84b-4e3c-8d9e-fa6dc7ad05e0` | `id_map.tsv` | `dashboards/report-vm-configuration-page-2.yaml` |
+| 23 | Report: VM Configuration | `5756c6e9-3239-5f4d-add3-d9549a99ef26` | `aa9e3a20-1083-4411-ad11-511e5c93fe52` | `id_map.tsv` | `dashboards/report-vm-configuration.yaml` |
+| 24 | Report: VM Inventory (page 2) | `05382cf8-4965-5b44-b52f-e7a7ebe9bd5a` | `c32894fc-f375-4f4d-b486-9f10473dc82b` | `id_map.tsv` | `dashboards/report-vm-inventory-page-2.yaml` |
+| 25 | Report: VM Inventory (page 3) | `9c093d91-7883-5e7c-af51-246ae93b3557` | `6a61ab77-3d45-4c93-b932-1c67640e29b1` | `id_map.tsv` | `dashboards/report-vm-inventory-page-3.yaml` |
+| 26 | Report: VM Inventory | `f45bd55e-f2e9-55ce-ad91-6f9d81822683` | `1fa82396-68ad-4eef-a1f2-3fce6df8274d` | `id_map.tsv` | `dashboards/report-vm-inventory.yaml` |
+| 27 | Report: VM Performance (page 2) | `7f3ee5b6-1ae5-575c-90ea-d5a42f956102` | `36940b83-1744-42ba-b8fd-c23f15644b17` | `id_map.tsv` | `dashboards/report-vm-performance-page-2.yaml` |
+| 28 | Report: VM Performance | `467de488-80d5-539b-8067-a1e6c8e2a5e7` | `749dd1b7-0a04-4502-93db-8cf1492b2723` | `id_map.tsv` | `dashboards/report-vm-performance.yaml` |
+| 29 | Report: VM Size Distribution | `5b2d2bb1-647c-56d0-9f1e-da4de9d5c0f0` | `ff519731-cd08-4cff-bdb9-dc29cd7d6e88` | `id_map.tsv` | `dashboards/report-vm-size-distribution.yaml` |
+| 30 | Report: vSphere Cluster Configuration | `7efb2814-37d8-5204-bee2-38fb85f040e2` | `ed71f901-bb66-46da-8a30-de49fda0e133` | `id_map.tsv` | `dashboards/report-vsphere-cluster-configuration.yaml` |
+| 31 | Report: vSphere Compute Capacity (page 2) | `b5f3c52e-9799-58fa-8d5f-8aaace92c025` | `1c12139f-3663-43af-aa6a-34a097249d59` | `id_map.tsv` | `dashboards/report-vsphere-compute-capacity-page-2.yaml` |
+| 32 | Report: vSphere Compute Capacity (page 3) | `74388fa7-a7a5-5bb0-96f3-a69706709c38` | `b43f77c4-2fa7-4446-9222-30f664ab9cac` | `id_map.tsv` | `dashboards/report-vsphere-compute-capacity-page-3.yaml` |
+| 33 | Report: vSphere Compute Capacity | `c14df574-c6e1-5315-9eb2-403eb56160be` | `b349c744-6008-4067-8ad0-b2817ad8fe7e` | `id_map.tsv` | `dashboards/report-vsphere-compute-capacity.yaml` |
+| 34 | Report: vSphere Compute Performance (page 2) | `dbd22448-430c-53ff-87f7-5a9c45a7b582` | `9c05826d-2695-487a-a10e-fb58997002dc` | `id_map.tsv` | `dashboards/report-vsphere-compute-performance-page-2.yaml` |
+| 35 | Report: vSphere Compute Performance | `0f815ef7-5cf9-5476-bede-7bee9d3584c4` | `985e7ad8-11d3-4aeb-88bd-49b2c8c03dde` | `id_map.tsv` | `dashboards/report-vsphere-compute-performance.yaml` |
+| 36 | Report: vSphere Inventory (page 2) | `c30d5908-eb10-5567-aa6b-6d5d6a66d8a4` | `aba3330a-fca1-430d-851c-cbb7e1be75bf` | `id_map.tsv` | `dashboards/report-vsphere-inventory-page-2.yaml` |
+| 37 | Report: vSphere Inventory | `091f2a63-49f1-586a-b7ed-fc535ab1034d` | `e750120d-c5b6-4fda-8e98-dc00e1f3f39c` | `id_map.tsv` | `dashboards/report-vsphere-inventory.yaml` |
+| 38 | Report: vSphere Network Configuration | `994b04e2-53f7-54dd-9476-bbb289d9e49e` | `ab480d7b-d33d-4488-8bf3-0d926972b89e` | `id_map.tsv` | `dashboards/report-vsphere-network-configuration.yaml` |
+| 39 | Report: vSphere Storage Capacity (page 2) | `b16b790d-da2f-53f7-a6ba-90a64b6acaaa` | `8e075ab3-8f69-4060-8760-df40e78def71` | `id_map.tsv` | `dashboards/report-vsphere-storage-capacity-page-2.yaml` |
+| 40 | Report: vSphere Storage Capacity (page 3) | `5045cc4e-53c8-5e03-94b2-1733e4f86172` | `caf7011d-59ca-4b87-993b-8199c461de40` | `id_map.tsv` | `dashboards/report-vsphere-storage-capacity-page-3.yaml` |
+| 41 | Report: vSphere Storage Capacity | `efe82900-5922-56a5-9bcb-5a682ffc587c` | `f09dd003-2131-4766-b6a5-c92448cba2c0` | `id_map.tsv` | `dashboards/report-vsphere-storage-capacity.yaml` |
+| 42 | Report: vSphere Storage Performance (page 2) | `03d85620-2f9c-5ae6-8b65-d1ff430fa9aa` | `a36f514e-f544-4a89-88f1-2a85887b01cb` | `id_map.tsv` | `dashboards/report-vsphere-storage-performance-page-2.yaml` |
+| 43 | Report: vSphere Storage Performance | `025001f9-c9f3-57d8-9822-ae27f90c0cea` | `8119d513-b05d-4142-8df6-caa8f38f1d7d` | `id_map.tsv` | `dashboards/report-vsphere-storage-performance.yaml` |
+| 44 | VCF Management Service | `129e9154-6b3e-579b-accb-e8cab804e3ba` | `bacf36d9-fb4d-49ff-ad97-e55b1fe9a4b2` | `id_map.tsv` | `dashboards/vcf-management-service.yaml` |
+| 45 | VM Capacity (new) | `ddeb19f0-9aaf-5bfa-bf1a-720d85c0e7d7` | `4e036192-7592-4a78-a5ad-276f2bfa5980` | `id_map.tsv` | `dashboards/vm-capacity-new.yaml` |
+| 46 | VM Performance 2.0 | `324e8cc1-4aea-5f9f-b025-9e297ce1be3e` | `4439d7b2-c758-4eca-ad49-42f3e0280d35` | `id_map.tsv` | `dashboards/vm-performance-2-0.yaml` |
+| 47 | VM Storage Configuration | `16960d4a-8167-5798-94c8-e7b162d27f2c` | `c80749d8-25a1-4867-a3fc-f64f92db9e95` | `id_map.tsv` | `dashboards/vm-storage-configuration.yaml` |
+| 48 | vSphere Cluster Capacity 2.0 | `77e838ec-232b-5235-999e-9b47ceb95943` | `c608ccb8-218a-4834-8a9d-af9241e01de1` | `section-dashboards-report.json` | `dashboards/vsphere-cluster-capacity-2-0.yaml` |
+| 49 | vSphere Cluster Configuration 2.0 | `e865f4a8-7936-53d8-ab2b-5a409c0f842e` | `d1941adc-5664-421e-af12-84736f76aa76` | `id_map.tsv` | `dashboards/vsphere-cluster-configuration-2-0.yaml` |
+| 50 | vSphere Cluster Performance 2.0 | `e4feadb6-8cd1-540d-bbcb-2ec3e8945660` | `325fd7c9-b8a9-48f2-a018-be070f49e1b5` | `id_map.tsv` | `dashboards/vsphere-cluster-performance-2-0.yaml` |
+| 51 | vSphere Network Configuration 2.0 | `76e05619-37ab-544b-b5e0-2d92cadc160e` | `769d7441-2926-413a-99cc-7641c0c78b63` | `id_map.tsv` | `dashboards/vsphere-network-configuration-2-0.yaml` |
+| 52 | vSphere Resource Management | `18b44b62-db71-5071-b930-100260dae503` | `3dff5e2d-5db1-4eec-97c7-b2b7c545ff3c` | `id_map.tsv` | `dashboards/vsphere-resource-management.yaml` |
 
 ## 2. Summary
 
 - Dashboards: **52**; widgets: **346** (Section widgets included).
+- Dashboard ids newly minted in the pak's own namespace (intended change, sign-off 2026-11-14): **52** of 52; pairs from `id_map.tsv`: 50, from the Section-dashboards report: 2.
 - Zero differences, not even a forced target key: **10**
 - Identical apart from forced target keys only (`omit: temporary` is not emitted for 8.18.7; the render carries `temporary` where the source has none): **6**
 - Differences at recorded losses only: **36** (of which 6 at widget level or with a layout difference, 30 at dashboard level only, widgets all identical)
 - Layout differences (widget count, grid rows): **2**, the two Section dashboards, sign-off 2026-11-13 (section 3)
-- Unrecorded differences (importer `differ` count): **0**
+- Unrecorded differences (importer `differ` count, summed over both reports): **0**; every bucket above counts the intended id change aside
 
 Recorded-loss kinds (a class the factory fidelity docs list as not modeled; each is a difference the importer recorded when it dropped or altered something):
 
@@ -167,9 +168,9 @@ Widget-level rows are printed for a dashboard whose widgets differ at some path 
 
 ### Critical Business Applications
 
-File `dashboards/critical-business-applications.yaml`; id `d1dd41f6-3bf3-492c-af43-2858ec923a14`; source `content/dashboards/critical business applications/Critical Business Applications.json`.
+File `dashboards/critical-business-applications.yaml`; id `6bba4252-5714-5bf8-a957-24822d5ac3f1` (newly minted; source id `d1dd41f6-3bf3-492c-af43-2858ec923a14`); source `content/dashboards/critical business applications/Critical Business Applications.json`.
 
-Importer verification: **differs only at recorded losses** (331 fields compared).
+Importer verification: **differs only at recorded losses** (332 fields compared).
 
 Dashboard-level settings
 
@@ -180,6 +181,7 @@ Dashboard-level settings
 | `hidden` | `False` | identical |
 | `time_range` | `last6Hour` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `6bba4252-5714-5bf8-a957-24822d5ac3f1` | **different**, intended: newly minted in the pak's own namespace; source id `d1dd41f6-3bf3-492c-af43-2858ec923a14` |
 | interactions | 10 | identical |
 | name | `Critical Business Applications` | identical (name_path carried in `name_path`) |
 | description | 90 chars | identical |
@@ -190,9 +192,9 @@ Dashboard-level settings
 
 ### ESXi Configuration 2.0
 
-File `dashboards/esxi-configuration-2-0.yaml`; id `b1b3ede5-32f2-4c49-a1a8-443dc23bd993`; source `content/dashboards/esxi configuration 2.0/ESXi Configuration 2.0.json`.
+File `dashboards/esxi-configuration-2-0.yaml`; id `95801204-ecfe-53c3-9f03-b578db431833` (newly minted; source id `b1b3ede5-32f2-4c49-a1a8-443dc23bd993`); source `content/dashboards/esxi configuration 2.0/ESXi Configuration 2.0.json`.
 
-Importer verification: **differs only at recorded losses** (477 fields compared).
+Importer verification: **differs only at recorded losses** (478 fields compared).
 
 Dashboard-level settings
 
@@ -202,6 +204,7 @@ Dashboard-level settings
 | `shared` | `True` | identical |
 | `hidden` | `True` | identical |
 | `doc_center_key` | `vcom_522` | identical |
+| id | `95801204-ecfe-53c3-9f03-b578db431833` | **different**, intended: newly minted in the pak's own namespace; source id `b1b3ede5-32f2-4c49-a1a8-443dc23bd993` |
 | interactions | 19 | identical |
 | name | `ESXi Configuration 2.0` | identical (name_path carried in `name_path`) |
 | description | 345 chars | identical |
@@ -211,7 +214,82 @@ Dashboard-level settings
 
 ### . Object Summary Page for Compute Folder
 
-File `dashboards/object-summary-page-for-compute-folder.yaml`; id `7e3e9266-b325-4225-b2ad-9198b801ff43`; source `content/dashboards/HostFolder/dashboard.json`.
+File `dashboards/object-summary-page-for-compute-folder.yaml`; id `8472cb2c-c63d-5f61-a5de-0b9fc4e3e990` (newly minted; source id `7e3e9266-b325-4225-b2ad-9198b801ff43`); source `content/dashboards/HostFolder/dashboard.json`.
+
+Importer verification: **identical apart from forced target keys** (72 fields compared).
+
+Dashboard-level settings
+
+| Setting | Value | Compared with source |
+|---|---|---|
+| `name_path` | `` | identical |
+| `omit` | `['name_path']` | identical |
+| `shared` | `False` | identical |
+| `hidden` | `False` | identical |
+| `disabled` | `True` | identical |
+| `edit_allowed` | `True` | identical |
+| `column_count` | `0` | identical |
+| id | `8472cb2c-c63d-5f61-a5de-0b9fc4e3e990` | **different**, intended: newly minted in the pak's own namespace; source id `7e3e9266-b325-4225-b2ad-9198b801ff43` |
+| interactions | 1 | identical |
+| name | `. Object Summary Page for Compute Folder` | identical |
+| description | 0 chars | identical |
+| `dashboard.temporary` | extra | **different**: forced by target 8.18.7 (`omit:` entry whose floor is above the target is not emitted; the render carries the key where the source has none), set aside by the importer |
+
+2 widgets, all identical.
+
+### . Object Summary Page for Distributed Port Groups
+
+File `dashboards/object-summary-page-for-distributed-port-groups.yaml`; id `01f7ff2e-2819-5c96-b06c-a72cc0ffe32a` (newly minted; source id `f0a8e1da-6b23-4cc7-8392-37a44162db52`); source `content/dashboards/DistributedVirtualPortgroup/dashboard.json`.
+
+Importer verification: **identical apart from forced target keys** (104 fields compared).
+
+Dashboard-level settings
+
+| Setting | Value | Compared with source |
+|---|---|---|
+| `name_path` | `` | identical |
+| `omit` | `['name_path']` | identical |
+| `shared` | `False` | identical |
+| `hidden` | `False` | identical |
+| `disabled` | `True` | identical |
+| `edit_allowed` | `True` | identical |
+| `column_count` | `0` | identical |
+| id | `01f7ff2e-2819-5c96-b06c-a72cc0ffe32a` | **different**, intended: newly minted in the pak's own namespace; source id `f0a8e1da-6b23-4cc7-8392-37a44162db52` |
+| interactions | 2 | identical |
+| name | `. Object Summary Page for Distributed Port Groups` | identical |
+| description | 0 chars | identical |
+| `dashboard.temporary` | extra | **different**: forced by target 8.18.7 (`omit:` entry whose floor is above the target is not emitted; the render carries the key where the source has none), set aside by the importer |
+
+3 widgets, all identical.
+
+### . Object Summary Page for Distributed Switch
+
+File `dashboards/object-summary-page-for-distributed-switch.yaml`; id `ae3629f3-f038-51a3-afd4-6360a6f45d2a` (newly minted; source id `4a295d27-a93d-4011-bf18-0bb70b0cbe86`); source `content/dashboards/VmwareDistributedVirtualSwitch/dashboard.json`.
+
+Importer verification: **identical apart from forced target keys** (100 fields compared).
+
+Dashboard-level settings
+
+| Setting | Value | Compared with source |
+|---|---|---|
+| `name_path` | `` | identical |
+| `omit` | `['name_path']` | identical |
+| `shared` | `False` | identical |
+| `hidden` | `False` | identical |
+| `disabled` | `True` | identical |
+| `edit_allowed` | `True` | identical |
+| `column_count` | `0` | identical |
+| id | `ae3629f3-f038-51a3-afd4-6360a6f45d2a` | **different**, intended: newly minted in the pak's own namespace; source id `4a295d27-a93d-4011-bf18-0bb70b0cbe86` |
+| interactions | 2 | identical |
+| name | `. Object Summary Page for Distributed Switch` | identical |
+| description | 0 chars | identical |
+| `dashboard.temporary` | extra | **different**: forced by target 8.18.7 (`omit:` entry whose floor is above the target is not emitted; the render carries the key where the source has none), set aside by the importer |
+
+3 widgets, all identical.
+
+### . Object Summary Page for Network Folder
+
+File `dashboards/object-summary-page-for-network-folder.yaml`; id `74f1299f-aa3e-5820-b71a-9d6708e058a1` (newly minted; source id `6740d93c-c8c3-4189-8bcb-7436da044fff`); source `content/dashboards/NetworkFolder/dashboard.json`.
 
 Importer verification: **identical apart from forced target keys** (71 fields compared).
 
@@ -226,78 +304,7 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `edit_allowed` | `True` | identical |
 | `column_count` | `0` | identical |
-| interactions | 1 | identical |
-| name | `. Object Summary Page for Compute Folder` | identical |
-| description | 0 chars | identical |
-| `dashboard.temporary` | extra | **different**: forced by target 8.18.7 (`omit:` entry whose floor is above the target is not emitted; the render carries the key where the source has none), set aside by the importer |
-
-2 widgets, all identical.
-
-### . Object Summary Page for Distributed Port Groups
-
-File `dashboards/object-summary-page-for-distributed-port-groups.yaml`; id `f0a8e1da-6b23-4cc7-8392-37a44162db52`; source `content/dashboards/DistributedVirtualPortgroup/dashboard.json`.
-
-Importer verification: **identical apart from forced target keys** (103 fields compared).
-
-Dashboard-level settings
-
-| Setting | Value | Compared with source |
-|---|---|---|
-| `name_path` | `` | identical |
-| `omit` | `['name_path']` | identical |
-| `shared` | `False` | identical |
-| `hidden` | `False` | identical |
-| `disabled` | `True` | identical |
-| `edit_allowed` | `True` | identical |
-| `column_count` | `0` | identical |
-| interactions | 2 | identical |
-| name | `. Object Summary Page for Distributed Port Groups` | identical |
-| description | 0 chars | identical |
-| `dashboard.temporary` | extra | **different**: forced by target 8.18.7 (`omit:` entry whose floor is above the target is not emitted; the render carries the key where the source has none), set aside by the importer |
-
-3 widgets, all identical.
-
-### . Object Summary Page for Distributed Switch
-
-File `dashboards/object-summary-page-for-distributed-switch.yaml`; id `4a295d27-a93d-4011-bf18-0bb70b0cbe86`; source `content/dashboards/VmwareDistributedVirtualSwitch/dashboard.json`.
-
-Importer verification: **identical apart from forced target keys** (99 fields compared).
-
-Dashboard-level settings
-
-| Setting | Value | Compared with source |
-|---|---|---|
-| `name_path` | `` | identical |
-| `omit` | `['name_path']` | identical |
-| `shared` | `False` | identical |
-| `hidden` | `False` | identical |
-| `disabled` | `True` | identical |
-| `edit_allowed` | `True` | identical |
-| `column_count` | `0` | identical |
-| interactions | 2 | identical |
-| name | `. Object Summary Page for Distributed Switch` | identical |
-| description | 0 chars | identical |
-| `dashboard.temporary` | extra | **different**: forced by target 8.18.7 (`omit:` entry whose floor is above the target is not emitted; the render carries the key where the source has none), set aside by the importer |
-
-3 widgets, all identical.
-
-### . Object Summary Page for Network Folder
-
-File `dashboards/object-summary-page-for-network-folder.yaml`; id `6740d93c-c8c3-4189-8bcb-7436da044fff`; source `content/dashboards/NetworkFolder/dashboard.json`.
-
-Importer verification: **identical apart from forced target keys** (70 fields compared).
-
-Dashboard-level settings
-
-| Setting | Value | Compared with source |
-|---|---|---|
-| `name_path` | `` | identical |
-| `omit` | `['name_path']` | identical |
-| `shared` | `False` | identical |
-| `hidden` | `False` | identical |
-| `disabled` | `True` | identical |
-| `edit_allowed` | `True` | identical |
-| `column_count` | `0` | identical |
+| id | `74f1299f-aa3e-5820-b71a-9d6708e058a1` | **different**, intended: newly minted in the pak's own namespace; source id `6740d93c-c8c3-4189-8bcb-7436da044fff` |
 | interactions | 1 | identical |
 | name | `. Object Summary Page for Network Folder` | identical |
 | description | 0 chars | identical |
@@ -307,9 +314,9 @@ Dashboard-level settings
 
 ### . Object Summary Page for Storage Folder
 
-File `dashboards/object-summary-page-for-storage-folder.yaml`; id `9c6b664a-04af-4271-a2ac-23795bfe0365`; source `content/dashboards/DatastoreFolder/dashboard.json`.
+File `dashboards/object-summary-page-for-storage-folder.yaml`; id `d5b1cd58-b57d-5b61-99a7-7101fdd16dab` (newly minted; source id `9c6b664a-04af-4271-a2ac-23795bfe0365`); source `content/dashboards/DatastoreFolder/dashboard.json`.
 
-Importer verification: **differs only at recorded losses** (72 fields compared).
+Importer verification: **differs only at recorded losses** (73 fields compared).
 
 Dashboard-level settings
 
@@ -322,6 +329,7 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `edit_allowed` | `True` | identical |
 | `column_count` | `0` | identical |
+| id | `d5b1cd58-b57d-5b61-99a7-7101fdd16dab` | **different**, intended: newly minted in the pak's own namespace; source id `9c6b664a-04af-4271-a2ac-23795bfe0365` |
 | interactions | 1 | identical |
 | name | `. Object Summary Page for Storage Folder` | identical |
 | description | 0 chars | identical |
@@ -336,9 +344,9 @@ Widgets (2; time range is dashboard-level: `product default`)
 
 ### . Object Summary Page for VM Folder
 
-File `dashboards/object-summary-page-for-vm-folder.yaml`; id `d22b04d0-1eb2-496e-8944-a143e94187d5`; source `content/dashboards/VMFolder/dashboard.json`.
+File `dashboards/object-summary-page-for-vm-folder.yaml`; id `a1ba283a-b469-5042-aefc-3f8e3a3bcfe4` (newly minted; source id `d22b04d0-1eb2-496e-8944-a143e94187d5`); source `content/dashboards/VMFolder/dashboard.json`.
 
-Importer verification: **identical apart from forced target keys** (97 fields compared).
+Importer verification: **identical apart from forced target keys** (98 fields compared).
 
 Dashboard-level settings
 
@@ -351,6 +359,7 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `edit_allowed` | `True` | identical |
 | `column_count` | `0` | identical |
+| id | `a1ba283a-b469-5042-aefc-3f8e3a3bcfe4` | **different**, intended: newly minted in the pak's own namespace; source id `d22b04d0-1eb2-496e-8944-a143e94187d5` |
 | interactions | 2 | identical |
 | name | `. Object Summary Page for VM Folder` | identical |
 | description | 0 chars | identical |
@@ -360,9 +369,9 @@ Dashboard-level settings
 
 ### Overall Daily Check
 
-File `dashboards/overall-daily-check.yaml`; id `555b7d86-b48e-4f26-ae9e-b19ba24369d4`; source `content/dashboards/overall daily check/Overall Daily Check.json`.
+File `dashboards/overall-daily-check.yaml`; id `12abae81-ce8b-5916-8126-298487728f37` (newly minted; source id `555b7d86-b48e-4f26-ae9e-b19ba24369d4`); source `content/dashboards/overall daily check/Overall Daily Check.json`.
 
-Importer verification: **differs only at recorded losses** (1619 fields compared).
+Importer verification: **differs only at recorded losses** (1620 fields compared).
 
 Dashboard-level settings
 
@@ -375,6 +384,7 @@ Dashboard-level settings
 | `edit_allowed` | `True` | identical |
 | `column_count` | `0` | identical |
 | `section_fallback` | `omit` | added by the port, not a source key (owner decision 2026-11-13); no effect on a target that imports Section |
+| id | `12abae81-ce8b-5916-8126-298487728f37` | **different**, intended: newly minted in the pak's own namespace; source id `555b7d86-b48e-4f26-ae9e-b19ba24369d4` |
 | interactions | 0 | identical |
 | name | `Overall Daily Check` | identical (name_path carried in `name_path`) |
 | description | 143 chars | identical |
@@ -423,9 +433,9 @@ Widgets (33; time range is dashboard-level: `lastHour`)
 
 ### Report: ESXi Hardware Configuration
 
-File `dashboards/report-esxi-hardware-configuration.yaml`; id `d0d182c9-2d83-48e1-9891-46905631c057`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-esxi-hardware-configuration.yaml`; id `1a5701f8-26bb-598d-b551-ffa1aeef3faf` (newly minted; source id `d0d182c9-2d83-48e1-9891-46905631c057`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (161 fields compared).
+Importer verification: **differs only at recorded losses** (162 fields compared).
 
 Dashboard-level settings
 
@@ -436,6 +446,7 @@ Dashboard-level settings
 | `hidden` | `True` | identical |
 | `disabled` | `True` | identical |
 | `doc_center_key` | `vcom_522` | identical |
+| id | `1a5701f8-26bb-598d-b551-ffa1aeef3faf` | **different**, intended: newly minted in the pak's own namespace; source id `d0d182c9-2d83-48e1-9891-46905631c057` |
 | interactions | 0 | identical |
 | name | `Report: ESXi Hardware Configuration` | identical (name_path carried in `name_path`) |
 | description | 263 chars | identical |
@@ -445,9 +456,9 @@ Dashboard-level settings
 
 ### Report: ESXi Software Configuration
 
-File `dashboards/report-esxi-software-configuration.yaml`; id `f6efe3e2-c905-4f22-afa2-bcb1fad9227f`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-esxi-software-configuration.yaml`; id `1b58d631-8491-5b4e-baf5-8e4fec841cd2` (newly minted; source id `f6efe3e2-c905-4f22-afa2-bcb1fad9227f`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (170 fields compared).
+Importer verification: **differs only at recorded losses** (171 fields compared).
 
 Dashboard-level settings
 
@@ -458,6 +469,7 @@ Dashboard-level settings
 | `hidden` | `True` | identical |
 | `disabled` | `True` | identical |
 | `doc_center_key` | `vcom_522` | identical |
+| id | `1b58d631-8491-5b4e-baf5-8e4fec841cd2` | **different**, intended: newly minted in the pak's own namespace; source id `f6efe3e2-c905-4f22-afa2-bcb1fad9227f` |
 | interactions | 0 | identical |
 | name | `Report: ESXi Software Configuration` | identical (name_path carried in `name_path`) |
 | description | 263 chars | identical |
@@ -467,9 +479,9 @@ Dashboard-level settings
 
 ### Report: Executive Summary (page 2)
 
-File `dashboards/report-executive-summary-page-2.yaml`; id `6e64e4e0-e484-434a-9cde-7a18964be2bc`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-executive-summary-page-2.yaml`; id `ccf00daa-3d1d-51ae-a9e7-e24504fe0e0c` (newly minted; source id `6e64e4e0-e484-434a-9cde-7a18964be2bc`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **identical** (100 fields compared).
+Importer verification: **identical** (101 fields compared).
 
 Dashboard-level settings
 
@@ -480,6 +492,7 @@ Dashboard-level settings
 | `hidden` | `False` | identical |
 | `disabled` | `True` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `ccf00daa-3d1d-51ae-a9e7-e24504fe0e0c` | **different**, intended: newly minted in the pak's own namespace; source id `6e64e4e0-e484-434a-9cde-7a18964be2bc` |
 | interactions | 0 | identical |
 | name | `Report: Executive Summary (page 2)` | identical (name_path carried in `name_path`) |
 | description | 212 chars | identical |
@@ -488,9 +501,9 @@ Dashboard-level settings
 
 ### Report: Executive Summary (page 3)
 
-File `dashboards/report-executive-summary-page-3.yaml`; id `46054d7d-335f-4c11-a3e5-18cf47a9f1f0`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-executive-summary-page-3.yaml`; id `cc06106f-a504-5ddf-8e7c-d2c117d1b3ba` (newly minted; source id `46054d7d-335f-4c11-a3e5-18cf47a9f1f0`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (145 fields compared).
+Importer verification: **differs only at recorded losses** (146 fields compared).
 
 Dashboard-level settings
 
@@ -503,6 +516,7 @@ Dashboard-level settings
 | `time_range` | `last7Days` | identical |
 | `doc_center_key` | `vcom_788` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `cc06106f-a504-5ddf-8e7c-d2c117d1b3ba` | **different**, intended: newly minted in the pak's own namespace; source id `46054d7d-335f-4c11-a3e5-18cf47a9f1f0` |
 | interactions | 0 | identical |
 | name | `Report: Executive Summary (page 3)` | identical (name_path carried in `name_path`) |
 | description | 212 chars | identical |
@@ -512,9 +526,9 @@ Dashboard-level settings
 
 ### Report: Executive Summary (page 4)
 
-File `dashboards/report-executive-summary-page-4.yaml`; id `413bc905-4980-4704-bf44-662c5018a8a8`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-executive-summary-page-4.yaml`; id `1be5507a-d028-58a6-8a68-912d2ae61d9a` (newly minted; source id `413bc905-4980-4704-bf44-662c5018a8a8`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (102 fields compared).
+Importer verification: **differs only at recorded losses** (103 fields compared).
 
 Dashboard-level settings
 
@@ -525,6 +539,7 @@ Dashboard-level settings
 | `hidden` | `True` | identical |
 | `disabled` | `True` | identical |
 | `doc_center_key` | `vcom_522` | identical |
+| id | `1be5507a-d028-58a6-8a68-912d2ae61d9a` | **different**, intended: newly minted in the pak's own namespace; source id `413bc905-4980-4704-bf44-662c5018a8a8` |
 | interactions | 0 | identical |
 | name | `Report: Executive Summary (page 4)` | identical (name_path carried in `name_path`) |
 | description | 212 chars | identical |
@@ -534,9 +549,9 @@ Dashboard-level settings
 
 ### Report: Executive Summary (page 5)
 
-File `dashboards/report-executive-summary-page-5.yaml`; id `5f8539a1-d022-414d-95ca-81c888e869a8`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-executive-summary-page-5.yaml`; id `17c1f4bd-1fd1-560f-a81c-de279bb91d9d` (newly minted; source id `5f8539a1-d022-414d-95ca-81c888e869a8`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **identical** (261 fields compared).
+Importer verification: **identical** (262 fields compared).
 
 Dashboard-level settings
 
@@ -547,6 +562,7 @@ Dashboard-level settings
 | `hidden` | `False` | identical |
 | `disabled` | `True` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `17c1f4bd-1fd1-560f-a81c-de279bb91d9d` | **different**, intended: newly minted in the pak's own namespace; source id `5f8539a1-d022-414d-95ca-81c888e869a8` |
 | interactions | 0 | identical |
 | name | `Report: Executive Summary (page 5)` | identical (name_path carried in `name_path`) |
 | description | 212 chars | identical |
@@ -555,9 +571,9 @@ Dashboard-level settings
 
 ### Report: Executive Summary
 
-File `dashboards/report-executive-summary.yaml`; id `a13b8278-83a4-435f-b2b6-309ab77e5017`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-executive-summary.yaml`; id `d209b327-255a-5478-8e56-a76506d98028` (newly minted; source id `a13b8278-83a4-435f-b2b6-309ab77e5017`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **identical** (278 fields compared).
+Importer verification: **identical** (279 fields compared).
 
 Dashboard-level settings
 
@@ -568,6 +584,7 @@ Dashboard-level settings
 | `hidden` | `False` | identical |
 | `disabled` | `True` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `d209b327-255a-5478-8e56-a76506d98028` | **different**, intended: newly minted in the pak's own namespace; source id `a13b8278-83a4-435f-b2b6-309ab77e5017` |
 | interactions | 0 | identical |
 | name | `Report: Executive Summary` | identical (name_path carried in `name_path`) |
 | description | 212 chars | identical |
@@ -576,9 +593,9 @@ Dashboard-level settings
 
 ### Report: Guest OS Configuration
 
-File `dashboards/report-guest-os-configuration.yaml`; id `8edbf859-2b36-4ea3-8fe5-68c44d7343f6`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-guest-os-configuration.yaml`; id `23709e89-81de-5326-8481-5a1ebdd93f0b` (newly minted; source id `8edbf859-2b36-4ea3-8fe5-68c44d7343f6`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (106 fields compared).
+Importer verification: **differs only at recorded losses** (107 fields compared).
 
 Dashboard-level settings
 
@@ -589,6 +606,7 @@ Dashboard-level settings
 | `hidden` | `True` | identical |
 | `disabled` | `True` | identical |
 | `doc_center_key` | `vcom_524` | identical |
+| id | `23709e89-81de-5326-8481-5a1ebdd93f0b` | **different**, intended: newly minted in the pak's own namespace; source id `8edbf859-2b36-4ea3-8fe5-68c44d7343f6` |
 | interactions | 0 | identical |
 | name | `Report: Guest OS Configuration` | identical (name_path carried in `name_path`) |
 | description | 263 chars | identical |
@@ -598,9 +616,9 @@ Dashboard-level settings
 
 ### Report: Reclamable Capacity
 
-File `dashboards/report-reclamable-capacity.yaml`; id `a3b87c13-3965-443a-bdc9-a69d402e3cec`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-reclamable-capacity.yaml`; id `afd4e974-e0cf-5222-a838-5c343c2c8378` (newly minted; source id `a3b87c13-3965-443a-bdc9-a69d402e3cec`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **identical** (206 fields compared).
+Importer verification: **identical** (207 fields compared).
 
 Dashboard-level settings
 
@@ -611,6 +629,7 @@ Dashboard-level settings
 | `hidden` | `False` | identical |
 | `disabled` | `True` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `afd4e974-e0cf-5222-a838-5c343c2c8378` | **different**, intended: newly minted in the pak's own namespace; source id `a3b87c13-3965-443a-bdc9-a69d402e3cec` |
 | interactions | 0 | identical |
 | name | `Report: Reclamable Capacity` | identical (name_path carried in `name_path`) |
 | description | 206 chars | identical |
@@ -619,9 +638,9 @@ Dashboard-level settings
 
 ### Report: VM Capacity (page 2)
 
-File `dashboards/report-vm-capacity-page-2.yaml`; id `c6b3909f-f1ec-4691-b22c-70b7175e0c87`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vm-capacity-page-2.yaml`; id `078dddf2-39d0-57b9-af49-cb94e3480bb1` (newly minted; source id `c6b3909f-f1ec-4691-b22c-70b7175e0c87`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (98 fields compared).
+Importer verification: **differs only at recorded losses** (99 fields compared).
 
 Dashboard-level settings
 
@@ -633,6 +652,7 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `time_range` | `last7Days` | identical |
 | `doc_center_key` | `vcom_556` | identical |
+| id | `078dddf2-39d0-57b9-af49-cb94e3480bb1` | **different**, intended: newly minted in the pak's own namespace; source id `c6b3909f-f1ec-4691-b22c-70b7175e0c87` |
 | interactions | 0 | identical |
 | name | `Report: VM Capacity (page 2)` | identical (name_path carried in `name_path`) |
 | description | 206 chars | identical |
@@ -642,9 +662,9 @@ Dashboard-level settings
 
 ### Report: VM Capacity (page 3)
 
-File `dashboards/report-vm-capacity-page-3.yaml`; id `ac7f0897-e75c-4072-91b7-af565c1ddb37`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vm-capacity-page-3.yaml`; id `b14f32fa-50e8-58ac-a05a-bc4c6b305cde` (newly minted; source id `ac7f0897-e75c-4072-91b7-af565c1ddb37`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (60 fields compared).
+Importer verification: **differs only at recorded losses** (61 fields compared).
 
 Dashboard-level settings
 
@@ -656,6 +676,7 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `time_range` | `last7Days` | identical |
 | `doc_center_key` | `vcom_556` | identical |
+| id | `b14f32fa-50e8-58ac-a05a-bc4c6b305cde` | **different**, intended: newly minted in the pak's own namespace; source id `ac7f0897-e75c-4072-91b7-af565c1ddb37` |
 | interactions | 0 | identical |
 | name | `Report: VM Capacity (page 3)` | identical (name_path carried in `name_path`) |
 | description | 206 chars | identical |
@@ -665,9 +686,9 @@ Dashboard-level settings
 
 ### Report: VM Capacity
 
-File `dashboards/report-vm-capacity.yaml`; id `8915da4d-0193-45da-83c1-4ef616a2e71d`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vm-capacity.yaml`; id `a47e40b8-5368-55d8-a933-bd0c82cbb49d` (newly minted; source id `8915da4d-0193-45da-83c1-4ef616a2e71d`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (155 fields compared).
+Importer verification: **differs only at recorded losses** (156 fields compared).
 
 Dashboard-level settings
 
@@ -679,6 +700,7 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `time_range` | `last7Days` | identical |
 | `doc_center_key` | `vcom_556` | identical |
+| id | `a47e40b8-5368-55d8-a933-bd0c82cbb49d` | **different**, intended: newly minted in the pak's own namespace; source id `8915da4d-0193-45da-83c1-4ef616a2e71d` |
 | interactions | 0 | identical |
 | name | `Report: VM Capacity` | identical (name_path carried in `name_path`) |
 | description | 206 chars | identical |
@@ -688,9 +710,9 @@ Dashboard-level settings
 
 ### Report: VM Configuration (page 2)
 
-File `dashboards/report-vm-configuration-page-2.yaml`; id `d477baf3-b84b-4e3c-8d9e-fa6dc7ad05e0`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vm-configuration-page-2.yaml`; id `ac79e341-c9dd-55ba-95a6-e3a95c940456` (newly minted; source id `d477baf3-b84b-4e3c-8d9e-fa6dc7ad05e0`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **identical** (96 fields compared).
+Importer verification: **identical** (97 fields compared).
 
 Dashboard-level settings
 
@@ -701,6 +723,7 @@ Dashboard-level settings
 | `hidden` | `False` | identical |
 | `disabled` | `True` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `ac79e341-c9dd-55ba-95a6-e3a95c940456` | **different**, intended: newly minted in the pak's own namespace; source id `d477baf3-b84b-4e3c-8d9e-fa6dc7ad05e0` |
 | interactions | 0 | identical |
 | name | `Report: VM Configuration (page 2)` | identical (name_path carried in `name_path`) |
 | description | 263 chars | identical |
@@ -709,9 +732,9 @@ Dashboard-level settings
 
 ### Report: VM Configuration
 
-File `dashboards/report-vm-configuration.yaml`; id `aa9e3a20-1083-4411-ad11-511e5c93fe52`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vm-configuration.yaml`; id `5756c6e9-3239-5f4d-add3-d9549a99ef26` (newly minted; source id `aa9e3a20-1083-4411-ad11-511e5c93fe52`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (194 fields compared).
+Importer verification: **differs only at recorded losses** (195 fields compared).
 
 Dashboard-level settings
 
@@ -722,6 +745,7 @@ Dashboard-level settings
 | `hidden` | `True` | identical |
 | `disabled` | `True` | identical |
 | `doc_center_key` | `vcom_524` | identical |
+| id | `5756c6e9-3239-5f4d-add3-d9549a99ef26` | **different**, intended: newly minted in the pak's own namespace; source id `aa9e3a20-1083-4411-ad11-511e5c93fe52` |
 | interactions | 0 | identical |
 | name | `Report: VM Configuration` | identical (name_path carried in `name_path`) |
 | description | 263 chars | identical |
@@ -731,9 +755,9 @@ Dashboard-level settings
 
 ### Report: VM Inventory (page 2)
 
-File `dashboards/report-vm-inventory-page-2.yaml`; id `c32894fc-f375-4f4d-b486-9f10473dc82b`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vm-inventory-page-2.yaml`; id `05382cf8-4965-5b44-b52f-e7a7ebe9bd5a` (newly minted; source id `c32894fc-f375-4f4d-b486-9f10473dc82b`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (247 fields compared).
+Importer verification: **differs only at recorded losses** (248 fields compared).
 
 Dashboard-level settings
 
@@ -745,6 +769,7 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `time_range` | `last7Days` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `05382cf8-4965-5b44-b52f-e7a7ebe9bd5a` | **different**, intended: newly minted in the pak's own namespace; source id `c32894fc-f375-4f4d-b486-9f10473dc82b` |
 | interactions | 0 | identical |
 | name | `Report: VM Inventory (page 2)` | identical (name_path carried in `name_path`) |
 | description | 235 chars | identical |
@@ -761,9 +786,9 @@ Widgets (5; time range is dashboard-level: `last7Days`)
 
 ### Report: VM Inventory (page 3)
 
-File `dashboards/report-vm-inventory-page-3.yaml`; id `6a61ab77-3d45-4c93-b932-1c67640e29b1`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vm-inventory-page-3.yaml`; id `9c093d91-7883-5e7c-af51-246ae93b3557` (newly minted; source id `6a61ab77-3d45-4c93-b932-1c67640e29b1`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **identical** (138 fields compared).
+Importer verification: **identical** (139 fields compared).
 
 Dashboard-level settings
 
@@ -775,6 +800,7 @@ Dashboard-level settings
 | `disabled` | `True` | identical |
 | `time_range` | `last7Days` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `9c093d91-7883-5e7c-af51-246ae93b3557` | **different**, intended: newly minted in the pak's own namespace; source id `6a61ab77-3d45-4c93-b932-1c67640e29b1` |
 | interactions | 0 | identical |
 | name | `Report: VM Inventory (page 3)` | identical (name_path carried in `name_path`) |
 | description | 235 chars | identical |
@@ -783,9 +809,9 @@ Dashboard-level settings
 
 ### Report: VM Inventory
 
-File `dashboards/report-vm-inventory.yaml`; id `1fa82396-68ad-4eef-a1f2-3fce6df8274d`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vm-inventory.yaml`; id `f45bd55e-f2e9-55ce-ad91-6f9d81822683` (newly minted; source id `1fa82396-68ad-4eef-a1f2-3fce6df8274d`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **identical** (193 fields compared).
+Importer verification: **identical** (194 fields compared).
 
 Dashboard-level settings
 
@@ -796,6 +822,7 @@ Dashboard-level settings
 | `hidden` | `False` | identical |
 | `disabled` | `True` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `f45bd55e-f2e9-55ce-ad91-6f9d81822683` | **different**, intended: newly minted in the pak's own namespace; source id `1fa82396-68ad-4eef-a1f2-3fce6df8274d` |
 | interactions | 0 | identical |
 | name | `Report: VM Inventory` | identical (name_path carried in `name_path`) |
 | description | 235 chars | identical |
@@ -804,165 +831,7 @@ Dashboard-level settings
 
 ### Report: VM Performance (page 2)
 
-File `dashboards/report-vm-performance-page-2.yaml`; id `36940b83-1744-42ba-b8fd-c23f15644b17`; source `content/dashboards/To be used in reports/Input dashboards.json`.
-
-Importer verification: **differs only at recorded losses** (117 fields compared).
-
-Dashboard-level settings
-
-| Setting | Value | Compared with source |
-|---|---|---|
-| `name_path` | `VCF Optimization Assessment` | identical |
-| `shared` | `False` | identical |
-| `hidden` | `True` | identical |
-| `disabled` | `True` | identical |
-| `time_range` | `last7Days` | identical |
-| `doc_center_key` | `vcom_788` | identical |
-| `column_proportion` | `1-1` | identical |
-| interactions | 0 | identical |
-| name | `Report: VM Performance (page 2)` | identical (name_path carried in `name_path`) |
-| description | 233 chars | identical |
-| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
-
-3 widgets, all identical.
-
-### Report: VM Performance
-
-File `dashboards/report-vm-performance.yaml`; id `749dd1b7-0a04-4502-93db-8cf1492b2723`; source `content/dashboards/To be used in reports/Input dashboards.json`.
-
-Importer verification: **differs only at recorded losses** (100 fields compared).
-
-Dashboard-level settings
-
-| Setting | Value | Compared with source |
-|---|---|---|
-| `name_path` | `VCF Optimization Assessment` | identical |
-| `shared` | `False` | identical |
-| `hidden` | `True` | identical |
-| `disabled` | `True` | identical |
-| `time_range` | `last6Hour` | identical |
-| `doc_center_key` | `vcom_788` | identical |
-| `column_proportion` | `1-1` | identical |
-| interactions | 0 | identical |
-| name | `Report: VM Performance` | identical (name_path carried in `name_path`) |
-| description | 233 chars | identical |
-| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
-
-4 widgets, all identical.
-
-### Report: VM Size Distribution
-
-File `dashboards/report-vm-size-distribution.yaml`; id `ff519731-cd08-4cff-bdb9-dc29cd7d6e88`; source `content/dashboards/To be used in reports/Input dashboards.json`.
-
-Importer verification: **differs only at recorded losses** (85 fields compared).
-
-Dashboard-level settings
-
-| Setting | Value | Compared with source |
-|---|---|---|
-| `name_path` | `VCF Optimization Assessment` | identical |
-| `shared` | `False` | identical |
-| `hidden` | `True` | identical |
-| `disabled` | `True` | identical |
-| `doc_center_key` | `vcom_524` | identical |
-| interactions | 0 | identical |
-| name | `Report: VM Size Distribution` | identical (name_path carried in `name_path`) |
-| description | 263 chars | identical |
-| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
-
-3 widgets, all identical.
-
-### Report: vSphere Cluster Configuration
-
-File `dashboards/report-vsphere-cluster-configuration.yaml`; id `ed71f901-bb66-46da-8a30-de49fda0e133`; source `content/dashboards/To be used in reports/Input dashboards.json`.
-
-Importer verification: **differs only at recorded losses** (174 fields compared).
-
-Dashboard-level settings
-
-| Setting | Value | Compared with source |
-|---|---|---|
-| `name_path` | `VCF Optimization Assessment` | identical |
-| `shared` | `False` | identical |
-| `hidden` | `True` | identical |
-| `disabled` | `True` | identical |
-| `doc_center_key` | `vcom_522` | identical |
-| interactions | 0 | identical |
-| name | `Report: vSphere Cluster Configuration` | identical (name_path carried in `name_path`) |
-| description | 263 chars | identical |
-| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
-
-8 widgets, all identical.
-
-### Report: vSphere Compute Capacity (page 2)
-
-File `dashboards/report-vsphere-compute-capacity-page-2.yaml`; id `1c12139f-3663-43af-aa6a-34a097249d59`; source `content/dashboards/To be used in reports/Input dashboards.json`.
-
-Importer verification: **differs only at recorded losses** (102 fields compared).
-
-Dashboard-level settings
-
-| Setting | Value | Compared with source |
-|---|---|---|
-| `name_path` | `VCF Optimization Assessment` | identical |
-| `shared` | `False` | identical |
-| `hidden` | `True` | identical |
-| `disabled` | `True` | identical |
-| `doc_center_key` | `vcom_522` | identical |
-| interactions | 0 | identical |
-| name | `Report: vSphere Compute Capacity (page 2)` | identical (name_path carried in `name_path`) |
-| description | 206 chars | identical |
-| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
-
-4 widgets, all identical.
-
-### Report: vSphere Compute Capacity (page 3)
-
-File `dashboards/report-vsphere-compute-capacity-page-3.yaml`; id `b43f77c4-2fa7-4446-9222-30f664ab9cac`; source `content/dashboards/To be used in reports/Input dashboards.json`.
-
-Importer verification: **differs only at recorded losses** (175 fields compared).
-
-Dashboard-level settings
-
-| Setting | Value | Compared with source |
-|---|---|---|
-| `name_path` | `VCF Optimization Assessment` | identical |
-| `shared` | `False` | identical |
-| `hidden` | `True` | identical |
-| `disabled` | `True` | identical |
-| `doc_center_key` | `vcom_522` | identical |
-| interactions | 0 | identical |
-| name | `Report: vSphere Compute Capacity (page 3)` | identical (name_path carried in `name_path`) |
-| description | 206 chars | identical |
-| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
-
-4 widgets, all identical.
-
-### Report: vSphere Compute Capacity
-
-File `dashboards/report-vsphere-compute-capacity.yaml`; id `b349c744-6008-4067-8ad0-b2817ad8fe7e`; source `content/dashboards/To be used in reports/Input dashboards.json`.
-
-Importer verification: **differs only at recorded losses** (300 fields compared).
-
-Dashboard-level settings
-
-| Setting | Value | Compared with source |
-|---|---|---|
-| `name_path` | `VCF Optimization Assessment` | identical |
-| `shared` | `False` | identical |
-| `hidden` | `True` | identical |
-| `disabled` | `True` | identical |
-| `doc_center_key` | `vcom_522` | identical |
-| interactions | 0 | identical |
-| name | `Report: vSphere Compute Capacity` | identical (name_path carried in `name_path`) |
-| description | 206 chars | identical |
-| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
-
-5 widgets, all identical.
-
-### Report: vSphere Compute Performance (page 2)
-
-File `dashboards/report-vsphere-compute-performance-page-2.yaml`; id `9c05826d-2695-487a-a10e-fb58997002dc`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vm-performance-page-2.yaml`; id `7f3ee5b6-1ae5-575c-90ea-d5a42f956102` (newly minted; source id `36940b83-1744-42ba-b8fd-c23f15644b17`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
 Importer verification: **differs only at recorded losses** (118 fields compared).
 
@@ -977,18 +846,159 @@ Dashboard-level settings
 | `time_range` | `last7Days` | identical |
 | `doc_center_key` | `vcom_788` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `7f3ee5b6-1ae5-575c-90ea-d5a42f956102` | **different**, intended: newly minted in the pak's own namespace; source id `36940b83-1744-42ba-b8fd-c23f15644b17` |
 | interactions | 0 | identical |
-| name | `Report: vSphere Compute Performance (page 2)` | identical (name_path carried in `name_path`) |
+| name | `Report: VM Performance (page 2)` | identical (name_path carried in `name_path`) |
 | description | 233 chars | identical |
 | `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
 
-2 widgets, all identical.
+3 widgets, all identical.
 
-### Report: vSphere Compute Performance
+### Report: VM Performance
 
-File `dashboards/report-vsphere-compute-performance.yaml`; id `985e7ad8-11d3-4aeb-88bd-49b2c8c03dde`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vm-performance.yaml`; id `467de488-80d5-539b-8067-a1e6c8e2a5e7` (newly minted; source id `749dd1b7-0a04-4502-93db-8cf1492b2723`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (206 fields compared).
+Importer verification: **differs only at recorded losses** (101 fields compared).
+
+Dashboard-level settings
+
+| Setting | Value | Compared with source |
+|---|---|---|
+| `name_path` | `VCF Optimization Assessment` | identical |
+| `shared` | `False` | identical |
+| `hidden` | `True` | identical |
+| `disabled` | `True` | identical |
+| `time_range` | `last6Hour` | identical |
+| `doc_center_key` | `vcom_788` | identical |
+| `column_proportion` | `1-1` | identical |
+| id | `467de488-80d5-539b-8067-a1e6c8e2a5e7` | **different**, intended: newly minted in the pak's own namespace; source id `749dd1b7-0a04-4502-93db-8cf1492b2723` |
+| interactions | 0 | identical |
+| name | `Report: VM Performance` | identical (name_path carried in `name_path`) |
+| description | 233 chars | identical |
+| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
+
+4 widgets, all identical.
+
+### Report: VM Size Distribution
+
+File `dashboards/report-vm-size-distribution.yaml`; id `5b2d2bb1-647c-56d0-9f1e-da4de9d5c0f0` (newly minted; source id `ff519731-cd08-4cff-bdb9-dc29cd7d6e88`); source `content/dashboards/To be used in reports/Input dashboards.json`.
+
+Importer verification: **differs only at recorded losses** (86 fields compared).
+
+Dashboard-level settings
+
+| Setting | Value | Compared with source |
+|---|---|---|
+| `name_path` | `VCF Optimization Assessment` | identical |
+| `shared` | `False` | identical |
+| `hidden` | `True` | identical |
+| `disabled` | `True` | identical |
+| `doc_center_key` | `vcom_524` | identical |
+| id | `5b2d2bb1-647c-56d0-9f1e-da4de9d5c0f0` | **different**, intended: newly minted in the pak's own namespace; source id `ff519731-cd08-4cff-bdb9-dc29cd7d6e88` |
+| interactions | 0 | identical |
+| name | `Report: VM Size Distribution` | identical (name_path carried in `name_path`) |
+| description | 263 chars | identical |
+| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
+
+3 widgets, all identical.
+
+### Report: vSphere Cluster Configuration
+
+File `dashboards/report-vsphere-cluster-configuration.yaml`; id `7efb2814-37d8-5204-bee2-38fb85f040e2` (newly minted; source id `ed71f901-bb66-46da-8a30-de49fda0e133`); source `content/dashboards/To be used in reports/Input dashboards.json`.
+
+Importer verification: **differs only at recorded losses** (175 fields compared).
+
+Dashboard-level settings
+
+| Setting | Value | Compared with source |
+|---|---|---|
+| `name_path` | `VCF Optimization Assessment` | identical |
+| `shared` | `False` | identical |
+| `hidden` | `True` | identical |
+| `disabled` | `True` | identical |
+| `doc_center_key` | `vcom_522` | identical |
+| id | `7efb2814-37d8-5204-bee2-38fb85f040e2` | **different**, intended: newly minted in the pak's own namespace; source id `ed71f901-bb66-46da-8a30-de49fda0e133` |
+| interactions | 0 | identical |
+| name | `Report: vSphere Cluster Configuration` | identical (name_path carried in `name_path`) |
+| description | 263 chars | identical |
+| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
+
+8 widgets, all identical.
+
+### Report: vSphere Compute Capacity (page 2)
+
+File `dashboards/report-vsphere-compute-capacity-page-2.yaml`; id `b5f3c52e-9799-58fa-8d5f-8aaace92c025` (newly minted; source id `1c12139f-3663-43af-aa6a-34a097249d59`); source `content/dashboards/To be used in reports/Input dashboards.json`.
+
+Importer verification: **differs only at recorded losses** (103 fields compared).
+
+Dashboard-level settings
+
+| Setting | Value | Compared with source |
+|---|---|---|
+| `name_path` | `VCF Optimization Assessment` | identical |
+| `shared` | `False` | identical |
+| `hidden` | `True` | identical |
+| `disabled` | `True` | identical |
+| `doc_center_key` | `vcom_522` | identical |
+| id | `b5f3c52e-9799-58fa-8d5f-8aaace92c025` | **different**, intended: newly minted in the pak's own namespace; source id `1c12139f-3663-43af-aa6a-34a097249d59` |
+| interactions | 0 | identical |
+| name | `Report: vSphere Compute Capacity (page 2)` | identical (name_path carried in `name_path`) |
+| description | 206 chars | identical |
+| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
+
+4 widgets, all identical.
+
+### Report: vSphere Compute Capacity (page 3)
+
+File `dashboards/report-vsphere-compute-capacity-page-3.yaml`; id `74388fa7-a7a5-5bb0-96f3-a69706709c38` (newly minted; source id `b43f77c4-2fa7-4446-9222-30f664ab9cac`); source `content/dashboards/To be used in reports/Input dashboards.json`.
+
+Importer verification: **differs only at recorded losses** (176 fields compared).
+
+Dashboard-level settings
+
+| Setting | Value | Compared with source |
+|---|---|---|
+| `name_path` | `VCF Optimization Assessment` | identical |
+| `shared` | `False` | identical |
+| `hidden` | `True` | identical |
+| `disabled` | `True` | identical |
+| `doc_center_key` | `vcom_522` | identical |
+| id | `74388fa7-a7a5-5bb0-96f3-a69706709c38` | **different**, intended: newly minted in the pak's own namespace; source id `b43f77c4-2fa7-4446-9222-30f664ab9cac` |
+| interactions | 0 | identical |
+| name | `Report: vSphere Compute Capacity (page 3)` | identical (name_path carried in `name_path`) |
+| description | 206 chars | identical |
+| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
+
+4 widgets, all identical.
+
+### Report: vSphere Compute Capacity
+
+File `dashboards/report-vsphere-compute-capacity.yaml`; id `c14df574-c6e1-5315-9eb2-403eb56160be` (newly minted; source id `b349c744-6008-4067-8ad0-b2817ad8fe7e`); source `content/dashboards/To be used in reports/Input dashboards.json`.
+
+Importer verification: **differs only at recorded losses** (301 fields compared).
+
+Dashboard-level settings
+
+| Setting | Value | Compared with source |
+|---|---|---|
+| `name_path` | `VCF Optimization Assessment` | identical |
+| `shared` | `False` | identical |
+| `hidden` | `True` | identical |
+| `disabled` | `True` | identical |
+| `doc_center_key` | `vcom_522` | identical |
+| id | `c14df574-c6e1-5315-9eb2-403eb56160be` | **different**, intended: newly minted in the pak's own namespace; source id `b349c744-6008-4067-8ad0-b2817ad8fe7e` |
+| interactions | 0 | identical |
+| name | `Report: vSphere Compute Capacity` | identical (name_path carried in `name_path`) |
+| description | 206 chars | identical |
+| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
+
+5 widgets, all identical.
+
+### Report: vSphere Compute Performance (page 2)
+
+File `dashboards/report-vsphere-compute-performance-page-2.yaml`; id `dbd22448-430c-53ff-87f7-5a9c45a7b582` (newly minted; source id `9c05826d-2695-487a-a10e-fb58997002dc`); source `content/dashboards/To be used in reports/Input dashboards.json`.
+
+Importer verification: **differs only at recorded losses** (119 fields compared).
 
 Dashboard-level settings
 
@@ -1001,6 +1011,32 @@ Dashboard-level settings
 | `time_range` | `last7Days` | identical |
 | `doc_center_key` | `vcom_788` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `dbd22448-430c-53ff-87f7-5a9c45a7b582` | **different**, intended: newly minted in the pak's own namespace; source id `9c05826d-2695-487a-a10e-fb58997002dc` |
+| interactions | 0 | identical |
+| name | `Report: vSphere Compute Performance (page 2)` | identical (name_path carried in `name_path`) |
+| description | 233 chars | identical |
+| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
+
+2 widgets, all identical.
+
+### Report: vSphere Compute Performance
+
+File `dashboards/report-vsphere-compute-performance.yaml`; id `0f815ef7-5cf9-5476-bede-7bee9d3584c4` (newly minted; source id `985e7ad8-11d3-4aeb-88bd-49b2c8c03dde`); source `content/dashboards/To be used in reports/Input dashboards.json`.
+
+Importer verification: **differs only at recorded losses** (207 fields compared).
+
+Dashboard-level settings
+
+| Setting | Value | Compared with source |
+|---|---|---|
+| `name_path` | `VCF Optimization Assessment` | identical |
+| `shared` | `False` | identical |
+| `hidden` | `True` | identical |
+| `disabled` | `True` | identical |
+| `time_range` | `last7Days` | identical |
+| `doc_center_key` | `vcom_788` | identical |
+| `column_proportion` | `1-1` | identical |
+| id | `0f815ef7-5cf9-5476-bede-7bee9d3584c4` | **different**, intended: newly minted in the pak's own namespace; source id `985e7ad8-11d3-4aeb-88bd-49b2c8c03dde` |
 | interactions | 0 | identical |
 | name | `Report: vSphere Compute Performance` | identical (name_path carried in `name_path`) |
 | description | 233 chars | identical |
@@ -1010,7 +1046,53 @@ Dashboard-level settings
 
 ### Report: vSphere Inventory (page 2)
 
-File `dashboards/report-vsphere-inventory-page-2.yaml`; id `aba3330a-fca1-430d-851c-cbb7e1be75bf`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vsphere-inventory-page-2.yaml`; id `c30d5908-eb10-5567-aa6b-6d5d6a66d8a4` (newly minted; source id `aba3330a-fca1-430d-851c-cbb7e1be75bf`); source `content/dashboards/To be used in reports/Input dashboards.json`.
+
+Importer verification: **differs only at recorded losses** (150 fields compared).
+
+Dashboard-level settings
+
+| Setting | Value | Compared with source |
+|---|---|---|
+| `name_path` | `VCF Optimization Assessment` | identical |
+| `shared` | `False` | identical |
+| `hidden` | `True` | identical |
+| `disabled` | `True` | identical |
+| `doc_center_key` | `vcom_559` | identical |
+| id | `c30d5908-eb10-5567-aa6b-6d5d6a66d8a4` | **different**, intended: newly minted in the pak's own namespace; source id `aba3330a-fca1-430d-851c-cbb7e1be75bf` |
+| interactions | 0 | identical |
+| name | `Report: vSphere Inventory (page 2)` | identical (name_path carried in `name_path`) |
+| description | 235 chars | identical |
+| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
+
+4 widgets, all identical.
+
+### Report: vSphere Inventory
+
+File `dashboards/report-vsphere-inventory.yaml`; id `091f2a63-49f1-586a-b7ed-fc535ab1034d` (newly minted; source id `e750120d-c5b6-4fda-8e98-dc00e1f3f39c`); source `content/dashboards/To be used in reports/Input dashboards.json`.
+
+Importer verification: **differs only at recorded losses** (418 fields compared).
+
+Dashboard-level settings
+
+| Setting | Value | Compared with source |
+|---|---|---|
+| `name_path` | `VCF Optimization Assessment` | identical |
+| `shared` | `False` | identical |
+| `hidden` | `True` | identical |
+| `disabled` | `True` | identical |
+| `doc_center_key` | `vcom_559` | identical |
+| id | `091f2a63-49f1-586a-b7ed-fc535ab1034d` | **different**, intended: newly minted in the pak's own namespace; source id `e750120d-c5b6-4fda-8e98-dc00e1f3f39c` |
+| interactions | 3 | identical |
+| name | `Report: vSphere Inventory` | identical (name_path carried in `name_path`) |
+| description | 235 chars | identical |
+| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
+
+6 widgets, all identical.
+
+### Report: vSphere Network Configuration
+
+File `dashboards/report-vsphere-network-configuration.yaml`; id `994b04e2-53f7-54dd-9476-bbb289d9e49e` (newly minted; source id `ab480d7b-d33d-4488-8bf3-0d926972b89e`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
 Importer verification: **differs only at recorded losses** (149 fields compared).
 
@@ -1022,52 +1104,9 @@ Dashboard-level settings
 | `shared` | `False` | identical |
 | `hidden` | `True` | identical |
 | `disabled` | `True` | identical |
-| `doc_center_key` | `vcom_559` | identical |
-| interactions | 0 | identical |
-| name | `Report: vSphere Inventory (page 2)` | identical (name_path carried in `name_path`) |
-| description | 235 chars | identical |
-| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
-
-4 widgets, all identical.
-
-### Report: vSphere Inventory
-
-File `dashboards/report-vsphere-inventory.yaml`; id `e750120d-c5b6-4fda-8e98-dc00e1f3f39c`; source `content/dashboards/To be used in reports/Input dashboards.json`.
-
-Importer verification: **differs only at recorded losses** (417 fields compared).
-
-Dashboard-level settings
-
-| Setting | Value | Compared with source |
-|---|---|---|
-| `name_path` | `VCF Optimization Assessment` | identical |
-| `shared` | `False` | identical |
-| `hidden` | `True` | identical |
-| `disabled` | `True` | identical |
-| `doc_center_key` | `vcom_559` | identical |
-| interactions | 3 | identical |
-| name | `Report: vSphere Inventory` | identical (name_path carried in `name_path`) |
-| description | 235 chars | identical |
-| `adapterName` | (source-only key, 1 path(s)) | **different**: recorded loss, adapterName |
-
-6 widgets, all identical.
-
-### Report: vSphere Network Configuration
-
-File `dashboards/report-vsphere-network-configuration.yaml`; id `ab480d7b-d33d-4488-8bf3-0d926972b89e`; source `content/dashboards/To be used in reports/Input dashboards.json`.
-
-Importer verification: **differs only at recorded losses** (148 fields compared).
-
-Dashboard-level settings
-
-| Setting | Value | Compared with source |
-|---|---|---|
-| `name_path` | `VCF Optimization Assessment` | identical |
-| `shared` | `False` | identical |
-| `hidden` | `True` | identical |
-| `disabled` | `True` | identical |
 | `time_range` | `last7Days` | identical |
 | `doc_center_key` | `vcom_523` | identical |
+| id | `994b04e2-53f7-54dd-9476-bbb289d9e49e` | **different**, intended: newly minted in the pak's own namespace; source id `ab480d7b-d33d-4488-8bf3-0d926972b89e` |
 | interactions | 0 | identical |
 | name | `Report: vSphere Network Configuration` | identical (name_path carried in `name_path`) |
 | description | 263 chars | identical |
@@ -1077,9 +1116,9 @@ Dashboard-level settings
 
 ### Report: vSphere Storage Capacity (page 2)
 
-File `dashboards/report-vsphere-storage-capacity-page-2.yaml`; id `8e075ab3-8f69-4060-8760-df40e78def71`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vsphere-storage-capacity-page-2.yaml`; id `b16b790d-da2f-53f7-a6ba-90a64b6acaaa` (newly minted; source id `8e075ab3-8f69-4060-8760-df40e78def71`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **identical** (298 fields compared).
+Importer verification: **identical** (299 fields compared).
 
 Dashboard-level settings
 
@@ -1090,6 +1129,7 @@ Dashboard-level settings
 | `hidden` | `False` | identical |
 | `disabled` | `True` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `b16b790d-da2f-53f7-a6ba-90a64b6acaaa` | **different**, intended: newly minted in the pak's own namespace; source id `8e075ab3-8f69-4060-8760-df40e78def71` |
 | interactions | 0 | identical |
 | name | `Report: vSphere Storage Capacity (page 2)` | identical (name_path carried in `name_path`) |
 | description | 463 chars | identical |
@@ -1098,9 +1138,9 @@ Dashboard-level settings
 
 ### Report: vSphere Storage Capacity (page 3)
 
-File `dashboards/report-vsphere-storage-capacity-page-3.yaml`; id `caf7011d-59ca-4b87-993b-8199c461de40`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vsphere-storage-capacity-page-3.yaml`; id `5045cc4e-53c8-5e03-94b2-1733e4f86172` (newly minted; source id `caf7011d-59ca-4b87-993b-8199c461de40`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **identical** (122 fields compared).
+Importer verification: **identical** (123 fields compared).
 
 Dashboard-level settings
 
@@ -1111,6 +1151,7 @@ Dashboard-level settings
 | `hidden` | `False` | identical |
 | `disabled` | `True` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `5045cc4e-53c8-5e03-94b2-1733e4f86172` | **different**, intended: newly minted in the pak's own namespace; source id `caf7011d-59ca-4b87-993b-8199c461de40` |
 | interactions | 0 | identical |
 | name | `Report: vSphere Storage Capacity (page 3)` | identical (name_path carried in `name_path`) |
 | description | 320 chars | identical |
@@ -1119,9 +1160,9 @@ Dashboard-level settings
 
 ### Report: vSphere Storage Capacity
 
-File `dashboards/report-vsphere-storage-capacity.yaml`; id `f09dd003-2131-4766-b6a5-c92448cba2c0`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vsphere-storage-capacity.yaml`; id `efe82900-5922-56a5-9bcb-5a682ffc587c` (newly minted; source id `f09dd003-2131-4766-b6a5-c92448cba2c0`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **identical** (191 fields compared).
+Importer verification: **identical** (192 fields compared).
 
 Dashboard-level settings
 
@@ -1132,6 +1173,7 @@ Dashboard-level settings
 | `hidden` | `False` | identical |
 | `disabled` | `True` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `efe82900-5922-56a5-9bcb-5a682ffc587c` | **different**, intended: newly minted in the pak's own namespace; source id `f09dd003-2131-4766-b6a5-c92448cba2c0` |
 | interactions | 0 | identical |
 | name | `Report: vSphere Storage Capacity` | identical (name_path carried in `name_path`) |
 | description | 206 chars | identical |
@@ -1140,9 +1182,9 @@ Dashboard-level settings
 
 ### Report: vSphere Storage Performance (page 2)
 
-File `dashboards/report-vsphere-storage-performance-page-2.yaml`; id `a36f514e-f544-4a89-88f1-2a85887b01cb`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vsphere-storage-performance-page-2.yaml`; id `03d85620-2f9c-5ae6-8b65-d1ff430fa9aa` (newly minted; source id `a36f514e-f544-4a89-88f1-2a85887b01cb`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (200 fields compared).
+Importer verification: **differs only at recorded losses** (201 fields compared).
 
 Dashboard-level settings
 
@@ -1155,6 +1197,7 @@ Dashboard-level settings
 | `time_range` | `last7Days` | identical |
 | `doc_center_key` | `vcom_788` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `03d85620-2f9c-5ae6-8b65-d1ff430fa9aa` | **different**, intended: newly minted in the pak's own namespace; source id `a36f514e-f544-4a89-88f1-2a85887b01cb` |
 | interactions | 0 | identical |
 | name | `Report: vSphere Storage Performance (page 2)` | identical (name_path carried in `name_path`) |
 | description | 233 chars | identical |
@@ -1164,9 +1207,9 @@ Dashboard-level settings
 
 ### Report: vSphere Storage Performance
 
-File `dashboards/report-vsphere-storage-performance.yaml`; id `8119d513-b05d-4142-8df6-caa8f38f1d7d`; source `content/dashboards/To be used in reports/Input dashboards.json`.
+File `dashboards/report-vsphere-storage-performance.yaml`; id `025001f9-c9f3-57d8-9822-ae27f90c0cea` (newly minted; source id `8119d513-b05d-4142-8df6-caa8f38f1d7d`); source `content/dashboards/To be used in reports/Input dashboards.json`.
 
-Importer verification: **differs only at recorded losses** (68 fields compared).
+Importer verification: **differs only at recorded losses** (69 fields compared).
 
 Dashboard-level settings
 
@@ -1179,6 +1222,7 @@ Dashboard-level settings
 | `time_range` | `last7Days` | identical |
 | `doc_center_key` | `vcom_788` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `025001f9-c9f3-57d8-9822-ae27f90c0cea` | **different**, intended: newly minted in the pak's own namespace; source id `8119d513-b05d-4142-8df6-caa8f38f1d7d` |
 | interactions | 0 | identical |
 | name | `Report: vSphere Storage Performance` | identical (name_path carried in `name_path`) |
 | description | 233 chars | identical |
@@ -1188,9 +1232,9 @@ Dashboard-level settings
 
 ### VCF Management Service
 
-File `dashboards/vcf-management-service.yaml`; id `bacf36d9-fb4d-49ff-ad97-e55b1fe9a4b2`; source `content/dashboards/vcf management service/VCF Management Service.json`.
+File `dashboards/vcf-management-service.yaml`; id `129e9154-6b3e-579b-accb-e8cab804e3ba` (newly minted; source id `bacf36d9-fb4d-49ff-ad97-e55b1fe9a4b2`); source `content/dashboards/vcf management service/VCF Management Service.json`.
 
-Importer verification: **identical apart from forced target keys** (334 fields compared).
+Importer verification: **identical apart from forced target keys** (335 fields compared).
 
 Dashboard-level settings
 
@@ -1203,6 +1247,7 @@ Dashboard-level settings
 | `time_range` | `last6Hour` | identical |
 | `edit_allowed` | `True` | identical |
 | `column_count` | `0` | identical |
+| id | `129e9154-6b3e-579b-accb-e8cab804e3ba` | **different**, intended: newly minted in the pak's own namespace; source id `bacf36d9-fb4d-49ff-ad97-e55b1fe9a4b2` |
 | interactions | 9 | identical |
 | name | `VCF Management Service` | identical |
 | description | 57 chars | identical |
@@ -1212,9 +1257,9 @@ Dashboard-level settings
 
 ### VM Capacity (new)
 
-File `dashboards/vm-capacity-new.yaml`; id `4e036192-7592-4a78-a5ad-276f2bfa5980`; source `content/dashboards/vm capacity 2.0/VM Capacity 2.0.json`.
+File `dashboards/vm-capacity-new.yaml`; id `ddeb19f0-9aaf-5bfa-bf1a-720d85c0e7d7` (newly minted; source id `4e036192-7592-4a78-a5ad-276f2bfa5980`); source `content/dashboards/vm capacity 2.0/VM Capacity 2.0.json`.
 
-Importer verification: **differs only at recorded losses** (426 fields compared).
+Importer verification: **differs only at recorded losses** (427 fields compared).
 
 Dashboard-level settings
 
@@ -1225,6 +1270,7 @@ Dashboard-level settings
 | `hidden` | `True` | identical |
 | `time_range` | `last24Hour` | identical |
 | `doc_center_key` | `vcom_554` | identical |
+| id | `ddeb19f0-9aaf-5bfa-bf1a-720d85c0e7d7` | **different**, intended: newly minted in the pak's own namespace; source id `4e036192-7592-4a78-a5ad-276f2bfa5980` |
 | interactions | 11 | identical |
 | name | `VM Capacity (new)` | identical (name_path carried in `name_path`) |
 | description | 190 chars | identical |
@@ -1235,9 +1281,9 @@ Dashboard-level settings
 
 ### VM Performance 2.0
 
-File `dashboards/vm-performance-2-0.yaml`; id `4439d7b2-c758-4eca-ad49-42f3e0280d35`; source `content/dashboards/vm performance 2.0/VM Performance 2.0.json`.
+File `dashboards/vm-performance-2-0.yaml`; id `324e8cc1-4aea-5f9f-b025-9e297ce1be3e` (newly minted; source id `4439d7b2-c758-4eca-ad49-42f3e0280d35`); source `content/dashboards/vm performance 2.0/VM Performance 2.0.json`.
 
-Importer verification: **differs only at recorded losses** (1339 fields compared).
+Importer verification: **differs only at recorded losses** (1340 fields compared).
 
 Dashboard-level settings
 
@@ -1249,6 +1295,7 @@ Dashboard-level settings
 | `time_range` | `last24Hour` | identical |
 | `edit_allowed` | `True` | identical |
 | `doc_center_key` | `vcom_635` | identical |
+| id | `324e8cc1-4aea-5f9f-b025-9e297ce1be3e` | **different**, intended: newly minted in the pak's own namespace; source id `4439d7b2-c758-4eca-ad49-42f3e0280d35` |
 | interactions | 11 | identical |
 | name | `VM Performance 2.0` | identical (name_path carried in `name_path`) |
 | description | 287 chars | identical |
@@ -1274,9 +1321,9 @@ Widgets (12; time range is dashboard-level: `last24Hour`)
 
 ### VM Storage Configuration
 
-File `dashboards/vm-storage-configuration.yaml`; id `c80749d8-25a1-4867-a3fc-f64f92db9e95`; source `content/dashboards/vm storage configuration/VM Storage Configuration.json`.
+File `dashboards/vm-storage-configuration.yaml`; id `16960d4a-8167-5798-94c8-e7b162d27f2c` (newly minted; source id `c80749d8-25a1-4867-a3fc-f64f92db9e95`); source `content/dashboards/vm storage configuration/VM Storage Configuration.json`.
 
-Importer verification: **differs only at recorded losses** (242 fields compared).
+Importer verification: **differs only at recorded losses** (243 fields compared).
 
 Dashboard-level settings
 
@@ -1286,6 +1333,7 @@ Dashboard-level settings
 | `shared` | `True` | identical |
 | `hidden` | `True` | identical |
 | `doc_center_key` | `vcom_524` | identical |
+| id | `16960d4a-8167-5798-94c8-e7b162d27f2c` | **different**, intended: newly minted in the pak's own namespace; source id `c80749d8-25a1-4867-a3fc-f64f92db9e95` |
 | interactions | 12 | identical |
 | name | `VM Storage Configuration` | identical (name_path carried in `name_path`) |
 | description | 242 chars | identical |
@@ -1295,9 +1343,9 @@ Dashboard-level settings
 
 ### vSphere Cluster Capacity 2.0
 
-File `dashboards/vsphere-cluster-capacity-2-0.yaml`; id `c608ccb8-218a-4834-8a9d-af9241e01de1`; source `content/dashboards/vsphere cluster capacity 2.0/vSphere Cluster Capacity 2.0.json`.
+File `dashboards/vsphere-cluster-capacity-2-0.yaml`; id `77e838ec-232b-5235-999e-9b47ceb95943` (newly minted; source id `c608ccb8-218a-4834-8a9d-af9241e01de1`); source `content/dashboards/vsphere cluster capacity 2.0/vSphere Cluster Capacity 2.0.json`.
 
-Importer verification: **differs only at recorded losses** (1390 fields compared).
+Importer verification: **differs only at recorded losses** (1391 fields compared).
 
 Dashboard-level settings
 
@@ -1310,6 +1358,7 @@ Dashboard-level settings
 | `edit_allowed` | `True` | identical |
 | `column_count` | `0` | identical |
 | `section_fallback` | `omit` | added by the port, not a source key (owner decision 2026-11-13); no effect on a target that imports Section |
+| id | `77e838ec-232b-5235-999e-9b47ceb95943` | **different**, intended: newly minted in the pak's own namespace; source id `c608ccb8-218a-4834-8a9d-af9241e01de1` |
 | interactions | 15 | identical |
 | name | `vSphere Cluster Capacity 2.0` | identical (name_path carried in `name_path`) |
 | description | 69 chars | identical |
@@ -1344,9 +1393,9 @@ Widgets (19; time range is dashboard-level: `last6Hour`)
 
 ### vSphere Cluster Configuration 2.0
 
-File `dashboards/vsphere-cluster-configuration-2-0.yaml`; id `d1941adc-5664-421e-af12-84736f76aa76`; source `content/dashboards/vsphere cluster configuration 2.0/vSphere Cluster Configuration 2.0.json`.
+File `dashboards/vsphere-cluster-configuration-2-0.yaml`; id `e865f4a8-7936-53d8-ab2b-5a409c0f842e` (newly minted; source id `d1941adc-5664-421e-af12-84736f76aa76`); source `content/dashboards/vsphere cluster configuration 2.0/vSphere Cluster Configuration 2.0.json`.
 
-Importer verification: **differs only at recorded losses** (418 fields compared).
+Importer verification: **differs only at recorded losses** (419 fields compared).
 
 Dashboard-level settings
 
@@ -1356,6 +1405,7 @@ Dashboard-level settings
 | `shared` | `True` | identical |
 | `hidden` | `True` | identical |
 | `doc_center_key` | `vcom_521` | identical |
+| id | `e865f4a8-7936-53d8-ab2b-5a409c0f842e` | **different**, intended: newly minted in the pak's own namespace; source id `d1941adc-5664-421e-af12-84736f76aa76` |
 | interactions | 14 | identical |
 | name | `vSphere Cluster Configuration 2.0` | identical (name_path carried in `name_path`) |
 | description | 344 chars | identical |
@@ -1365,9 +1415,9 @@ Dashboard-level settings
 
 ### vSphere Cluster Performance 2.0
 
-File `dashboards/vsphere-cluster-performance-2-0.yaml`; id `325fd7c9-b8a9-48f2-a018-be070f49e1b5`; source `content/dashboards/vsphere cluster performance 2.0/vSphere Cluster Performance 2.0.json`.
+File `dashboards/vsphere-cluster-performance-2-0.yaml`; id `e4feadb6-8cd1-540d-bbcb-2ec3e8945660` (newly minted; source id `325fd7c9-b8a9-48f2-a018-be070f49e1b5`); source `content/dashboards/vsphere cluster performance 2.0/vSphere Cluster Performance 2.0.json`.
 
-Importer verification: **differs only at recorded losses** (2478 fields compared).
+Importer verification: **differs only at recorded losses** (2479 fields compared).
 
 Dashboard-level settings
 
@@ -1380,6 +1430,7 @@ Dashboard-level settings
 | `edit_allowed` | `True` | identical |
 | `doc_center_key` | `vcom_636` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `e4feadb6-8cd1-540d-bbcb-2ec3e8945660` | **different**, intended: newly minted in the pak's own namespace; source id `325fd7c9-b8a9-48f2-a018-be070f49e1b5` |
 | interactions | 29 | identical |
 | name | `vSphere Cluster Performance 2.0` | identical (name_path carried in `name_path`) |
 | description | 165 chars | identical |
@@ -1420,9 +1471,9 @@ Widgets (26; time range is dashboard-level: `last6Hour`)
 
 ### vSphere Network Configuration 2.0
 
-File `dashboards/vsphere-network-configuration-2-0.yaml`; id `769d7441-2926-413a-99cc-7641c0c78b63`; source `content/dashboards/vsphere network configuration 2.0/vSphere Network Configuration 2.0.json`.
+File `dashboards/vsphere-network-configuration-2-0.yaml`; id `76e05619-37ab-544b-b5e0-2d92cadc160e` (newly minted; source id `769d7441-2926-413a-99cc-7641c0c78b63`); source `content/dashboards/vsphere network configuration 2.0/vSphere Network Configuration 2.0.json`.
 
-Importer verification: **differs only at recorded losses** (280 fields compared).
+Importer verification: **differs only at recorded losses** (281 fields compared).
 
 Dashboard-level settings
 
@@ -1432,6 +1483,7 @@ Dashboard-level settings
 | `shared` | `True` | identical |
 | `hidden` | `True` | identical |
 | `doc_center_key` | `vcom_523` | identical |
+| id | `76e05619-37ab-544b-b5e0-2d92cadc160e` | **different**, intended: newly minted in the pak's own namespace; source id `769d7441-2926-413a-99cc-7641c0c78b63` |
 | interactions | 14 | identical |
 | name | `vSphere Network Configuration 2.0` | identical (name_path carried in `name_path`) |
 | description | 352 chars | identical |
@@ -1441,9 +1493,9 @@ Dashboard-level settings
 
 ### vSphere Resource Management
 
-File `dashboards/vsphere-resource-management.yaml`; id `3dff5e2d-5db1-4eec-97c7-b2b7c545ff3c`; source `content/dashboards/vsphere resource management/vSphere Resource Management.json`.
+File `dashboards/vsphere-resource-management.yaml`; id `18b44b62-db71-5071-b930-100260dae503` (newly minted; source id `3dff5e2d-5db1-4eec-97c7-b2b7c545ff3c`); source `content/dashboards/vsphere resource management/vSphere Resource Management.json`.
 
-Importer verification: **differs only at recorded losses** (589 fields compared).
+Importer verification: **differs only at recorded losses** (590 fields compared).
 
 Dashboard-level settings
 
@@ -1453,6 +1505,7 @@ Dashboard-level settings
 | `shared` | `True` | identical |
 | `hidden` | `False` | identical |
 | `column_proportion` | `1-1` | identical |
+| id | `18b44b62-db71-5071-b930-100260dae503` | **different**, intended: newly minted in the pak's own namespace; source id `3dff5e2d-5db1-4eec-97c7-b2b7c545ff3c` |
 | interactions | 31 | identical |
 | name | `vSphere Resource Management` | identical (name_path carried in `name_path`) |
 | description | 147 chars | identical |
