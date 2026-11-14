@@ -3,6 +3,21 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.17 (Unreleased)
+
+Content under ids of our own (owner decisions, 2026-11-14; design 10.1, "Versioning").
+
+- feat(adapter): all 253 content objects (170 views, 52 dashboards, 16 reports, 2 super metrics, 10 symptoms, 4 alerts, 1 recommendation) are re-converted
+  with minted ids in the namespace `vcfcf_vcommunity` (deterministic; map in `docs/design/inputs/import-report/id_map.tsv`). Names and the metric and
+  property keys are unchanged, so history continues. Built-in views referenced in place keep the product ids. Symptom ids no longer meet the
+  tombstoned or purged ids of the Python packs (a deleted symptom id becomes unusable on an instance about 45 days after deletion).
+- docs: "Moving from the Python pack" in the README and `docs/installing.md`: uninstall the Python pack first (Onur's 1.x or Ewan's 2.x), side by side is
+  unsupported; what carries over; save check lists first; have a clean export of the built-in views at hand for the versions that ship built-in view ids.
+  The statements that the content keeps the source pack's ids are removed; `NOTICE`, `docs/NOTICE.md`, `EULA.txt` say the ids are the pak's own.
+- docs: the minimum product version is VCF Operations 8.18.x (owner decision); 8.18.7 stays as a tested version.
+- feat(adapter): the two Section dashboards carry `section_fallback: omit`; the Collection Warnings recommendation text comes from `docs/design/inputs/recommendation_describe.tsv`.
+- build: `0.0.0.17`.
+
 ## 1.0.0.16 (Unreleased)
 
 Live install of build 15 (9.0.2, 9.1.1) and the factory pak-build fixes.
