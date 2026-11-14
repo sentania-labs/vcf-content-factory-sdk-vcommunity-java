@@ -55,7 +55,7 @@ final class Coverage4 {
         if (row == 213) return "distinct names per Datacenter, summed; withheld when any part could not be read";
         if (row == 214) return "mean of VM Performance and Guest OS Performance; VM Performance alone without Tools";
         if (row >= 215 && row <= 217) return "business applications, from the stored VM Guest OS KPI (previous cycle)";
-        if (row == 218 || row == 219) return "pool levels from the vCenter's pool tree; 0 for a cluster with none";
+        if (row == 218 || row == 219) return "pool levels from the vCenter's pool tree, without vApps and Supervisor namespaces; 0 for a cluster with none";
         if (row == 221) return "min(100, (sum - the k lowest) / (N - k)); hosts counted and not found are 0";
         if (row >= 222 && row <= 225) return "once per window from the history of the three cluster KPIs";
         return "";

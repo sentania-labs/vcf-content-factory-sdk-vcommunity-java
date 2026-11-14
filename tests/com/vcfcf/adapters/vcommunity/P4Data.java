@@ -46,6 +46,8 @@ final class P4Data {
     volatile boolean emptyEntries;
     /** A latest-statistics or properties request whose body names one of these keys fails (HTTP 500). */
     final Set<String> failOnKey = new HashSet<>();
+    /** Only a latest-statistics request whose body names one of these keys fails (HTTP 500). */
+    final Set<String> failLatestOn = new HashSet<>();
     /** Run once, on the first latest-statistics request (a test moves the clock from here). */
     volatile Runnable onFirstLatest;
     /** Samples since the end of the window, for a history request that begins at {@link #splitAtMs} or later. */
@@ -104,6 +106,11 @@ final class P4Data {
         if (failPaths.contains(path)) throw new IOException("connection reset");
         for (String k : failOnKey) {
             if (!path.equals(HISTORY) && body.contains(k)) throw new OpsHttpException("Suite API answered HTTP 500", 500, null);
+        }
+        if (path.equals(LATEST)) {
+            for (String k : failLatestOn) {
+                if (body.contains(k)) throw new OpsHttpException("Suite API answered HTTP 500", 500, null);
+            }
         }
         Runnable hook = onFirstLatest;
         if (hook != null && path.equals(LATEST)) {
@@ -210,6 +217,7 @@ final class P4Data {
         if (!path.startsWith("/api/resources/") || !path.contains("/relationships?relationshipType=")) return null;
         String id = path.substring("/api/resources/".length(), path.indexOf("/relationships"));
         String type = path.substring(path.indexOf('=') + 1);
+        if (type.contains("&")) type = type.substring(0, type.indexOf('&'));
         log.add("GET " + id + " " + type);
         if (failRelationshipsOf.contains(id)) throw new OpsHttpException("Suite API answered HTTP 500", 500, null);
         StringBuilder b = new StringBuilder("{\"resourceList\":[");

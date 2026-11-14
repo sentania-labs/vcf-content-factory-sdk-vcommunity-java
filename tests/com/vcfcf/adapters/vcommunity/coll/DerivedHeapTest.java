@@ -132,6 +132,15 @@ public final class DerivedHeapTest {
                 any = true;
                 b.append("{\"timestamps\":[").append(NOW - 1000).append("],\"statKey\":{\"key\":\"").append(key)
                         .append("\"},\"data\":[").append(v).append("]}");
+                // the platform also answers every instance of a requested key: a host's 128 CPU threads, its NICs;
+                // a VM's vCPUs, disks and virtual NICs (the reader keeps only what it asked for)
+                int bar = key.indexOf('|');
+                int instances = id.startsWith("HostSystem") ? key.startsWith("cpu|") ? 128 : 4 : 4;
+                for (int i = 0; i < instances; i++) {
+                    String inst = key.substring(0, bar) + ":" + (key.startsWith("net|") ? "vmnic" : "") + i + key.substring(bar);
+                    b.append(",{\"timestamps\":[").append(NOW - 1000).append("],\"statKey\":{\"key\":\"")
+                            .append(inst).append("\"},\"data\":[").append(v).append("]}");
+                }
             }
             return any ? b.append("]}}").toString() : null;
         }

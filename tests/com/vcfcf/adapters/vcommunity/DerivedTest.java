@@ -72,6 +72,13 @@ public final class DerivedTest {
                 parent = "resgroup-" + i;
             }
             vc.add(pool("resgroup-v1", "vApp", "ResourcePool", "resgroup-r1", true));
+            // a Supervisor: the Namespaces pool is an Operations pool, each namespace under it (and what is in one) is not
+            vc.add(pool("resgroup-n0", "Namespaces", "ResourcePool", "resgroup-r1", false));
+            for (int i = 1; i <= 3; i++) {
+                vc.add(pool("resgroup-n" + i, "ns" + i, "ResourcePool", "resgroup-n0", false)
+                        .put("namespace", SoapFx.str("namespace-" + i)));
+            }
+            vc.add(pool("resgroup-n1c", "ns1-child", "ResourcePool", "resgroup-n1", false));
             vc.add(pool("resgroup-r2", "Resources", "ClusterComputeResource", "domain-c2", false));
             vc.add(pool("resgroup-s1", "standalone", "ResourcePool", "resgroup-s0", false));
             vc.add(pool("resgroup-s0", "Resources", "ComputeResource", "domain-s5", false));
@@ -245,6 +252,7 @@ public final class DerivedTest {
             run("periodic cluster check, window rollover, restart", () -> periodic(fake));
             run("business applications", () -> business(fake));
             run("a failed read withholds, never a zero", () -> failedReads(fake));
+            run("review fixes: stale network counts, placement, shares per key, warnings, stale lists", () -> reviewFixes(fake));
             run("failed membership reads", () -> failedMembership(fake));
             run("a stale sample is no data, an empty answer is a reading", () -> staleAndEmpty(fake));
             run("the deadline", () -> deadline(fake));
@@ -279,7 +287,7 @@ public final class DerivedTest {
     static double kpi(KpiMetric[] metrics, boolean worse, Object... rows) {
         Map<String, Double> m = new LinkedHashMap<>();
         for (int i = 0; i < rows.length; i += 2) m.put((String) rows[i], ((Number) rows[i + 1]).doubleValue());
-        return KpiScorer.compute(metrics, m, worse).score;
+        return KpiScorer.evaluate(metrics, m, worse).score;
     }
 
     // ------------------------------------------------------------------ values
@@ -398,8 +406,9 @@ public final class DerivedTest {
                     "Cluster-wide ESXi Memory Ballooned", 0.62, "Cluster-wide ESXi Memory Zip Swap", 0.0));
             // 3 hosts, none to spare: (100 + 100 + 75) / 3
             chk(l, CL, C1, V + "Availability|Cluster Operational Availability", 275.0 / 3);
-            // the pools: levels 1 to 3 are counted, 2 to 5 cascade; the root pool, the vApp and a standalone host's pool are not
-            chk(l, CL, C1, V + "Resource Pools|Number of Resource Pools", 3.0);
+            // the pools: levels 1 to 3 are counted (pool1 to pool3 and Namespaces), 2 to 5 cascade (pool2 to pool5); the root
+            // pool, the vApp, a standalone host's pool, the three Supervisor namespaces and the pool inside one are not
+            chk(l, CL, C1, V + "Resource Pools|Number of Resource Pools", 4.0);
             chk(l, CL, C1, V + "Resource Pools|Cascading Resource Pools", 4.0);
             // ---- Edge: one host, a 16-core host without hyper-threading, no failover level
             T.eq(10.0, l.st(0, C2, r + "Highest ESXi CPU Thread Utilization"), "Edge risk");
@@ -766,6 +775,78 @@ public final class DerivedTest {
         }
         // a failed relationship read is not "no pools", and an unreadable pool list is not 0
         // (see failedMembership)
+    }
+
+    static void reviewFixes(FakeVc fake) throws Exception {
+        // W1: hosts that once had a speed and have nothing fresh: the World count is 0 while the answer names them (Q16)
+        try (Lab l = new Lab(fake)) {
+            l.d.stat(H1, StatKeys.HOST_NETWORK_SPEED, 55, 20 * 60_000L);
+            l.r.run();
+            T.eq(0.0, l.st(0, WORLD, StatKeys.DC_NETWORK_SPEED), "a stored speed too old to use still means 'measured': 0");
+        }
+        try (Lab l = new Lab(fake)) {
+            l.r.run();
+            T.check(l.st(0, WORLD, StatKeys.DC_NETWORK_SPEED) == null, "nothing stored for any host: nothing");
+        }
+        // N3: a VM whose host vCenter would not read is placed by the host name Operations holds
+        try (Lab l = new Lab(fake)) {
+            for (SoapFx.Obj o : l.vc.byType.get("VirtualMachine")) {
+                if (o.moid.equals("vm-1")) {
+                    o.vals.remove("runtime.host");
+                    o.missing("runtime.host");
+                }
+            }
+            l.d.prop("res-vm-1", StatKeys.VM_PARENT_HOST, "esx-1");
+            l.r.run();
+            T.eq(10.0, l.st(0, C1, V + "Cluster Performance|Worst VM CPU Ready"), "vm-1 still counts in its cluster");
+            T.eq(10.0, l.st(0, H1, V + "ESXi Performance|Worst VM CPU Ready"), "and on its host");
+        }
+        try (Lab l = new Lab(fake)) {
+            for (SoapFx.Obj o : l.vc.byType.get("VirtualMachine")) {
+                if (o.moid.equals("vm-1")) {
+                    o.vals.remove("runtime.host");
+                    o.missing("runtime.host");
+                }
+            }
+            l.r.run(); // no host name either: the placement of every VM is in doubt, and nothing is invented
+            T.check(l.st(0, C1, V + "Cluster Performance|Worst VM CPU Ready") == null, "an unplaceable VM withholds the VM-based rows");
+            T.eq(100.0, l.st(0, H1, V + "Availability|ESXi Host Operational Availability"), "not the others");
+            T.eq(1000.0, l.st(0, "res-vm-1", V + "Configuration|Share per vCPU"), "nor the VM's own figures");
+        }
+        // N5: only the share that needed the fallback read is withheld when that read fails
+        try (Lab l = new Lab(fake)) {
+            l.d.props.get("res-vm-2").put(StatKeys.VM_CPU_SHARES, "2000");
+            l.d.stats.get("res-vm-2").remove(StatKeys.VM_CPU_SHARES);
+            l.d.failLatestOn.add(StatKeys.VM_MEM_SHARES);
+            l.r.run();
+            T.eq(1000.0, l.st(0, "res-vm-2", V + "Configuration|Share per vCPU"), "the CPU shares came with the properties");
+            T.check(l.st(0, "res-vm-2", V + "Configuration|Share per MB of Memory") == null, "the memory share needed the failed read");
+            T.eq(1000.0, l.st(0, "res-vm-1", V + "Configuration|Share per vCPU"), "a VM that needed no fallback is unaffected");
+        }
+        // L6: the warning the original writes when no host has a NIC speed, counted and first
+        try (Lab l = new Lab(fake)) {
+            for (String h : new String[] {H1, H2}) {
+                l.d.stats.get(h).keySet().removeIf(k -> k.startsWith("net:"));
+            }
+            l.r.run();
+            T.check(l.st(0, H1, V + "Network|Network Speed Degradation") == null, "no NIC speed for any host: none");
+            T.eq("No NIC speeds for any host, so no Network Speed Degradation this cycle", l.r.health(0, "First Warning"),
+                    "the original's text");
+            T.eq(1.0, l.r.health(0, "Warnings in Last Cycle"), "counted once");
+        }
+        // W3: a failed World read marks the lists of clusters and hosts for a new read next cycle
+        try (Lab l = new Lab(fake)) {
+            l.d.failOnKey.add(StatKeys.CLUSTER_PERFORMANCE_SCORE);
+            l.r.run();
+            int hosts = PropertiesTest.listReads(l.r, "HostSystem");
+            int clusters = PropertiesTest.listReads(l.r, "ClusterComputeResource");
+            l.d.failOnKey.clear();
+            l.r.run();
+            T.eq(hosts + 1, PropertiesTest.listReads(l.r, "HostSystem"), "the host list is read again");
+            T.eq(clusters + 1, PropertiesTest.listReads(l.r, "ClusterComputeResource"), "and the cluster list");
+            l.r.run();
+            T.eq(hosts + 1, PropertiesTest.listReads(l.r, "HostSystem"), "once, not every cycle");
+        }
     }
 
     static void failedMembership(FakeVc fake) throws Exception {

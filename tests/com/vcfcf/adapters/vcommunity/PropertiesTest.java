@@ -211,6 +211,7 @@ public final class PropertiesTest {
             run("a failed page discards the whole type", () -> failedPage(fake));
             run("per-host call failures", () -> hostCallFailures(fake));
             run("refused property paths", () -> refusedPaths(fake));
+            run("VM Options that are lists of references or the tools configuration, and the entries skipped", () -> optionObjects(fake));
             run("check lists gate the reads", () -> gating(fake));
             run("matching: unmatched, ambiguous, other vCenters", () -> matching(fake));
             run("Ops lists: refresh rules, failures, unknown vCenter", () -> refresh(fake));
@@ -975,6 +976,41 @@ public final class PropertiesTest {
             T.contains(r.log.all(), "F-HOST-INSTALLDATE: 1 failed read(s)", "named once");
             T.contains(r.log.all(), "F-HOST-PACKAGES: 1 failed read(s)", "named once");
             T.eq(3, r.count("installDate"), "a call per connected host that has a manager");
+        }
+    }
+
+    static void optionObjects(FakeVc fake) throws Exception {
+        FakeVcenter vc = dataset();
+        SoapFx.Obj vm1 = vc.byType.get("VirtualMachine").get(0);
+        vm1.put("datastore", SoapFx.arr("ArrayOfManagedObjectReference", "<ManagedObjectReference type=\"Datastore\" "
+                + "xsi:type=\"ManagedObjectReference\">datastore-7001</ManagedObjectReference>"));
+        vm1.put("config.tools", SoapFx.obj("ToolsConfigInfo", SoapFx.e("toolsVersion", "13312")
+                + SoapFx.e("toolsInstallType", "guestToolsTypeOpenVMTools") + SoapFx.e("afterPowerOn", "true")
+                + SoapFx.e("afterResume", "true") + SoapFx.e("beforeGuestStandby", "true")
+                + SoapFx.e("beforeGuestShutdown", "true") + SoapFx.e("toolsUpgradePolicy", "manual")
+                + SoapFx.e("syncTimeWithHostAllowed", "true") + SoapFx.e("syncTimeWithHost", "false")
+                + SoapFx.el("lastInstallInfo", SoapFx.e("counter", "0"))));
+        try (Rig r = standard(fake, vc)) {
+            files(r.ops, "", "", "", "datastore,config.tools,config.hardware");
+            r.run();
+            eq(r, VM, "Options|datastore", "(ManagedObject) [ 'vim.Datastore:datastore-7001' ]");
+            eq(r, VM, "Options|config.tools", "(vim.vm.ToolsConfigInfo) { dynamicType = , dynamicProperty = "
+                    + "(vmodl.DynamicProperty) [], toolsVersion = 13312, toolsInstallType = 'guestToolsTypeOpenVMTools', "
+                    + "afterPowerOn = true, afterResume = true, beforeGuestStandby = true, beforeGuestShutdown = true, "
+                    + "beforeGuestReboot = , toolsUpgradePolicy = 'manual', pendingCustomization = , customizationKeyId = , "
+                    + "syncTimeWithHostAllowed = true, syncTimeWithHost = false, lastInstallInfo = "
+                    + "(vim.vm.ToolsConfigInfo.ToolsLastInstallInfo) { dynamicType = , dynamicProperty = "
+                    + "(vmodl.DynamicProperty) [], counter = 0, fault =  } }");
+            // the edge of Q1: with config.tools in the list the original's read holds it, so the two keys are real
+            eq(r, VM, "Guest|Tools Sync Time", "False");
+            eq(r, VM, "Guest|Tools Upgrade Policy", "manual");
+            // a VM with no tools configuration: None
+            eq(r, "res-vm-2", "Guest|Tools Sync Time", "None");
+            none(r, VM, "Options|config.hardware");
+            T.eq(1.0, r.health(0, "Check-List Entries Skipped"), "the entry that is not reproduced is counted");
+            r.run();
+            T.eq(1.0, r.health(1, "Check-List Entries Skipped"), "and counted every cycle, not only when it is found");
+            eq(r, VM, "Guest|Tools Sync Time", "False");
         }
     }
 

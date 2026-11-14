@@ -184,17 +184,17 @@ public final class KpiTest {
         s(BAD, 0.8, 0, 16, "bad 0.8");
 
         KpiMetric[] two = {CPU_READY, FREE_MEMORY};
-        near(26.48, KpiScorer.kpi(two, vals("CPU Ready", 5.0, "Guest Free Memory", 2048.0)), 1e-9, "the weighted mean");
-        near(18.75, KpiScorer.kpi(two, vals("CPU Ready", 5.0)), 1e-9, "a missing row is left out");
-        check(KpiScorer.kpi(two, new HashMap<>()) == null, "no data, no KPI");
+        near(26.48, KpiScorer.combine(two, vals("CPU Ready", 5.0, "Guest Free Memory", 2048.0)), 1e-9, "the weighted mean");
+        near(18.75, KpiScorer.combine(two, vals("CPU Ready", 5.0)), 1e-9, "a missing row is left out");
+        check(KpiScorer.combine(two, new HashMap<>()) == null, "no data, no KPI");
         KpiMetric[] rare = {CPU_READY, BALLOON};
-        near(18.75, KpiScorer.kpi(rare, vals("CPU Ready", 5.0, "Memory Ballooned", 0.5)), 1e-9, "skipped while green");
-        near(46.89, KpiScorer.kpi(rare, vals("CPU Ready", 0.0, "Memory Ballooned", 3.0)), 1e-9, "counts once it leaves green");
-        near(100.0, KpiScorer.kpi(new KpiMetric[] {BALLOON}, vals("Memory Ballooned", 0.0)), 1e-9, "all green: 100");
-        check(KpiScorer.kpi(new KpiMetric[] {BALLOON}, new HashMap<>()) == null, "no value is still no KPI");
+        near(18.75, KpiScorer.combine(rare, vals("CPU Ready", 5.0, "Memory Ballooned", 0.5)), 1e-9, "skipped while green");
+        near(46.89, KpiScorer.combine(rare, vals("CPU Ready", 0.0, "Memory Ballooned", 3.0)), 1e-9, "counts once it leaves green");
+        near(100.0, KpiScorer.combine(new KpiMetric[] {BALLOON}, vals("Memory Ballooned", 0.0)), 1e-9, "all green: 100");
+        check(KpiScorer.combine(new KpiMetric[] {BALLOON}, new HashMap<>()) == null, "no value is still no KPI");
         // the KPI does not jump at a colour boundary
-        double below = KpiScorer.kpi(new KpiMetric[] {CPU_READY}, vals("CPU Ready", 1.999999));
-        double above = KpiScorer.kpi(new KpiMetric[] {CPU_READY}, vals("CPU Ready", 2.000001));
+        double below = KpiScorer.combine(new KpiMetric[] {CPU_READY}, vals("CPU Ready", 1.999999));
+        double above = KpiScorer.combine(new KpiMetric[] {CPU_READY}, vals("CPU Ready", 2.000001));
         check(Math.abs(below - above) < 0.01, "smooth across a boundary: " + below + " " + above);
         done("scoring: tiers, weights, higher is better, green as one value, skip when green");
     }
@@ -226,17 +226,17 @@ public final class KpiTest {
         eq(274.0, Percentile.nearestRank(day, 95), "95th of 288 samples is the 274th");
         eq(288.0, Percentile.nearestRank(day, 100), "100th");
         check(Percentile.nearestRank(new ArrayList<Double>(), 95) == null, "none");
-        eq(274.0, Percentile.worst(day, 5, true), "higher is worse: the 14 highest are ignored");
-        eq(15.0, Percentile.worst(day, 5, false), "higher is better: the 14 lowest are ignored");
-        eq(288.0, Percentile.worst(day, 0, true), "0: the single worst, high");
-        eq(1.0, Percentile.worst(day, 0, false), "0: the single worst, low");
-        eq(144.0, Percentile.worst(day, 50, true), "50 high");
-        eq(145.0, Percentile.worst(day, 50, false), "50 low");
-        check(Percentile.worst(new ArrayList<Double>(), 5, true) == null, "none");
+        eq(274.0, Percentile.worstTail(day, 5, true), "higher is worse: the 14 highest are ignored");
+        eq(15.0, Percentile.worstTail(day, 5, false), "higher is better: the 14 lowest are ignored");
+        eq(288.0, Percentile.worstTail(day, 0, true), "0: the single worst, high");
+        eq(1.0, Percentile.worstTail(day, 0, false), "0: the single worst, low");
+        eq(144.0, Percentile.worstTail(day, 50, true), "50 high");
+        eq(145.0, Percentile.worstTail(day, 50, false), "50 low");
+        check(Percentile.worstTail(new ArrayList<Double>(), 5, true) == null, "none");
         List<Double> dip = new ArrayList<>(Collections.nCopies(287, 90.0));
         dip.add(20.0);
-        eq(90.0, Percentile.worst(dip, 5, false), "one bad sample in a quiet window is ignored");
-        eq(20.0, Percentile.worst(dip, 0, false), "with 0 the dip decides");
+        eq(90.0, Percentile.worstTail(dip, 5, false), "one bad sample in a quiet window is ignored");
+        eq(20.0, Percentile.worstTail(dip, 0, false), "with 0 the dip decides");
         done("nearest-rank percentiles and the worst-percent rule");
     }
 
@@ -250,16 +250,16 @@ public final class KpiTest {
         // every row 0: the KPI is 100, bad packets (0 is green, excluded) are left out
         Map<String, Double> allZero = new LinkedHashMap<>();
         for (KpiMetric m : KpiTable.CLUSTER_PERFORMANCE) allZero.put(m.name, 0.0);
-        near(100.0, KpiScorer.kpi(KpiTable.CLUSTER_PERFORMANCE, allZero), 1e-9, "all zeros is 100");
+        near(100.0, KpiScorer.combine(KpiTable.CLUSTER_PERFORMANCE, allZero), 1e-9, "all zeros is 100");
         Map<String, Double> one = new LinkedHashMap<>(allZero);
         one.put("90th Percentile VM CPU Ready", 5.0);
-        near(53.19, KpiScorer.kpi(KpiTable.CLUSTER_PERFORMANCE, one), 1e-9, "one red row is not hidden by seven good ones");
+        near(53.19, KpiScorer.combine(KpiTable.CLUSTER_PERFORMANCE, one), 1e-9, "one red row is not hidden by seven good ones");
         Map<String, Double> pk = new LinkedHashMap<>(allZero);
         pk.put("Highest ESXi Bad Network Packets", 0.005);
-        near(94.8, KpiScorer.kpi(KpiTable.CLUSTER_PERFORMANCE, pk), 1e-9, "any bad packet is yellow and counts");
+        near(94.8, KpiScorer.combine(KpiTable.CLUSTER_PERFORMANCE, pk), 1e-9, "any bad packet is yellow and counts");
         Map<String, Double> worst = new LinkedHashMap<>();
         for (KpiMetric m : KpiTable.CLUSTER_PERFORMANCE) worst.put(m.name, m.zeroAt);
-        near(0.0, KpiScorer.kpi(KpiTable.CLUSTER_PERFORMANCE, worst), 1e-9, "everything at its worst is 0");
+        near(0.0, KpiScorer.combine(KpiTable.CLUSTER_PERFORMANCE, worst), 1e-9, "everything at its worst is 0");
 
         // ten VMs with ready 1..10: worst 10, the 90th percentile the 9th lowest
         List<double[]> vms = new ArrayList<>();
@@ -304,10 +304,10 @@ public final class KpiTest {
         List<double[]> vms = new ArrayList<>();
         for (int n = 0; n < 10; n++) vms.add(vm(0, 0, 0, n == 0 ? 200 : 0));
         Map<String, Double> v = EsxiPerformance.values(vms, packets(0, 1000));
-        KpiScorer.Computed c = KpiScorer.compute(KpiTable.ESXI_PERFORMANCE, v, false);
+        KpiScorer.Evaluation c = KpiScorer.evaluate(KpiTable.ESXI_PERFORMANCE, v, false);
         near(53.19, c.score, 1e-9, "one bad VM: bad packets 0 are excluded, the KPI is 53.19");
         v = EsxiPerformance.values(new ArrayList<double[]>(), packets(0, 1000));
-        c = KpiScorer.compute(KpiTable.ESXI_PERFORMANCE, v, false);
+        c = KpiScorer.evaluate(KpiTable.ESXI_PERFORMANCE, v, false);
         eq(0.0, c.rows.get("ESXi Bad Network Packets"), "a host without VMs is scored on its network");
         near(100.0, c.score, 1e-9, "nothing wrong: 100");
         // 15 of 6000 is 0.25 %
@@ -330,11 +330,11 @@ public final class KpiTest {
     }
 
     static Double vmScore(Map<String, Double> s) {
-        return KpiScorer.compute(KpiTable.VM_PERFORMANCE, VmKpis.vmPerformanceValues(s), false).score;
+        return KpiScorer.evaluate(KpiTable.VM_PERFORMANCE, VmKpis.vmPerformanceValues(s), false).score;
     }
 
     static void vmKpis() {
-        KpiScorer.Computed healthy = KpiScorer.compute(KpiTable.VM_PERFORMANCE, VmKpis.vmPerformanceValues(vmHealthy()), false);
+        KpiScorer.Evaluation healthy = KpiScorer.evaluate(KpiTable.VM_PERFORMANCE, VmKpis.vmPerformanceValues(vmHealthy()), false);
         near(100.0, healthy.score, 1e-9, "a healthy VM scores 100");
         eq(0.0, healthy.rows.get("Memory Zip Swap"), "the one published row");
         Map<String, Double> s = vmHealthy();
@@ -371,12 +371,12 @@ public final class KpiTest {
         g.put(StatKeys.GUEST_DISK_QUEUE, 0.0);
         g.put(StatKeys.GUEST_FREE_KB, 2048.0 * 1024.0);
         g.put(StatKeys.GUEST_PAGE_OUT, 0.0);
-        near(100.0, KpiScorer.compute(KpiTable.GUEST_OS_PERFORMANCE, VmKpis.guestValues(g), false).score, 1e-9, "healthy guest");
+        near(100.0, KpiScorer.evaluate(KpiTable.GUEST_OS_PERFORMANCE, VmKpis.guestValues(g), false).score, 1e-9, "healthy guest");
         g.put(StatKeys.GUEST_CPU_QUEUE, 3.0);
-        near(81.8, KpiScorer.compute(KpiTable.GUEST_OS_PERFORMANCE, VmKpis.guestValues(g), false).score, 1e-9, "queue of 3");
+        near(81.8, KpiScorer.evaluate(KpiTable.GUEST_OS_PERFORMANCE, VmKpis.guestValues(g), false).score, 1e-9, "queue of 3");
         g.put(StatKeys.GUEST_CPU_QUEUE, 0.0);
         g.put(StatKeys.GUEST_FREE_KB, 192.0 * 1024.0);
-        near(59.16, KpiScorer.compute(KpiTable.GUEST_OS_PERFORMANCE, VmKpis.guestValues(g), false).score, 1e-9, "192 MB free");
+        near(59.16, KpiScorer.evaluate(KpiTable.GUEST_OS_PERFORMANCE, VmKpis.guestValues(g), false).score, 1e-9, "192 MB free");
         eq(512.0, VmKpis.guestValues(Collections.singletonMap(StatKeys.GUEST_FREE_KB, 524288.0)).get("Guest Free Memory"),
                 "KB to MB");
         check(VmKpis.guestValues(new HashMap<>()).isEmpty(), "no Tools, no guest rows");
@@ -419,9 +419,9 @@ public final class KpiTest {
         return riskStats(40, 80, 256, 0, 0, 0, 0, 16, 64);
     }
 
-    static KpiScorer.Computed risk(List<HostInv> hosts, Map<String, Map<String, Double>> stats, MonsterVm monster) {
+    static KpiScorer.Evaluation risk(List<HostInv> hosts, Map<String, Map<String, Double>> stats, MonsterVm monster) {
         Map<String, Double> raw = ClusterRisk.clusterValues(hosts, h -> stats.get(h.id), monster);
-        return KpiScorer.compute(KpiTable.CLUSTER_RISK, raw, true);
+        return KpiScorer.evaluate(KpiTable.CLUSTER_RISK, raw, true);
     }
 
     static void clusterRisk() {
@@ -429,7 +429,7 @@ public final class KpiTest {
         healthy.put("host-1", healthyHost());
         healthy.put("host-2", healthyHost());
         List<HostInv> hosts = Arrays.asList(host("host-1", 32, 64, 4, 4, 16384), host("host-2", 32, 64, 4, 4, 16384));
-        KpiScorer.Computed r = risk(hosts, healthy, MonsterVm.DEFAULT);
+        KpiScorer.Evaluation r = risk(hosts, healthy, MonsterVm.DEFAULT);
         eq(1.0, r.rows.get("Worst ESXi CPU Imbalance"), "one thread per busy core");
         eq(0.25, r.rows.get("Highest CPU Monster VM to Host Ratio"), "4 vCPU against half of 32 cores is 0.25");
         eq(0.08, r.rows.get("Highest Memory Monster VM to Host Ratio"), "16 GB against 40 % of 512 GB");
@@ -591,7 +591,7 @@ public final class KpiTest {
         eq(62.5, PyRound.round2(v.get("Cluster-wide ESXi CPU Thread Utilization")), "against usable capacity");
         eq(79.17, PyRound.round2(v.get("Cluster-wide ESXi Memory Consumed")), "memory against usable");
         eq(0.83, PyRound.round2(v.get("Cluster-wide ESXi Memory Ballooned")), "ballooned against usable");
-        KpiScorer.Computed c = KpiScorer.compute(KpiTable.CLUSTER_CONSUMPTION, v, true);
+        KpiScorer.Evaluation c = KpiScorer.evaluate(KpiTable.CLUSTER_CONSUMPTION, v, true);
         near(34.53, c.score, 1e-9, "the KPI is 100 minus the health");
 
         // CPU and memory have their own usable capacity
@@ -625,12 +625,12 @@ public final class KpiTest {
             Map<String, Double> r = ClusterConsumption.values(hosts, h -> st.get(h.id), bad);
             check(!r.containsKey("Cluster-wide ESXi Memory Consumed"), "no memory row without usable capacity");
         }
-        check(ClusterConsumption.hasNoUsableCapacity(cluster(0.0)), "usable 0 is full");
+        check(ClusterConsumption.usableIsZero(cluster(0.0)), "usable 0 is full");
         Map<String, Double> cpuOnly = cluster(1.0);
         cpuOnly.put(StatKeys.CPU_USABLE, 0.0);
-        check(ClusterConsumption.hasNoUsableCapacity(cpuOnly), "CPU alone is enough");
-        check(!ClusterConsumption.hasNoUsableCapacity(new HashMap<>()), "not reported: no data");
-        check(!ClusterConsumption.hasNoUsableCapacity(cluster(0.8)), "usable");
+        check(ClusterConsumption.usableIsZero(cpuOnly), "CPU alone is enough");
+        check(!ClusterConsumption.usableIsZero(new HashMap<>()), "not reported: no data");
+        check(!ClusterConsumption.usableIsZero(cluster(0.8)), "usable");
 
         // a host in maintenance is left out
         HostInv h3 = chost("host-3", 32, "inMaintenance");
@@ -658,7 +658,7 @@ public final class KpiTest {
         Map<String, Map<String, Double>> full = new HashMap<>();
         full.put("host-1", cstats(95, 512, 500, 40));
         full.put("host-2", cstats(95, 256, 250, 20));
-        Double fullKpi = KpiScorer.compute(KpiTable.CLUSTER_CONSUMPTION,
+        Double fullKpi = KpiScorer.evaluate(KpiTable.CLUSTER_CONSUMPTION,
                 ClusterConsumption.values(hosts, h -> full.get(h.id), cluster(0.8)), true).score;
         check(fullKpi > 75.0, "a full cluster is red: " + fullKpi);
 
@@ -675,9 +675,9 @@ public final class KpiTest {
             {null, null, null, "false"}};
         for (String[] k : cases) {
             HostInv hi = new HostInv("h", 32.0, 64.0, k[0], k[1], k[2]);
-            eq(Boolean.valueOf(k[3]), ClusterConsumption.hostIsGone(hi, 40.0), "gone: " + Arrays.toString(k));
+            eq(Boolean.valueOf(k[3]), ClusterConsumption.cannotHostVms(hi, 40.0), "gone: " + Arrays.toString(k));
         }
-        check(ClusterConsumption.hostIsGone(chost("h", 32, "notInMaintenance"), null), "no current value is gone");
+        check(ClusterConsumption.cannotHostVms(chost("h", 32, "notInMaintenance"), null), "no current value is gone");
         done("Cluster Consumption rows and KPI");
     }
 
@@ -688,34 +688,34 @@ public final class KpiTest {
         up.put(StatKeys.HOST_CONNECTION, "connected");
         up.put(StatKeys.HOST_MAINTENANCE, "notInMaintenance");
         up.put(StatKeys.HOST_QUARANTINE, "notInQuarantine");
-        eq(100.0, Availability.host(1.0, up), "fully available");
+        eq(100.0, Availability.ofHost(1.0, up), "fully available");
         Map<String, String> dis = new HashMap<>(up);
         dis.put(StatKeys.HOST_CONNECTION, "disconnected");
-        eq(75.0, Availability.host(1.0, dis), "disconnected is not connected");
+        eq(75.0, Availability.ofHost(1.0, dis), "disconnected is not connected");
         Map<String, String> mnt = new HashMap<>(up);
         mnt.put(StatKeys.HOST_MAINTENANCE, "inMaintenance");
-        eq(75.0, Availability.host(1.0, mnt), "in maintenance");
+        eq(75.0, Availability.ofHost(1.0, mnt), "in maintenance");
         Map<String, String> nr = new HashMap<>(up);
         nr.put(StatKeys.HOST_CONNECTION, "notResponding");
-        eq(50.0, Availability.host(0.0, nr), "each condition is 25");
-        eq(0.0, Availability.host(null, new HashMap<>()), "no data is 0");
+        eq(50.0, Availability.ofHost(0.0, nr), "each condition is 25");
+        eq(0.0, Availability.ofHost(null, new HashMap<>()), "no data is 0");
 
-        eq(100.0, Availability.cluster(Arrays.asList(100.0, 100.0, 100.0, 100.0), 4.0, 0.0), "N+0 healthy");
-        eq(93.75, Availability.cluster(Arrays.asList(100.0, 100.0, 100.0, 75.0), 4.0, 0.0), "N+0 counts every host");
-        eq(100.0, Availability.cluster(Arrays.asList(100.0, 100.0, 100.0, 0.0), 4.0, 1.0), "N+1, one host down");
-        eq(66.67, PyRound.round2(Availability.cluster(Arrays.asList(100.0, 100.0, 0.0, 0.0), 4.0, 1.0)), "N+1, two down");
-        eq(91.67, PyRound.round2(Availability.cluster(Arrays.asList(100.0, 100.0, 75.0, 75.0), 4.0, 1.0)), "degraded counts");
+        eq(100.0, Availability.ofCluster(Arrays.asList(100.0, 100.0, 100.0, 100.0), 4.0, 0.0), "N+0 healthy");
+        eq(93.75, Availability.ofCluster(Arrays.asList(100.0, 100.0, 100.0, 75.0), 4.0, 0.0), "N+0 counts every host");
+        eq(100.0, Availability.ofCluster(Arrays.asList(100.0, 100.0, 100.0, 0.0), 4.0, 1.0), "N+1, one host down");
+        eq(66.67, PyRound.round2(Availability.ofCluster(Arrays.asList(100.0, 100.0, 0.0, 0.0), 4.0, 1.0)), "N+1, two down");
+        eq(91.67, PyRound.round2(Availability.ofCluster(Arrays.asList(100.0, 100.0, 75.0, 75.0), 4.0, 1.0)), "degraded counts");
         List<Double> ten = new ArrayList<>(Collections.nCopies(8, 100.0));
         ten.addAll(Arrays.asList(0.0, 0.0));
-        eq(100.0, Availability.cluster(ten, 10.0, 2.0), "N+2, two down");
+        eq(100.0, Availability.ofCluster(ten, 10.0, 2.0), "N+2, two down");
         List<Double> mixed = new ArrayList<>(Collections.nCopies(7, 100.0));
         mixed.addAll(Collections.nCopies(3, 50.0));
-        eq(93.75, Availability.cluster(mixed, 10.0, 2.0), "N+2: (850 - 100) / 8");
-        eq(100.0, Availability.cluster(Arrays.asList(100.0, 100.0, 100.0, 100.0), 4.0, 1.0), "capped at 100");
-        eq(75.0, Availability.cluster(Arrays.asList(100.0, 100.0, 100.0, 0.0), 4.0, null), "no failover level is k = 0");
-        eq(75.0, Availability.cluster(Arrays.asList(100.0, 100.0, 100.0), 4.0, 0.0), "a counted host not found is 0");
-        check(Availability.cluster(Arrays.asList(100.0, 100.0), 2.0, 2.0) == null, "HA tolerates every host: no value");
-        eq(100.0, Availability.cluster(Arrays.asList(100.0, 100.0), null, null), "no host count: the hosts found");
+        eq(93.75, Availability.ofCluster(mixed, 10.0, 2.0), "N+2: (850 - 100) / 8");
+        eq(100.0, Availability.ofCluster(Arrays.asList(100.0, 100.0, 100.0, 100.0), 4.0, 1.0), "capped at 100");
+        eq(75.0, Availability.ofCluster(Arrays.asList(100.0, 100.0, 100.0, 0.0), 4.0, null), "no failover level is k = 0");
+        eq(75.0, Availability.ofCluster(Arrays.asList(100.0, 100.0, 100.0), 4.0, 0.0), "a counted host not found is 0");
+        check(Availability.ofCluster(Arrays.asList(100.0, 100.0), 2.0, 2.0) == null, "HA tolerates every host: no value");
+        eq(100.0, Availability.ofCluster(Arrays.asList(100.0, 100.0), null, null), "no host count: the hosts found");
         eq(91.67, PyRound.round2(Availability.worst(Arrays.asList(91.67, null, 100.0))), "worst leaves out a cluster with no value");
         check(Availability.worst(Arrays.asList((Double) null)) == null, "none");
         done("Operational Availability");
@@ -767,59 +767,59 @@ public final class KpiTest {
         double end = w.endMs;
         Map<String, Double> m = new HashMap<>();
         m.put(StatKeys.CLUSTER_PERFORMANCE_SCORE, begin + 500);
-        check(w.isDue(m), "KPI data in the window, nothing calculated: due");
+        check(w.awaitsCheck(m), "KPI data in the window, nothing calculated: due");
         m.put(StatKeys.CLOSE_FOR_BUSINESS, end + 100);
-        check(!w.isDue(m), "calculated for this window: not due");
+        check(!w.awaitsCheck(m), "calculated for this window: not due");
         m.put(StatKeys.CLOSE_FOR_BUSINESS, begin + 100);
-        check(w.isDue(m), "calculated for the window before: due");
+        check(w.awaitsCheck(m), "calculated for the window before: due");
         Map<String, Double> old = new HashMap<>();
         old.put(StatKeys.CLUSTER_PERFORMANCE_SCORE, begin - 500);
-        check(!w.isDue(old), "KPI data only from before the window: not due");
-        check(!w.isDue(new HashMap<>()), "no data: not due");
+        check(!w.awaitsCheck(old), "KPI data only from before the window: not due");
+        check(!w.awaitsCheck(new HashMap<>()), "no data: not due");
 
         // in turn
         List<String> due = Arrays.asList("a", "b", "c", "d", "e");
         PeriodicWindow wk = PeriodicWindow.at(java.time.Instant.parse("2026-10-12T00:01:00Z").toEpochMilli(), 0, 0, 24);
         List<List<String>> cycles = new ArrayList<>();
-        for (int n = 0; n < 3; n++) cycles.add(wk.thisCycle(due, wk.endMs + (5L * n + 1) * 60_000L, 2));
+        for (int n = 0; n < 3; n++) cycles.add(wk.sliceFor(due, wk.endMs + (5L * n + 1) * 60_000L, 2));
         eq(Arrays.asList(Arrays.asList("a", "b"), Arrays.asList("c", "d"), Arrays.asList("e", "a")), cycles, "in turn");
-        eq(Arrays.asList("a", "b"), wk.thisCycle(Arrays.asList("a", "b"), wk.endMs, 2), "up to the limit: all");
+        eq(Arrays.asList("a", "b"), wk.sliceFor(Arrays.asList("a", "b"), wk.endMs, 2), "up to the limit: all");
 
         // the rule
         String[] bands = new String[4];
         double[] vs = {10, 30, 60, 90};
-        for (int i = 0; i < 4; i++) bands[i] = PeriodicCheck.band(vs[i], false);
+        for (int i = 0; i < 4; i++) bands[i] = PeriodicCheck.bandOf(vs[i], false);
         eq(Arrays.asList("red", "orange", "yellow", "green"), Arrays.asList(bands), "performance bands: 25, 50, 75");
         double[] hs = {90, 70, 40, 10};
-        for (int i = 0; i < 4; i++) bands[i] = PeriodicCheck.band(hs[i], true);
+        for (int i = 0; i < 4; i++) bands[i] = PeriodicCheck.bandOf(hs[i], true);
         eq(Arrays.asList("red", "orange", "yellow", "green"), Arrays.asList(bands), "risk bands");
-        eq("orange", PeriodicCheck.band(25, false), "a value on a limit is the better band");
-        eq("orange", PeriodicCheck.band(75, true), "risk 75 is orange");
-        eq("yellow", PeriodicCheck.band(50, false), "50 is yellow");
-        eq(1, PeriodicCheck.decide(24, 0, 0), "performance red");
-        eq(1, PeriodicCheck.decide(99, 0, 76), "consumption red");
-        eq(0, PeriodicCheck.decide(99, 99, 0), "risk never closes alone");
-        eq(0, PeriodicCheck.decide(40, 99, 40), "only one orange");
-        eq(0, PeriodicCheck.decide(60, 99, 60), "yellow");
-        eq(1, PeriodicCheck.decide(40, 60, 60), "both orange, risk orange");
-        eq(1, PeriodicCheck.decide(40, 90, 60), "risk red");
-        eq(0, PeriodicCheck.decide(40, 40, 60), "risk yellow");
-        eq(0, PeriodicCheck.decide(40, 10, 60), "risk green");
-        eq(0, PeriodicCheck.decide(50, 60, 60), "performance 50 is yellow");
-        eq(1, PeriodicCheck.decide(49.99, 50.01, 50.01), "just inside orange");
-        eq(0, PeriodicCheck.decide(95, 10, 30), "healthy");
-        eq(1, PeriodicCheck.decide(25, 75, 75), "all three orange");
-        eq(0, PeriodicCheck.decide(25, 0, 0), "performance orange alone");
+        eq("orange", PeriodicCheck.bandOf(25, false), "a value on a limit is the better band");
+        eq("orange", PeriodicCheck.bandOf(75, true), "risk 75 is orange");
+        eq("yellow", PeriodicCheck.bandOf(50, false), "50 is yellow");
+        eq(1, PeriodicCheck.closeFlag(24, 0, 0), "performance red");
+        eq(1, PeriodicCheck.closeFlag(99, 0, 76), "consumption red");
+        eq(0, PeriodicCheck.closeFlag(99, 99, 0), "risk never closes alone");
+        eq(0, PeriodicCheck.closeFlag(40, 99, 40), "only one orange");
+        eq(0, PeriodicCheck.closeFlag(60, 99, 60), "yellow");
+        eq(1, PeriodicCheck.closeFlag(40, 60, 60), "both orange, risk orange");
+        eq(1, PeriodicCheck.closeFlag(40, 90, 60), "risk red");
+        eq(0, PeriodicCheck.closeFlag(40, 40, 60), "risk yellow");
+        eq(0, PeriodicCheck.closeFlag(40, 10, 60), "risk green");
+        eq(0, PeriodicCheck.closeFlag(50, 60, 60), "performance 50 is yellow");
+        eq(1, PeriodicCheck.closeFlag(49.99, 50.01, 50.01), "just inside orange");
+        eq(0, PeriodicCheck.closeFlag(95, 10, 30), "healthy");
+        eq(1, PeriodicCheck.closeFlag(25, 75, 75), "all three orange");
+        eq(0, PeriodicCheck.closeFlag(25, 0, 0), "performance orange alone");
 
         Map<String, List<Double>> samples = new HashMap<>();
         samples.put(StatKeys.CLUSTER_PERFORMANCE_SCORE, Arrays.asList(95.0));
         samples.put(StatKeys.CLUSTER_RISK_SCORE, Arrays.asList(10.0));
         samples.put(StatKeys.CLUSTER_CONSUMPTION_SCORE, Arrays.asList(40.0));
-        Map<String, Double> v = PeriodicCheck.windowValues(samples, 5);
+        Map<String, Double> v = PeriodicCheck.valuesOver(samples, 5);
         eq(95.0, v.get(StatKeys.PERIODIC_PERFORMANCE), "performance");
         eq(0.0, v.get(StatKeys.CLOSE_FOR_BUSINESS), "open");
         samples.remove(StatKeys.CLUSTER_CONSUMPTION_SCORE);
-        v = PeriodicCheck.windowValues(samples, 5);
+        v = PeriodicCheck.valuesOver(samples, 5);
         check(!v.containsKey(StatKeys.CLOSE_FOR_BUSINESS) && !v.containsKey(StatKeys.PERIODIC_CONSUMPTION),
                 "no Close for Business when an input has no data");
 
@@ -828,13 +828,13 @@ public final class KpiTest {
         Map<String, Double> cur = new HashMap<>();
         prev.put("a", 0.0); prev.put("b", 1.0); prev.put("c", 0.0); prev.put("d", 1.0); prev.put("e", 1.0);
         cur.put("a", 1.0); cur.put("b", 0.0); cur.put("c", 0.0); cur.put("d", 1.0); cur.put("e", 0.0);
-        eq(Arrays.asList(1, 2), asList(PeriodicCheck.transitions(prev, cur)), "close and open per direction");
+        eq(Arrays.asList(1, 2), asList(PeriodicCheck.flips(prev, cur)), "close and open per direction");
         Map<String, Double> fresh = new HashMap<>();
         fresh.put("new_closed", 1.0);
         fresh.put("new_open", 0.0);
-        eq(Arrays.asList(0, 0), asList(PeriodicCheck.transitions(new HashMap<>(), fresh)), "a blank previous value is not counted");
-        eq(Arrays.asList(0, 0), asList(PeriodicCheck.transitions(prev, new HashMap<>())), "a blank current value is not counted");
-        eq(Arrays.asList(0, 0), asList(PeriodicCheck.transitions(prev, prev)), "no change");
+        eq(Arrays.asList(0, 0), asList(PeriodicCheck.flips(new HashMap<>(), fresh)), "a blank previous value is not counted");
+        eq(Arrays.asList(0, 0), asList(PeriodicCheck.flips(prev, new HashMap<>())), "a blank current value is not counted");
+        eq(Arrays.asList(0, 0), asList(PeriodicCheck.flips(prev, prev)), "no change");
         done("Periodic Cluster Check: window, due, rotation, rule, Cluster Delta");
     }
 
@@ -845,17 +845,17 @@ public final class KpiTest {
     // ------------------------------------------------------------------ business applications
 
     static void businessApps() {
-        eq(70.0, BusinessApps.tier(Arrays.asList(80.0, 60.0)), "tier mean");
-        check(BusinessApps.tier(new ArrayList<Double>()) == null, "no VM KPI");
-        eq(90.0, BusinessApps.application(Arrays.asList(90.0), Arrays.asList(70.0, 80.0)), "the higher of namespace and lowest tier (Q14)");
-        eq(70.0, BusinessApps.application(Arrays.asList(50.0), Arrays.asList(70.0, 80.0)), "the lowest tier is higher");
-        eq(70.0, BusinessApps.application(new ArrayList<Double>(), Arrays.asList(70.0, 80.0)), "tiers only");
-        eq(90.0, BusinessApps.application(Arrays.asList(90.0), new ArrayList<Double>()), "namespaces only");
-        check(BusinessApps.application(new ArrayList<Double>(), new ArrayList<Double>()) == null, "nothing");
-        eq(50.0, BusinessApps.application(Arrays.asList(90.0, 50.0), Arrays.asList(70.0, 80.0), false), "Q14 off: the lowest of all");
-        eq(90.0, BusinessApps.application(Arrays.asList(90.0, 50.0), Arrays.asList(70.0, 80.0), true), "Q14 on: the higher part");
-        eq(70.0, BusinessApps.enterprise(Arrays.asList(60.0, 80.0)), "enterprise mean");
-        check(BusinessApps.enterprise(new ArrayList<Double>()) == null, "no application");
+        eq(70.0, BusinessApps.tierValue(Arrays.asList(80.0, 60.0)), "tier mean");
+        check(BusinessApps.tierValue(new ArrayList<Double>()) == null, "no VM KPI");
+        eq(90.0, BusinessApps.applicationValue(Arrays.asList(90.0), Arrays.asList(70.0, 80.0)), "the higher of namespace and lowest tier (Q14)");
+        eq(70.0, BusinessApps.applicationValue(Arrays.asList(50.0), Arrays.asList(70.0, 80.0)), "the lowest tier is higher");
+        eq(70.0, BusinessApps.applicationValue(new ArrayList<Double>(), Arrays.asList(70.0, 80.0)), "tiers only");
+        eq(90.0, BusinessApps.applicationValue(Arrays.asList(90.0), new ArrayList<Double>()), "namespaces only");
+        check(BusinessApps.applicationValue(new ArrayList<Double>(), new ArrayList<Double>()) == null, "nothing");
+        eq(50.0, BusinessApps.applicationValue(Arrays.asList(90.0, 50.0), Arrays.asList(70.0, 80.0), false), "Q14 off: the lowest of all");
+        eq(90.0, BusinessApps.applicationValue(Arrays.asList(90.0, 50.0), Arrays.asList(70.0, 80.0), true), "Q14 on: the higher part");
+        eq(70.0, BusinessApps.enterpriseValue(Arrays.asList(60.0, 80.0)), "enterprise mean");
+        check(BusinessApps.enterpriseValue(new ArrayList<Double>()) == null, "no application");
         done("Business Applications formulas");
     }
 
@@ -867,18 +867,18 @@ public final class KpiTest {
         // the KPI is the rounded mean of rounded rows
         Map<String, Double> raw = new LinkedHashMap<>();
         raw.put("CPU Ready", 0.005);
-        KpiScorer.Computed c = KpiScorer.compute(new KpiMetric[] {CPU_READY}, raw, false);
+        KpiScorer.Evaluation c = KpiScorer.evaluate(new KpiMetric[] {CPU_READY}, raw, false);
         eq(0.01, c.rows.get("CPU Ready"), "the rows are rounded first");
         // a higher-is-worse KPI is 100 minus the score, rounded
         Map<String, Double> r2 = new LinkedHashMap<>();
         r2.put("CPU Ready", 5.0);
-        eq(PyRound.round2(100.0 - 18.75), KpiScorer.compute(new KpiMetric[] {CPU_READY}, r2, true).score, "flipped");
+        eq(PyRound.round2(100.0 - 18.75), KpiScorer.evaluate(new KpiMetric[] {CPU_READY}, r2, true).score, "flipped");
         done("rounding order");
     }
 
     static void sentinel() {
         // Q13: -1 is scored as read while the switch holds (upstream); a test of both settings is in DerivedTest
-        eq(100.0, KpiScorer.kpi(new KpiMetric[] {CPU_READY}, vals("CPU Ready", -1.0)), "-1 scores as perfect, as upstream");
+        eq(100.0, KpiScorer.combine(new KpiMetric[] {CPU_READY}, vals("CPU Ready", -1.0)), "-1 scores as perfect, as upstream");
         check(Quirks.NEGATIVE_ONE_STAT_IS_A_VALUE, "the quirk is on for the match");
         done("a -1 reading is what upstream scores (Q13)");
     }
