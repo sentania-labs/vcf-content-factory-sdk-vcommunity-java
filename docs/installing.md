@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- VCF Operations 8.18, 9.0 or 9.1 (the lines this pak targets) with a collector (or Cloud Proxy) that can
+- VCF Operations 8.18.7 or later on the 8.18, 9.0 or 9.1 lines (the lines this pak targets) with a collector (or Cloud Proxy) that can
   reach the vCenter's HTTPS port (443 unless the account says otherwise).
 - The vCenter adapter (VMWARE) collecting the vCenter, so its objects exist in
   VCF Operations to receive the keys.
@@ -10,16 +10,64 @@
   it collects; later phases state what each collector reads.
 - Optionally, a Windows account for the guest checks (off by default; see Guest monitoring below).
 
+**The minimum version.** The content of this pak is converted and gated for VCF
+Operations 8.18.7; that is the floor. The `manifest.txt` the pak carries says
+`vcops_minimum_version 8.0.0` (a constant of the factory builder, not a decision of this pak), so an
+8.10 to 8.17 instance will accept the install: do not install it on anything older than 8.18.7.
+
 **Do not install it next to the original vCommunity pack on the same VCF
-Operations instance.** The two are different adapter kinds and would write the
-same keys. This pak is not an upgrade of the original: its objects are new
-objects with no history carried over, and uninstalling the original removes the
-built-in views it shipped. The content of this pak (see "Content" below) keeps
-the original pack's ids for most views, and for every dashboard, report, super
-metric, symptom and alert, so the two paks also claim the same content ids; that
-is a second reason not to run both on one instance. Co-installing them, and the
-steps to move from the original to this pak, have not been tested and there is no
-migration guide yet.
+Operations instance, and do not "install this, then remove the original".** The two
+are different adapter kinds and would write the same keys. This pak is not an
+upgrade of the original: its objects are new objects with no history carried over.
+The content is the problem: this pak keeps the original's ids for every dashboard,
+report, super metric, symptom and alert, for the check-list files (the platform stores
+them under the lower-cased title) and for most views. How many views depends on which
+build of the original: 69 of the 170 against the released 0.8.1 (which ships the
+other 101 under 101 built-in view ids, plus 19 more built-in ids), and all 170 against
+the corrected build (the one this content was converted from; the same views the fix
+sent upstream as its pull request 92 would ship). What follows from shared ids:
+
+- Installing the second pak overwrites the first pak's definitions under every shared
+  id; the view titles and descriptions become the last installer's. The check-list files
+  are the exception: the second import is refused and the first pak's files stay.
+- Uninstalling either pak (with the remove-content option) deletes every shared id. The
+  pak that stays loses its dashboards, reports, super metrics (and their policy
+  enablement), symptoms, alerts and the shared views. The check-list files are deleted
+  if the uninstalled pak recorded them, which is the one installed first.
+- So "install this, then remove the original" deletes this pak's content. With the
+  released 0.8.1 it also deletes the 120 built-in views that 0.8.1 overwrote; 9 of them
+  are views this pak's 11 widgets use in place, and those widgets show "The view does not
+  exist" until the built-in views are restored from a clean export of the same VCF
+  Operations version.
+- Removing the original first does the same to those 120 built-in views, so those 11
+  widgets break in the same way until the restore.
+- Installed side by side with the released 0.8.1, 92 view titles appear in the views list
+  twice (0.8.1's copies sit under built-in ids with the same titles).
+- The two super metrics have the same two ids in every upstream line: uninstalling either
+  pak removes them for both.
+
+**A safe order to move from the original pack to this one:** (1) export or note
+anything you changed in the original's content and check-list files, and keep a clean
+export of the built-in views of your VCF Operations version; (2) uninstall the original
+pack with remove-content; (3) if it was the released 0.8.1, restore the built-in views
+it deleted from the clean export; (4) install this pak. The original's check-list files
+go with its uninstall, so this pak installs its own six. A clone of a check-list file
+under another name (see "Check-list files") is not removed by any of this.
+
+**Inferred, not measured with this pak.** Every statement above is inferred from the
+platform's behavior as measured on the source pack alone (the factory investigation
+`2026-11-12-vcommunity-upstream-builtin-view-ids`): that content is tracked by id, that
+a second install overwrites and an uninstall with remove-content deletes by id. Neither pak
+has been installed next to the other, nor uninstalled after the other, on any instance.
+There is no migration guide beyond the order above.
+
+**Same adapter kind as the retired earlier port.** `vcfcf_vcommunity` was also the
+adapter kind of the retired 2026 Java port of this pack. On an instance that still has
+that port (its `1.0.0.9` pak ships 63 views under built-in ids, 33 view ids this pak also
+ships and 2 symptom ids that are the same), installing this pak is an upgrade of it, not
+a second pack. On 9.x an upgrade deletes the content the new version no longer ships,
+including those 63 built-in views. Inferred as above, not measured. Remove the earlier
+port first, and restore the built-in views, as for the original.
 
 ## Permissions Required
 
@@ -170,7 +218,7 @@ holds:
 
 | Content | Count | Notes |
 |---|---:|---|
-| Views | 170 | Carried over from the original pack. 101 of them began as edited copies of VCF Operations' own views; they are installed under new ids with new descriptions (nine also have new titles, below). |
+| Views | 170 | Carried over from the original pack. 101 of them began as edited copies of VCF Operations' own views; they carry new descriptions (nine also have new titles, below) and keep the ids of the corrected upstream build they were converted from (the fix sent upstream as its pull request 92), not ids of this project's own; if upstream merges that fix, both packs carry them under the same ids (see the warning at the top). |
 | Dashboards | 52 | The original pack's, including the "Report:" and "Object Summary Page" dashboards. |
 | Reports | 16 | The "VOA" report templates (capacity, configuration, inventory, performance, executive summary and the CSV export reports). |
 | Super metrics | 2 | See "Super metrics" below. |
@@ -205,6 +253,19 @@ and reports that used them point at the built-in view by its id
 export of each of 8.18.7, 9.0.2 and 9.1.1, as recorded in the factory's stock
 id baseline; they were not looked at on a running instance.
 
+**No Summary pages are bound.** Six dashboards are named ". Object Summary Page for ..."
+(compute folder, distributed port groups, distributed switch, network folder, storage folder, VM
+folder). In the original pack they are plain dashboards, and so they are here: the pak has no
+`content/dashboards/dashboards.properties`, so nothing replaces the built-in Summary tab of those
+object kinds. Binding one to a Summary tab is a step of its own (the original's
+`docs/configuration-guide/summary-dashboards.md`); this pak does not do it.
+
+**ESXi Host License Expiring covers one license name.** As in the original pack, the
+alert's symptoms read `vCommunity|Licensing:vSphere 8 Enterprise Plus for VCF|Remaining Days`,
+the key of one fixed license name. The alert does not fire for a host holding any other license
+(for example "VMware Cloud Foundation (cores)" or "Evaluation Mode"). It is reproduced for the match
+with the original and is a candidate to fix (design 5.8).
+
 **Two dashboards without Section rows.** "Overall Daily Check" (6 Section rows)
 and "vSphere Cluster Capacity 2.0" (2) use the Section widget, which VCF
 Operations imports only from 9.1.1. The pak is built for a floor below that, so
@@ -222,7 +283,7 @@ own content).
 
 **Text from the original pack.** The names and descriptions that ship as the
 original pack wrote them are listed, by type and field, in
-`docs/design/inputs/carried-text-report.md`. The 101 re-authored views have
+`docs/design/inputs/carried-text-report.md`. The 101 views that began as edited copies of built-in views have
 descriptions written for this pak.
 
 ## Check-list files

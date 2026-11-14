@@ -31,7 +31,7 @@ check), programmatic in-guest actions. Lessons that bind: `cross-runtime-pak-upg
 (distinct kind, no in-place upgrade from the Python pack), `stitch-moid-not-unique-across-vcenters.md`,
 `foreign-resource-property-push.md`, `pak-content-must-not-reuse-stock-ids.md`.
 
-Delivery: the pak lives in its own repo (above). It is **not yet in `knowledge/context/managed_paks.md`**;
+Delivery: the pak lives in its own repo (above). It is **not yet in `knowledge/context/managed_paks.md`**, deliberately while the repository is private (10.1a);
 the orchestrator adds the entry (name `vcommunity-java`, remote, target) before authoring. Bundled
 dashboards, views, reports, alerts and symptoms ship from that repo.
 
@@ -823,7 +823,7 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-51 | Pinned REST accepts SHA-256 only | SOAP and REST accept SHA-256 or SHA-512 | one trust manager | a 128-hex pin also works for libraries |
 | DV-52 | Enabled uses the proxy OS trust store (SOAP) and certifi (REST) | platform trust plus the accept dialog | in-collector adapter | a self-signed vCenter can be accepted in Validate Connection |
 | DV-53 | invalid instance fields warned twice per cycle | once | noise | one warning |
-| DV-54 | 101 views that are edited built-in views ship under built-in ids; 19 renamed built-ins ship under built-in ids | 101 re-authored under new ids and fresh titles; 19 not shipped, referenced in place | `pak-content-must-not-reuse-stock-ids.md` | installing or removing the pak never overwrites or deletes built-in views; 101 views have new titles |
+| DV-54 | 101 views that are edited built-in views ship under built-in ids; 19 renamed built-ins ship under built-in ids | 101 converted with new descriptions (nine with new titles), under the ids minted for the corrected upstream build (the fix sent upstream as its pull request 92), not ids of this project: see DV-106; 19 not shipped, referenced in place | `pak-content-must-not-reuse-stock-ids.md` | installing or removing the pak never overwrites or deletes built-in views; 101 views have new descriptions and nine new titles |
 | DV-55 | (only if Q1 is accepted) `None`/`null` sent while a feature is off | on a set-to-unset transition, `""` pushed once | a property keeps its last value forever | a turned-off feature's settings show blank, not their old values |
 | DV-56 | whole `guest` object read for every VM | the ten sub-paths | bytes and heap | none (Detailed Data on an older vCenter: withheld, as rule 2) |
 | DV-57 | sentinel instance names (`Unknown Adapter`, `unknown`, `Unknown`) for devices without labels | such devices not published | a sentinel instance is a fake object | no `Unknown` instances |
@@ -876,6 +876,7 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-103 | the Windows account is sent to vCenter whatever the vCenter TLS mode, Trust on First Use (the default) included | the guest phase does not run while vCenter TLS Validation is Trust on First Use: health `Collector:guest|Status` FAILED with `F-GUEST-TLS-MODE`, Test Connection says so as a warning when a guest switch is on, and nothing is sent to vCenter. Enabled or Pinned runs it. One named constant, `GuestPlan.REQUIRE_CHECKED_VCENTER_TLS`, reverses this (the phase then runs and warns once per start) | a Windows account is usually more privileged than the read-only vCenter account, and in that mode it would cross a connection nobody checked (owner decision Q6 covers the vCenter account only) | enabling guest monitoring needs vCenter TLS Validation changed to Enabled or Pinned first |
 | DV-104 | a fixed look-back of five minutes for every VM, every cycle | the look-back is the time since that VM's events were last read, plus a minute, between 5 and 60 minutes; a VM last read longer ago than that is looked at for the 60 and the minutes before are counted (`F-GUEST-WINDOW`, collector PARTIAL). Records are still the newest one per (log, event id), as upstream's `-MaxEvents 1`. A VM is asked every collection when the time allows, as upstream's serial run does within its 1800 s, so this only matters at scale (DV-43) or after a gap | events of collections in which a VM was not reached would otherwise be skipped for good | fewer silently missed events |
 | DV-105 | the Cluster Delta counts are published once per window, as the stored samples say (DV-86, no memory) | the same, plus a memory of 30 minutes after a clean push of the counts: Operations does not read a stored value back at once (a minute or four, so the next collection, five minutes later, may still not see it), and the read-back alone sent the same counts twice (two consecutive collections after a restart, third live differential, L2). After the 30 minutes the read-back decides again, so counts that never landed are sent again | L2 | one publication per window |
+| DV-106 | the 101 views that began as edited built-in views ship under built-in ids (released 0.8.1) | they ship under the ids minted for the corrected upstream build, the fix sent upstream as its pull request 92 (`--ids keep`; `docs/design/inputs/import-report/id_map.tsv`). The design (10.1, DV-54) said new ids minted by the factory; none was minted here, and no id was changed | the conversion kept the corrected source's ids; the ids are not built-in ids, so the stock-id guard passes | if upstream merges that fix, both packs carry all 170 views under the same ids, the same sharing situation as the rest of the content (installing guide, co-install warning): each pak's install overwrites the other's, and uninstalling either deletes the shared views |
 
 Superseded by quirk Q9 (P2 live fixes, build 7): DV-08, DV-09, DV-11 (counts and sizes), DV-12, DV-14, DV-16, DV-18 and the text and figure parts of DV-17 and DV-13 (an unset patch level is `None`); by Q10: DV-15. DV-10 stands: a failed `installDate` call is withheld and counted, and no image manager or no date is `null`.
 
@@ -907,6 +908,7 @@ the factory's local clone of it is 31 commits past that tag and already fixes Q1
 | Q14 | R216 Business Application Performance | the value is the HIGHER of its K8S Namespaces' performance values and the lowest of its Tiers' (upstream issue 6), so a healthy namespace hides an unhealthy tier | the lowest of all the parts, or whatever the owner decides | `Quirks.APPLICATION_TAKES_HIGHER` (read in `BusinessApps.application`) |
 | Q15 | R195, R196, R197, R212, R221 | publishes no availability for any host, cluster or vCenter when no host answered either of the two reads (a vCenter whose hosts are all unreported), and no Network Speed Degradation for any host or Datacenter when no host has any NIC speed ("No NIC speeds for any host"), instead of 0 % | with the answers read, availability of every host 0 % | `Quirks.NOTHING_WHEN_NO_HOST_HAS_DATA` (read in `ObjectKpis.hosts`); a failed read is never this case Upstream's test of "no host answered" is on the answer to the `sys|poweredOn` statistic and to the three condition properties; the port reads the 23 statistics and 7 properties in one request each and tests whether the answer names the host at all (as upstream does, whether or not a sample survived the age limit). Both give the same on real data, where `runtime|connectionState` is always stored. Both warnings of the original are logged, so `Warnings in Last Cycle` and `First Warning` agree |
 | Q16 | R211 Total Network Speed Degradation on the vSphere World | publishes the count (0) whenever the answer names any host, even when every stored host value is older than ten minutes, so it goes on publishing 0 after the host values stop | a count only while some host has a fresh stored value | `Quirks.STALE_HOST_VALUE_COUNTS_AS_ZERO` (read in `WorldStage.networkCount`) |
+| Q17 | R6 Licensing Remaining Days; the 7 condition symptoms of the alert "ESXi Host License Expiring" | every symptom reads `vCommunity\|Licensing:vSphere 8 Enterprise Plus for VCF\|Remaining Days`, the key of one fixed license name, not instanced; Java and upstream publish Remaining Days per license name | an instanced key (one symptom family for any license name), or a configurable name | the seven `symptoms/condition-*.yaml` files that name the key (content, not Java); Java needs no change. Reproduced for the match: the alert does not fire for a host with any other license (in the labs: `VMware Cloud Foundation (cores)`, `Evaluation Mode`) |
 
 **Note L1 (third live differential, build 11): `Options|config.tools`.** On all 45 VMs the Python side stores the text
 ending `counter = N, fault =  } }` (two spaces) and the Java side `fault = } }` (one). The formatter (`PyObjectText.toolsConfigInfo`) has
@@ -1408,7 +1410,7 @@ packs `content/files/**`, `sdk_builder.py` "content/files/"). Inventory of 0.8.1
 
 | Content | Id | Name |
 |---|---|---|
-| The 101 views that began as edited built-in views | new ids minted by the factory | freshly written title and description; a title equal to any built-in view title on 8.18.7, 9.0.2 or 9.1.1 gets a distinct title |
+| The 101 views that began as edited built-in views | **as built (DV-106):** the ids of the corrected upstream build (pull request 92), kept; **as designed:** new ids minted by the factory | freshly written title and description; a title equal to any built-in view title on 8.18.7, 9.0.2 or 9.1.1 gets a distinct title |
 | The 19 views that only renamed a built-in | **not shipped** | dashboards and reports reference the built-in view in place, by its built-in id; E17 checks each exists with the same id on all three lines; one missing on a line is re-authored under a new id instead |
 | All other views (about 69) | upstream ids | upstream names |
 | Dashboards (52) | upstream ids | upstream names (50-character editor limit, `dashboard-name-limit-50-editor.md`) |
@@ -1417,6 +1419,23 @@ packs `content/files/**`, `sdk_builder.py` "content/files/"). Inventory of 0.8.1
 
 Every id that keeps upstream's value is checked against a clean export of each line by the stock-id guard
 (issue #345); a collision means re-id it like the 101.
+
+### 10.1a Conversion decisions recorded after the P6 review
+
+- **Duplicate symptom id.** The source pak defines `SymptomDefinition-7675759b-2ca0-4847-87ed-e3e23acdf7a5` twice
+  under two names: "Windows Service Down" (`symptomdefs/Windows Service Down Symptom.xml`) and "Windows Service
+  Status Down" (inside `alertdefs/Windows Service Down.xml`). One id can carry one definition. The conversion kept the second,
+  name "Windows Service Status Down", chosen with `--prefer-source "alertdefs/Windows Service Down.xml"`. An install of the source
+  pack may show the other name for the same id. The importer's `merged_duplicates` lists only identical pairs, so
+  this choice is not in `report.json`; it is recorded here.
+- **No Summary binding.** The six "Object Summary Page for ..." dashboards carry no `summary_for`, so the pak has no
+  `content/dashboards/dashboards.properties`, as the source pak. The importer had inferred the binding from the folder
+  name; the review (B1) removed it.
+- **Not in the factory registry, on purpose.** This pak is not in `knowledge/context/managed_paks.md` while the repository is
+  private (before any release tag), so `defect-gate --pak vcommunity-java` sees nothing for it. It is registered when the
+  owner confirms the licensing record and a release is planned.
+- **Same adapter kind as the retired port** (Q8): an instance that still has the retired port's `1.0.0.9` pak sees this install as
+  an upgrade of it; the installing guide says so.
 
 ### 10.2 Re-authoring the 101 views from a neutral spec
 

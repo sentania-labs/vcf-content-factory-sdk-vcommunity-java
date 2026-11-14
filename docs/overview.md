@@ -185,8 +185,9 @@ The pak carries the content of the original pack as VCF Operations content, inst
 
 - The content is converted from the original pack's content files by the factory's offline importer and
   checked against them field by field (`docs/design/inputs/import-report/`). Most of it keeps the original's
-  ids and names. The 101 views that began as edited copies of VCF Operations' own views have new ids and
-  descriptions written for this pak, and nine of them new titles.
+  ids and names. The 101 views that began as edited copies of VCF Operations' own views have descriptions written
+  for this pak, and nine of them new titles; their ids are those minted for the corrected upstream build
+  (the fix sent upstream as its pull request 92), kept as they are.
 - 19 views only renamed a built-in view; they are not shipped, and the dashboards and reports that used them
   point at the built-in view by id.
 - Five views and two dashboards name objects of kinds other than the vCenter adapter's: four views (the VCF
