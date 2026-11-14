@@ -1,6 +1,7 @@
 package com.vcfcf.adapters.vcommunity.coll;
 
 import com.vcfcf.adapters.vcommunity.text.DetailedDataParser;
+import com.vcfcf.adapters.vcommunity.text.PyObjectText;
 import com.vcfcf.adapters.vcommunity.text.PyText;
 import com.vcfcf.adapters.vcommunity.text.Quirks;
 import com.vcfcf.adapters.vcommunity.vim.BulkRow;
@@ -90,7 +91,9 @@ public final class VmCollector {
         }
         // an entry that names a path already read keeps that path's pruning
         for (String p : optionPaths) {
-            if (!r.paths().containsKey(p)) r.path(p, PathSpec.shallow());
+            if (r.paths().containsKey(p)) continue;
+            // the tools configuration and a list of references are printed (PyObjectText); anything else is one value or skipped
+            r.path(p, "config.tools".equals(p) ? PyObjectText.TOOLS_SPEC : PyObjectText.LIST_SPEC);
         }
         return r;
     }
@@ -130,7 +133,7 @@ public final class VmCollector {
         yv(o, row, V + "Guest|Operation Ready", "guest.guestOperationsReady");
         yv(o, row, V + "Guest|State Change Support", "guest.guestStateChangeSupported");
         yv(o, row, V + "Guest|Interactive Guest", "guest.interactiveGuestOperationsReady");
-        tools(o, row);
+        tools(o, row, optionPaths);
         yv(o, row, V + "Runtime|Consolidation Needed", "runtime.consolidationNeeded");
         yv(o, row, V + "Runtime|DAS protection", "runtime.dasVmProtection.dasProtected");
         yv(o, row, V + "Runtime|Min Required EVC Mode Key", "runtime.minRequiredEVCModeKey");
@@ -149,8 +152,20 @@ public final class VmCollector {
      * {@code None} for both on every VM. That is a placeholder where a value exists; it is reproduced
      * here only, and the correct read is the else branch.
      */
-    private static void tools(ObjectOut o, BulkRow row) {
-        if (Quirks.TOOLS_ALWAYS_NONE) {
+    private static void tools(ObjectOut o, BulkRow row, List<String> optionPaths) {
+        if (Quirks.TOOLS_ALWAYS_NONE && optionPaths.contains("config.tools")) {
+            // the edge of Q1: with config.tools in the VM Options list the original's read does hold it, and the two
+            // keys carry the real values (None only for a VM that has no tools configuration)
+            XmlNode t = row.val("config.tools");
+            if (t == null && !row.isUnset("config.tools")) {
+                o.withhold(2); // the read of it failed
+                return;
+            }
+            XmlNode sync = t == null ? null : t.child("syncTimeWithHost");
+            XmlNode policy = t == null ? null : t.child("toolsUpgradePolicy");
+            o.prop(V + "Guest|Tools Sync Time", sync == null ? "None" : PyText.bool(sync.text()));
+            o.prop(V + "Guest|Tools Upgrade Policy", policy == null ? "None" : policy.rawText());
+        } else if (Quirks.TOOLS_ALWAYS_NONE) {
             o.prop(V + "Guest|Tools Sync Time", "None");
             o.prop(V + "Guest|Tools Upgrade Policy", "None");
         } else {
@@ -336,6 +351,7 @@ public final class VmCollector {
             XmlNode v = row.val(p);
             if (v == null) continue; // unset on this VM: nothing
             String t = PyText.scalar(v);
+            if (t == null) t = PyObjectText.of(p, v);
             if (t != null) {
                 o.prop(V + "Options|" + p, t);
             } else {

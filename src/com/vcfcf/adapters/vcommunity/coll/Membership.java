@@ -80,12 +80,15 @@ public final class Membership {
         public final boolean vApp;
         public final String parentType;
         public final String parent;
+        /** True for a Supervisor namespace: vCenter keeps it as a pool, Operations keeps it as a Namespace object. */
+        public final boolean namespace;
 
-        Pool(String moref, boolean vApp, String parentType, String parent) {
+        Pool(String moref, boolean vApp, String parentType, String parent, boolean namespace) {
             this.moref = moref;
             this.vApp = vApp;
             this.parentType = parentType;
             this.parent = parent;
+            this.namespace = namespace;
         }
     }
 
@@ -183,12 +186,13 @@ public final class Membership {
 
     void pool(BulkRow row) {
         XmlNode parent = row.val("parent");
+        XmlNode ns = row.val("namespace");
         addPool(row.obj.value, "VirtualApp".equals(row.obj.type), parent == null ? null : parent.attr("type"),
-                parent == null ? null : parent.text());
+                parent == null ? null : parent.text(), ns != null && !ns.text().isEmpty());
     }
 
-    void addPool(String moref, boolean vApp, String parentType, String parent) {
-        pools.add(new Pool(moref, vApp, parentType, parent));
+    void addPool(String moref, boolean vApp, String parentType, String parent, boolean namespace) {
+        pools.add(new Pool(moref, vApp, parentType, parent, namespace));
     }
 
     void resetPools() {
@@ -248,6 +252,23 @@ public final class Membership {
     public String hostOfVm(String vm) {
         String h = vmHost.get(vm);
         return h == null || h.isEmpty() ? null : h;
+    }
+
+    /** The VMs whose host vCenter could not be read. */
+    public Set<String> vmsWithUnknownHost() {
+        return Collections.unmodifiableSet(vmsUnknownHost);
+    }
+
+    /** The MoRef of the one host with this name; null when none or several have it. */
+    public String hostByName(String name) {
+        if (name == null || name.isEmpty()) return null;
+        String found = null;
+        for (Host h : hosts.values()) {
+            if (!name.equals(h.name)) continue;
+            if (found != null) return null;
+            found = h.moref;
+        }
+        return found;
     }
 
     public boolean vmHostKnown(String vm) {
@@ -314,30 +335,29 @@ public final class Membership {
     // ------------------------------------------------------------------ resource pools
 
     /**
-     * The two counts per cluster MoRef: pools at level 1 to 3 and at level 2 to 5. The level of a pool is the
-     * number of resource pool hops from it up to the cluster, not counting the cluster's root pool (the pool
-     * whose parent is the cluster, which is level 0). A pool that is really a vApp, or whose parent chain
-     * does not reach a cluster, or loops, is in no count (DV-35). A cluster with none has no entry.
+     * The two counts per cluster MoRef: pools at level 1 to 3 and at level 2 to 5. A pool's level is the
+     * number of pool-to-pool steps from it up to the cluster, with the cluster's own root pool at level 0
+     * (it is not counted). Left out of every count: a vApp, a Supervisor namespace and everything below
+     * either (Operations holds those as other kinds of object, so its own pool list never has them; DV-35),
+     * and a pool whose chain of parents does not end at a cluster or loops. A cluster with none has no entry.
      */
     public Map<String, int[]> poolCounts() {
         Map<String, Pool> byMoref = new HashMap<>();
         List<Pool> all = pools();
-        for (Pool p : all) if (!p.vApp) byMoref.put(p.moref, p);
+        for (Pool p : all) byMoref.put(p.moref, p);
         Map<String, int[]> counts = new LinkedHashMap<>();
         for (Pool p : all) {
-            if (p.vApp) continue;
             int level = 0;
-            Pool cur = p;
             String cluster = null;
             Set<String> seen = new HashSet<>();
-            while (cur != null && seen.add(cur.moref)) {
+            for (Pool cur = p; cur != null && seen.add(cur.moref); cur = byMoref.get(cur.parent)) {
+                if (cur.vApp || cur.namespace) break; // this pool, or one above it, is not an Operations pool
                 if ("ClusterComputeResource".equals(cur.parentType)) {
                     cluster = cur.parent;
                     break;
                 }
                 if (!"ResourcePool".equals(cur.parentType)) break;
                 level++;
-                cur = byMoref.get(cur.parent);
             }
             if (cluster == null) continue;
             int[] c = counts.computeIfAbsent(cluster, k -> new int[2]);

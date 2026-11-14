@@ -375,7 +375,7 @@ public final class PyText {
     }
 
     /** {@code xsd:string} keeps its text as sent; this is the one place that decides. */
-    private static String stripPrefix(String type) {
+    static String stripPrefix(String type) {
         int c = type.indexOf(':');
         return c < 0 ? type : type.substring(c + 1);
     }

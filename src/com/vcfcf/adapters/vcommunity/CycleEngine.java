@@ -276,6 +276,8 @@ public final class CycleEngine {
                     p2 = properties.run(in);
                     s.collectorStatus.putAll(p2.status);
                     if (p2.deadlineHit) s.deadlineHit = true;
+                    // the VM Options entries skipped each cycle are skipped entries of a list too
+                    if (s.checklistSkipped != null && p2.optionsSkipped != null) s.checklistSkipped += p2.optionsSkipped;
                     // D: the derived metrics, from the membership those reads gave and what Operations holds
                     DerivedPhase.Input d = new DerivedPhase.Input();
                     d.ops = ops;

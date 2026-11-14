@@ -110,6 +110,8 @@ public final class PropertyCollection {
         public Map<String, String> folderNames;
         /** Who is in what, as this cycle's reads say it (P4); each part carries whether its read finished. */
         public Membership membership;
+        /** VM Options entries skipped this cycle (invalid for vCenter, or a value this port cannot print); null when not measured. */
+        public Integer optionsSkipped;
         private Runnable afterCleanPush = () -> { };
 
         /** Remember what was sent; call it once, after a clean push. */
@@ -197,6 +199,7 @@ public final class PropertyCollection {
             List<ObjectOut> cluster = await(fCluster, in, res, C_CLUSTER, "the cluster read");
             HostResult host = await(fHost, in, res, C_HOST, "the host read");
             List<ObjectOut> vm = await(fVm, in, res, C_VM, "the virtual machine read");
+            res.optionsSkipped = vm == null ? null : optionsSkipped;
             List<ObjectOut> ds = await(fDs, in, res, C_DATASTORE, "the datastore read");
             Map<String, List<HostCollector.Assignment>> lic = await(fLic, in, res, C_HOST,
                     "the license read");
@@ -789,6 +792,7 @@ public final class PropertyCollection {
 
     private List<ObjectOut> vms(Input in, List<String> vmParams, List<String> vmOptions, TemplateScan scan,
             Membership members) {
+        optionsSkipped = null;
         List<String> accepted = acceptedOptions(in, vmOptions);
         Set<String> nonScalar = ConcurrentHashMap.newKeySet();
         List<ObjectOut> out = new ArrayList<>();
@@ -813,15 +817,29 @@ public final class PropertyCollection {
             if (accepted.contains(p)) forgetOption(p);
         }
         for (String p : nonScalar) {
-            // read as a value of one element, so one that is an object or a list cost nothing to find;
-            // it is left out of every later read
-            forgetOption(p);
+            // an object or a list this port cannot print costs nothing to find; it is left out of every later read.
+            // The tools configuration stays in: its two keys of the Guest group come from the same read
+            if (!"config.tools".equals(p)) forgetOption(p);
             if (reportedOptions.add("scalar:" + p)) {
                 log.warn("VM Options entry '" + p + "' is not a single value this port can reproduce (an "
                         + "object, a list, or a reference of a type it has no Python name for); it is skipped");
             }
         }
+        optionsSkipped = skippedOptions(vmOptions, nonScalar);
         return out;
+    }
+
+    /** How many VM Options entries are skipped now; null when it is not known (the list was not checked this cycle). */
+    private volatile Integer optionsSkipped;
+
+    private synchronized Integer skippedOptions(List<String> wanted, Set<String> nonScalar) {
+        if (wanted.isEmpty()) return 0;
+        if (!String.join("\n", wanted).equals(optionsFor)) return null;
+        int n = 0;
+        for (String w : new java.util.LinkedHashSet<>(wanted)) {
+            if (!optionsAccepted.contains(w) || nonScalar.contains(w)) n++;
+        }
+        return n;
     }
 
     private RetrieveStats readVms(Input in, List<String> vmParams, List<String> accepted, Set<String> nonScalar,
@@ -845,8 +863,9 @@ public final class PropertyCollection {
         boolean[] unreadable = new boolean[1];
         members.resetPools();
         RetrieveStats st = read(in, C_CLUSTER, new RetrieveRequest("R-RP", "ResourcePool", 500, null)
-                .path("parent", PathSpec.shallow()), row -> {
-                    if (!row.readable("parent")) unreadable[0] = true;
+                .path("parent", PathSpec.shallow()).path("namespace", PathSpec.shallow()), row -> {
+                    // a pool whose parent or namespace flag could not be read cannot be placed: the counts are withheld
+                    if (!row.readable("parent") || !row.readable("namespace")) unreadable[0] = true;
                     members.pool(row);
                 });
         return st != null && !unreadable[0];

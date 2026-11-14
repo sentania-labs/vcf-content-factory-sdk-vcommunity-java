@@ -106,6 +106,14 @@ public final class Quirks {
      */
     public static final boolean NOTHING_WHEN_NO_HOST_HAS_DATA = true;
 
+    /**
+     * Q16, R211 Total Network Speed Degradation on the vSphere World: upstream publishes the count (0) whenever the
+     * answer names any host, even when the only stored values are older than ten minutes (a host's stored speed
+     * stays until the platform is told otherwise), so after the host values stop it goes on publishing 0.
+     * {@code true}: as upstream. {@code false}: a count only while some host has a fresh stored value.
+     */
+    public static final boolean STALE_HOST_VALUE_COUNTS_AS_ZERO = true;
+
     /** The original's {@code str(None)}. */
     public static final String NONE = "None";
     /** The original's {@code NULL_STATUS}. */
