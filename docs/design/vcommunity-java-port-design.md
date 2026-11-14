@@ -1464,6 +1464,25 @@ License Expiring", "Windows Service Down" and "vCommunity Collection Warnings". 
 design keeps (NIC Status R30, Remaining Days R6, Service Status R79, Warnings R253). New-key alerts fire from the
 second sample (`new-metric-alerts-need-two-samples.md`). RULE-011 applies to the dashboards (Q7).
 
+### 10.4 Check-list files across a pak upgrade (measured 2026-11-14)
+
+**Measured fact, replacing the earlier claim read from the platform's bytecode (9.0.2 only).** On VCF Operations
+9.0.2 and 9.1.1, installing build 15 over an earlier build **replaced** the pak's six check-list files in the
+configuration-file store even without "force content update": four operator-edited files were overwritten byte for
+byte. So an edit to a file that has a default name is lost on every pak upgrade. The supported way is a copy under
+another name with the account field pointed at the copy (each of the six names is an account field:
+`esxi_adv_settings_config_file`, `esxi_vib_driver_config_file`, `vm_adv_settings_config_file`,
+`vm_configuration_config_file`, `win_service_config_file`, `win_event_config_file`), and a backup of the files before
+an upgrade. The earlier statement (an install without force leaves an existing file alone, a forced one replaces it)
+is withdrawn; `docs/installing.md` and the six file headers say the measured one. Not measured: 8.18.7, and the effect
+of uninstalling with remove-content (E10).
+
+**Policy defaults (measured on all three lab instances, 2026-11-14).** The two super metrics and the "vCommunity
+Collection Warnings" alert ship not enabled in the default policy, as in the source pack; the installing guide says so.
+
+**Quirk Q1 with the shipped lists.** With every entry commented out, `Guest|Tools Sync Time` and
+`Guest|Tools Upgrade Policy` read `None` on every VM (the quirk's no-edge case); the installing guide says so.
+
 ---
 
 ## 11. Build sequence
@@ -1512,6 +1531,7 @@ Each with a recommendation; none blocks P0-P1.
 | Q9 | Differential environment: e1 0.8.1 must run somewhere, and installing it as shipped overwrites 117 built-in views. | Collector-only build from the fork (content stripped) on one lab instance; never co-installed with the Java pak. |
 | Q10 | Guest operations at scale: upstream allowed 1,800 s per cycle; a 5-minute cycle allows about 240 s. | Deadline-bound phase, 4 parallel guests, rotating cursor (DV-43). |
 | Q11 | Windows and configuration events appear as DIAGNOSTIC events (troubleshooting timeline), not notifications. | Accept; NOTIFICATION is dropped by the platform. |
+| Q12 | **Open.** `Options|config.tools` is stored one space short of the Python value on 9.0.2 and 9.1.1 (re-measured with build 15): the Python original's text ends `fault =  } }` (two spaces), the stored property ends `fault = } }`. | Settled offline where the space is **not** lost: `WireBodyTest` runs the real cycle, then the real Suite API port and framework client over a fake connection, and asserts `fault =  } }` (two spaces) in the bytes of the request body; `PropertiesTest` asserts the same Java string at the port. Nothing between the formatter (`PyObjectText.toolsConfigInfo`) and the socket changes it: `PushSet` stores the string as is, `LastPushed` only hashes it, `Failures.bound` is never applied to a property value (it is for failure and log text), the framework's `jsonStr` escapes only quote, backslash and control characters, and the body is written as UTF-8 bytes. The adapter therefore sends two spaces, and the platform collapses them on the Suite API property path (the same measurement on both versions). Left open: whether a property that differs from the source only in a run of spaces matters to any view or symptom (none uses this key); no adapter change. |
 
 ## 13. Live experiments needed (list only; nothing was probed for this design)
 

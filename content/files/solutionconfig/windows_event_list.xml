@@ -13,9 +13,9 @@
   in force until the collector is restarted. A restart forgets it, and a list that
   cannot be read after a restart is empty.
 
-  Do not edit this shipped file: a forced upgrade of the pack replaces it and
-  your edits are lost (as read from the platform code of VCF Operations 9.0.2; not
-  tested on other versions). Make a copy under another name in the VCF Operations
+  Do not edit this shipped file: every upgrade of the pack replaces it and
+  your edits are lost (measured on VCF Operations 9.0.2 and 9.1.1, even without force
+  content update). Back the files up before an upgrade. Make a copy under another name in the VCF Operations
   configuration-file store, and enter that name (no .xml) in the account's
   Windows Event Log Configuration File field. As shipped, no Log is switched on, so no event is collected.
   To switch one on, copy it out of this comment into the Events element.

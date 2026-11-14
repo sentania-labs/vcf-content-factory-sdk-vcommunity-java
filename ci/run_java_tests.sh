@@ -14,19 +14,37 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 out="$(mktemp -d)"
 trap 'rm -rf "$out"' EXIT
-mapfile -t sources < <(find tests -name '*.java' | sort)
-mapfile -t tests < <(find tests -name '*Test.java' | sort)
+# WireBodyTest needs the VCF Operations SDK jar, the framework jar and log4j (the real Suite API client puts
+# the bytes on a fake connection). The repository's CI never has the SDK jar, so it runs only when
+# VCFCF_WIRE_CP names those jars (a colon separated class path), and says so when it does not:
+#   VCFCF_WIRE_CP=sdk.jar:vcfcf-adapter-base.jar:log4j-api.jar:log4j-core.jar ci/run_java_tests.sh
+wire_cp="${VCFCF_WIRE_CP:-}"
+if [ -n "$wire_cp" ]; then
+    mapfile -t sources < <(find tests -name '*.java' | sort)
+    mapfile -t tests < <(find tests -name '*Test.java' | sort)
+else
+    mapfile -t sources < <(find tests -name '*.java' ! -name WireBodyTest.java | sort)
+    mapfile -t tests < <(find tests -name '*Test.java' ! -name WireBodyTest.java | sort)
+fi
 if [ "${#tests[@]}" -eq 0 ]; then
     echo "no tests/**/*Test.java found" >&2
     exit 1
 fi
-javac -d "$out" -sourcepath src:tests "${sources[@]}"
+if [ -n "$wire_cp" ]; then
+    javac -d "$out" -cp "$wire_cp" -sourcepath src:tests "${sources[@]}"
+else
+    javac -d "$out" -sourcepath src:tests "${sources[@]}"
+fi
 for f in "${tests[@]}"; do
     cls="${f#tests/}"
     cls="${cls%.java}"
     # BcHandshakeTest needs the BouncyCastle jars; it runs below.
     [ "$(basename "$f" .java)" = "BcHandshakeTest" ] && continue
-    java -cp "$out" "${cls//\//.}"
+    if [ "$(basename "$f" .java)" = "WireBodyTest" ]; then
+        java -cp "$out:$wire_cp" "${cls//\//.}"
+    else
+        java -cp "$out" "${cls//\//.}"
+    fi
 done
 
 # Real handshakes under the BouncyCastle JSSE provider, the TLS provider family
@@ -65,6 +83,15 @@ elif [ "${GITHUB_ACTIONS:-}" = "true" ]; then
     exit 1
 else
     bc_skipped=1
+fi
+if [ -z "$wire_cp" ]; then
+    echo
+    echo "################################################################"
+    echo "## SKIPPED: WireBodyTest was NOT run (VCFCF_WIRE_CP is not set:"
+    echo "## it needs the SDK jar, the framework jar and log4j). The two"
+    echo "## spaces of Options|config.tools are asserted up to the Suite"
+    echo "## API port by PropertiesTest; the bytes on the wire only here."
+    echo "################################################################"
 fi
 # Printed last and on stdout so a passing exit code on a workstation is not
 # mistaken for a run that exercised the BouncyCastle handshakes.

@@ -277,9 +277,12 @@ change is needed for that, only a build for that floor.
 "Number of VM" (distributed port groups and distributed switches) are on objects
 of the vCenter adapter. A super metric computes only for an object whose
 policy has it enabled: turn both on in whichever policy governs those objects,
-or they show no values. They stay super metrics, not computed metrics of this pak
-(a percentile has no form in a computed metric, and they are the original pack's
-own content).
+or they show no values. They ship **not enabled** in the default policy, as in the
+original pack (measured on all three lab instances). The alert "vCommunity Collection
+Warnings" also ships not enabled in the default policy, as in the original; enable it
+in the policy that governs the vCenter adapter's objects. The two stay super metrics,
+not computed metrics of this pak (a percentile has no form in a computed metric, and
+they are the original pack's own content).
 
 **Text from the original pack.** The names and descriptions that ship as the
 original pack wrote them are listed, by type and field, in
@@ -311,26 +314,39 @@ element per event log and one `EventID` per number.
 Infrastructure Operations, Configurations, Management Packs Configuration, in
 System Defined; clone one, give the copy a name that differs from the shipped one
 in more than letter case, edit the copy, and enter the copy's name (no `.xml`) in
-the account field. Why: what the platform does with these files when the pak is
-installed again is, as read from VCF Operations 9.0.2.0 (build 25137845):
+the account field. Why: **a pak upgrade replaces every one of the six files that
+has a default name, even without "force content update"**. Measured on VCF Operations
+9.0.2 and 9.1.1 on 2026-11-14 (build 15 installed over an earlier build): four
+operator-edited files were overwritten byte for byte. So an edit to a file with a
+default name is lost on every pak upgrade. The supported way is:
 
-- an install or upgrade **without** "force content update" does not touch a file
-  that already exists in the store: the import of that file fails with an error
-  in the platform log ("The following file of the same name already exist"), the
-  rest of the install carries on, and your edit survives. The new version's file
-  text is not applied either;
-- an upgrade **with** force content update replaces the file unconditionally,
-  and an edit is lost;
-- uninstalling with the remove-content option deletes the files the pak
-  installed, edited or not.
+- copy the file under another name and point the account's field at the copy. Each
+  file name is configurable in the account (the field takes the name without `.xml`):
 
-That is read from the platform's code on one 9.0.2 instance. It was not tested on
-8.18.7 or 9.1.x, and it was not tried with this pak. A clone under another name is
-outside all three cases.
+  | Shipped file | Account field (key) |
+  |---|---|
+  | `esxi_advanced_system_settings` | ESXi Advanced System Settings Config File (`esxi_adv_settings_config_file`) |
+  | `esxi_packages` | ESXi Software Packages Config File (`esxi_vib_driver_config_file`) |
+  | `vm_advanced_parameters` | VM Advanced Parameters Config File (`vm_adv_settings_config_file`) |
+  | `vm_options` | VM Options Config File (`vm_configuration_config_file`) |
+  | `windows_service_list` | Windows Service Configuration File (`win_service_config_file`) |
+  | `windows_event_list` | Windows Event Log Configuration File (`win_event_config_file`) |
+
+- back the files up before every upgrade, whichever names you use;
+- uninstalling with the remove-content option deletes the files the pak installed
+  (read from the platform's code on 9.0.2; not measured). A copy under another name
+  is not one of them.
 
 If the original vCommunity pack was installed on the instance before, its six files
-(the same names) are already in the store. A normal install of this pak then leaves
-them as they are (the first case above), and this pak reads them.
+(the same names) are already in the store, and installing this pak replaces them
+the same way.
+
+**With the shipped check lists, two keys read `None`.** Every entry is commented out
+as shipped, so `Guest|Tools Sync Time` and `Guest|Tools Upgrade Policy` read the text
+`None` on every VM (design quirk Q1: the original pack looks them up under
+`config.tools`, a path its read never has unless `config.tools` is listed in the VM
+options file). List `config.tools` in your copy of the VM options file to get the
+real values.
 
 ## Step-by-Step Installation
 

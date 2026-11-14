@@ -15,9 +15,9 @@
       it out of the comment, and keep the comma after it.
     - Do not write two hyphens in a row inside a comment.
 
-  Do not edit this shipped file: a forced upgrade of the pack replaces it and
-  your edits are lost (as read from the platform code of VCF Operations 9.0.2; not
-  tested on other versions). Make a copy under another name in the VCF Operations configuration-file store, and
+  Do not edit this shipped file: every upgrade of the pack replaces it and
+  your edits are lost (measured on VCF Operations 9.0.2 and 9.1.1, even without force
+  content update). Back the files up before an upgrade. Make a copy under another name in the VCF Operations configuration-file store, and
   enter that name (no .xml) in the account's ESXi Advanced System Settings
   Config File field. As shipped, every entry is commented out, so nothing is collected.
 

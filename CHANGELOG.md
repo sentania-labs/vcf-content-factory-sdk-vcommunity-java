@@ -3,6 +3,21 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.16 (Unreleased)
+
+Live install of build 15 (9.0.2, 9.1.1) and the factory pak-build fixes.
+
+- fix(adapter): the upgrade statement for the six check-list files is the measured one (2026-11-14, 9.0.2 and 9.1.1): a pak upgrade
+  replaces every file with a default name even without force content update, so operator edits to those files are lost; copy the file
+  under another name, point the account's field at the copy (each field named in `docs/installing.md`) and back the files up. The six file
+  headers, `docs/installing.md` and the design (10.4) say it; the earlier bytecode-derived statement is withdrawn.
+- docs: `docs/installing.md` says the shipped (all-commented) lists leave `Guest|Tools Sync Time` and `Guest|Tools Upgrade Policy` at `None`
+  (Q1) and that the super metrics and the Collection Warnings alert ship not enabled in the default policy, as in the source.
+- test(adapter): `WireBodyTest` captures the request body of the real Suite API client for `Options|config.tools` and asserts the two spaces of
+  `fault =  } }` in the bytes sent (design Q12): the adapter sends them, nothing between the formatter and the socket changes them. It needs the
+  SDK, framework and log4j jars (`VCFCF_WIRE_CP`) and is skipped, with a notice, by `ci/run_java_tests.sh` without them.
+- build: first pak built with the factory fix for empty localization values and for content ids defined twice (every symptom was in two files).
+
 ## 1.0.0.15 (Unreleased)
 
 Review of build 14 (`docs/reviews/p6-content-review.md`).
