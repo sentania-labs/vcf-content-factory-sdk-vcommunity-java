@@ -20,7 +20,8 @@
     - Do not write two hyphens in a row inside a comment.
 
   Do not edit this shipped file: a forced upgrade of the pack replaces it and
-  your edits are lost. Make a copy under another name in the VCF Operations configuration-file store, and
+  your edits are lost (as read from the platform code of VCF Operations 9.0.2; not
+  tested on other versions). Make a copy under another name in the VCF Operations configuration-file store, and
   enter that name (no .xml) in the account's VM Options Config File field. As shipped,
   every entry is commented out, so nothing is collected.
 

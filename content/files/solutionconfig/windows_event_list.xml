@@ -10,10 +10,12 @@
   one EventID element per event number to report, each a whole number.
   Anything else (another element, a Log without a Name, an EventID that is not
   a whole number) makes the whole file unusable, and the last good list stays
-  in force.
+  in force until the collector is restarted. A restart forgets it, and a list that
+  cannot be read after a restart is empty.
 
   Do not edit this shipped file: a forced upgrade of the pack replaces it and
-  your edits are lost. Make a copy under another name in the VCF Operations
+  your edits are lost (as read from the platform code of VCF Operations 9.0.2; not
+  tested on other versions). Make a copy under another name in the VCF Operations
   configuration-file store, and enter that name (no .xml) in the account's
   Windows Event Log Configuration File field. As shipped, no Log is switched on, so no event is collected.
   To switch one on, copy it out of this comment into the Events element.

@@ -13,6 +13,7 @@
   The first character must be a letter, a digit or an underscore, and a name
   is at most 256 characters long. Any other name is skipped and reported,
   because the name is put inside a command that runs in every monitored guest.
+  A name that contains the two characters $( is skipped as well.
 
   Format
     - Separate entries with commas. A line break does NOT separate entries.
@@ -21,7 +22,8 @@
     - Do not write two hyphens in a row inside a comment.
 
   Do not edit this shipped file: a forced upgrade of the pack replaces it and
-  your edits are lost. Make a copy under another name in the VCF Operations configuration-file store, and
+  your edits are lost (as read from the platform code of VCF Operations 9.0.2; not
+  tested on other versions). Make a copy under another name in the VCF Operations configuration-file store, and
   enter that name (no .xml) in the account's Windows Service Configuration
   File field. As shipped, every entry is commented out, so no service is
   checked.
