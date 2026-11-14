@@ -5,7 +5,19 @@ One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 
 ## 1.0.0.7 (Unreleased)
 
-Phase P3, the pak's own objects (design 4.11, rows R227 to R252).
+Phase P3, the pak's own objects (design 4.11, rows R227 to R252), and the fixes from the first live
+differential of build 6.
+
+- fix(adapter) P2 live: the host license read asked the license manager for its `name`, which it does not have
+  (it is not a managed entity), so vCenter refused it and no host had a license key;
+  the read asks for `licenseAssignmentManager` only.
+- fix(adapter) P2 live: the install date call is `installDate` on the wire, not `InstallDate`
+  (vCenter refused it for every host).
+- fix(adapter) P2 live: an unset value on a read that worked is published as the original prints
+  it (quirk Q9): `None`, `null`, `[]`, `N/A`, 0 (VM, host, cluster, datastore, vCenter and the own kinds);
+  a read that failed still sends nothing and is counted. One switch, `Quirks.UNSET_AS_UPSTREAM`.
+- fix(adapter) P2 live: a NIC whose link is down is `half-duplex` (Q10); a datastore with no
+  extents has `Number of Extents` 0; DRS Score is 0 while DRS is off or negative.
 
 - feat(adapter): Content Library and Library Item objects, read from the vSphere
   Automation REST API (login, list, library, item list, item; logout in a
