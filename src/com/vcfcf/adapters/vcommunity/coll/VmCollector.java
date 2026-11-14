@@ -74,7 +74,19 @@ public final class VmCollector {
      */
     public static RetrieveRequest request(boolean extraConfigWanted, Set<String> extraKeys,
             List<String> optionPaths) {
+        return request(extraConfigWanted, extraKeys, optionPaths, false);
+    }
+
+    /**
+     * @param guest true when the guest phase is on: the tools state, the guest family and the power state are
+     *              read too (they are not keys; the phase picks the Windows VMs from them)
+     */
+    public static RetrieveRequest request(boolean extraConfigWanted, Set<String> extraKeys,
+            List<String> optionPaths, boolean guest) {
         RetrieveRequest r = new RetrieveRequest(READ, KIND, PAGE, null);
+        if (guest) {
+            for (String p : com.vcfcf.adapters.vcommunity.guest.GuestRoster.VM_PATHS) r.path(p);
+        }
         for (String p : SCALARS) r.path(p);
         // the VM Template objects are built from the same read (design 4.11)
         for (String p : TemplateScan.PATHS) r.path(p);

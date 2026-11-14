@@ -100,6 +100,13 @@ public final class Membership {
     private final Map<String, Datacenter> datacenters = new ConcurrentHashMap<>();
     private final List<Pool> pools = Collections.synchronizedList(new ArrayList<>());
 
+    /** The guest phase's view of the same two reads; null when the guest phase is not wanted this cycle. */
+    private volatile com.vcfcf.adapters.vcommunity.guest.GuestRoster roster;
+
+    void roster(com.vcfcf.adapters.vcommunity.guest.GuestRoster r) {
+        this.roster = r;
+    }
+
     private volatile boolean clustersRead;
     private volatile boolean hostsRead;
     private volatile boolean vmsRead;
@@ -142,6 +149,7 @@ public final class Membership {
         }
         addHost(row.obj.value, row.name(), cluster, connected, groups);
         if (!row.readable("parent")) hostsParentUnknown.add(row.obj.value);
+        if (roster != null) roster.hostRow(row);
     }
 
     void addHost(String moref, String name, String cluster, Boolean connected, Set<String> portGroups) {
@@ -153,9 +161,11 @@ public final class Membership {
     void resetHosts() {
         hosts.clear();
         hostsParentUnknown.clear();
+        if (roster != null) roster.resetHosts();
     }
 
     void vm(BulkRow row) {
+        if (roster != null) roster.vmRow(row);
         XmlNode h = row.val("runtime.host");
         if (h != null && !h.text().isEmpty()) {
             addVm(row.obj.value, h.text());
@@ -174,6 +184,7 @@ public final class Membership {
     void resetVms() {
         vmHost.clear();
         vmsUnknownHost.clear();
+        if (roster != null) roster.resetVms();
     }
 
     void datacenter(String moref, String name) {
@@ -205,6 +216,7 @@ public final class Membership {
         this.vmsRead = vms;
         this.datacentersRead = datacenters;
         this.poolsRead = pools;
+        if (roster != null) roster.done(vms, hosts);
     }
 
     // ------------------------------------------------------------------ reading

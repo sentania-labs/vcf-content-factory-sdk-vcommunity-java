@@ -6,16 +6,26 @@ import com.vcfcf.adapters.vcommunity.coll.OwnObject;
 import com.vcfcf.adapters.vcommunity.coll.OwnObjects;
 import com.vcfcf.adapters.vcommunity.coll.PropertyCollection;
 import com.vcfcf.adapters.vcommunity.coll.TemplateCollector;
+import com.vcfcf.adapters.vcommunity.coll.VmCollector;
 import com.vcfcf.adapters.vcommunity.health.CollectionHealth;
 import com.vcfcf.adapters.vcommunity.health.CollectionHealth.Status;
 import com.vcfcf.adapters.vcommunity.health.FailureCause;
 import com.vcfcf.adapters.vcommunity.health.Failures;
+import com.vcfcf.adapters.vcommunity.guest.GuestAuth;
+import com.vcfcf.adapters.vcommunity.guest.GuestHttp;
+import com.vcfcf.adapters.vcommunity.guest.GuestPhase;
+import com.vcfcf.adapters.vcommunity.guest.GuestPlan;
+import com.vcfcf.adapters.vcommunity.guest.GuestRunner;
+import com.vcfcf.adapters.vcommunity.guest.GuestTrust;
+import com.vcfcf.adapters.vcommunity.guest.HttpsGuestHttp;
 import com.vcfcf.adapters.vcommunity.health.WarnCounter;
 import com.vcfcf.adapters.vcommunity.kpi.MonsterVm;
 import com.vcfcf.adapters.vcommunity.list.CheckListStore;
 import com.vcfcf.adapters.vcommunity.list.ConfigFileFetch;
+import com.vcfcf.adapters.vcommunity.list.ConfigProblemEvents;
 import com.vcfcf.adapters.vcommunity.list.ListKind;
 import com.vcfcf.adapters.vcommunity.ops.LastPushed;
+import com.vcfcf.adapters.vcommunity.ops.OpsEvent;
 import com.vcfcf.adapters.vcommunity.ops.OpsApi;
 import com.vcfcf.adapters.vcommunity.ops.OpsResourceMap;
 import com.vcfcf.adapters.vcommunity.ops.PushOutcome;
@@ -30,6 +40,7 @@ import com.vcfcf.adapters.vcommunity.vim.VimSession;
 
 import java.io.IOException;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -139,6 +150,11 @@ public final class CycleEngine {
     private final DerivedPhase derived;
     private final LibrarySource libraries;
 
+    private final GuestPhase guestPhase = new GuestPhase();
+    private GuestHttp guestHttp = new HttpsGuestHttp();
+    private GuestRunner.Sleeper guestSleeper = Thread::sleep;
+    private GuestRunner.Limits guestLimits = new GuestRunner.Limits();
+
     private long cycleNo;
     private String vcenterId;
     private String vcenterIdFor;
@@ -170,6 +186,16 @@ public final class CycleEngine {
         this.clock = clock;
         this.properties = new PropertyCollection(warns, clock::now);
         this.derived = new DerivedPhase(warns, clock::now);
+    }
+
+    /**
+     * Replace what the guest phase talks to the ESXi host with, how it waits and its limits (tests only: a
+     * fake host, a clock that moves instead of waiting, short limits).
+     */
+    void guestWiring(GuestHttp http, GuestRunner.Sleeper sleeper, GuestRunner.Limits limits) {
+        this.guestHttp = http;
+        this.guestSleeper = sleeper;
+        this.guestLimits = limits;
     }
 
     /**
@@ -240,6 +266,24 @@ public final class CycleEngine {
         }
         s.vcenterResolved = vcId != null;
 
+        // the guest phase: what it is to do this cycle, and (when it is not) why, so that the health keys say so
+        GuestPlan plan = GuestPlan.of(cfg, lists);
+        if (plan.queriesSkipped > 0) {
+            // entries of the event list the guest file cannot carry are skipped entries of a list too
+            log.warn(plan.queriesSkipped + " entr" + (plan.queriesSkipped == 1 ? "y" : "ies") + " of the Windows event "
+                    + "list cannot be sent to a guest (a log name with a tab or another control character, or more "
+                    + "than " + GuestPlan.MAX_QUERIES + " entries) and " + (plan.queriesSkipped == 1 ? "is" : "are")
+                    + " left out");
+            if (s.checklistSkipped != null) s.checklistSkipped += plan.queriesSkipped;
+        }
+        if (!plan.runs()) {
+            GuestPhase.Input off = new GuestPhase.Input();
+            off.plan = plan;
+            off.failures = failures;
+            off.log = log;
+            s.collectorStatus.put(GuestPhase.COLLECTOR, guestPhase.run(off).status);
+        }
+
         // B: the content libraries start reading on a thread of their own, then the property keys
         LibraryRun libs = startLibraries(deadlineMs, s, failures);
         try {
@@ -273,6 +317,7 @@ public final class CycleEngine {
                     in.deadlineMs = deadlineMs;
                     in.ps = ps;
                     in.failures = failures;
+                    in.guest = plan.runs();
                     p2 = properties.run(in);
                     s.collectorStatus.putAll(p2.status);
                     if (p2.deadlineHit) s.deadlineHit = true;
@@ -313,7 +358,9 @@ public final class CycleEngine {
             own.merge(libs.finish(deadlineMs, failures, s));
             for (OwnObject o : own.objects()) failures.addWithheld(o.withheld());
             guardEmpty(own);
-            return finish(t0, s, failures, null, null, about, presented, lists, vcId, ps, p2, own);
+            Result result = finish(t0, s, failures, null, null, about, presented, lists, vcId, ps, p2, own);
+            guest(plan, p2, vcid, vcId, s, failures, t0, deadlineMs);
+            return result;
         } finally {
             libs.close();
         }
@@ -476,6 +523,7 @@ public final class CycleEngine {
                         + outcome + ")");
             }
         }
+        if (ops != null && failure == null && vcId != null) configProblems(lists, vcId, t0, failures);
         fill(s, failures, t0);
         s.pushBatchesFailed = attempted ? outcome.batchesFailed : 0;
         if (attempted && outcome.isClean()) {
@@ -485,6 +533,85 @@ public final class CycleEngine {
         s.cycleSeconds = (clock.now() - t0) / 1000.0;
         log.info(summaryLine(cycleNo, s, failure));
         return new Result(failure, cause, s, about, presented, lists, own, t0);
+    }
+
+    /**
+     * One warning event on the vCenter's object for each check-list file that could not be used (design 4.10). They
+     * go every cycle the problem lasts, as the original sent them; the platform ends one that stops coming.
+     */
+    private void configProblems(Map<ListKind, CheckListStore.Entry> lists, String vcId, long t0, Failures failures) {
+        List<OpsEvent> events = ConfigProblemEvents.of(lists.values(), vcId, t0);
+        if (events.isEmpty()) return;
+        PushOutcome po = ops.pushEvents(events);
+        if (!po.isClean() || po.sent < events.size()) {
+            warns.addExternal(1, "the configuration warning events were not sent cleanly: " + po);
+            failures.add(COLLECTOR_VCENTER, FailureCause.EVENTS, "configuration events", 0,
+                    "the configuration warning events were not sent cleanly (" + po + ")");
+        }
+    }
+
+    /**
+     * The guest phase, after the cycle's main push (design 8.1): it asks the Windows VMs for as long as the
+     * cycle's time allows, then pushes what it found, its events and its own health keys in one more push. A
+     * failure of any part is counted and never reaches what the cycle already sent.
+     */
+    private void guest(GuestPlan plan, PropertyCollection.Result p2, String vcid, String vcId,
+            CollectionHealth.Summary s, Failures failures, long t0, long deadlineMs) throws InterruptedException {
+        if (!plan.runs()) return;
+        if (ops == null || vcid == null || p2 == null || p2.roster == null) {
+            s.collectorStatus.put(GuestPhase.COLLECTOR, Status.SKIPPED);
+            failures.add(GuestPhase.COLLECTOR, FailureCause.guest("SKIPPED"), "prerequisites", 0,
+                    "the property reads did not run, so there is no list of Windows VMs");
+            refreshHealth(s, failures, t0, vcId, new PushSet(log));
+            return;
+        }
+        PushSet gps = new PushSet(log);
+        GuestPhase.Input in = new GuestPhase.Input();
+        in.plan = plan;
+        in.auth = new GuestAuth(cfg.winUser, cfg.winPassword());
+        in.trust = new GuestTrust(cfg.guestTlsMode, p2.roster.thumbprints());
+        in.vim = vim.reader();
+        in.http = guestHttp;
+        in.roster = p2.roster;
+        in.resourceIdOf = moref -> {
+            com.vcfcf.adapters.vcommunity.ops.OpsResourceMap m = properties.opsMap(VmCollector.KIND, vcid);
+            return m == null ? null : m.resourceId(moref);
+        };
+        in.ops = ops;
+        in.ps = gps;
+        in.failures = failures;
+        in.log = log;
+        in.clock = clock::now;
+        in.sleeper = guestSleeper;
+        in.limits = guestLimits;
+        in.cycle = cycleNo;
+        in.deadlineMs = deadlineMs;
+        in.hardStopMs = deadlineMs + GUEST_HARD_STOP_GRACE_MS;
+        GuestPhase.Result r = guestPhase.run(in);
+        s.collectorStatus.put(GuestPhase.COLLECTOR, r.status);
+        if (r.ran) {
+            s.guestVmsDone = r.done;
+            s.guestVmsPending = r.pending;
+        }
+        if (r.deadlineHit) s.deadlineHit = true;
+        refreshHealth(s, failures, t0, vcId, gps);
+    }
+
+    /** How long past the cycle's deadline a VM that is being asked may go on before it is stopped. */
+    static final long GUEST_HARD_STOP_GRACE_MS = 45_000;
+
+    /** Send the guest phase's values with its collector's health keys; the figures of the cycle are brought up to date. */
+    private void refreshHealth(CollectionHealth.Summary s, Failures failures, long t0, String vcId, PushSet gps) {
+        fill(s, failures, t0);
+        if (vcId != null) CollectionHealth.collectorKeys(gps, vcId, s, GuestPhase.COLLECTOR);
+        if (gps.isEmpty()) return;
+        PushOutcome po = ops.pushBatch(gps.properties(), gps.stats(), t0);
+        if (!po.isClean()) {
+            s.pushBatchesFailed += Math.max(1, po.batchesFailed);
+            warns.addExternal(Math.max(1, po.batchesFailed), "the guest push to VCF Operations was not clean: " + po);
+            log.warn(FailureCause.PUSH + ": the push of the guest keys was not clean (" + po + ")");
+        }
+        fill(s, failures, t0);
     }
 
     /**

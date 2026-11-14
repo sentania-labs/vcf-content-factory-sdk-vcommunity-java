@@ -94,6 +94,8 @@ public final class PropertyCollection {
         public long deadlineMs;
         public PushSet ps;
         public Failures failures;
+        /** True when the guest phase will run: the VM and host reads also take what it picks its VMs by. */
+        public boolean guest;
     }
 
     /** What the phase measured. */
@@ -110,6 +112,8 @@ public final class PropertyCollection {
         public Map<String, String> folderNames;
         /** Who is in what, as this cycle's reads say it (P4); each part carries whether its read finished. */
         public Membership membership;
+        /** The Windows VMs and the ESXi thumbprints, for the guest phase (P5); null when it is not wanted. */
+        public com.vcfcf.adapters.vcommunity.guest.GuestRoster roster;
         /** VM Options entries skipped this cycle (invalid for vCenter, or a value this port cannot print); null when not measured. */
         public Integer optionsSkipped;
         private Runnable afterCleanPush = () -> { };
@@ -153,6 +157,10 @@ public final class PropertyCollection {
         Result res = new Result();
         final Membership members = new Membership();
         res.membership = members;
+        if (in.guest) {
+            res.roster = new com.vcfcf.adapters.vcommunity.guest.GuestRoster();
+            members.roster(res.roster);
+        }
         if (in.vim == null || in.vim.refs() == null) return res;
         newSession(in.about, in.vim.generation());
         final List<String> advSettings = items(in, ListKind.ESXI_SETTINGS);
@@ -455,7 +463,7 @@ public final class PropertyCollection {
         Set<String> noImageMgr = new HashSet<>();
         List<MoRef> refs = new ArrayList<>();
         Tally tally = new Tally();
-        RetrieveStats st = read(in, C_HOST, HostCollector.request(), row -> {
+        RetrieveStats st = read(in, C_HOST, HostCollector.request(in.guest), row -> {
             members.host(row);
             ObjectOut o = guarded(HostCollector::collectRow, row, in.failures, C_HOST, HostCollector.READ, tally);
             if (o == null) return;
@@ -844,7 +852,7 @@ public final class PropertyCollection {
 
     private RetrieveStats readVms(Input in, List<String> vmParams, List<String> accepted, Set<String> nonScalar,
             List<ObjectOut> out, Tally tally, String[] fault, TemplateScan scan, Membership members) {
-        RetrieveRequest req = VmCollector.request(!vmParams.isEmpty(), new HashSet<>(vmParams), accepted);
+        RetrieveRequest req = VmCollector.request(!vmParams.isEmpty(), new HashSet<>(vmParams), accepted, in.guest);
         scan.reset(); // a page that failed is read again from the start, never added to
         members.resetVms();
         return read(in, C_VM, req, row -> {

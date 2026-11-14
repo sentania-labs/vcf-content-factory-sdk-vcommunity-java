@@ -38,7 +38,14 @@ public final class HostCollector {
     private static final String NET = Vals.P + "Network|";
 
     public static RetrieveRequest request() {
-        return new RetrieveRequest(READ, KIND, PAGE, null)
+        return request(false);
+    }
+
+    /** @param guest true when the guest phase is on: the thumbprint vCenter recorded for the host is read too */
+    public static RetrieveRequest request(boolean guest) {
+        RetrieveRequest r = new RetrieveRequest(READ, KIND, PAGE, null);
+        if (guest) r.path(com.vcfcf.adapters.vcommunity.guest.GuestRoster.HOST_PATH);
+        return r
                 .path("runtime.connectionState").path("runtime.bootTime")
                 .path("configStatus").path("summary.maxEVCModeKey")
                 .path("config.network.pnic", PathSpec.keepingInElements("device", "driverVersion",

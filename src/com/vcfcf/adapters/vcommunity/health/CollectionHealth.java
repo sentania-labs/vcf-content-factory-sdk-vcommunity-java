@@ -45,6 +45,9 @@ public final class CollectionHealth {
         public Integer seriesPushed;
         public Integer propertiesPushed;
         public int pushBatchesFailed;
+        /** VMs the guest phase finished and VMs it left for later; null when the phase did not run. */
+        public Integer guestVmsDone;
+        public Integer guestVmsPending;
         public boolean deadlineHit;
         public boolean vcenterResolved;
         /** Collector name to status, only for collectors that exist in this build. */
@@ -87,6 +90,20 @@ public final class CollectionHealth {
         }
     }
 
+    /**
+     * Queue the health keys of one collector alone (the guest phase reports after the cycle's main push, so its
+     * figures follow in a push of their own).
+     */
+    public static void collectorKeys(PushSet ps, String vcenterResourceId, Summary s, String collector) {
+        Status st = s.collectorStatus.get(collector);
+        if (st == null) return;
+        ps.prop(vcenterResourceId, PREFIX + "Collector:" + collector + "|Status", st.text());
+        Integer f = s.collectorFailures.get(collector);
+        if (f != null) ps.stat(vcenterResourceId, PREFIX + "Collector:" + collector + "|Failures", f);
+        String c = s.collectorCauses.get(collector);
+        ps.prop(vcenterResourceId, PREFIX + "Collector:" + collector + "|Causes", c == null ? NONE : c);
+    }
+
     public static final String LAST_ERROR = "Collection|last_error";
     public static final String FAILURE_CAUSES = "Collection|failure_causes";
 
@@ -112,6 +129,8 @@ public final class CollectionHealth {
             m.put("Collection|properties_pushed", (double) s.propertiesPushed);
         }
         m.put("Collection|push_batches_failed", (double) s.pushBatchesFailed);
+        if (s.guestVmsDone != null) m.put("Collection|guest_vms_done", (double) s.guestVmsDone);
+        if (s.guestVmsPending != null) m.put("Collection|guest_vms_pending", (double) s.guestVmsPending);
         m.put("Collection|deadline_hit", s.deadlineHit ? 1.0 : 0.0);
         m.put("Collection|vcenter_object_resolved", s.vcenterResolved ? 1.0 : 0.0);
         return m;
