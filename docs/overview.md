@@ -184,10 +184,11 @@ The pak carries the content of the original pack as VCF Operations content, inst
 | Check-list files | 6 |
 
 - The content is converted from the original pack's content files by the factory's offline importer and
-  checked against them field by field (`docs/design/inputs/import-report/`). Most of it keeps the original's
-  ids and names. The 101 views that began as edited copies of VCF Operations' own views have descriptions written
-  for this pak, and nine of them new titles; their ids are those minted for the corrected upstream build
-  (the fix sent upstream as its pull request 92), kept as they are.
+  checked against them field by field (`docs/design/inputs/import-report/`). Names, descriptions, widget titles and layout are the
+  original's; every id is minted for this pak (namespace `vcfcf_vcommunity`), so none is shared with the Python pack.
+  The 101 views that began as edited copies of VCF Operations' own views have descriptions written
+  for this pak, and nine of them new titles. Install this pak only after uninstalling the Python pack (`installing.md`,
+  "Moving from the Python pack"); the two side by side are unsupported.
 - 19 views only renamed a built-in view; they are not shipped, and the dashboards and reports that used them
   point at the built-in view by id.
 - Five views and two dashboards name objects of kinds other than the vCenter adapter's: four views (the VCF
@@ -195,7 +196,7 @@ The pak carries the content of the original pack as VCF Operations content, inst
   dashboards (Critical Business Applications, VCF Management Service) on Container and VMSP. The builder does not
   check those kinds; it checks only symptoms and alerts, all of which are on VMWARE.
 - The two Section dashboards ("Overall Daily Check", "vSphere Cluster Capacity 2.0") install without their
-  Section rows while the pak's floor is below VCF Operations 9.1.1.
+  Section rows while the pak's minimum version (8.18.x) is below VCF Operations 9.1.1.
 - The two super metrics need enabling in the policy.
 - How the check-list files behave across an upgrade is in `installing.md`.
 

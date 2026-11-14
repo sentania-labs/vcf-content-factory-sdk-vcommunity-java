@@ -38,8 +38,9 @@ offline tool, from the content files of this source:
 
 The converted content is 170 views, 52 dashboards, 16 reports, 2 super metrics, 10
 symptom definitions, 4 alert definitions and 1 recommendation. It derives from those
-files. Most of it keeps their ids, names, descriptions, widget titles and layout as the
-source wrote them; the amount of free text kept as written is counted in
+files. Most of it keeps their names, descriptions, widget titles and layout as the
+source wrote them, under ids minted for this pak (namespace vcfcf_vcommunity; no id is shared
+with the source pack); the amount of free text kept as written is counted in
 docs/design/inputs/carried-text-report.md. The conversion and its checks against the
 source are in docs/design/inputs/import-report/.
 
@@ -47,8 +48,9 @@ What was written for this pak and is not carried from the source:
 
   - the descriptions of the 101 views that began as edited copies of VCF Operations'
     own views, and the new titles of nine of them (docs/design/inputs/view_rename.tsv,
-    view_describe.tsv). Their ids are NOT written for this pak: they are the ids minted
-    for the corrected upstream build (pull request 92, above), and kept as they are;
+    view_describe.tsv);
+  - the ids of all of the content, minted by the offline tool in this pak's own namespace
+    (docs/design/inputs/import-report/id_map.tsv maps each source id to its new id);
   - the six check-list files under content/files/solutionconfig/: the header text
     and examples are written from this pak's own parser; the file names, the
     account fields that name them and the public vSphere and Windows setting names in

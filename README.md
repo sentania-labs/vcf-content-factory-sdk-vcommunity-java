@@ -10,7 +10,7 @@ check-list files follow the original pack, the code is new and MIT licensed. The
 what that means for its terms.
 
 Adapter kind `vcfcf_vcommunity`; distinct from the original Python pack's kind,
-so the two are never an upgrade of each other (see `docs/installing.md`).
+so the two are never an upgrade of each other. Minimum product version: VCF Operations 8.18.x (tested on 8.18.7, 9.0.2 and 9.1.1).
 
 ## Status
 
@@ -31,6 +31,28 @@ The design is in `docs/design/` (start with `vcommunity-java-port-design.md`).
 
 The content is converted from the original pack's content files (see `NOTICE`); the
 conversion report and the list of text carried as written are in `docs/design/inputs/`.
+
+## Moving from the Python pack
+
+**Uninstall the Python pack first (Onur's 1.x "VCF Operations vCommunity" or Ewan's 2.x
+"vCommunity" adapter), then install this one.** Running both side by side is unsupported: both
+write the same `vCommunity|...` keys onto the same vSphere objects, and both ship content with
+the same names. This pak's content is under ids of its own (namespace `vcfcf_vcommunity`), so
+it does not overwrite the Python pack's content, and uninstalling one does not delete the other's.
+
+- Carries over: the metric and property keys are the same names on the same objects, so their
+  history continues (not measured across an uninstall and install on an instance).
+- Replaced: dashboards, views, reports, super metrics, symptoms, alerts and the recommendation
+  are this pak's copies under new ids and the same names. Anything you cloned or customized from
+  the old content is yours to keep or re-point; the alert history of the old definitions stays with them.
+- Check-list files: the six default-named files are replaced on every pak upgrade, and
+  uninstalling the Python pack removes its copies of the same names (inferred from the platform's
+  code, not measured). Save your edited check lists first and re-apply them in copies under other names.
+- Built-in views: some Python pack versions ship views under built-in view ids, and uninstalling
+  them deletes those built-in views (measured). Have a clean export of the built-in views of the same
+  product version at hand and import it after the uninstall.
+
+The full guide is in `docs/installing.md`, "Moving from the Python pack".
 
 ## Documentation
 

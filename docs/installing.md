@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- VCF Operations 8.18.7 or later on the 8.18, 9.0 or 9.1 lines (the lines this pak targets) with a collector (or Cloud Proxy) that can
+- VCF Operations 8.18.x or later (the 8.18, 9.0 and 9.1 lines are the ones this pak targets) with a collector (or Cloud Proxy) that can
   reach the vCenter's HTTPS port (443 unless the account says otherwise).
 - The vCenter adapter (VMWARE) collecting the vCenter, so its objects exist in
   VCF Operations to receive the keys.
@@ -11,63 +11,66 @@
 - Optionally, a Windows account for the guest checks (off by default; see Guest monitoring below).
 
 **The minimum version.** The content of this pak is converted and gated for VCF
-Operations 8.18.7; that is the floor. The `manifest.txt` the pak carries says
+Operations 8.18.x; that is the minimum version (owner decision, 2026-11-14). It was tested on 8.18.7, 9.0.2 and 9.1.1. The `manifest.txt` the pak carries says
 `vcops_minimum_version 8.0.0` (a constant of the factory builder, not a decision of this pak), so an
-8.10 to 8.17 instance will accept the install: do not install it on anything older than 8.18.7.
+8.10 to 8.17 instance will accept the install: do not install it on anything older than 8.18.x.
 
-**Do not install it next to the original vCommunity pack on the same VCF
-Operations instance, and do not "install this, then remove the original".** The two
-are different adapter kinds and would write the same keys. This pak is not an
-upgrade of the original: its objects are new objects with no history carried over.
-The content is the problem: this pak keeps the original's ids for every dashboard,
-report, super metric, symptom and alert, for the check-list files (the platform stores
-them under the lower-cased title) and for most views. How many views depends on which
-build of the original: 69 of the 170 against the released 0.8.1 (which ships the
-other 101 under 101 built-in view ids, plus 19 more built-in ids), and all 170 against
-the corrected build (the one this content was converted from; the same views the fix
-sent upstream as its pull request 92 would ship). What follows from shared ids:
+## Moving from the Python pack
 
-- Installing the second pak overwrites the first pak's definitions under every shared
-  id; the view titles and descriptions become the last installer's. The check-list files
-  are the exception: the second import is refused and the first pak's files stay.
-- Uninstalling either pak (with the remove-content option) deletes every shared id. The
-  pak that stays loses its dashboards, reports, super metrics (and their policy
-  enablement), symptoms, alerts and the shared views. The check-list files are deleted
-  if the uninstalled pak recorded them, which is the one installed first.
-- So "install this, then remove the original" deletes this pak's content. With the
-  released 0.8.1 it also deletes the 120 built-in views that 0.8.1 overwrote; 9 of them
-  are views this pak's 11 widgets use in place, and those widgets show "The view does not
-  exist" until the built-in views are restored from a clean export of the same VCF
-  Operations version.
-- Removing the original first does the same to those 120 built-in views, so those 11
-  widgets break in the same way until the restore.
-- Installed side by side with the released 0.8.1, 92 view titles appear in the views list
-  twice (0.8.1's copies sit under built-in ids with the same titles).
-- The two super metrics have the same two ids in every upstream line: uninstalling either
-  pak removes them for both.
+**Uninstall the Python pack first, then install this one.** The Python pack is Onur Yuzseven's
+1.x "VCF Operations vCommunity" or Ewan's 2.x "vCommunity" adapter. Running it and this pak
+side by side is not supported: both write the same `vCommunity|...` keys onto the same vSphere
+objects, and both ship content with the same names (dashboards, views, reports, alerts), so
+every list shows twice and the two collect over each other. There is no way to make that work
+from this pak's side. This pak is a separate adapter kind (`vcfcf_vcommunity`), and its
+content is minted under ids of its own, so it does not overwrite the Python pack's content and
+uninstalling one does not delete the other's.
 
-**A safe order to move from the original pack to this one:** (1) export or note
-anything you changed in the original's content and check-list files, and keep a clean
-export of the built-in views of your VCF Operations version; (2) uninstall the original
-pack with remove-content; (3) if it was the released 0.8.1, restore the built-in views
-it deleted from the clean export; (4) install this pak. The original's check-list files
-go with its uninstall, so this pak installs its own six. A clone of a check-list file
-under another name (see "Check-list files") is not removed by any of this.
+What carries over (owner decision, 2026-11-14: names stay, ids are our own):
 
-**Inferred, not measured with this pak.** Every statement above is inferred from the
-platform's behavior as measured on the source pack alone (the factory investigation
-`2026-11-12-vcommunity-upstream-builtin-view-ids`): that content is tracked by id, that
-a second install overwrites and an uninstall with remove-content deletes by id. Neither pak
-has been installed next to the other, nor uninstalled after the other, on any instance.
-There is no migration guide beyond the order above.
+- **Metrics and properties.** The keys are the same names on the same vSphere objects, so the
+  history of those keys continues across the move. (The keys are the same by construction and
+  by the key comparison in `docs/design/`; the continuation of history across an uninstall and
+  install was not measured on an instance.)
+- **Dashboards, views, reports, super metrics, symptoms, alerts and the recommendation** are
+  replaced by this pak's copies, under new ids and with the same names. Anything you cloned
+  or customized from the Python pack's content is yours to keep or to re-point at this pak's
+  copies. The alert history of the Python pack's alert definitions stays with those
+  definitions (they go away with the uninstall), not with this pak's alerts.
+- **Check-list files.** This pak ships the same six file names as the Python pack
+  (`esxi_advanced_system_settings`, `esxi_packages`, `vm_advanced_parameters`, `vm_options`,
+  `windows_service_list`, `windows_event_list`). Uninstalling the Python pack with the
+  remove-content option removes its copies of those names, and this pak's pak upgrade replaces
+  them too (below). **Save your edited check lists before the move and re-apply them** in
+  copies under other names (see "Check-list files"). That the uninstall removes the files is
+  inferred from the platform's code on 9.0.2 and from the measured behavior of the source pack,
+  not measured for the Python pack's own files.
+
+**Built-in views.** Some versions of the Python pack ship views under VCF Operations'
+own built-in view ids: Onur's 0.1.5 (41 views) and 0.1.6 to 0.3.1 (117), and Ewan's 0.4.2 to
+0.8.1 (120). Installing such a version overwrote those built-in views, and **uninstalling it
+deletes them** (measured on 8.18.7, 9.0.2 and 9.1.1; factory note
+`2026-11-12-vcommunity-upstream-builtin-view-ids`). Built-in dashboards that use them then show
+"The view does not exist". Before you uninstall one of those versions, have a clean export of the built-in
+views of the same VCF Operations version at hand (taken from an instance that never had the
+Python pack: an export from the affected instance holds the pack's copies). After the uninstall,
+import the views from that export (Content > Import, views); this was measured to restore
+them. This pak never uses a built-in view id for its own content, so it neither overwrites nor
+deletes a built-in view; the 19 built-in views its dashboards and reports use in place must
+exist on your instance, which is why the restore matters.
+
+**A safe order:** (1) save your edited check-list files and note anything you changed in the Python pack's content;
+(2) have the clean built-in views export ready if your version is one of those named above;
+(3) uninstall the Python pack with remove-content; (4) restore the built-in views if it
+shipped any; (5) install this pak; (6) re-apply your check lists.
+The order is a recommendation. It was not run as a whole on an instance with this pak.
 
 **Same adapter kind as the retired earlier port.** `vcfcf_vcommunity` was also the
 adapter kind of the retired 2026 Java port of this pack. On an instance that still has
-that port (its `1.0.0.9` pak ships 63 views under built-in ids, 33 view ids this pak also
-ships and 2 symptom ids that are the same), installing this pak is an upgrade of it, not
+that port (its `1.0.0.9` pak ships 63 views under built-in ids), installing this pak is an upgrade of it, not
 a second pack. On 9.x an upgrade deletes the content the new version no longer ships,
-including those 63 built-in views. Inferred as above, not measured. Remove the earlier
-port first, and restore the built-in views, as for the original.
+including those 63 built-in views and everything shipped under ids this pak no longer uses.
+Inferred, not measured. Remove the earlier port first, and restore the built-in views, as above.
 
 ## Permissions Required
 
@@ -218,7 +221,7 @@ holds:
 
 | Content | Count | Notes |
 |---|---:|---|
-| Views | 170 | Carried over from the original pack. 101 of them began as edited copies of VCF Operations' own views; they carry new descriptions (nine also have new titles, below) and keep the ids of the corrected upstream build they were converted from (the fix sent upstream as its pull request 92), not ids of this project's own; if upstream merges that fix, both packs carry them under the same ids (see the warning at the top). |
+| Views | 170 | Carried over from the original pack. 101 of them began as edited copies of VCF Operations' own views; they carry new descriptions (nine also have new titles, below) and are shipped under ids minted for this pak (see "Moving from the Python pack"). |
 | Dashboards | 52 | The original pack's, including the "Report:" and "Object Summary Page" dashboards. |
 | Reports | 16 | The "VOA" report templates (capacity, configuration, inventory, performance, executive summary and the CSV export reports). |
 | Super metrics | 2 | See "Super metrics" below. |
@@ -337,9 +340,9 @@ default name is lost on every pak upgrade. The supported way is:
   (read from the platform's code on 9.0.2; not measured). A copy under another name
   is not one of them.
 
-If the original vCommunity pack was installed on the instance before, its six files
-(the same names) are already in the store, and installing this pak replaces them
-the same way.
+If the Python pack was installed on the instance before, its six files
+(the same names) may already be in the store, and installing this pak replaces them
+the same way; uninstalling the Python pack removes its copies (inferred, see "Moving from the Python pack").
 
 **With the shipped check lists, two keys read `None`.** Every entry is commented out
 as shipped, so `Guest|Tools Sync Time` and `Guest|Tools Upgrade Policy` read the text

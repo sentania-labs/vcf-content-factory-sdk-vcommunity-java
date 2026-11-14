@@ -439,7 +439,7 @@ def render(root):
     head.append(f"Section needs VCF Operations {SECTION_FLOOR} or later; 8.18.7 and 9.0.x cannot import it (a dashboard carrying one aborts the whole import). "
                 f"Owner decision, {SIGNOFF_DATE}, verbatim (design section 10.3, \"Section widget\"):\n")
     head.append(f"> \"{SIGNOFF_QUOTE}\"\n")
-    head.append("The committed YAML keeps every Section widget and sets `section_fallback: omit`. A build below 9.1.1 (the content is gated at 8.18.7; the built manifest still says `vcops_minimum_version 8.0.0`, a constant of the factory builder, so 8.18.7 is the floor of this content and of `docs/installing.md`, not one the platform enforces at install) "
+    head.append("The committed YAML keeps every Section widget and sets `section_fallback: omit`. A build below 9.1.1 (the content is gated at 8.18.x; the built manifest still says `vcops_minimum_version 8.0.0`, a constant of the factory builder, so 8.18.x is the minimum of this content and of `docs/installing.md`, not one the platform enforces at install) "
                 f"ships the dashboard without its Section widgets, rows closed up; raising the minimum to {SECTION_FLOOR} ships the Section variant from the same source with no content edit. "
                 "The omitted Section rows are the only layout difference on targets below 9.1.1; every other widget keeps its id, type, width, height, column, title, view or metrics, interactions and pins, and only its row number can move up (the per-widget tables below show both grids).\n")
     head.append("| Dashboard | Widgets as ported | Section widgets omitted below 9.1.1 | Widgets shipped below 9.1.1 |")
