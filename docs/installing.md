@@ -228,7 +228,7 @@ holds:
 |---|---:|---|
 | Views | 170 | Carried over from the original pack. 101 of them began as edited copies of VCF Operations' own views; they carry new descriptions (nine also have new titles, below) and are shipped under ids minted for this pak (see "Moving from the Python pack"). |
 | Dashboards | 52 | The original pack's, including the "Report:" and "Object Summary Page" dashboards. |
-| Reports | 16 | The "VOA" report templates (capacity, configuration, inventory, performance, executive summary and the CSV export reports). |
+| Reports | 16 | The "VOA" report templates (capacity, configuration, inventory, performance, executive summary and the CSV export reports). Below 9.0.2 the five summary reports ship without their cover page text color (below). |
 | Super metrics | 2 | See "Super metrics" below. |
 | Symptom definitions | 10 | On ESXi hosts, virtual machines and the vCenter (VMwareAdapter Instance) objects. |
 | Alert definitions | 4 | ESXi Host NIC Disconnected, ESXi Host License Expiring, Windows Service Down and vCommunity Collection Warnings. One recommendation ships with the last. |
@@ -280,6 +280,28 @@ Operations imports only from 9.1.1. The pak is built for a floor below that, so
 these two install **without** their Section header rows and their other widgets
 as they were. A pak built for 9.1.1 and later keeps the Section rows; no content
 change is needed for that, only a build for that floor.
+
+**Five reports without their cover page text color on versions below 9.0.2.** The cover
+page of the five summary reports (VOA Capacity, Configuration, Executive Summary,
+Inventory and Performance) carries a text color. VCF Operations 8.18.7 rejects the
+template that holds it (`Invalid content was found starting with element 'FontColor'`;
+measured on a fresh install of build 18, 2026-11-15 UTC: 11 of 16 report templates
+existed), so from build 19 these five ship without the color element and all 16
+import on 8.18.7. On 9.0.2 and 9.1.1 the pak still carries the color. The loss is cosmetic:
+the cover page text uses the default color, nothing else of the reports changes.
+
+**Notes for 8.18.7.** In the lab, a collection cycle took about 13 to 22 s on 8.18.7,
+against about 2 s on 9.0.2 and 8 s on 9.1.1 (same vCenter and content; the
+`Collection cycle <n> finished in <s> s` line in the account log). After check lists
+were re-applied, the first cycle logged `VM Advanced Parameters item 'ide0:0.autodetect'
+contains '|' or ':'; it is published under exactly that key`. That is a note, not a
+failure, and the entry is **not skipped**: only the VM Options list (an item must be a
+dotted property path) and the Windows services list (an unsafe service name) reject
+entries. The note exists because `|` and `:` mean something in a VCF Operations key
+(`|` separates groups), so the item is collected and shows as the property
+`Configuration|Advanced Parameters|ide0:0.autodetect` on the VM, spelled as listed. It is
+written once per item for the life of the adapter instance. If the key is not wanted,
+remove the item from your copy of the file.
 
 **Super metrics.** "CPU Usable Capacity Utilization" (vSphere clusters) and
 "Number of VM" (distributed port groups and distributed switches) are on objects

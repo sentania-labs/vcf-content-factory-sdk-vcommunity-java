@@ -189,6 +189,8 @@ The pak carries the content of the original pack as VCF Operations content, inst
   The 101 views that began as edited copies of VCF Operations' own views have descriptions written
   for this pak, and nine of them new titles. Install this pak only after uninstalling the Python pack (`installing.md`,
   "Moving from the Python pack"); the two side by side are unsupported.
+- On versions below 9.0.2 (8.18.7 measured) the five summary reports (capacity, configuration, executive summary, inventory,
+  performance) ship without their cover page text color, which the product rejects there; cosmetic only (`installing.md`, "Content").
 - 19 views only renamed a built-in view; they are not shipped, and the dashboards and reports that used them
   point at the built-in view by id.
 - Five views and two dashboards name objects of kinds other than the vCenter adapter's: four views (the VCF

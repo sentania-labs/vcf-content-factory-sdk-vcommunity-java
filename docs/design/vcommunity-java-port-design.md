@@ -877,10 +877,11 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-104 | a fixed look-back of five minutes for every VM, every cycle | the look-back is the time since that VM's events were last read, plus a minute, between 5 and 60 minutes; a VM last read longer ago than that is looked at for the 60 and the minutes before are counted (`F-GUEST-WINDOW`, collector PARTIAL). Records are still the newest one per (log, event id), as upstream's `-MaxEvents 1`. A VM is asked every collection when the time allows, as upstream's serial run does within its 1800 s, so this only matters at scale (DV-43) or after a gap | events of collections in which a VM was not reached would otherwise be skipped for good | fewer silently missed events |
 | DV-105 | the Cluster Delta counts are published once per window, as the stored samples say (DV-86, no memory) | the same, plus a memory of 30 minutes after a clean push of the counts: Operations does not read a stored value back at once (a minute or four, so the next collection, five minutes later, may still not see it), and the read-back alone sent the same counts twice (two consecutive collections after a restart, third live differential, L2). After the 30 minutes the read-back decides again, so counts that never landed are sent again | L2 | one publication per window |
 | DV-106 | the 101 views that began as edited built-in views ship under built-in ids (released 0.8.1) | **retired 2026-11-14 (10.1):** build 16 and earlier kept the ids of the corrected upstream build (pull request 92, `--ids keep`), which would have been shared with upstream if merged. From build 17 every content id is minted in `vcfcf_vcommunity` (`--ids mint --mint-namespace vcfcf_vcommunity`; `docs/design/inputs/import-report/id_map.tsv`), so no id is shared with any Python pack line | the owner's decision (1) below; also avoids burned symptom ids (10.1b) | no sharing, so no overwrite or shared deletion; the co-install outcomes of earlier builds no longer apply, the pak states plainly that side by side is unsupported (installing guide, "Moving from the Python pack") |
+| DV-107 | the five summary reports carry a cover page font color | the color is left out of those five templates where the target cannot import it (floor 9.0.2; 8.18.7 measured 2026-11-15) | version-forced: the product rejects the element, and a rejected template is a missing report | cover page text in the default color on versions below 9.0.2; nothing else changes |
 
 Superseded by quirk Q9 (P2 live fixes, build 7): DV-08, DV-09, DV-11 (counts and sizes), DV-12, DV-14, DV-16, DV-18 and the text and figure parts of DV-17 and DV-13 (an unset patch level is `None`); by Q10: DV-15. DV-10 stands: a failed `installDate` call is withheld and counted, and no image manager or no date is `null`.
 
-105 rows (DV-55, DV-58 and DV-59 are conditional or retired; DV-33 is retired into quirk Q3; DV-17 is superseded for text by quirk Q8; DV-78 to DV-82 are the P3 additions, proposed; DV-86 to DV-93 are the P4 additions, proposed; DV-94 to DV-105 are the P5 additions and the P5 review, proposed). DV-22 is superseded for a Datacenter whose reads worked by quirk Q12.
+106 rows (DV-55, DV-58 and DV-59 are conditional or retired; DV-33 is retired into quirk Q3; DV-17 is superseded for text by quirk Q8; DV-78 to DV-82 are the P3 additions, proposed; DV-86 to DV-93 are the P4 additions, proposed; DV-94 to DV-105 are the P5 additions and the P5 review, proposed). DV-22 is superseded for a Datacenter whose reads worked by quirk Q12.
 
 ### 5.8 Upstream quirks reproduced for the match (candidates to fix after the first differential)
 
@@ -1445,7 +1446,7 @@ later release; mint a new one.
 
 ### 10.1c Versioning
 
-Dev builds are stamped `0.0.0.N` (RULE-014); this build is `0.0.0.18`. The released line is to be labelled 3.0.x: Onur's pack is the 1.x
+Dev builds are stamped `0.0.0.N` (RULE-014); this build is `0.0.0.19`. The released line is to be labelled 3.0.x: Onur's pack is the 1.x
 line, Ewan's the 2.x line, this port the 3.x line. The version scheme and build numbers are unchanged by this record. Where the release version is
 set: `version` in `adapter.yaml` (currently `1.0.0`, to be changed to the 3.0.x value) and the `v*` git tag the repository's CI builds from; the dev stamp
 `0.0.0.<build_number>` comes from `build_number` in `adapter.yaml`. Not changed here.
@@ -1471,6 +1472,15 @@ Aria Operations 8.18.x as its minimum; 8.18.7, 9.0.2 and 9.1.1 remain the tested
   owner confirms the licensing record and a release is planned.
 - **Same adapter kind as the retired port** (Q8): an instance that still has the retired port's `1.0.0.9` pak sees this install as
   an upgrade of it; the installing guide says so.
+
+### 10.1d Report cover page text color (version-forced, 2026-11-15)
+
+Measured on a fresh install of build 18 on 8.18.7 (2026-11-15 UTC): five report templates (`voa-capacity`, `voa-configuration`,
+`voa-executive-summary`, `voa-inventory`, `voa-performance`) were rejected (`cvc-complex-type.2.4.d: Invalid content was found starting with element
+'FontColor'`), so 11 of 16 report templates existed; 9.0.2 and 9.1.1 import all 16. From build 19 those five YAML files opt in with
+`feature_fallback: {font_color: omit}`; the factory (main `0a8a4b7a`) then leaves the cover page font color out of the built template where the
+target floor cannot import it. The other cover page formatting and `ColorizeListView` are unchanged, and the other eleven reports are byte-identical.
+The color is cosmetic. Recorded as DV-107.
 
 ### 10.2 Re-authoring the 101 views from a neutral spec
 
