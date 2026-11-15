@@ -9,6 +9,7 @@ description: "This report is part of VCF Optimization Assessment. It's not a sta
   \ way to do is by applying filters on relevant widgets. Filter out up to date settings, or only show\
   \ outdated versions."
 subject_types: []
+feature_fallback: {font_color: omit}
 sections:
 - type: CoverPage
   colorize: false
