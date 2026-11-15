@@ -3,6 +3,14 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
+## 1.0.0.19 (Unreleased)
+
+- fix(adapter): the five summary reports (`voa-capacity`, `voa-configuration`, `voa-executive-summary`, `voa-inventory`, `voa-performance`) opt in to
+  `feature_fallback: {font_color: omit}`: VCF Operations 8.18.7 rejected their templates on the cover page `FontColor` element (11 of 16 reports installed;
+  measured 2026-11-15 UTC). Below 9.0.2 they ship without the cover page text color (cosmetic); 9.0.2 and 9.1.1 are unchanged. Design 10.1d, DV-107.
+- docs: installing guide notes for 8.18.7 (cycle time, the `ide0:0.autodetect` check-list note).
+- build: `0.0.0.19`; built with factory main `0a8a4b7a`.
+
 ## 1.0.0.18 (Unreleased)
 
 - fix(adapter): the recommendation id is `Recommendation-df-VMWARE-ec5f14b5-b009-564e-8c31-66f205a839b1`; VCF Operations 9.0.2 refused the build 17 id at import
