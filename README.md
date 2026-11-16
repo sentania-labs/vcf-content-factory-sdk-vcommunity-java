@@ -28,6 +28,8 @@ and Windows events. Phase 6 ships the content: 170 views, 52 dashboards, 16 repo
 map with whether this build collects it and the test that proves it.
 The design is in `docs/design/` (start with `vcommunity-java-port-design.md`).
 
+Network Speed Degradation needs the host NIC property `net|configuredSpeed` enabled in the active policy; see `docs/installing.md`, "Network Speed Degradation".
+
 The content is converted from the original pack's content files (see `NOTICE`); the
 conversion report and the list of text carried as written are in `docs/design/inputs/`.
 

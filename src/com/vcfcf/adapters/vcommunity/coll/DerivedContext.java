@@ -14,6 +14,12 @@ final class DerivedContext {
     final LongSupplier clock;
     final Log log;
     boolean deadlineHit;
+    /** Remembers across cycles whether the NIC configured speed property was seen; set by the phase. */
+    java.util.function.Consumer<String> nicPolicy = state -> { };
+
+    void nicPolicyState(String state) {
+        nicPolicy.accept(state);
+    }
 
     DerivedContext(DerivedPhase.Input in, LongSupplier clock, Log log) {
         this.in = in;

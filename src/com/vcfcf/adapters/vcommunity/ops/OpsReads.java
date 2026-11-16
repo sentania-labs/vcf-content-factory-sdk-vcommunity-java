@@ -74,11 +74,6 @@ public final class OpsReads {
         void resource(String id, Map<String, Double> stats);
     }
 
-    /** A resource's instance statistics: statistic key, then instance name, then the latest value. */
-    public interface InstanceSink {
-        void resource(String id, Map<String, Map<String, Double>> byStat);
-    }
-
     public interface TimestampSink {
         void resource(String id, Map<String, Double> latestMs);
     }
@@ -372,46 +367,6 @@ public final class OpsReads {
                 }
             });
             for (Map.Entry<String, Map<String, Double>> e : got.entrySet()) sink.resource(e.getKey(), e.getValue());
-        });
-    }
-
-    /** "net:vmnic0|speed" gives {"vmnic0", "net|speed"}; a key with no instance gives null. */
-    static String[] splitInstance(String statKey) {
-        int bar = statKey.indexOf('|');
-        if (bar < 0) return null;
-        String group = statKey.substring(0, bar);
-        int colon = group.indexOf(':');
-        if (colon < 0) return null;
-        return new String[] {group.substring(colon + 1), group.substring(0, colon) + "|" + statKey.substring(bar + 1)};
-    }
-
-    /**
-     * The latest value of each instance of the requested statistics ({@code net:vmnic0|speed} for
-     * {@code net|speed}), the statistic with no instance left out. {@code sink} gets only the resources
-     * that have at least one instance statistic.
-     */
-    public Report latestInstanceStats(List<String> ids, List<String> keys, long nowMs, InstanceSink sink)
-            throws InterruptedException {
-        final Set<String> wanted = new HashSet<>(keys);
-        final double oldest = nowMs - STALE_MS;
-        return batched(ids, HOST_BATCH, part -> {
-            Map<String, Map<String, Map<String, Double>>> got = new LinkedHashMap<>();
-            readStats(postText(LATEST_STATS, statBody(part, keys)), k -> {
-                String[] split = splitInstance(k);
-                return split != null && wanted.contains(split[1]);
-            }, (id, stats) -> {
-                for (Stat st : stats) {
-                    String[] split = splitInstance(st.key);
-                    List<Double> s = samples(st, oldest, true);
-                    if (s.isEmpty()) continue;
-                    got.computeIfAbsent(id, k -> new LinkedHashMap<>())
-                            .computeIfAbsent(split[1], k -> new LinkedHashMap<>())
-                            .put(split[0], s.get(s.size() - 1));
-                }
-            });
-            for (Map.Entry<String, Map<String, Map<String, Double>>> e : got.entrySet()) {
-                sink.resource(e.getKey(), e.getValue());
-            }
         });
     }
 

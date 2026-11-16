@@ -166,7 +166,9 @@ public final class DerivedHeapTest {
             for (Object k : keys) {
                 String key = (String) k;
                 String v = null;
-                if (id.startsWith("VirtualMachine")) {
+                if (id.startsWith("HostSystem") && key.startsWith("net:")) {
+                    v = key.endsWith("|speed") ? "\"1000.0\"" : "\"10000.0\"";
+                } else if (id.startsWith("VirtualMachine")) {
                     v = key.equals(StatKeys.VM_POWER) ? "\"Powered On\"" : key.equals(StatKeys.VM_VCPUS) ? "4"
                             : key.equals(StatKeys.VM_MEMORY_KB) ? "16777216" : key.contains("cpuAllocation") ? "4000"
                             : key.contains("memoryAllocation") ? "163840" : null;
@@ -196,7 +198,8 @@ public final class DerivedHeapTest {
         Membership m = new Membership();
         for (int c = 0; c < CLUSTERS; c++) m.addCluster("domain-c" + c, "cluster" + c);
         for (int h = 0; h < HOSTS; h++) {
-            m.addHost("host-" + h, "esx" + h, "domain-c" + (h % CLUSTERS), Boolean.TRUE, new java.util.HashSet<>());
+            m.addHost("host-" + h, "esx" + h, "domain-c" + (h % CLUSTERS), Boolean.TRUE, new java.util.HashSet<>(),
+                    new java.util.TreeSet<>(java.util.Arrays.asList("vmnic0", "vmnic1", "vmnic2", "vmnic3")));
         }
         for (int v = 0; v < VMS; v++) m.addVm("vm-" + v, "host-" + (v % HOSTS));
         m.done(true, true, true, true, true);
@@ -246,6 +249,8 @@ public final class DerivedHeapTest {
         check(res.status.get("kpi") == com.vcfcf.adapters.vcommunity.health.CollectionHealth.Status.OK, "kpi " + res.status);
         // every VM has its two shares, and the powered-on ones their score; every host its rows; every cluster its KPIs
         check(ps.statCount() > VMS * 4 + HOSTS * 10 + CLUSTERS * 20, "the figures were produced: " + ps.statCount());
+        long speeds = ps.stats().values().stream().filter(sm -> Double.valueOf(10.0).equals(sm.get(StatKeys.HOST_NETWORK_SPEED))).count();
+        check(speeds == HOSTS, "every host has its network speed from the NIC properties: " + speeds);
         check(ops.maxIdsPerRequest.get() <= 500, "at most 500 resources in one request");
         // 10,000 VMs: 20 pages of the list, 20 + 20 + 20 batches of VM reads, a few more for the hosts and clusters
         check(ops.requests.get() < 200, "bounded requests: " + ops.requests.get());

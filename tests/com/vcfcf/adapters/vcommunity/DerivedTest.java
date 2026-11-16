@@ -101,6 +101,10 @@ public final class DerivedTest {
                 for (String n : portGroups) pg.append(el("HostPortGroup", el("spec", e("name", n))));
                 h.put("config.network.portgroup", arr("ArrayOfHostPortGroup", pg.toString()));
             }
+            if (state.equals("connected")) {
+                h.put("config.network.pnic", arr("ArrayOfPhysicalNic",
+                        el("PhysicalNic", e("device", "vmnic0")) + el("PhysicalNic", e("device", "vmnic1"))));
+            }
             return h.in(dc);
         }
 
@@ -155,8 +159,22 @@ public final class DerivedTest {
 
         void nic(String n, double s0, double c0, double s1, double c1) {
             String id = "res-host-" + n;
-            d.stat(id, "net:vmnic0|speed", s0).stat(id, "net:vmnic0|configuredSpeed", c0)
-                    .stat(id, "net:vmnic1|speed", s1).stat(id, "net:vmnic1|configuredSpeed", c1);
+            nicProps(n, "vmnic0", num(s0), num(c0));
+            nicProps(n, "vmnic1", num(s1), num(c1));
+        }
+
+        private static String num(double v) {
+            return String.valueOf((long) v);
+        }
+
+        /** One NIC's two properties as the Suite API holds them (text); null leaves a property out. */
+        void nicProps(String n, String dev, String speed, String configured) {
+            String id = "res-host-" + n;
+            d.props.computeIfAbsent(id, k -> new java.util.LinkedHashMap<>());
+            if (speed != null) d.prop(id, "net:" + dev + "|speed", speed);
+            else d.props.get(id).remove("net:" + dev + "|speed");
+            if (configured != null) d.prop(id, "net:" + dev + "|configuredSpeed", configured);
+            else d.props.get(id).remove("net:" + dev + "|configuredSpeed");
         }
 
         /** The VMware adapter's data: what the derived metrics read back. */
@@ -754,7 +772,7 @@ public final class DerivedTest {
         }
         // the NIC speeds
         try (Lab l = new Lab(fake)) {
-            l.d.failOnKey.add("net|speed");
+            l.d.failOnKey.add("net:vmnic0|speed");
             l.r.run();
             T.check(l.st(0, H1, V + "Network|Network Speed Degradation") == null, "no host speed");
             T.check(l.st(0, DC1, V + "Network|Total Network Speed Degradation") == null, "no Datacenter count, not 0");
@@ -780,6 +798,11 @@ public final class DerivedTest {
         }
         // a failed relationship read is not "no pools", and an unreadable pool list is not 0
         // (see failedMembership)
+    }
+
+    static SoapFx.Obj hostObj(Lab l, String moid) {
+        for (SoapFx.Obj o : l.vc.byType.get("HostSystem")) if (o.moid.equals(moid)) return o;
+        throw new AssertionError("no " + moid);
     }
 
     static void reviewFixes(FakeVc fake) throws Exception {
@@ -831,13 +854,127 @@ public final class DerivedTest {
         // L6: the warning the original writes when no host has a NIC speed, counted and first
         try (Lab l = new Lab(fake)) {
             for (String h : new String[] {H1, H2}) {
-                l.d.stats.get(h).keySet().removeIf(k -> k.startsWith("net:"));
+                l.d.props.get(h).keySet().removeIf(k -> k.startsWith("net:"));
             }
             l.r.run();
             T.check(l.st(0, H1, V + "Network|Network Speed Degradation") == null, "no NIC speed for any host: none");
             T.eq("No NIC speeds for any host, so no Network Speed Degradation this cycle", l.r.health(0, "First Warning"),
                     "the original's text");
             T.eq(1.0, l.r.health(0, "Warnings in Last Cycle"), "counted once");
+        }
+        // DV-108: the NIC speeds are properties. Only the actual speed is held: the configured speed is opt-in, off in
+        // the stock policy. That is no failure: no status, no cause, no warning and no withheld count change
+        Object baseWithheld;
+        try (Lab l = new Lab(fake)) {
+            l.r.run();
+            baseWithheld = l.r.health(0, "Values Withheld in Last Cycle");
+        }
+        try (Lab l = new Lab(fake)) {
+            for (String h : new String[] {H1, H2}) {
+                l.d.props.get(h).keySet().removeIf(k -> k.endsWith("|configuredSpeed"));
+            }
+            l.r.run();
+            l.r.run();
+            T.check(l.st(0, H1, V + "Network|Network Speed Degradation") == null, "no configured speed: no value, not 100");
+            T.check(l.st(0, H2, V + "Network|Network Speed Degradation") == null, "and none for the other host");
+            T.check(l.st(0, DC1, V + "Network|Total Network Speed Degradation") == null, "no Datacenter count, not 0");
+            T.eq("OK", l.r.health(0, "Collector:kpi|Status"), "the opt-in property being off is not a partial collection");
+            T.eq("None in the last cycle", String.valueOf(l.r.health(0, "Collector:kpi|Causes")), "no cause");
+            T.eq(0.0, l.r.health(0, "Warnings in Last Cycle"), "no warning");
+            T.eq(baseWithheld, l.r.health(0, "Values Withheld in Last Cycle"), "nothing more counted as withheld than with the property on");
+            int said = 0;
+            for (String m : l.r.log.infos) if (m.contains("F-POLICY-NIC-CONFIGURED-SPEED") && m.contains("net|configuredSpeed")) said++;
+            T.eq(1, said, "said once at INFO over two cycles, naming the property");
+            for (String m : l.r.log.infos) T.check(!m.contains("enable that property in the active policy"), "no instruction to a policy it cannot see");
+            T.check(l.r.log.warns.stream().noneMatch(m -> m.contains("configured")), "not a warning");
+            T.eq(100.0, l.st(0, H1, V + "Availability|ESXi Host Operational Availability"), "nothing else is affected");
+        }
+        // the same, with the Ops list of clusters failing: the opt-in gap must not make the KPI collector FAILED
+        try (Lab l = new Lab(fake)) {
+            for (String h : new String[] {H1, H2}) {
+                l.d.props.get(h).keySet().removeIf(k -> k.endsWith("|configuredSpeed"));
+            }
+            l.r.ops.listFails.put("ClusterComputeResource", new java.io.IOException("the list is not available"));
+            l.r.run();
+            T.eq("PARTIAL", l.r.health(0, "Collector:kpi|Status"), "two missing lists are PARTIAL, as they are without the policy gap");
+            T.eq(100.0, l.st(0, H1, V + "Availability|ESXi Host Operational Availability"), "host figures still published");
+        }
+        // a host whose NIC list vCenter would not give, alone: that host and its Datacenter are withheld and counted
+        try (Lab l = new Lab(fake)) {
+            hostObj(l, "host-1").missing("config.network.pnic");
+            l.r.run();
+            T.check(l.st(0, H1, V + "Network|Network Speed Degradation") == null, "no figure for the host whose NICs are unknown");
+            T.eq(100.0, l.st(0, H2, V + "Network|Network Speed Degradation"), "the other host is unaffected");
+            T.check(l.st(0, DC1, V + "Network|Total Network Speed Degradation") == null, "its Datacenter is withheld, not 0");
+            T.check((Double) l.r.health(0, "Values Withheld in Last Cycle") > (Double) baseWithheld, "counted");
+        }
+        // B1: the same unreadable NIC list on the stock policy (no configured speed anywhere): nothing was measured,
+        // so no Datacenter publishes 0
+        try (Lab l = new Lab(fake)) {
+            for (String h : new String[] {H1, H2, H4}) {
+                l.d.props.computeIfAbsent(h, k -> new java.util.LinkedHashMap<>()).keySet().removeIf(k -> k.endsWith("|configuredSpeed"));
+            }
+            l.nicProps("4", "vmnic0", "1000", null);
+            hostObj(l, "host-1").missing("config.network.pnic");
+            l.r.run();
+            for (String dc : new String[] {DC1, DC2}) {
+                T.check(l.st(0, dc, V + "Network|Total Network Speed Degradation") == null, dc + ": nothing measured, not 0");
+            }
+            for (String h : new String[] {H1, H2, H4}) {
+                T.check(l.st(0, h, V + "Network|Network Speed Degradation") == null, h + ": no value");
+            }
+            T.eq("OK", l.r.health(0, "Collector:kpi|Status"), "the opt-in property is still no status");
+            T.check(l.r.log.infos.stream().anyMatch(m -> m.contains("F-POLICY-NIC-CONFIGURED-SPEED")), "and still said");
+        }
+        // the Datacenter count follows the host figure's eligibility: an unknown connection state makes the count unknown
+        try (Lab l = new Lab(fake)) {
+            hostObj(l, "host-1").missing("runtime.connectionState");
+            l.r.run();
+            T.check(l.st(0, DC1, V + "Network|Total Network Speed Degradation") == null,
+                    "a member whose connection state is unknown: no count, not a misleading 0");
+            T.check(l.st(0, H1, V + "Network|Network Speed Degradation") == null, "and no host figure");
+            T.eq(100.0, l.st(0, H2, V + "Network|Network Speed Degradation"), "the other host is unaffected");
+        }
+        // a host that is known to be disconnected is not part of the count, even when its NIC list cannot be read
+        try (Lab l = new Lab(fake)) {
+            hostObj(l, "host-5").missing("config.network.pnic");
+            l.r.run();
+            T.eq(0.0, l.st(0, DC2, V + "Network|Total Network Speed Degradation"), "DC2 is counted without the disconnected host");
+            T.eq(1.0, l.st(0, DC1, V + "Network|Total Network Speed Degradation"), "DC1 unchanged");
+        }
+        // a connected host's frozen property values count; a host vCenter says is not connected does not
+        try (Lab l = new Lab(fake)) {
+            l.nicProps("5", "vmnic0", "1000", "10000");
+            l.r.run();
+            T.check(l.st(0, "res-host-5", V + "Network|Network Speed Degradation") == null, "a disconnected host has no figure");
+            T.eq(1.0, l.st(0, DC1, V + "Network|Total Network Speed Degradation"), "and is not in a Datacenter count");
+            T.eq(0.0, l.st(0, DC2, V + "Network|Total Network Speed Degradation"), "DC2: host-4 has no NICs, host-5 is not counted");
+        }
+        // text that is not a number, a zero and an absent value are no value for that NIC
+        try (Lab l = new Lab(fake)) {
+            l.nicProps("1", "vmnic0", "1000", "n/a");
+            l.nicProps("1", "vmnic1", "10000", "0");
+            l.nicProps("2", "vmnic0", "", "10000");
+            l.nicProps("2", "vmnic1", "10000", "10000");
+            l.r.run();
+            T.check(l.st(0, H1, V + "Network|Network Speed Degradation") == null, "no NIC with a usable pair: no value");
+            T.eq(100.0, l.st(0, H2, V + "Network|Network Speed Degradation"), "the NIC with a blank speed is left out");
+            T.eq(0.0, l.st(0, DC1, V + "Network|Total Network Speed Degradation"), "one host has a value and is not degraded");
+            T.eq("None in the last cycle", String.valueOf(l.r.health(0, "First Failure")), "none of it is a failed read");
+        }
+        // a disconnected NIC (no speed) beside a connected one that runs below its configured speed
+        try (Lab l = new Lab(fake)) {
+            l.nicProps("1", "vmnic0", "1000", "10000");
+            l.nicProps("1", "vmnic1", null, "10000");
+            l.nicProps("2", "vmnic0", "10000", "10000");
+            l.nicProps("2", "vmnic1", "0", "10000");
+            // the World count reads back what the hosts' figures were stored as
+            l.d.stat(H1, V + "Network|Network Speed Degradation", 10.0).stat(H2, V + "Network|Network Speed Degradation", 100.0);
+            l.r.run();
+            T.eq(10.0, l.st(0, H1, V + "Network|Network Speed Degradation"), "only the NIC that has a speed counts");
+            T.eq(100.0, l.st(0, H2, V + "Network|Network Speed Degradation"), "a zero speed is left out");
+            T.eq(1.0, l.st(0, DC1, V + "Network|Total Network Speed Degradation"), "one degraded host");
+            T.eq(1.0, l.st(0, WORLD, V + "Network|Total Network Speed Degradation"), "and the World count");
         }
         // W3: a failed World read marks the lists of clusters and hosts for a new read next cycle
         try (Lab l = new Lab(fake)) {

@@ -1,0 +1,34 @@
+{
+ "request": "POST /suite-api/api/resources/properties/latest/query",
+ "body": {
+  "resourceIds": [
+   "197e4d3c-1683-45cc-8008-74048e2c317d"
+  ],
+  "propertyKeys": [
+   "net:vmnic0|speed",
+   "net:vmnic0|configuredSpeed"
+  ]
+ },
+ "status": 200,
+ "host": "vcf-lab-osa-esx03.int.sentania.net",
+ "response": {
+  "values": [
+   {
+    "resourceId": "197e4d3c-1683-45cc-8008-74048e2c317d",
+    "property-contents": {
+     "property-content": [
+      {
+       "statKey": "net:vmnic0|speed",
+       "timestamps": [
+        1794091214341
+       ],
+       "data": [
+        10000.0
+       ]
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

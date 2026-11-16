@@ -1,6 +1,7 @@
 package com.vcfcf.adapters.vcommunity;
 
 import com.vcfcf.adapters.vcommunity.json.Json;
+import com.vcfcf.adapters.vcommunity.kpi.NetworkSpeed;
 import com.vcfcf.adapters.vcommunity.kpi.StatKeys;
 import com.vcfcf.adapters.vcommunity.ops.OpsApi;
 import com.vcfcf.adapters.vcommunity.ops.OpsHttpException;
@@ -72,7 +73,8 @@ public final class OpsReadsTest {
 
     public static void main(String[] args) throws Exception {
         latest();
-        instances();
+        instancedProperties();
+        recordedNicProperties();
         timestamps();
         history();
         properties();
@@ -123,22 +125,79 @@ public final class OpsReadsTest {
         T.eq(4.5, got.get("a").get("cpu|x"), "both spellings, strings that are numbers");
     }
 
-    static void instances() throws Exception {
-        OpsReads r = new OpsReads(ops((p, b) -> values(
-                res("h1", stat("net:vmnic0|speed", 1000, "1000"), stat("net:vmnic1|speed", 1000, "10000"),
-                        stat("net|speed", 1000, "99"), stat("net:vmnic0|configuredSpeed", 1000, "10000"),
-                        stat("cpu:3|speed", 1000, "5")),
-                res("h2", stat("net|speed", 1000, "99")),
-                res("h3")), new ArrayList<>()), null);
-        Map<String, Map<String, Map<String, Double>>> got = new LinkedHashMap<>();
-        OpsReads.Report rep = r.latestInstanceStats(Arrays.asList("h1", "h2", "h3"), StatKeys.NIC_STATS, NOW, got::put);
+    /**
+     * Instanced property keys through {@code properties/latest/query}. The payload is a recorded-answer slot: a
+     * real answer (from a live read-only call) can replace {@link #INSTANCED_PROPERTY_ANSWER} and the same
+     * assertions run on it. The shape below is the one the reader is written against, not a recording.
+     */
+    static final String INSTANCED_PROPERTY_ANSWER = "{\"values\":[{\"resourceId\":\"h1\",\"property-contents\":"
+            + "{\"property-content\":[{\"statKey\":\"net:vmnic0|speed\",\"values\":[\"1000.0\"]},"
+            + "{\"statKey\":\"net:vmnic1|speed\",\"values\":[\"0.0\"]},"
+            + "{\"statKey\":\"net:vmnic0|configuredSpeed\",\"values\":[\"10000.0\"]}]}},"
+            + "{\"resourceId\":\"h2\"}]}";
+
+    static void instancedProperties() throws Exception {
+        List<String> bodies = new ArrayList<>();
+        OpsReads r = new OpsReads(ops((p, b) -> {
+            bodies.add(b);
+            return INSTANCED_PROPERTY_ANSWER;
+        }, new ArrayList<>()), null);
+        Map<String, Map<String, String>> got = new LinkedHashMap<>();
+        OpsReads.Report rep = r.latestProperties(Arrays.asList("h1", "h2"),
+                Arrays.asList("net:vmnic0|speed", "net:vmnic1|speed", "net:vmnic0|configuredSpeed"), got::put);
         T.check(rep.ok(), "read");
-        T.eq(1, got.size(), "only a host that has an instance statistic is handed over");
-        T.eq(1000.0, got.get("h1").get("net|speed").get("vmnic0"), "by instance");
-        T.eq(10000.0, got.get("h1").get("net|speed").get("vmnic1"), "second NIC");
-        T.eq(10000.0, got.get("h1").get("net|configuredSpeed").get("vmnic0"), "configured");
-        T.check(!got.get("h1").containsKey("cpu|speed"), "a statistic that was not asked for is not kept");
-        T.done("read: instance statistics");
+        T.check(bodies.get(0).contains("\"net:vmnic0|speed\""), "the instanced key is sent as it is");
+        T.eq("1000.0", got.get("h1").get("net:vmnic0|speed"), "by instance key");
+        T.eq("10000.0", got.get("h1").get("net:vmnic0|configuredSpeed"), "configured");
+        T.eq("0.0", got.get("h1").get("net:vmnic1|speed"), "a link that is down reads 0.0 and is kept as text");
+        T.check(NetworkSpeed.parseSpeed(got.get("h1").get("net:vmnic1|speed")) == null, "and is no value as a speed");
+        T.done("read: instanced properties");
+    }
+
+    static String recording(String path) throws IOException {
+        return new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(path)),
+                java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    /** The text of the {@code response} member of a recording (it is the last member). */
+    static String responseOf(String raw) {
+        int i = raw.indexOf("\"response\":");
+        return raw.substring(i + "\"response\":".length(), raw.lastIndexOf('}'));
+    }
+
+    /** Recorded answers of the Suite API (9.0.2 and 8.18.7, 2026-11-16): the value is in a numeric {@code data} array. */
+    static void recordedNicProperties() throws Exception {
+        String dir = "tests/fixtures/nic-properties/";
+        Object[][] cases = {
+            {"devel-vcf-lab-mgmt-esx06-instanced-nic-both.json", 0.0, "link down reads 0.0"},
+            {"devel-vcf-lab-osa-esx03-instanced-nic-both.json", 10000.0, "a fixed 10000"},
+            {"devel_8_18-vcf-lab-wld01-esx01-instanced-nic-both.json", 1000.0, "8.18.7, 1000"},
+        };
+        for (Object[] c : cases) {
+            String raw = recording(dir + c[0]);
+            Object rec = Json.parse(raw);
+            String id = Json.str(Json.list(Json.get(Json.get(rec, "body"), "resourceIds")).get(0));
+            List<String> keys = new ArrayList<>();
+            for (Object k : Json.list(Json.get(Json.get(rec, "body"), "propertyKeys"))) keys.add(Json.str(k));
+            String answer = responseOf(raw);
+            OpsReads r = new OpsReads(ops((p, b) -> answer, new ArrayList<>()), null);
+            Map<String, Map<String, String>> got = new LinkedHashMap<>();
+            OpsReads.Report rep = r.latestProperties(Arrays.asList(id), keys, got::put);
+            T.check(rep.ok(), "read " + c[0]);
+            String text = got.get(id).get("net:vmnic0|speed");
+            T.check(text != null, "the numeric data array is read: " + c[2]);
+            Double v = Double.valueOf(text);
+            T.eq((Double) c[1], v, (String) c[2]);
+            T.check(!got.get(id).containsKey("net:vmnic0|configuredSpeed"),
+                    "a key the resource does not have is dropped by the platform and absent here");
+            T.eq(c[1].equals(0.0) ? null : (Double) c[1], NetworkSpeed.parseSpeed(text), "as a speed: " + c[2]);
+        }
+        String emptyAnswer = responseOf(recording(dir + "devel-vcf-lab-mgmt-esx06-generic-net-speed-instanced-false.json"));
+        Map<String, Map<String, String>> none = new LinkedHashMap<>();
+        new OpsReads(ops((p, b) -> emptyAnswer, new ArrayList<>()), null)
+                .latestProperties(Arrays.asList("x"), Arrays.asList("net|speed"), none::put);
+        T.check(none.isEmpty(), "the generic key without the instanced flag answers nothing (why NIC names are asked for)");
+        T.done("read: recorded NIC properties");
     }
 
     static void timestamps() throws Exception {

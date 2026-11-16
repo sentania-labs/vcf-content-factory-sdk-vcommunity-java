@@ -77,6 +77,31 @@ a second pack. On 9.x an upgrade deletes the content the new version no longer s
 including those 63 built-in views and everything shipped under ids this pak no longer uses.
 Inferred, not measured. Remove the earlier port first, and restore the built-in views, as above.
 
+## Network Speed Degradation
+
+Network Speed Degradation (host), Total Network Speed Degradation (Datacenter and vSphere World)
+compare each host NIC's actual link speed with its configured speed. Both are properties of the host's
+NICs in VCF Operations, one pair per NIC: `net:<nic>|speed` (Network | Actual Speed) and
+`net:<nic>|configuredSpeed` (Network | Configured Speed, for example `net:vmnic0|configuredSpeed`).
+
+The vSphere adapter's stock policy does **not** collect the configured speed: in the VMWARE
+`HostSystem` describe the property `net|configuredSpeed` has `default_monitored: false` (`net|speed` is
+collected). Until it is enabled, no host reports a configured NIC speed, so the figure is not sent for any
+host, Datacenter or the World. That is not a collection failure: `kpi` status, causes, warnings and the withheld
+count are unchanged, and the adapter log notes it a single time at INFO (`F-POLICY-NIC-CONFIGURED-SPEED`) on the first
+cycle and again when it changes. A NIC with no value, a zero, a value that is not a number, or no link (a
+disconnected NIC reports a speed of 0) does not count; a host none of whose NICs has both values gets no figure,
+and only connected hosts count in the Datacenter and World numbers.
+
+To get the figure, enable the property `net|configuredSpeed` (Network | Configured Speed) as a HostSystem
+attribute in the policy that applies to your hosts. The steps in the policy editor are not verified, so this guide
+gives no menu paths. Measured live on 9.0.2 (build 22): after the property was enabled in policy, hosts whose NICs have
+a fixed speed in vCenter had `net:<nic>|configuredSpeed` by the second collection and published 100.0.
+
+A NIC whose link speed is left on auto-negotiate in vCenter gets **no** configured-speed property at all (not a 0),
+even with the property enabled. Such a NIC does not count, so a host whose NICs are all on auto-negotiate publishes no
+figure. (In the lab, 30 of 36 NICs are on auto-negotiate.) Only 9.0.2 was measured; 8.18.7 and 9.1.1 are not.
+
 ## Permissions Required
 
 Read-only access to the vCenter inventory. The license assignments and the

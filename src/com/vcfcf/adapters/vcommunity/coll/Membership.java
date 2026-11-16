@@ -45,13 +45,16 @@ public final class Membership {
         public final Boolean connected;
         /** Distinct standard port group names; null when the read of them failed (empty when unset). */
         public final Set<String> portGroups;
+        /** Device names of the physical NICs (vmnic0, ...); null when the read of them failed (empty when none). */
+        public final Set<String> nics;
 
-        Host(String moref, String name, String cluster, Boolean connected, Set<String> portGroups) {
+        Host(String moref, String name, String cluster, Boolean connected, Set<String> portGroups, Set<String> nics) {
             this.moref = moref;
             this.name = name;
             this.cluster = cluster;
             this.connected = connected;
             this.portGroups = portGroups;
+            this.nics = nics;
         }
     }
 
@@ -147,13 +150,24 @@ public final class Membership {
                 }
             }
         }
-        addHost(row.obj.value, row.name(), cluster, connected, groups);
+        Set<String> nics;
+        if (!row.readable("config.network.pnic")) {
+            nics = null;
+        } else {
+            nics = new java.util.TreeSet<>();
+            for (XmlNode n : Vals.items(row.val("config.network.pnic"))) {
+                String dev = Vals.str(n, "device");
+                if (dev != null && !dev.isEmpty()) nics.add(dev);
+            }
+        }
+        addHost(row.obj.value, row.name(), cluster, connected, groups, nics);
         if (!row.readable("parent")) hostsParentUnknown.add(row.obj.value);
         if (roster != null) roster.hostRow(row);
     }
 
-    void addHost(String moref, String name, String cluster, Boolean connected, Set<String> portGroups) {
-        hosts.put(moref, new Host(moref, name == null ? "" : name, cluster, connected, portGroups));
+    void addHost(String moref, String name, String cluster, Boolean connected, Set<String> portGroups,
+            Set<String> nics) {
+        hosts.put(moref, new Host(moref, name == null ? "" : name, cluster, connected, portGroups, nics));
     }
 
     private final Set<String> hostsParentUnknown = ConcurrentHashMap.newKeySet();

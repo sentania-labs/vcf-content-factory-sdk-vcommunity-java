@@ -24,6 +24,11 @@ public final class FailureCause {
     public static final String EVENTS = "F-EVENTS";
     public static final String DEADLINE = "F-DEADLINE";
     public static final String TLS_CONFIG = "F-TLS-CONFIG";
+    /**
+     * Informational only (DV-108): the opt-in host NIC configured speed property is not collected. It is logged at
+     * INFO and never added to {@link Failures}, so it changes no status and no count.
+     */
+    public static final String POLICY_NIC_CONFIGURED_SPEED = "F-POLICY-NIC-CONFIGURED-SPEED";
 
     /** A collector that threw on one object, by its read id: a defect in this pak, not an answer of vCenter. */
     public static String collect(String read) {

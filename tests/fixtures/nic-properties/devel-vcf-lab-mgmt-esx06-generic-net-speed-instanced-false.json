@@ -1,0 +1,18 @@
+{
+ "request": "POST /suite-api/api/resources/properties/latest/query",
+ "body": {
+  "resourceIds": [
+   "13d5bc5a-bc1a-4fd7-a148-c52c3cff084d"
+  ],
+  "propertyKeys": [
+   "net|speed",
+   "net|configuredSpeed"
+  ],
+  "instanced": false
+ },
+ "status": 200,
+ "host": "vcf-lab-mgmt-esx06.int.sentania.net",
+ "response": {
+  "values": []
+ }
+}
