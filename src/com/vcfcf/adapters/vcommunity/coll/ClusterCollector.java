@@ -151,8 +151,11 @@ public final class ClusterCollector {
     }
 
     /**
-     * The original: 0 while DRS is off, 0 for a negative score, the score otherwise; no summary, or a
-     * score that is unset while DRS is on, raises there and sends nothing (Q9 for the zeros).
+     * The DRS score, 0 to 100, where 0 is the worst. It is published only when DRS is on and vCenter gave a
+     * score (Q9, DV-111): with DRS off there is nothing to score, and a score below zero is outside the scale (we
+     * take it to mean "no score yet"; that is an assumption, not a documented value), so neither is sent as a 0 that
+     * would read as the worst balance. A score of 0 vCenter really gave stays.
+     * A summary or DRS setting that could not be read is withheld and counted, as before.
      */
     private static void drsScore(ObjectOut o, XmlNode summary, boolean drsOn, boolean drsRead) {
         Integer score = null;
@@ -164,18 +167,17 @@ public final class ClusterCollector {
                 score = null;
             }
         }
-        Double zero = Quirks.UNSET_AS_UPSTREAM ? Double.valueOf(0) : null;
-        Double v;
         if (summary == null || !drsRead) {
-            v = null;
+            o.statY(DRS + "DRS Score", null);
         } else if (!drsOn) {
-            v = zero;
+            return; // DRS is off: nothing to score, and nothing was left unread
         } else if (score == null) {
-            v = null;
+            o.statY(DRS + "DRS Score", null);
+        } else if (score < 0) {
+            return; // below zero is outside the scale: no score (assumed to mean "not yet scored")
         } else {
-            v = score < 0 ? zero : Double.valueOf(score);
+            o.stat(DRS + "DRS Score", score);
         }
-        o.statY(DRS + "DRS Score", v);
     }
 
     private static void dpm(ObjectOut o, XmlNode ex) {

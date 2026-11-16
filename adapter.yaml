@@ -28,7 +28,7 @@ description: >
   pack (views, dashboards, reports, super metrics, symptoms, alerts and a
   recommendation) and the six check-list files.
 version: 1.0.0
-build_number: 22
+build_number: 24
 tier: 2
 released: false
 
@@ -46,7 +46,7 @@ content_naming: unprefixed
 content_foreign_adapter_kinds: [VMWARE]
 
 # The content as converted from the original pack by the factory's offline importer
-# (docs/design/inputs/import-report/): 170 views, 52 dashboards, 16 reports, 2 super
+# (docs/design/inputs/import-report/): 170 views, 52 dashboards, 16 reports, 3 super
 # metrics, 10 symptoms, 4 alerts, 1 recommendation. The two Section dashboards
 # (overall-daily-check, vsphere-cluster-capacity-2-0) carry section_fallback: omit:
 # below product 9.1.1 they ship without their Section rows.
@@ -54,6 +54,7 @@ bundled_content:
   supermetrics:
   - supermetrics/cpu-usable-capacity-utilization.yaml
   - supermetrics/number-of-vm.yaml
+  - supermetrics/vsphere-clusters-not-green.yaml
   views:
   - views/esxi-host-details-vcommunity.yaml
   - views/esxi-host-hardware-vcommunity.yaml

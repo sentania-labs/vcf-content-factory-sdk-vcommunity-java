@@ -52,9 +52,11 @@ public final class Quirks {
      * the original's own placeholders are {@code null} (an unset EVC mode, a HA key while HA is off, a
      * missing vCenter setting, no install date, no HBA model), {@code []} (no maximum EVC mode),
      * {@code N/A} (a NIC with no PCI device), {@code Unknown} (a disk with no backing or shares), and
-     * {@code 0} for a count, a DRS score while DRS is off, a timeout, a size. Which key prints which is
-     * decided where the key is built, from the original's code. {@code false}: nothing is sent for an
-     * unset value (DV-08 to DV-16, DV-11, DV-18). A value that vCenter did not return because the
+     * {@code 0} for a count, a timeout, a size. Which key prints which is decided where the key is built, from the
+     * original's code. {@code false}: nothing is sent for an unset value (DV-08 to DV-16, DV-11, DV-18).
+     * Three keys no longer follow this switch (DV-111): DRS Score (nothing while DRS is off or the score is
+     * negative), and the HBA and SCSI Controllers counts (nothing when the list was not returned), because their
+     * 0 stood for "does not apply" or "unknown". A value that vCenter did not return because the
      * <em>read failed</em> is never one of these: it is withheld and counted, with either setting.
      */
     public static final boolean UNSET_AS_UPSTREAM = true;

@@ -5,7 +5,7 @@ R3	vCommunity|Licensing:{license_name}|License Key	HostSystem	yes	PropertiesTest
 R4	vCommunity|Licensing:{license_name}|Edition Key	HostSystem	yes	PropertiesTest: hosts	property	P2
 R5	vCommunity|Licensing:{license_name}|License Expiration Date	HostSystem	yes	PropertiesTest: hosts	property	P2
 R6	vCommunity|Licensing:{license_name}|Remaining Days	HostSystem	yes	PropertiesTest: hosts	metric; metric, floor of days	P2
-R7	vCommunity|Storage Adapter|Number of HBA	HostSystem	yes	PropertiesTest: hosts	property; count of the adapters read; none on a read that worked is "0" (Q9)	P2
+R7	vCommunity|Storage Adapter|Number of HBA	HostSystem	yes	PropertiesTest: hosts	property; count of the adapters read; a list that came back empty is a real 0; a list not returned sends nothing (Q9, DV-111)	P2
 R8	vCommunity|Configuration|VAAI|ATS Heartbeat	HostSystem	yes	PropertiesTest: hosts	property	P2
 R9	vCommunity|Configuration|VAAI|ATS Locking	HostSystem	yes	PropertiesTest: hosts	property	P2
 R10	vCommunity|Configuration|Config Status	HostSystem	yes	PropertiesTest: hosts	property	P2
@@ -118,7 +118,7 @@ R116	vCommunity|Guest|Detailed Data|Distro Version	VirtualMachine	yes	Properties
 R117	vCommunity|Guest|Detailed Data|Kernel Version	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R118	vCommunity|Guest|Detailed Data|Pretty Name	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R119	vCommunity|Summary|VM Path Name	VirtualMachine	yes	PropertiesTest: vms	property	P2
-R120	vCommunity|Configuration|SCSI Controllers|Count	VirtualMachine	yes	PropertiesTest: vms	metric; metric; 0 when the VM lists no device (Q9)	P2
+R120	vCommunity|Configuration|SCSI Controllers|Count	VirtualMachine	yes	PropertiesTest: vms	metric; metric; a device list that came back with no controller is a real 0; a list not returned sends nothing (Q9, DV-111)	P2
 R121	vCommunity|Configuration|SCSI Controllers:{bus_str}|Type	VirtualMachine	yes	PropertiesTest: vms	property; type text of an unmapped controller is its vim25 type name (DV-34)	P2
 R122	vCommunity|Network|Network Adapters:{vnicLabel}|Type	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R123	vCommunity|Network|Network Adapters:{vnicLabel}|Starts Connected	VirtualMachine	yes	PropertiesTest: vms	property	P2
@@ -218,7 +218,7 @@ R216	vCommunity|Business Application|Business Application Performance	BusinessSe
 R217	vCommunity|Business Application|Business Applications Performance	Enterprise	no		P4: derived metrics, World, Business Applications, resource pools	P4
 R218	vCommunity|Resource Pools|Number of Resource Pools	ClusterComputeResource	no		P4: derived metrics, World, Business Applications, resource pools	P4
 R219	vCommunity|Resource Pools|Cascading Resource Pools	ClusterComputeResource	no		P4: derived metrics, World, Business Applications, resource pools	P4
-R220	vCommunity|Cluster Configuration|Distributed Resource Scheduler|DRS Score	ClusterComputeResource	yes	PropertiesTest: clusters	metric; metric; DRS off or a negative score: 0, as upstream (Q9)	P2
+R220	vCommunity|Cluster Configuration|Distributed Resource Scheduler|DRS Score	ClusterComputeResource	yes	PropertiesTest: clusters	metric; metric; nothing while DRS is off or vCenter gives a negative score (Q9, DV-111); a score of 0 vCenter gave is sent	P2
 R221	vCommunity|Availability|Cluster Operational Availability	ClusterComputeResource	no		P4: availability and the periodic cluster check	P4
 R222	vCommunity|Periodic Cluster Check|Worst Cluster Performance	ClusterComputeResource	no		P4: availability and the periodic cluster check	P4
 R223	vCommunity|Periodic Cluster Check|Worst Cluster Risk	ClusterComputeResource	no		P4: availability and the periodic cluster check	P4

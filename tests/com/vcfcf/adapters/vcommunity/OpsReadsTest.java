@@ -75,6 +75,7 @@ public final class OpsReadsTest {
         latest();
         instancedProperties();
         recordedNicProperties();
+        recordedHostProperties();
         timestamps();
         history();
         properties();
@@ -163,6 +164,30 @@ public final class OpsReadsTest {
     static String responseOf(String raw) {
         int i = raw.indexOf("\"response\":");
         return raw.substring(i + "\"response\":".length(), raw.lastIndexOf('}'));
+    }
+
+    /** Recorded host properties (GET, trimmed to runtime|*): 8.18.7 has no quarantine property, 9.0.2 has (DV-110). */
+    static void recordedHostProperties() throws Exception {
+        Map<String, Map<String, String>> byVersion = new LinkedHashMap<>();
+        for (String f : new String[] {"8.18.7-host.json", "9.0.2-host.json"}) {
+            Object rec = Json.parse(recording("tests/fixtures/host-properties/" + f));
+            Map<String, String> m = new LinkedHashMap<>();
+            for (Object p : Json.list(Json.get(Json.get(rec, "response"), "property"))) {
+                m.put(Json.str(Json.get(p, "name")), Json.str(Json.get(p, "value")));
+            }
+            byVersion.put(f, m);
+        }
+        Map<String, String> v818 = byVersion.get("8.18.7-host.json");
+        Map<String, String> v902 = byVersion.get("9.0.2-host.json");
+        T.check(v818.containsKey(StatKeys.HOST_CONNECTION) && !v818.containsKey(StatKeys.HOST_QUARANTINE),
+                "8.18.7: the other runtime properties exist and the quarantine one does not");
+        T.eq("notInQuarantine", v902.get(StatKeys.HOST_QUARANTINE), "9.0.2 has it");
+        T.eq(100.0, com.vcfcf.adapters.vcommunity.kpi.Availability.ofHost(1.0, v818,
+                com.vcfcf.adapters.vcommunity.kpi.Availability.quarantineExists(Arrays.asList(v818))),
+                "the real 8.18.7 host scores 100, not 75");
+        T.eq(100.0, com.vcfcf.adapters.vcommunity.kpi.Availability.ofHost(1.0, v902,
+                com.vcfcf.adapters.vcommunity.kpi.Availability.quarantineExists(Arrays.asList(v902))), "and the 9.0.2 host 100");
+        T.done("read: recorded host runtime properties");
     }
 
     /** Recorded answers of the Suite API (9.0.2 and 8.18.7, 2026-11-16): the value is in a numeric {@code data} array. */

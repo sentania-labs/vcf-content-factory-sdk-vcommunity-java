@@ -38,11 +38,13 @@ final class Coverage4 {
         if (row == 70 || row == 71) return "read back from the VM's properties, else its statistics; round(shares / size, 2); no value without both";
         if (row >= 153 && row <= 158) return "KPI: round(weighted mean of the rows, 2); withheld unless every row's inputs were read";
         if (row >= 159 && row <= 167) return "max / 90th percentile over the powered-on VMs of the cluster's hosts (by MoRef); bad packets: the worst host";
+        if (row == 170 || row == 171 || row == 172 || row == 175 || row == 177 || row == 179) return "worst host of the cluster; memory rows divide by DRAM plus the NVMe tier on a host with memory tiering, DRAM alone otherwise (DV-109); unreadable inputs withhold the family";
         if (row >= 168 && row <= 179) return "worst host of the cluster; unreadable inputs withhold the family";
+        if (row == 181 || row == 183 || row == 184) return "of the cluster's usable capacity, the running hosts only; memory capacity is DRAM plus the NVMe tier on a host with memory tiering (DV-109)";
         if (row >= 180 && row <= 184) return "of the cluster's usable capacity, the running hosts only";
         if (row >= 185 && row <= 193) return "the VMs on the host; published for hosts vCenter says are connected";
         if (row == 194) return "(compressed + swapped) / guest used memory x 100";
-        if (row == 195) return "25 points per condition met; a host with no data counts 0; withheld when its reads failed";
+        if (row == 195) return "share of the conditions met, over four, or over three where the host has no quarantine property (DV-110); a host with no data counts 0; withheld when its reads failed";
         if (row == 196) return "published for connected hosts that have a NIC with both speed properties (DV-108: read as properties; needs net|configuredSpeed enabled in the policy)";
         if (row == 197) return "member hosts below 100; a Datacenter whose hosts have no value is 0 as upstream (Q12); needs the host NIC configured speed property (DV-108)";
         if (row == 198) return "sum of the vCenters' stored counts within 15 minutes";

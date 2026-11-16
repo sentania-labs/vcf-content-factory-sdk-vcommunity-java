@@ -16,6 +16,8 @@ ROOT = Path(__file__).resolve().parents[3]
 REPORT = ROOT / "docs/design/inputs/import-report/report.json"
 OUT = ROOT / "docs/design/inputs/carried-text-report.md"
 SECTION_FILES = ["dashboards/overall-daily-check.yaml", "dashboards/vsphere-cluster-capacity-2-0.yaml"]
+# objects written by hand after the conversion, so the report does not list them: only their name follows the source
+HAND_ADDED = [("supermetric", "supermetrics/vsphere-clusters-not-green.yaml")]
 
 
 def kind_of(otype, field):
@@ -52,6 +54,10 @@ def main():
         walk(y.get("widgets"), items, y["name"])
         sec.extend(items)
     sec_rows = [("dashboard", n, fld, ln) for n, fld, ln in sec]
+    hand_rows = []
+    for t, f in HAND_ADDED:
+        y = yaml.safe_load((ROOT / f).read_text())
+        hand_rows.append((t, y["name"], "name", len(y["name"])))
 
     def table(rs):
         agg = collections.OrderedDict()
@@ -73,7 +79,7 @@ def main():
         1 for o in rep["objects"]
         if o.get("description_replaced") and any(v["field"] == "description" for v in o["verbatim_text"]))
     renamed = sum(1 for line in (ROOT / "docs/design/inputs/view_rename.tsv").read_text().splitlines() if line.strip())
-    allrows = rows + sec_rows
+    allrows = rows + sec_rows + hand_rows
     L = []
     a = L.append
     a("# Carried text report")
@@ -104,6 +110,7 @@ def main():
     a("|---|---:|---:|")
     a(f"| Importer report, {len(rep['objects'])} objects | {len(rows)} | {sum(r[3] for r in rows)} |")
     a(f"| The two Section dashboards (from their YAML) | {len(sec_rows)} | {sum(r[3] for r in sec_rows)} |")
+    a(f"| Objects written by hand after the conversion (name only, from their YAML) | {len(hand_rows)} | {sum(r[3] for r in hand_rows)} |")
     a(f"| **All carried free text** | **{len(allrows)}** | **{sum(r[3] for r in allrows)}** |")
     a("")
     a("## By type")

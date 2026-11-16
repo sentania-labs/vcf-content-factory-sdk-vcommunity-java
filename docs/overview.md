@@ -19,7 +19,7 @@ Application figures). When switched on in the account (both switches are off by
 default), it also asks the Windows guests for their operating system, their
 services and their event logs, and sends the events (see "Guest monitoring"
 below). It also ships the content of the original pack (phase 6): 170 views, 52
-dashboards, 16 reports, 2 super metrics, 10 symptoms, 4 alerts with 1 recommendation,
+dashboards, 16 reports, 3 super metrics, 10 symptoms, 4 alerts with 1 recommendation,
 and the six check-list files (see "Content" below and `installing.md`);
 `p2-key-coverage.tsv`, `p3-key-coverage.tsv`, `p4-key-coverage.tsv` and
 `p5-key-coverage.tsv` in this folder's parent (`docs/`) say, key by key, what this
@@ -81,10 +81,12 @@ pushes nothing onto the vCenter's objects.
   it (quirk Q9): the text `None` for an unset property, `null` for an unset EVC
   mode, HA or DRS settings that are off, a missing vCenter setting or install
   date, `[]` for no maximum EVC mode, `N/A` for a NIC with no PCI device, and
-  `0` for a count, a DRS score while DRS is off, or a figure that is missing. A
+  `0` for a count or a figure that is missing. Three keys are the exception: nothing is sent for a DRS Score while
+  DRS is off or the score is negative, nor for the HBA and SCSI Controllers counts of a list that was not returned
+  (DV-111), because their 0 would stand for "does not apply" or "unknown". A
   NIC whose link is down is `half-duplex` (Q10). One switch,
   `Quirks.UNSET_AS_UPSTREAM`, in `text/Quirks.java`, turns this off, and then an
-  unset value is not sent. A key that is not sent keeps its last value in VCF
+  unset value is not sent; those three keys do not follow it. A key that is not sent keeps its last value in VCF
   Operations (a pushed key cannot be deleted).
 - **Derived metrics are read back from VCF Operations.** The scores, availability,
   network speed and shares are computed from the statistics and properties the
@@ -178,7 +180,7 @@ The pak carries the content of the original pack as VCF Operations content, inst
 | Views | 170 |
 | Dashboards | 52 |
 | Reports | 16 |
-| Super metrics | 2 |
+| Super metrics | 3 |
 | Symptom definitions | 10 |
 | Alert definitions | 4 (with 1 recommendation) |
 | Check-list files | 6 |
@@ -199,7 +201,7 @@ The pak carries the content of the original pack as VCF Operations content, inst
   check those kinds; it checks only symptoms and alerts, all of which are on VMWARE.
 - The two Section dashboards ("Overall Daily Check", "vSphere Cluster Capacity 2.0") install without their
   Section rows while the pak's minimum version (8.18.x) is below VCF Operations 9.1.1.
-- The two super metrics need enabling in the policy.
+- The three super metrics need enabling in the policy ("CPU Usable Capacity Utilization", "Number of VM" and "vSphere Clusters not Green", the last on the vSphere World).
 - How the check-list files behave across an upgrade is in `installing.md`.
 
 ## Known Limitations

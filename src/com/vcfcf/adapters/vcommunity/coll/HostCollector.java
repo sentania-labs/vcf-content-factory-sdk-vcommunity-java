@@ -198,9 +198,9 @@ public final class HostCollector {
 
     private static void adapters(ObjectOut o, BulkRow row, XmlNode list) {
         if (list == null) {
-            // no adapters on a read that worked: the original counts none (Q9)
-            o.propY(Vals.P + "Storage Adapter|Number of HBA",
-                    row.isUnset("config.storageDevice.hostBusAdapter") ? Quirks.orText(null, "0", Quirks.UNSET_AS_UPSTREAM) : null);
+            // the list was not returned (unset, or not read): no count is known, and a 0 would stand for it (DV-111).
+            // A list that came back empty is a real count of 0 and is published below.
+            o.propY(Vals.P + "Storage Adapter|Number of HBA", null);
             return;
         }
         List<XmlNode> hbas = Vals.items(list);

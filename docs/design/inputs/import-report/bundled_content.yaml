@@ -5,6 +5,7 @@ bundled_content:
   supermetrics:
   - supermetrics/cpu-usable-capacity-utilization.yaml
   - supermetrics/number-of-vm.yaml
+  - supermetrics/vsphere-clusters-not-green.yaml  # added by hand after the conversion
   views:
   - views/esxi-host-details-vcommunity.yaml
   - views/esxi-host-hardware-vcommunity.yaml

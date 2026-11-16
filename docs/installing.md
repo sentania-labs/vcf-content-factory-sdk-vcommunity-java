@@ -158,7 +158,7 @@ rest are under Advanced Settings.
 | Cluster Check Time (UTC) | `periodic_cluster_check_time` | No | 00:00 | Time of day, `HH:MM` UTC, at which a window ends. |
 | Cluster Check Worst Percent | `cluster_check_worst_percent` | No | 5 | 0 to 50: the share of a window's worst samples set aside. |
 | Monster VM CPU (% of host cores) | `monster_vm_cpu_percent_of_cores` | No | 50 | 1 to 100. |
-| Monster VM Memory (% of host DRAM) | `monster_vm_memory_percent_of_dram` | No | 40 | 1 to 100. |
+| Monster VM Memory (% of host DRAM) | `monster_vm_memory_percent_of_dram` | No | 40 | 1 to 100. On a host with memory tiering the percentage is of DRAM plus the NVMe tier (DV-109). |
 | Monster VM Memory Minimum (GB) | `monster_vm_memory_min_gb` | No | 256 | 1 or more. |
 | Windows Service Configuration File | `win_service_config_file` | No | `windows_service_list` | Check-list file naming the Windows services to check; read only when service monitoring is Enabled. |
 | Windows Event Log Configuration File | `win_event_config_file` | No | `windows_event_list` | Event log list for the guests; read only when event monitoring is Enabled. |
@@ -258,7 +258,7 @@ holds:
 | Views | 170 | Carried over from the original pack. 101 of them began as edited copies of VCF Operations' own views; they carry new descriptions (nine also have new titles, below) and are shipped under ids minted for this pak (see "Moving from the Python pack"). |
 | Dashboards | 52 | The original pack's, including the "Report:" and "Object Summary Page" dashboards. |
 | Reports | 16 | The "VOA" report templates (capacity, configuration, inventory, performance, executive summary and the CSV export reports). Below 9.0.2 the five summary reports ship without their cover page text color (below). |
-| Super metrics | 2 | See "Super metrics" below. |
+| Super metrics | 3 | See "Super metrics" below. |
 | Symptom definitions | 10 | On ESXi hosts, virtual machines and the vCenter (VMwareAdapter Instance) objects. |
 | Alert definitions | 4 | ESXi Host NIC Disconnected, ESXi Host License Expiring, Windows Service Down and vCommunity Collection Warnings. One recommendation ships with the last. |
 | Check-list files | 6 | See "Check-list files" below. |
@@ -297,11 +297,17 @@ folder). In the original pack they are plain dashboards, and so they are here: t
 object kinds. Binding one to a Summary tab is a step of its own (the original's
 `docs/configuration-guide/summary-dashboards.md`); this pak does not do it.
 
-**ESXi Host License Expiring covers one license name.** As in the original pack, the
-alert's symptoms read `vCommunity|Licensing:vSphere 8 Enterprise Plus for VCF|Remaining Days`,
-the key of one fixed license name. The alert does not fire for a host holding any other license
-(for example "VMware Cloud Foundation (cores)" or "Evaluation Mode"). It is reproduced for the match
-with the original and is a candidate to fix (design 5.8).
+**ESXi Host License Expiring covers every license.** The alert's symptoms read the generic key
+`vCommunity|Licensing|Remaining Days` as an instanced key, so the alert covers each license a host holds that has an
+expiration date (a perpetual license publishes no Remaining Days and never raises it). When a host holds several dated
+licenses, the alert's severity is the band of the license nearest to expiring. This departs from the original pack,
+whose symptoms named one fixed license (design 5.8, Q17).
+
+**Upgrading from an earlier build: some values keep their last stored value.** A key that this build no longer sends
+is not deleted in VCF Operations (a pushed key cannot be deleted), so it keeps what it had. After upgrading to the build
+that carries DV-111, every cluster that has DRS off keeps the DRS Score of 0 it had, every host whose adapter list is
+not returned keeps its "Number of HBA" of 0, and a cluster that turns DRS off later keeps its last real score. They
+stop being updated; the old value stays until it ages out of a widget's time window or you clear it.
 
 **Two dashboards without Section rows.** "Overall Daily Check" (6 Section rows)
 and "vSphere Cluster Capacity 2.0" (2) use the Section widget, which VCF
@@ -332,14 +338,17 @@ entries. The note exists because `|` and `:` mean something in a VCF Operations 
 written once per item for the life of the adapter instance. If the key is not wanted,
 remove the item from your copy of the file.
 
-**Super metrics.** "CPU Usable Capacity Utilization" (vSphere clusters) and
-"Number of VM" (distributed port groups and distributed switches) are on objects
+**Super metrics.** "CPU Usable Capacity Utilization" (vSphere clusters),
+"Number of VM" (distributed port groups and distributed switches) and "vSphere Clusters
+not Green" (the vSphere World; it counts the clusters whose Cluster Performance Score is
+below 75, and does not count a cluster that has no score this cycle) are on objects
 of the vCenter adapter. A super metric computes only for an object whose
-policy has it enabled: turn both on in whichever policy governs those objects,
-or they show no values. They ship **not enabled** in the default policy, as in the
-original pack (measured on all three lab instances). The alert "vCommunity Collection
+policy has it enabled: turn all three on in whichever policy governs those objects,
+or they show no values. The first two ship **not enabled** in the default policy, as in the
+original pack (measured on all three lab instances); "vSphere Clusters not Green" is
+expected to behave the same (not measured). The alert "vCommunity Collection
 Warnings" also ships not enabled in the default policy, as in the original; enable it
-in the policy that governs the vCenter adapter's objects. The two stay super metrics,
+in the policy that governs the vCenter adapter's objects. The three stay super metrics,
 not computed metrics of this pak (a percentile has no form in a computed metric, and
 they are the original pack's own content).
 
@@ -361,6 +370,11 @@ and `windows_event_list` (each with `.xml`).
 As shipped, every entry in every file is commented out, so nothing is collected
 until you list something. Each file explains its own format in its header and
 gives examples, one per line.
+
+Some content depends on a list: the five package views ("nenic VIB Vendor Distribution", "nenic VIB
+Version Distribution", "nfnic VIB Vendor Distribution", "nfnic VIB Version Distribution" and "VIB Info")
+show no data until the packages they chart (`nenic`, `nfnic` and `nsx-host`) are named in your copy of
+`esxi_packages`.
 
 The list files (all but the event list) hold a comma separated list. Items are
 separated by commas, **not** by line breaks: two items on two lines with no comma

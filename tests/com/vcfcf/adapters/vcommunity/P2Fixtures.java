@@ -97,6 +97,8 @@ final class P2Fixtures {
     /** DRS on, but its proactive configuration is missing (the original raises and sends none of the four). */
     static Obj clusterNoProactive(String moid, String name) {
         Obj c = new Obj("ClusterComputeResource", moid).name(name);
+        // a score of 0 that vCenter really gave, with DRS on
+        c.put("summary", SoapFx.obj("ClusterComputeResourceSummary", e("drsScore", "0")));
         c.put("configuration.drsConfig", SoapFx.obj("ClusterDrsConfigInfo", e("enabled", "true")
                 + e("scaleDescendantsShares", "disabled")));
         c.put("configurationEx", SoapFx.obj("ClusterConfigInfoEx", el("drsConfig", e("enabled", "true"))));
