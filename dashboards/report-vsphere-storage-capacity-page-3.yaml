@@ -1,0 +1,104 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: 5045cc4e-53c8-5e03-94b2-1733e4f86172
+name: 'Report: vSphere Storage Capacity (page 3)'
+description: "Part of a report covering capacity. Designed to be run on a weekly basis, and be compared\
+  \ with previous week result. \nWorking with a VCF expert, tailor the dashboard and widget to the specific\
+  \ requirements.\nThe Provisioned + Overhead column sums the allocated VM virtual disk capacity + non\
+  \ virtual disk (snapshot, logs)"
+name_path: VCF Optimization Assessment
+shared: false
+hidden: false
+disabled: true
+column_proportion: 1-1
+widgets:
+- id: w0
+  type: ParetoAnalysis
+  title: Top-20 Datastores by Lowest Capacity Remaining
+  coords:
+    w: 6
+    x: 1
+    h: 16
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: Datastore
+  metric_key: OnlineCapacityAnalytics|capacityRemainingPercentage
+  metric_name: Capacity Analytics Generated|Capacity Remaining Percentage (%)
+  mode: all
+  top_n: 15
+  top_option: metricsLowestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Capacity Remaining
+  refresh_content: false
+  max_value: 100
+  metric_unit:
+    id: percent
+    name: '%'
+  yellow_bound: 45
+  orange_bound: 30
+  red_bound: 15
+  additional_columns:
+  - metric_key: summary|diskCapacity
+    metric_name: Summary|Disk Capacity (GB)
+    label: Capacity
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  - metric_key: summary|total_number_vms
+    metric_name: Summary|Total Number of VMs
+    label: Total VMs
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  - metric_key: diskspace|total_provisioned_with_overhead
+    metric_name: Disk Space|Total Provisioned Disk Space With Overhead (GB)
+    label: Provisioned + Overhead
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  ui:
+    height: 894
+- id: w1
+  type: ParetoAnalysis
+  title: Top-20 Datastores by Lowest Capacity Remaining
+  coords:
+    w: 6
+    x: 7
+    h: 16
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: Datastore
+  metric_key: OnlineCapacityAnalytics|capacityRemainingPercentage
+  metric_name: Capacity Analytics Generated|Capacity Remaining Percentage (%)
+  mode: all
+  top_n: 20
+  top_option: metricsLowestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Capacity Remaining
+  refresh_content: false
+  max_value: 100
+  metric_unit:
+    id: percent
+    name: '%'
+  yellow_bound: 45
+  orange_bound: 30
+  red_bound: 15
+  additional_columns:
+  - metric_key: summary|diskCapacity
+    metric_name: Summary|Disk Capacity (GB)
+    label: Capacity
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  - metric_key: summary|total_number_vms
+    metric_name: Summary|Total Number of VMs
+    label: Total VMs
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  - metric_key: diskspace|total_provisioned_with_overhead
+    metric_name: Disk Space|Total Provisioned Disk Space With Overhead (GB)
+    label: Provisioned + Overhead
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  ui:
+    height: 893
+interactions: []

@@ -1,0 +1,37 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: 7dd83f97-44e0-5306-a074-16ee512261d5
+name: VM with Hot Add Memory
+description: Bar chart counting virtual machines whose memory hot add setting is anything other than false.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+  filter:
+  - - filter_type: properties
+      metric_key: config|extraConfig|mem_hotadd
+      condition: NOT_EQUALS
+      value: 'false'
+time_window:
+  unit: MINUTES
+  count: 1
+columns:
+- attribute: config|extraConfig|mem_hotadd
+  display_name: No of VM
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  omit:
+  - roll_up_type
+  - transformation
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  is_sum: false
+distribution_color: 37B3EB
+omit:
+- include_resource_creation_time

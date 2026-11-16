@@ -1,0 +1,48 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: afe7c84e-d3aa-5f6e-993b-a9abe747e449
+name: VM Distribution by Reclaimable Disk
+description: Bar chart of powered-off virtual machines grouped by disk space used, in terabyte buckets
+  from under 1 TB to over 20 TB.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+  filter:
+  - - filter_type: metrics
+      metric_key: summary|poweredOff
+      condition: EQUALS
+      value: 1
+time_window:
+  unit: MINUTES
+  count: 1
+columns:
+- attribute: diskspace|used
+  display_name: Disk Space Used
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+buckets:
+  dynamic: false
+  ranges:
+  - start: 0
+    end: 1
+  - start: 1
+    end: 2
+  - start: 2
+    end: 10
+  - start: 10
+    end: 20
+  - start: 20
+    end: 999
+  min_value: 0
+  max_value: 0
+  is_sum: false
+distribution_color: 4DABD5
+omit:
+- include_resource_creation_time

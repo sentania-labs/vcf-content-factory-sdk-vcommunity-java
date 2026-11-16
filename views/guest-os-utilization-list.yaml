@@ -1,0 +1,134 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 554d5f97-d139-56b7-be46-df94369761fd
+name: Guest OS Utilization List
+description: "While the object is VM, what is being sized is the Guest OS inside VM. The external footprint\
+  \ is not relevant in this context. \n\nList of powered on VMs and their capacity utilization. For memory,\
+  \ Guest OS metrics are used. Notice the metrics use different percentile, that is appropriate for the\
+  \ metric.\n\nCreation Date is added as new VM tends to be lowly utilized. \n"
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  filter:
+  - - filter_type: metrics
+      metric_key: sys|poweredOn
+      condition: EQUALS
+      value: 1
+      transform: CURRENT
+      business_hours: false
+time_window:
+  unit: WEEKS
+  count: 1
+columns:
+- attribute: config|hardware|numCpu
+  display_name: vCPU
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+  yellow_bound: 8
+  orange_bound: 16
+  red_bound: 24
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: cpu|net_run
+  display_name: Run at 99P
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 99
+  sort: desc
+  yellow_bound: 75
+  orange_bound: 85
+  red_bound: 95
+  ascending_range: false
+- attribute: cpu|net_run
+  display_name: Run at 95P
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+  yellow_bound: 70
+  orange_bound: 80
+  red_bound: 90
+  ascending_range: false
+- attribute: cpu|usage_average
+  display_name: CPU Cycle
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+- attribute: guest|cpu_queue
+  display_name: CPU Q
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+  yellow_bound: 3
+  orange_bound: 9
+  red_bound: 27
+  ascending_range: false
+- attribute: cpu|vcpu_usage_disparity
+  display_name: Usage Disparity
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: AVG
+  yellow_bound: 15
+  orange_bound: 30
+  red_bound: 60
+  ascending_range: false
+- attribute: config|hardware|memoryKB
+  display_name: Memory
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 64
+  orange_bound: 128
+  red_bound: 196
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: guest|mem.free_latest
+  display_name: Free Memory
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 5
+  yellow_bound: 0.5
+  orange_bound: 0.25
+  red_bound: 0.125
+  ascending_range: true
+- attribute: config|createDate
+  display_name: Creation Date
+  unit: week
+  is_property: true
+  roll_up_count: 0
+  transformation: TIMESTAMP
+  show_relative_timestamp: true
+  omit:
+  - roll_up_type
+  - add_timestamp_as_column
+summary:
+- display_name: Average
+  aggregation: AVG
+  columns:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+page_size: 25
+omit:
+- include_resource_creation_time

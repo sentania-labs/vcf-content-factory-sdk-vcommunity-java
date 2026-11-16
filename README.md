@@ -1,76 +1,110 @@
-# VCF Content Factory — SDK adapter template
+# VCF Content Factory vCommunity
 
-A minimal, fully-wired skeleton for a **Tier 2 Java SDK management-pack adapter**
-for VCF Operations, built and released independently of the VCF Content Factory.
+A Java port of the vCommunity management pack for VCF Operations. The pak reads
+a vCenter over vim25 and pushes the `vCommunity|` keys onto the vCenter
+adapter's own objects through the VCF Operations Suite API, and adds three
+object kinds of its own (content libraries, library items and VM templates).
+It is a clean reimplementation: the key tree, the account fields and the
+check-list files follow the original pack, the code is new. The content
+(views, dashboards and the rest) is converted from the original pack's content files; the whole pak, code and content, is MIT licensed (`NOTICE` has the provenance).
 
-This template tracks the current framework v2 idioms used by the production
-adapters (`compliance`, `unifi`). The example adapter discovers one
-`ExampleResource` kind under a `World` traversal anchor and pushes one metric and
-one property per resource — replace the resource kinds, endpoints, and metric
-keys with your target system, keeping the SHAPE.
+Adapter kind `vcfcf_vcommunity`; distinct from the original Python pack's kind,
+so the two are never an upgrade of each other. Minimum product version: VCF Operations 8.18.x (tested on 8.18.7, 9.0.2 and 9.1.1).
+
+## Status
+
+Phase 6 of the port (content). Phase 1 gave the account (the 19 fields and
+credential of the original pack), the three vCenter TLS modes, the vim25
+session, Test Connection and the cycle with its Collection Health keys and self
+metrics. Phase 2 added the property keys of clusters, hosts, virtual machines,
+datastores and the vCenter, phase 3 the three own kinds, phase 4 the derived
+metrics: the cluster, host and VM scores, availability, network speed, shares,
+port groups, resource pools, the periodic cluster check, the vSphere World
+roll-ups and the Business Application figures, phase 5 the guest checks (off by default)
+and Windows events. Phase 6 ships the content: 170 views, 52 dashboards, 16 reports,
+2 super metrics, 10 symptoms, 4 alerts with 1 recommendation, and the six check-list files
+(`docs/installing.md`, "Content"). `docs/p2-key-coverage.tsv`,
+`docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv` and `docs/p5-key-coverage.tsv` list every key of the key
+map with whether this build collects it and the test that proves it.
+The design is in `docs/design/` (start with `vcommunity-java-port-design.md`).
+
+The content is converted from the original pack's content files (see `NOTICE`); the
+conversion report and the list of text carried as written are in `docs/design/inputs/`.
+
+## Moving from the Python pack
+
+**Uninstall the Python pack first (Onur's 1.x "VCF Operations vCommunity" or Ewan's 2.x
+"vCommunity" adapter), then install this one.** Running both side by side is unsupported: both
+write the same `vCommunity|...` keys onto the same vSphere objects, and both ship content with
+the same names. This pak's content is under ids of its own (namespace `vcfcf_vcommunity`), so
+it does not overwrite the Python pack's content, and uninstalling one does not delete the other's.
+
+- Carries over: the metric and property keys are the same names on the same objects, so their
+  history continues (not measured across an uninstall and install on an instance).
+- Replaced: dashboards, views, reports, super metrics, symptoms, alerts and the recommendation
+  are this pak's copies under new ids and the same names. Anything you cloned or customized from
+  the old content is yours to keep or re-point; the alert history of the old definitions stays with them.
+- Check-list files: the six default-named files are replaced on every pak upgrade, and
+  uninstalling the Python pack removes its copies of the same names (inferred from the platform's
+  code, not measured). Save your edited check lists first and re-apply them in copies under other names.
+- Built-in views: some Python pack versions ship views under built-in view ids, and uninstalling
+  them deletes those built-in views (measured). Have a clean export of the built-in views of the same
+  product version at hand and import it after the uninstall.
+
+**Supported path: uninstall, then install fresh.** This is the only supported way onto this pak
+from the Python pack, and from any earlier dev build of this pak that used different content ids
+(builds up to 0.0.0.16). An in-place upgrade across an id change is not supported. Normal upgrades
+between releases that keep their ids are in-place as usual.
+
+The full guide is in `docs/installing.md`, "Moving from the Python pack".
 
 ## Documentation
 
-Every SDK pak ships a standard docset under [`docs/`](docs/README.md):
-a generated inventory-tree diagram (kinds + identifying keys), plus
-hand-curated `overview.md` and `installing.md` prose pages. The two prose
-pages are scaffolded once by `docs-gen` and then curated — in this template
-they carry placeholder guidance telling you what to write when you
-instantiate a pak. Regenerate the derived files (diagram, inventory tree,
-`docs/README.md`) on every build; never hand-edit them.
+`docs/README.md` indexes the docset: `overview.md`, `installing.md` (the account
+fields, TLS modes, Test Connection) and the generated inventory tree.
+`REFERENCE.md` lists the account, the self metrics and the own kinds' keys.
+`NOTICE` credits the original authors (see Credits below).
 
 ## What's here
 
 ```
-adapter.yaml                              # name, version, build_number, adapter_kind, entry_class
-describe.xml                              # adapter descriptor (ResourceKinds, metrics, credentials)
-resources/resources.properties            # nameKey -> display strings
-icons/icons.yaml                          # ResourceKind -> icon mapping (optional)
-src/com/vcfcf/adapters/example/           # adapter Java source
-  ExampleAdapter.java                     #   the adapter (heavily commented — read this first)
-  ExampleApiClient.java                   #   thin REST client
-  ExampleConfig.java                      #   typed config POJO (validated host/port, redacted toString)
-  ExampleFailures.java                    #   unreachable (DOWN) vs failed (ERROR), cause-chain walk
-  ExampleValues.java                      #   numeric-or-absent check behind metricIfPresent
-  CycleCache.java                         #   one snapshot per collection cycle
-  ItemIndex.java                          #   id index; throws when a non-empty list has no ids
-  BoundedBody.java                        #   response body handler with an 8 MB cap
-tests/com/vcfcf/adapters/example/         # plain-main tests for the helpers above (no SDK jar)
-.github/workflows/build-pak-on-tag.yml    # CI: tag v* -> build .pak -> attach to Release
-.github/workflows/pak-tests.yml           # reusable CI: JDK 17 + 25 test matrix, no secrets, no SDK jar
-.github/workflows/tests.yml               # CI: every push and PR -> calls pak-tests.yml (@main in paks)
-ci/run_java_tests.sh                      # runs every tests/**/*Test.java, no SDK jar needed
-CHANGELOG.md                              # one line per build
+adapter.yaml                         # pak metadata (kind, entry class, naming, stitch targets)
+describe.xml                         # account fields, credential, own kinds, self metrics
+resources/resources.properties       # nameKey -> display strings
+icons/icons.yaml                     # kind -> icon map
+src/com/vcfcf/adapters/vcommunity/   # adapter source
+  VCommunityAdapter.java             #   lifecycle, Test Connection, discovery (SDK side)
+  OpsPort.java                       #   Suite API port (SDK side)
+  VCommunityConfig.java              #   the 19 fields, defaults, fallbacks (SDK-free)
+  CycleEngine.java                   #   one cycle: session, probe, lists, binding, properties, health
+  ConnectionTester.java              #   Test Connection logic
+  vim/                               #   raw SOAP session, paged streamed reads, no JAX-WS and no vim25.jar
+  coll/                              #   what each object kind's keys read; the property phase
+  text/                              #   Python text rules, license key mask
+  tls/                               #   trust on first use, platform trust, pin; probe
+  ops/                               #   resource identity, push set, push on change
+  list/                              #   check-list files: parse, validate, store
+  health/                            #   failure accounting, warning count, health keys
+  json/                              #   small JSON reader and writer
+tests/com/vcfcf/adapters/vcommunity/ # plain-main tests, no SDK jar needed
+views/ dashboards/ reports/ supermetrics/ symptoms/ alerts/ recommendations/  # the content, as factory YAML
+content/files/solutionconfig/        # the six check-list files, packed as they are
+docs/design/                         # the approved design, the collection map, key tables
+.github/workflows/                   # tests on push; release build on a v* tag
+ci/run_java_tests.sh                 # runs every tests/**/*Test.java
 ```
 
-There is **no `lib/` of bundled jars** (C2 pak shape — see below).
+Everything outside `VCommunityAdapter` and `OpsPort` has no import from the VCF
+Operations SDK or the framework jar, so the tests run on a bare JDK:
 
-## Instantiating a new pak
+```sh
+ci/run_java_tests.sh
+```
 
-1. **Create the repo from this template.** Click **Use this template** to create
-   `sentania-labs/vcf-content-factory-sdk-<name>`.
-2. **Register it in the factory.** Add one line to the factory's
-   `context/managed_paks.md` registry so `scripts/bootstrap_managed_paks.sh`
-   clones it into the gitignored `content/sdk-adapters/<name>/` working tree.
-3. **Rename the skeleton.** Pick your `adapter_kind` (snake_case) and apply it
-   consistently across:
-   - `adapter.yaml` — `adapter_kind`, `entry_class`, `name`, `description`;
-   - `describe.xml` — the `AdapterKind` key, the type-7 instance `ResourceKind`
-     key, credential/resource kinds, identifiers, groups, attributes;
-   - `resources/resources.properties` — the display strings;
-   - `icons/icons.yaml` — the resource-kind icon map;
-   - the Java package/class names and the `ADAPTER_KIND` constant.
-4. **Build out collection.** Replace the example HTTP calls and per-resource
-   collect logic. Keep the load-bearing idioms documented at the top of
-   `ExampleAdapter.java` — especially **collect-path discovery** (mandatory on
-   VCF Ops 9.0.2, which never calls `onDiscover()`), `componentLogger(Class)`,
-   cooperative cancellation, and loud-failure (no sentinel for an unreadable
-   value).
+The tests make a throwaway TLS certificate with the JDK's `keytool` at run time;
+no key or certificate is stored in the repository.
 
-**Tests on every push and PR.** `sdk-validation.yml` verifies the release workflow’s pinned buildkit, runs `validate-sdk` without the private SDK jar, and tests the defect gate and real pak-compare exit statuses. Full framework/adapter compilation, deploy-key access, checksum handover, provenance and release upload are proved only by a tag build. The defect registry is pinned by `DEFECT_REGISTRY_COMMIT` in the release workflow; review and update that pin before releasing when the factory registry changes.
-
-A new pak inherits the test workflow by keeping `.github/workflows/tests.yml` as created: it calls this template's `pak-tests.yml@main`, which runs `ci/run_java_tests.sh` (every `tests/**/*Test.java`) on JDK 17 and 25 (pass `test-script:`, `pre-check:` or `java-versions:` under `with:` to customize).
-A pak instantiated from the template also carries a copy of `pak-tests.yml` that it never runs (only the template calls its local copy); the pak may delete it.
+There is **no `lib/` of bundled jars** (see "C2 pak shape" below).
 
 ## Local dev build (preview)
 
@@ -84,18 +118,18 @@ supply it from a 9.0.2 appliance (JDK 17 or newer is needed to read it):
 #   (check its sha256 and rename it as described in the build instructions below)
 
 # Either pass it explicitly:
-python3 -m vcfcf_managementpacks build-sdk content/sdk-adapters/<name> \
+python3 -m vcfcf_managementpacks build-sdk content/sdk-adapters/vcommunity-java \
   --sdk-jar /path/to/vrops-adapters-sdk-9.0.2.0.25137845.jar -o dist
 
 # ...or set it once in the environment:
 export VCFCF_SDK_JAR=/path/to/vrops-adapters-sdk-9.0.2.0.25137845.jar
-python3 -m vcfcf_managementpacks build-sdk content/sdk-adapters/<name> -o dist
+python3 -m vcfcf_managementpacks build-sdk content/sdk-adapters/vcommunity-java -o dist
 ```
 
 Validate first (the cheap loop — exhaust this before building a pak):
 
 ```sh
-python3 -m vcfcf_managementpacks validate-sdk content/sdk-adapters/<name>
+python3 -m vcfcf_managementpacks validate-sdk content/sdk-adapters/vcommunity-java
 ```
 
 The framework jar (`vcfcf-adapter-base.jar`) is provided by the builder; you do
@@ -246,7 +280,7 @@ PRIVATE half as an Environment secret named `SDK_RUNTIME_SSH_KEY` in
 `sdk-release` **before** pushing a release tag. See the workflow header for the
 runner/JDK/buildkit knobs. Configure required reviewers on `sdk-release` and
 protect `v*` tags with repository rulesets before releasing. Those GitHub
-settings are managed separately from this template.
+settings are managed separately from this repository.
 
 ## C2 pak shape — no bundled jars
 
@@ -260,12 +294,29 @@ This pak **never** carries `vrops-adapters-sdk` or any Broadcom jar:
 
 `.gitignore` ignores `lib/*.jar` so a stray jar can't be committed.
 
-## Bundled content (optional)
+## Bundled content
 
-For an adapter that ships dashboards/views, add a `bundled_content:` block to
-`adapter.yaml` and co-locate the YAML **in this repo** under `views/` and
-`dashboards/` (paths resolve relative to `adapter.yaml`).
+`adapter.yaml` lists the content in `bundled_content:`; the YAML lives in this repo under `views/`,
+`dashboards/`, `reports/`, `supermetrics/`, `symptoms/`, `alerts/` and `recommendations/` (paths resolve
+relative to `adapter.yaml`). The six check-list files are under `content/files/solutionconfig/` and are
+packed as they are. `content_foreign_adapter_kinds: [VMWARE]` lets the symptoms and alerts, which sit on
+vCenter adapter objects, build. The two Section dashboards carry `section_fallback: omit`: the build
+prints `SECTIONS OMITTED` for them while the floor is below VCF Operations 9.1.1.
+
+## Credits
+
+Portions of this pak are derived from the vCommunity Management Pack for VCF Operations
+by its authors, included here under the MIT License with their permission. `NOTICE` has
+the full acknowledgments and the upstream Required Notice line.
+
+- Onur Yuzseven: the original vCommunity Management Pack and its adapter
+  ([VCF-Operations-vCommunity](https://github.com/vmbro/VCF-Operations-vCommunity)).
+- Iwan "e1" Rahabok: the dashboards, reports, super metrics and the pack's design, and the
+  continuation of the pack ([VCF-vCommunity-Adapter](https://github.com/e1-rahabok/VCF-vCommunity-Adapter)).
+- Brock Peterson: contributions to the pack, and the blog series that explains it and its use cases.
+- Mark Arbogast and Robert Mesropyan: credited by the upstream project as assisting Onur Yuzseven.
+- Other contributors in the upstream history: Dave Kaber, Alan Renouf and the contributor recorded as atm8119.
 
 ## License
 
-MIT, see `LICENSE`. Repos instantiated from this template inherit the file; keep or replace it as the pak's own license.
+MIT, Copyright (c) 2026 Scott Bowe, for the whole pak, the adapter code and all bundled content, see `LICENSE`. The bundled content was converted from the content files of the upstream vCommunity pack 0.8.1, which is published under its own license (PolyForm Noncommercial 1.0.0); it is released here under MIT by decision of this project's owner, who holds the record of the upstream authors' agreement (`NOTICE`, which carries the "portions derived from" statement and the acknowledgments; the pak shows it as its license text, `EULA.txt`).

@@ -1,0 +1,33 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 0cf5ba5f-9382-5a6d-9803-b1590b4982db
+name: VM CPU Allocation Trend
+description: Trend line of VM growth. It shows both the powered on and powered off, to see the relative
+  movement over time
+data_type: trend
+presentation: line-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+time_window:
+  unit: MONTHS
+  count: 1
+transformations:
+- NONE
+columns:
+- attribute: cpu|vcpus_allocated_on_all_vms
+  display_name: Total Allocation
+  roll_up_type: NONE
+  roll_up_count: 0
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: cpu|vcpus_allocated_on_all_powered_on_vms
+  display_name: Powered-on VMs
+  roll_up_type: NONE
+  roll_up_count: 0
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+page_size: 25
+omit:
+- metadata

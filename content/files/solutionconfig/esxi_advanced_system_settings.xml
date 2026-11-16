@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<advancedSettings>
+<!--
+  Advanced system settings of ESXi hosts to publish (VCF Content Factory vCommunity).
+
+  Name the ESXi advanced options whose value you want on every ESXi host. The
+  adapter publishes each one as a property of the host, under the option name
+  exactly as ESXi spells it (letters and case matter).
+
+  Format
+    - Separate entries with commas. A line break does NOT separate entries:
+      two names on two lines with no comma between them are read as one
+      name that contains a line break, which is skipped and reported.
+    - An XML comment, like this one, is ignored. To switch an entry on, move
+      it out of the comment, and keep the comma after it.
+    - Do not write two hyphens in a row inside a comment.
+
+  Do not edit this shipped file: every upgrade of the pack replaces it and
+  your edits are lost (measured on VCF Operations 9.0.2 and 9.1.1, even without force
+  content update). Back the files up before an upgrade. Make a copy under another name in the VCF Operations configuration-file store, and
+  enter that name (no .xml) in the account's ESXi Advanced System Settings
+  Config File field. As shipped, every entry is commented out, so nothing is collected.
+
+  Examples, one per line:
+    Net.TcpipHeapSize,
+    Net.TcpipHeapMax,
+    Mem.ShareForceSalting,
+    UserVars.ESXiShellTimeOut,
+    UserVars.SuppressShellWarning,
+    Syslog.global.logHost,
+    NFS.MaxVolumes,
+-->
+</advancedSettings>

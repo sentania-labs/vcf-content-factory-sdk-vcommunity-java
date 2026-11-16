@@ -1,0 +1,37 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: 575db3b2-5a44-541b-8f5b-b59e60696ae4
+name: vSphere Cluster Admission Control Policy
+description: Donut chart of clusters with HA admission control enabled, grouped by the admission control
+  policy in use.
+data_type: distribution
+presentation: donut-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  types:
+  - descendant
+  filter:
+  - - filter_type: properties
+      metric_key: configuration|dasConfig|admissionControlEnabled
+      condition: NOT_EQUALS
+      value: 'false'
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: configuration|dasConfig|admissionControlPolicyId
+  display_name: .
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+  - add_timestamp_as_column
+  - show_relative_timestamp
+page_size: 25
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  is_sum: false
+omit:
+- include_resource_creation_time

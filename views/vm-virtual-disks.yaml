@@ -1,0 +1,92 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: 3da37b9d-0b30-5824-bccf-22b2b6c74dcd
+name: VM Virtual Disks
+description: 'Per-VM table of virtual disk details: label, size in GB, datastore, raw device mapping flag,
+  IOPS limit, provisioning format, SCSI controller type and bus sharing. Columns are bound to the first
+  disk instance.'
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- instanced_group:
+    name: GROUP_virtualDisk
+    show_instance_name: true
+    keep_instance_summary: false
+  display_name: Virtual Disk
+- attribute: virtualDisk:scsi0:0|label
+  display_name: Label
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: virtualDisk:scsi0:0|configuredGB
+  display_name: Disk Size
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 250
+  orange_bound: 500
+  red_bound: 1000
+  ascending_range: false
+  omit:
+  - roll_up_type
+- attribute: virtualDisk:scsi0:0|datastore
+  display_name: Datastore
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: virtualDisk:scsi0:0|isRDM
+  display_name: RDM?
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  red_bound: 'true'
+  ascending_range: true
+  omit:
+  - roll_up_type
+- attribute: virtualDisk:scsi0:0|iopsLimit
+  display_name: IOPS Limit
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: virtualDisk:scsi0:0|provisioning_type
+  display_name: Format
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: virtualDisk:scsi0:0|scsiControllerType
+  display_name: SCSI Controller
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: virtualDisk:scsi0:0|scsiBusSharing
+  display_name: Bus Sharing
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+hide_object_name: true
+omit:
+- include_resource_creation_time

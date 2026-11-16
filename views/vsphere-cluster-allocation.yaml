@@ -1,0 +1,36 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: 5977e69d-3b25-5be0-a1ad-2c6487b0d017
+name: vSphere Cluster Allocation
+description: Trend line of cluster allocation. This complements the demand model as demand model cannot
+  account for newly provisioned VMs that are not yet active. It's used in Capacity Management context,
+  hence it's showing 3 months time horizon and the value is hourly averaged.
+data_type: trend
+presentation: line-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+time_window:
+  unit: MONTHS
+  count: 3
+transformations:
+- NONE
+columns:
+- attribute: cpu|vcpus_to_cores_allocation_ratio
+  display_name: CPU
+  roll_up_type: AVG
+  roll_up_unit: HOURS
+  roll_up_count: 1
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: mem|virtual_to_physical_memory_allocation_ratio
+  display_name: Memory
+  roll_up_type: AVG
+  roll_up_unit: HOURS
+  roll_up_count: 1
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+page_size: 25
+omit:
+- metadata

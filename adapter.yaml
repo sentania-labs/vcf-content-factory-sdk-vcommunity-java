@@ -1,29 +1,396 @@
-# adapter.yaml — pak metadata for the example/template adapter.
+# adapter.yaml: pak metadata for VCF Content Factory vCommunity.
 #
-# Field conventions match the production adapters (compliance, unifi):
-#   adapter_kind  snake_case kind; MUST equal the AdapterKind key in describe.xml
-#                 and ADAPTER_KIND in your *Adapter.java.
-#   entry_class   fully-qualified adapter class.
-#   name          display name; prose prefix "VCF Content Factory" (no brackets).
-#   version       semantic version of the pak.
-#   build_number  bump on every build; CHANGELOG.md gets a matching one-liner.
-#   tier          2 for Java SDK adapters.
-#   released      false while authoring; the official release is the .pak CI
-#                 builds on a v* git tag.
+#   adapter_kind  MUST equal the AdapterKind key in describe.xml and
+#                 ADAPTER_KIND in VCommunityAdapter.java.
+#   build_number  bump on every build; CHANGELOG.md gets a matching line.
+#   released      false while authoring; the official release is the .pak
+#                 CI builds on a v* git tag. Dev builds stamp 0.0.0.<build>.
 #
-# For a pak that bundles dashboards/views, add a bundled_content: block and
-# co-locate the YAML in this repo under views/ and dashboards/ (paths resolve
-# relative to this file).
-adapter_kind: example_adapter
-entry_class: com.vcfcf.adapters.example.ExampleAdapter
-name: VCF Content Factory Example Adapter
+# Design: docs/design/vcommunity-java-port-design.md (identity in section 1).
+adapter_kind: vcfcf_vcommunity
+entry_class: com.vcfcf.adapters.vcommunity.VCommunityAdapter
+name: VCF Content Factory vCommunity
 description: >
-  Minimal framework-v2 Tier 2 SDK adapter skeleton. Discovers one
-  ExampleResource kind under a World traversal anchor via collect-path
-  discovery, and pushes one metric and one property per resource. Copy this
-  repo and replace the example resource kinds, endpoints, and metric keys with
-  your target system.
-version: 0.1.0
-build_number: 3
+  Java port of the vCommunity management pack. Reads a vCenter over vim25 and
+  pushes the vCommunity| keys onto the vCenter adapter's own objects through
+  the VCF Operations Suite API, and adds three objects of its own (content
+  libraries, library items and VM templates). Port of vCommunity by Onur
+  Yuzseven (github.com/vmbro/VCF-Operations-vCommunity) as continued by
+  e1-rahabok (github.com/e1-rahabok/VCF-vCommunity-Adapter) 0.8.1.
+  This build collects the property keys of clusters, hosts, virtual machines,
+  datastores and the vCenter, delivers the content libraries, their items and
+  the VM templates as objects of its own, and computes the derived metrics
+  (the cluster, host and VM scores, availability, network speed, the periodic
+  cluster check, the vSphere World and Business Application figures), and,
+  when switched on in the account (both are off by default), asks the Windows
+  guests of the vCenter for their operating system, their services and their
+  event logs and sends the events. The pak also ships the content of the original
+  pack (views, dashboards, reports, super metrics, symptoms, alerts and a
+  recommendation) and the six check-list files.
+version: 1.0.0
+build_number: 20
 tier: 2
 released: false
+
+vendor: "VCF Content Factory"
+# The pak's eula.txt: NOTICE (source, license and terms of the bundled content) followed by the
+# MIT text of LICENSE. Keep it equal to NOTICE + LICENSE when either changes.
+eula_file: EULA.txt
+
+# The pak's content keeps the original pack's names; none carries a prefix.
+content_naming: unprefixed
+# Bundled content (phase P6). The symptoms, alerts and recommendation all sit on
+# VMWARE objects, where the keys are stitched, not objects of this kind; the builder
+# checks only those against this list (the views and dashboards that name VMSP,
+# APPLICATIONDISCOVERY or Container subjects are not checked by it).
+content_foreign_adapter_kinds: [VMWARE]
+
+# The content as converted from the original pack by the factory's offline importer
+# (docs/design/inputs/import-report/): 170 views, 52 dashboards, 16 reports, 2 super
+# metrics, 10 symptoms, 4 alerts, 1 recommendation. The two Section dashboards
+# (overall-daily-check, vsphere-cluster-capacity-2-0) carry section_fallback: omit:
+# below product 9.1.1 they ship without their Section rows.
+bundled_content:
+  supermetrics:
+  - supermetrics/cpu-usable-capacity-utilization.yaml
+  - supermetrics/number-of-vm.yaml
+  views:
+  - views/esxi-host-details-vcommunity.yaml
+  - views/esxi-host-hardware-vcommunity.yaml
+  - views/esxi-host-license-information-vcommunity.yaml
+  - views/esxi-host-maintenance-mode-vcommunity.yaml
+  - views/esxi-host-nic-details.yaml
+  - views/esxi-host-power-state-vcommunity.yaml
+  - views/esxi-host-versions-vcommunity.yaml
+  - views/esxi-packages.yaml
+  - views/report-datastore-for-csv-export.yaml
+  - views/report-distributed-port-groups-for-csv-export.yaml
+  - views/report-distributed-switch-for-csv-export.yaml
+  - views/report-esxi-hosts-for-csv-export.yaml
+  - views/report-namespace-for-csv-export.yaml
+  - views/report-supervisor-cluster-for-csv-export.yaml
+  - views/report-vcenter-for-csv-export.yaml
+  - views/report-virtual-machines-for-csv-export.yaml
+  - views/report-vsphere-clusters-for-csv-export.yaml
+  - views/report-vsphere-data-center-for-csv-export.yaml
+  - views/report-vsphere-pod-for-csv-export.yaml
+  - views/vcf-management-services-component-health-list.yaml
+  - views/vcf-management-services-node-resource-list.yaml
+  - views/vcf-management-services-volume-usage-list.yaml
+  - views/vcf-management-services.yaml
+  - views/nfnic-vib-vendor-distribution.yaml
+  - views/nfnic-vib-version-distribution.yaml
+  - views/nenic-vib-version-distribution.yaml
+  - views/vib-info.yaml
+  - views/nenic-vib-vendor-distribution.yaml
+  - views/vm-cpu-allocation-trend.yaml
+  - views/esxi-distribution-by-versions.yaml
+  - views/vsphere-port-group-configuration.yaml
+  - views/esxi-distribution-by-memory-size.yaml
+  - views/vm-distribution-by-cpu-size.yaml
+  - views/esxi-distribution-by-hardware-model.yaml
+  - views/vsphere-cluster-resource-management.yaml
+  - views/esxi-distribution-by-cpu-socket.yaml
+  - views/vsphere-data-centers-inventory.yaml
+  - views/esxi-distribution-by-storage-path-counts.yaml
+  - views/vm-distribution-by-cpu-to-add.yaml
+  - views/esxi-network-interfaces.yaml
+  - views/esxi-distribution-by-nic-count.yaml
+  - views/esxi-distribution-by-cpu-ghz.yaml
+  - views/vsphere-data-center-network-list.yaml
+  - views/datastores-distribution-by-vm-count.yaml
+  - views/esxi-ntp-running.yaml
+  - views/vm-with-hot-add-cpu.yaml
+  - views/vm-memory-to-reclaim-idle.yaml
+  - views/vm-configured-size-summary.yaml
+  - views/vm-distribution-by-disk-size.yaml
+  - views/vm-with-no-guest-counters.yaml
+  - views/vm-memory-contention-distribution-for-profiling.yaml
+  - views/vsphere-cluster-distribution-by-cpu-reservation.yaml
+  - views/vm-disk-latency-distribution.yaml
+  - views/vsphere-cluster-drs-status.yaml
+  - views/vm-with-hot-remove-cpu.yaml
+  - views/vm-network-top-talkers.yaml
+  - views/vsphere-distributed-switch-inventory.yaml
+  - views/vsphere-cluster-ha-status.yaml
+  - views/local-datastore-with-vm.yaml
+  - views/vsphere-port-group-promiscuous-mode-allowed.yaml
+  - views/vm-distribution-by-reclaimable-memory.yaml
+  - views/esxi-distribution-by-core-counts.yaml
+  - views/vm-distribution-by-memory-reservation.yaml
+  - views/vm-shares-by-rp.yaml
+  - views/guest-os-list-of-services.yaml
+  - views/vsphere-cluster-memory-reservation.yaml
+  - views/vm-distribution-by-snapshots-age.yaml
+  - views/vm-distribution-by-cpu-share.yaml
+  - views/esxi-unavailable.yaml
+  - views/vm-virtual-disks-counts.yaml
+  - views/vsphere-vms-context.yaml
+  - views/vm-distribution-by-reclaimable-disk.yaml
+  - views/vm-distribution-by-memory-share.yaml
+  - views/vm-configuration.yaml
+  - views/vsphere-cluster-drs-automation-status.yaml
+  - views/esxi-on-maintenance-mode.yaml
+  - views/esxi-distribution-by-nic-speed.yaml
+  - views/vm-distribution-by-memory-to-add.yaml
+  - views/datastores-distribution-by-size.yaml
+  - views/vm-distribution-by-reclaimable-cpu.yaml
+  - views/vm-distribution-by-cpu-reservation.yaml
+  - views/vm-memory-allocation-trend.yaml
+  - views/vm-cpu-ready-distribution.yaml
+  - views/esxi-power-management.yaml
+  - views/esxi-high-memory-trend.yaml
+  - views/vm-memory-distribution.yaml
+  - views/guest-os-utilization-list.yaml
+  - views/vm-performance-list.yaml
+  - views/vsphere-cluster-utilization.yaml
+  - views/vm-cpu-size-distribution.yaml
+  - views/vm-memory-contention-distribution.yaml
+  - views/guest-os-root-partition-usage-list.yaml
+  - views/vsphere-vm-99th-percentile-performance-profile.yaml
+  - views/vm-network-card-configuration.yaml
+  - views/vsphere-cluster-allocation.yaml
+  - views/esxi-bios-versions.yaml
+  - views/vsphere-port-group-forged-transmit.yaml
+  - views/vsphere-cluster-configuration-list.yaml
+  - views/vsphere-esxi-memory-capacity-and-use-trend.yaml
+  - views/esxi-cpu-models.yaml
+  - views/vm-with-rdm-disks.yaml
+  - views/esxi-hyperthread-active.yaml
+  - views/vsphere-cluster-worst-case-contention-profile.yaml
+  - views/vmware-tools-version.yaml
+  - views/esxi-cpu-speed.yaml
+  - views/vsphere-cluster-ha-admission-control-status.yaml
+  - views/vm-memory-size-distribution.yaml
+  - views/vm-virtual-disk-distribution.yaml
+  - views/vm-tools-states.yaml
+  - views/vm-snapshot-size.yaml
+  - views/vm-snapshot-by-size.yaml
+  - views/guest-os-page-in-and-page-out-trend.yaml
+  - views/vsphere-port-group-inventory.yaml
+  - views/vm-cpu-ready-distribution-for-profiling.yaml
+  - views/vm-storage-heavy-hitters.yaml
+  - views/esxi-utilization-list.yaml
+  - views/guest-os-cpu-queue-trend.yaml
+  - views/vsphere-cluster-performance-list-1.yaml
+  - views/vsan-host-distribution.yaml
+  - views/vsphere-cluster-memory-utilization.yaml
+  - views/datastore-type.yaml
+  - views/vsphere-cluster-admission-control-policy.yaml
+  - views/vm-growth-trend.yaml
+  - views/vsphere-cluster-cpu-utilization.yaml
+  - views/esxi-hyperthread-capability.yaml
+  - views/esxi-power-management-bios.yaml
+  - views/vsphere-distributed-switch-configuration.yaml
+  - views/vm-with-many-network-cards.yaml
+  - views/esxi-network-cards-list.yaml
+  - views/vsphere-cluster-dpm-status.yaml
+  - views/vm-hardware-version.yaml
+  - views/vsphere-resource-pool-configuration.yaml
+  - views/esxi-switch-property.yaml
+  - views/vm-disk-latency-distribution-for-profiling.yaml
+  - views/esxi-cluster-settings.yaml
+  - views/guest-os-from-vcenter.yaml
+  - views/vm-memory-limit.yaml
+  - views/vsphere-clusters-by-datastores-count.yaml
+  - views/esxi-configuration-list.yaml
+  - views/esxi-hardware-model.yaml
+  - views/vm-distribution-by-guest-os-name.yaml
+  - views/vsphere-switch-version.yaml
+  - views/vsphere-clusters-distribution-by-esxi-count.yaml
+  - views/vsphere-cluster-distribution-by-vm-count.yaml
+  - views/vsphere-port-group-mac-address.yaml
+  - views/esxi-bios-version-distribution.yaml
+  - views/vm-snapshots-list.yaml
+  - views/vm-virtual-disks.yaml
+  - views/esxi-storage-adapters.yaml
+  - views/vsphere-cluster-drs-automation-level.yaml
+  - views/vsphere-resource-pool-list.yaml
+  - views/vm-with-hot-add-memory.yaml
+  - views/vsphere-port-group-promiscuous-mode.yaml
+  - views/vm-capacity-consumption.yaml
+  - views/esxi-security-policy-list.yaml
+  - views/guest-os-from-tools.yaml
+  - views/vm-cpu-utilization.yaml
+  - views/esxi-vmotion-status.yaml
+  - views/vm-cpu-limit.yaml
+  - views/esxi-cpu-core-distribution.yaml
+  - views/vm-network-configuration.yaml
+  - views/vm-storage-configuration.yaml
+  - views/vm-details-vcommunity.yaml
+  - views/vm-outdated-hardware-version.yaml
+  - views/vm-tools-not-running.yaml
+  - views/vm-tools-outdated.yaml
+  - views/vm-with-large-snapshot.yaml
+  - views/vm-with-old-snapshots.yaml
+  - views/vsphere-clusters-capacity-list.yaml
+  - views/windows-services-vcommunity.yaml
+  dashboards:
+  - dashboards/object-summary-page-for-storage-folder.yaml
+  - dashboards/object-summary-page-for-distributed-port-groups.yaml
+  - dashboards/object-summary-page-for-compute-folder.yaml
+  - dashboards/object-summary-page-for-network-folder.yaml
+  - dashboards/report-vsphere-compute-capacity-page-2.yaml
+  - dashboards/report-vm-inventory.yaml
+  - dashboards/report-vm-performance-page-2.yaml
+  - dashboards/report-executive-summary-page-4.yaml
+  - dashboards/report-executive-summary-page-3.yaml
+  - dashboards/report-executive-summary-page-5.yaml
+  - dashboards/report-vm-inventory-page-3.yaml
+  - dashboards/report-executive-summary-page-2.yaml
+  - dashboards/report-vm-performance.yaml
+  - dashboards/report-vsphere-storage-performance.yaml
+  - dashboards/report-vm-capacity.yaml
+  - dashboards/report-vsphere-storage-capacity-page-2.yaml
+  - dashboards/report-guest-os-configuration.yaml
+  - dashboards/report-vsphere-compute-performance.yaml
+  - dashboards/report-vsphere-compute-performance-page-2.yaml
+  - dashboards/report-executive-summary.yaml
+  - dashboards/report-vsphere-storage-performance-page-2.yaml
+  - dashboards/report-reclamable-capacity.yaml
+  - dashboards/report-vm-configuration.yaml
+  - dashboards/report-vsphere-network-configuration.yaml
+  - dashboards/report-vsphere-inventory-page-2.yaml
+  - dashboards/report-vm-capacity-page-3.yaml
+  - dashboards/report-vsphere-compute-capacity.yaml
+  - dashboards/report-vsphere-compute-capacity-page-3.yaml
+  - dashboards/report-vm-inventory-page-2.yaml
+  - dashboards/report-vm-capacity-page-2.yaml
+  - dashboards/report-vsphere-storage-capacity-page-3.yaml
+  - dashboards/report-esxi-hardware-configuration.yaml
+  - dashboards/report-vm-configuration-page-2.yaml
+  - dashboards/report-vsphere-inventory.yaml
+  - dashboards/report-vsphere-cluster-configuration.yaml
+  - dashboards/report-vsphere-storage-capacity.yaml
+  - dashboards/report-esxi-software-configuration.yaml
+  - dashboards/report-vm-size-distribution.yaml
+  - dashboards/object-summary-page-for-vm-folder.yaml
+  - dashboards/object-summary-page-for-distributed-switch.yaml
+  - dashboards/critical-business-applications.yaml
+  - dashboards/esxi-configuration-2-0.yaml
+  - dashboards/vcf-management-service.yaml
+  - dashboards/vm-capacity-new.yaml
+  - dashboards/vm-performance-2-0.yaml
+  - dashboards/vm-storage-configuration.yaml
+  - dashboards/vsphere-cluster-configuration-2-0.yaml
+  - dashboards/vsphere-cluster-performance-2-0.yaml
+  - dashboards/vsphere-network-configuration-2-0.yaml
+  - dashboards/vsphere-resource-management.yaml
+  - dashboards/overall-daily-check.yaml
+  - dashboards/vsphere-cluster-capacity-2-0.yaml
+  reports:
+  - reports/voa-capacity.yaml
+  - reports/voa-configuration.yaml
+  - reports/voa-datastores-for-csv-export.yaml
+  - reports/voa-distributed-port-groups-for-csv-export.yaml
+  - reports/voa-distributed-switch-for-csv-export.yaml
+  - reports/voa-esxi-hosts-csv-export.yaml
+  - reports/voa-executive-summary.yaml
+  - reports/voa-inventory.yaml
+  - reports/voa-vsphere-namespace-for-csv-export.yaml
+  - reports/voa-performance.yaml
+  - reports/voa-vsphere-supervisor-for-csv-export.yaml
+  - reports/voa-vcenter-for-csv-export.yaml
+  - reports/voa-virtual-machine-csv-export.yaml
+  - reports/voa-vsphere-clusters-csv-export.yaml
+  - reports/voa-vsphere-data-centers-csv-export.yaml
+  - reports/voa-vsphere-pod-for-csv-export.yaml
+  symptoms:
+  - symptoms/vcommunity-collection-warnings.yaml
+  - symptoms/condition-d2f954fc-3121-49db-bb9a-33c04afb8de2.yaml
+  - symptoms/condition-c6a38afa-6d69-4c73-a88c-c764e66db49b.yaml
+  - symptoms/condition-191895ee-451e-43f5-9237-3c24344ffe70.yaml
+  - symptoms/condition-b8e3e3de-2a06-4dbd-9829-a12ffe048677.yaml
+  - symptoms/condition-b9573d67-e858-44b2-afa5-d04d757dab0c.yaml
+  - symptoms/condition-eefdbe0c-98aa-49a0-ba96-e398864ea68e.yaml
+  - symptoms/condition-93e95c4e-63aa-4e04-b332-cc27317966e2.yaml
+  - symptoms/esxi-host-nic-disconnected.yaml
+  - symptoms/windows-service-status-down.yaml
+  recommendations:
+  - recommendations/vcommunitycollectionwarnings.yaml
+  alerts:
+  - alerts/vcommunity-collection-warnings.yaml
+  - alerts/esxi-host-license-expiring.yaml
+  - alerts/esxi-host-nic-disconnected.yaml
+  - alerts/windows-service-down.yaml
+
+# Where the keys land. Documentation only: the groups are the exact prefixes.
+# This build pushes the property keys (phase P2), the derived metrics (phase P4),
+# the guest keys of Windows VMs (phase P5, only when switched on) and the
+# Collection Health keys; the rest are listed in the design and are filled
+# in as the collectors arrive.
+# docs/p2-key-coverage.tsv, docs/p3-key-coverage.tsv, docs/p4-key-coverage.tsv and
+# docs/p5-key-coverage.tsv count every key of the key map against the tests (P3:
+# the 26 keys of the three own kinds; P4: the 74 derived rows; P5: the 9 guest rows).
+stitch_targets:
+  - adapter_kind: VMWARE
+    resource_kind: VMwareAdapter Instance
+    identity: "VMEntityVCID (the vCenter's about.instanceUuid); exactly one object must carry it, otherwise the keys are held back and counted"
+    key_groups:
+      - "vCommunity|Certificate|*"
+      - "vCommunity|Configuration|*"
+      - "vCommunity|Collection Health|*"
+      - "vCommunity|Availability|Worst Cluster Operational Availability"
+      - "vCommunity|Number of Port Groups"
+  - adapter_kind: VMWARE
+    resource_kind: ClusterComputeResource
+    identity: "VMEntityObjectID + VMEntityVCID (the MoRef and the vCenter's instance UUID, never a name)"
+    key_groups:
+      - "vCommunity|Cluster Configuration|*"
+      - "vCommunity|Cluster Performance|*"
+      - "vCommunity|Cluster Risk|*"
+      - "vCommunity|Cluster Consumption|*"
+      - "vCommunity|Availability|*"
+      - "vCommunity|Periodic Cluster Check|*"
+      - "vCommunity|Resource Pools|*"
+  - adapter_kind: VMWARE
+    resource_kind: HostSystem
+    identity: "VMEntityObjectID + VMEntityVCID"
+    key_groups:
+      - "vCommunity|Configuration|*"
+      - "vCommunity|Licensing:<license name>|*"
+      - "vCommunity|Storage Adapter|*"
+      - "vCommunity|Storage Adapter:<hba>|*"
+      - "vCommunity|Network|*"
+      - "vCommunity|Network|Device:<vmnic>|*"
+      - "vCommunity|Runtime|*"
+      - "vCommunity|Hardware|*"
+      - "vCommunity|Capability|*"
+      - "vCommunity|ESXi Performance|*"
+      - "vCommunity|Availability|*"
+  - adapter_kind: VMWARE
+    resource_kind: VirtualMachine
+    identity: "VMEntityObjectID + VMEntityVCID"
+    key_groups:
+      - "vCommunity|Configuration|*"
+      - "vCommunity|Guest|*"
+      - "vCommunity|Guest OS|*"
+      - "vCommunity|Runtime|*"
+      - "vCommunity|Summary|*"
+      - "vCommunity|Network|Network Adapters:<label>|*"
+      - "vCommunity|Virtual Disk:<label>|*"
+      - "vCommunity|Options|*"
+      - "vCommunity|VM Performance|*"
+      - "vCommunity|Guest OS Performance|*"
+      - "vCommunity|VM Guest OS KPI"
+  - adapter_kind: VMWARE
+    resource_kind: Datastore
+    identity: "VMEntityObjectID + VMEntityVCID"
+    key_groups:
+      - "vCommunity|Identifiers|*"
+      - "vCommunity|Summary|*"
+  - adapter_kind: VMWARE
+    resource_kind: Datacenter
+    identity: "VMEntityObjectID + VMEntityVCID (live-unproven: E1)"
+    key_groups:
+      - "vCommunity|Network|Total Network Speed Degradation"
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    identity: "the one object of the kind; none or several: held back and counted"
+    key_groups:
+      - "vCommunity|*"
+  - adapter_kind: Container
+    resource_kind: Tier, BusinessService, Enterprise
+    identity: "the Suite API resource id from the Container tree"
+    key_groups:
+      - "vCommunity|Business Application|*"

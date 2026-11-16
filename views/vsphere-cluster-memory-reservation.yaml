@@ -1,0 +1,35 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 9e603075-3f3d-5ffd-90da-863708b6637f
+name: vSphere Cluster Memory Reservation
+description: Bar chart counting clusters by reserved memory in TB, in five equal buckets across the observed
+  range.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  types:
+  - descendant
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: mem|reservedCapacity_average
+  display_name: .
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+page_size: 25
+buckets:
+  dynamic: false
+  calc_function: SIMPLEMAXMIN
+  count: 5
+  min_value: 0
+  max_value: 1073741824.0
+  is_sum: false
+distribution_color: 37B3EB
+omit:
+- include_resource_creation_time

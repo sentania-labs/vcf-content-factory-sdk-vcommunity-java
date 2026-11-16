@@ -1,0 +1,36 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/alertdefs/ESXi Host License Expiring.xml
+name: ESXi Host License Expiring
+description: ESXi Host License Expiring
+id: 8179982d-8676-5f3d-9259-5eb64fe66e10
+adapter_kind: VMWARE
+resource_kind: HostSystem
+type: 15
+sub_type: 19
+wait_cycles: 1
+cancel_cycles: 1
+criticality: SYMPTOM_BASED
+impact:
+  badge: HEALTH
+disable_in_base_policy: true
+symptom_sets:
+  operator: ANY
+  sets:
+  - defined_on: SELF
+    operator: ALL
+    symptoms:
+    - name: Condition_c6a38afa-6d69-4c73-a88c-c764e66db49b
+  - defined_on: SELF
+    operator: ALL
+    symptoms:
+    - name: Condition_d2f954fc-3121-49db-bb9a-33c04afb8de2
+    - name: Condition_b8e3e3de-2a06-4dbd-9829-a12ffe048677
+  - defined_on: SELF
+    operator: ALL
+    symptoms:
+    - name: Condition_93e95c4e-63aa-4e04-b332-cc27317966e2
+    - name: Condition_191895ee-451e-43f5-9237-3c24344ffe70
+  - defined_on: SELF
+    operator: ALL
+    symptoms:
+    - name: Condition_eefdbe0c-98aa-49a0-ba96-e398864ea68e
+    - name: Condition_b9573d67-e858-44b2-afa5-d04d757dab0c

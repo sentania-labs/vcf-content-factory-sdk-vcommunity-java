@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<packages>
+<!--
+  ESXi software packages to collect (VCF Content Factory vCommunity).
+
+  Name the installed packages (VIBs, including driver packages) whose version
+  you want on every ESXi host. The adapter asks each connected host for its
+  installed packages and keeps the ones whose package name is exactly an entry
+  here. Package names are case sensitive.
+
+  Format
+    - Separate entries with commas. A line break does NOT separate entries.
+    - An XML comment, like this one, is ignored. To switch an entry on, move
+      it out of the comment, and keep the comma after it.
+    - Do not write two hyphens in a row inside a comment.
+
+  Do not edit this shipped file: every upgrade of the pack replaces it and
+  your edits are lost (measured on VCF Operations 9.0.2 and 9.1.1, even without force
+  content update). Back the files up before an upgrade. Make a copy under another name in the VCF Operations configuration-file store, and
+  enter that name (no .xml) in the account's ESXi Software Packages Config
+  File field.
+  As shipped, every entry is commented out, so nothing is collected.
+
+  Examples, one per line:
+    esx-base,
+    nenic,
+    nfnic,
+    lsi-mr3,
+    vmw-ahci,
+-->
+</packages>

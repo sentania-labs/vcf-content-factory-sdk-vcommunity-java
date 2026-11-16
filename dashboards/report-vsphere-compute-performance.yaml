@@ -1,0 +1,165 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: 0f815ef7-5cf9-5476-bede-7bee9d3584c4
+name: 'Report: vSphere Compute Performance'
+description: "Part of a report covering performance, as opposed to capacity. Designed to be run on a weekly\
+  \ basis, and be compared with previous week result. \nWorking with a VCF expert, tailor the dashboard\
+  \ and widget to the specific requirements."
+name_path: VCF Optimization Assessment
+shared: false
+hidden: true
+disabled: true
+time_range: last7Days
+doc_center_key: vcom_788
+column_proportion: 1-1
+widgets:
+- id: w0
+  type: ParetoAnalysis
+  title: Top-10 Cluster Memory Latency
+  coords:
+    w: 6
+    x: 7
+    h: 7
+    y: 10
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  metric_key: mem|host_contentionPct
+  metric_name: Memory|Contention (%)
+  mode: all
+  top_n: 10
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Memory Contention
+  refresh_content: false
+  relationship_mode: children
+  max_value: null
+  metric_unit:
+    id: percent
+    name: '%'
+  yellow_bound: 4
+  orange_bound: 8
+  red_bound: 16
+  additional_columns:
+  - metric_key: summary|total_number_vms
+    metric_name: Summary|Total Number of VMs
+    label: VMs
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  - metric_key: summary|total_number_hosts
+    metric_name: Summary|Total Number of Hosts
+    label: ESXi
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  ui:
+    height: 381
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A1
+- id: w1
+  type: ParetoAnalysis
+  title: Top-10 Cluster CPU Ready
+  coords:
+    w: 6
+    x: 1
+    h: 7
+    y: 10
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  metric_key: cpu|max_cpu_ready
+  metric_name: CPU|Worst VM CPU Ready (%)
+  mode: all
+  top_n: 10
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: VM CPU Ready
+  refresh_content: false
+  relationship_mode: children
+  max_value: null
+  metric_unit:
+    id: percent
+    name: '%'
+  yellow_bound: 4
+  orange_bound: 8
+  red_bound: 16
+  additional_columns:
+  - metric_key: summary|total_number_vms
+    metric_name: Summary|Total Number of VMs
+    label: VMs
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  - metric_key: summary|total_number_hosts
+    metric_name: Summary|Total Number of Hosts
+    label: ESXi
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  ui:
+    height: 381
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A1
+- id: w2
+  type: HealthChart
+  title: 10th Percentile Performance of All Clusters
+  coords:
+    w: 12
+    x: 1
+    h: 5
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: vCommunity|Worst 10 Percent Cluster Performance
+  metric_name: vCommunity|Worst 10 Percent Cluster Performance
+  metric_full_name: Super Metrics|vSphere Clusters Performance (%)
+  mode: resource
+  depth: 1
+  chart_height: 190
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 267
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+- id: w3
+  type: HealthChart
+  title: Count of Clusters not in Green zone
+  coords:
+    w: 12
+    x: 1
+    h: 4
+    y: 6
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+  metric_key: Super Metric|sm_dda97f70-65e0-4c5a-b6f0-7acec936a0bd
+  metric_name: Super Metrics|vSphere Clusters not Green
+  metric_full_name: Super Metrics|vSphere Clusters not Green
+  mode: resource
+  depth: 1
+  chart_height: 135
+  pagination_number: 15
+  sort_by_dir: asc
+  yellow_bound: 1
+  orange_bound: 5
+  red_bound: 10
+  show_resource_name: false
+  self_provider: true
+  pin:
+    adapter_kind: VMWARE
+    resource_kind: vSphere World
+  ui:
+    height: 210
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+interactions: []

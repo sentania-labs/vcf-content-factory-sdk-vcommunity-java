@@ -1,0 +1,70 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: 8efbf206-9b8f-5937-bf87-98acdf71bdbf
+name: ESXi Switch property
+description: Table for distributed virtual switches with per-host check results for configuration sync,
+  teaming mismatch, MTU mismatch, unsupported MTU and unsupported VLAN. Its host columns are bound to
+  one specific host instance.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VmwareDistributedVirtualSwitch
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- instanced_group:
+    name: GROUP_host
+    show_instance_name: true
+    keep_instance_summary: false
+  display_name: ESXi
+- attribute: host:10.156.17.100|config_outofsync
+  display_name: Config Out of Sync
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.1
+  orange_bound: 0.2
+  red_bound: 1
+  ascending_range: false
+- attribute: host:10.156.17.100|teaming_mismatch
+  display_name: Teaming Mismatch
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.1
+  orange_bound: 0.2
+  red_bound: 1
+  ascending_range: false
+- attribute: host:10.156.17.100|mtu_mismatch
+  display_name: MTU Mismatch
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.1
+  orange_bound: 0.2
+  red_bound: 1
+  ascending_range: false
+- attribute: host:10.156.17.100|mtu_unsupported
+  display_name: Unsupported MTU
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.1
+  orange_bound: 0.2
+  red_bound: 1
+  ascending_range: false
+- attribute: host:10.156.17.100|vlans_unsupported
+  display_name: Unsupported VLAN
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0.1
+  orange_bound: 0.2
+  red_bound: 1
+  ascending_range: false
+page_size: 50
+distribution_color: 6870C4
+hide_object_name: true
+omit:
+- include_resource_creation_time

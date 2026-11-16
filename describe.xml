@@ -1,98 +1,202 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  describe.xml — adapter descriptor for the example/template adapter.
+  describe.xml: VCF Content Factory vCommunity (vcfcf_vcommunity).
 
-  When you instantiate this template, rename:
-    - the AdapterKind  key="example_adapter"   -> your adapter kind (snake_case),
-      matching ADAPTER_KIND in your *Adapter.java and adapter_kind in adapter.yaml.
-    - the CredentialKind / ResourceKind keys, identifiers, groups, and attributes
-      to describe your target system.
+  A Java port of the vCommunity management pack. The pak reads a vCenter over
+  vim25 and pushes the "vCommunity|" keys onto the vCenter adapter's own
+  VMWARE objects through the Suite API (ARIA_OPS stitching), so those keys are
+  not declared here: a pak cannot declare keys for another adapter's kinds, and
+  pushed keys carry no label or unit of their own. What is declared:
 
-  Conventions (match the production adapters):
-    - nameKey integers index resources.properties (display strings).
-    - The adapter instance is a type="7" ResourceKind whose key == the AdapterKind
-      key; it carries credentialKind + the connection ResourceIdentifiers.
-    - Monitored resources are type="1"; isProperty="true" for string properties,
-      isProperty="false" (+ dataType="float") for numeric metrics.
-    - A World resource is the traversal entry point: the TraversalSpecKind
-      sets rootResourceKind to the World kind and every ResourcePath starts
-      at "<adapter_kind>::World||" (no ::child on the first segment), the
-      way VMWARE roots "vSphere Hosts and Clusters" at "vSphere World".
-      Do NOT root at the adapter instance kind: the instance resource has
-      no children (its only parent is Universe), so a path starting
-      "<adapter_kind>::<adapter_kind>||<adapter_kind>::World::child" never
-      matches and the tree shows the instance with nothing under it.
+    - the adapter instance (type 7) with the 19 account fields of the original
+      pack, field for field (keys, labels, defaults, choices, main form versus
+      Advanced Settings), and the "Collection" self metrics;
+    - the credential kind vsphere_user (vCenter user and password, and the
+      optional Windows user and password for guest checks);
+    - vCommunityCollector, the per-account object the collection cycle runs for;
+    - three own object kinds (Content Library, Library Item, VM Template) with
+      the same keys as the original pack;
+    - one traversal spec, "vCommunity Content Libraries": Content Library >
+      Library Item, the only relationship the pak writes.
+
+  Account form. A field with no identType is in the main form and part of the
+  account's identity; identType 2 is not identity and lands under Advanced
+  Settings when it is not required or has a default (every identType 2 field
+  here has a default). Changing a field's identType after release changes
+  account identity.
+
+  Choices ("enum") are stored as the value text. The cluster check period is
+  stored zero padded (01 ... 24) so the form sorts it as numbers.
+
+  The traversal spec roots at Content Library itself, as VMWARE roots
+  "vSphere Hosts and Clusters" at "vSphere World" (a path starts at the root
+  kind, no ::child). Content Library is the root of its own tree: a library has
+  no parent in this pak (the original writes none), and a spec rooted at the
+  adapter instance or at vCommunityCollector would never reach it, because
+  neither has a child. VM Template has no relationship and no spec.
 -->
 <AdapterKind xmlns="http://schemas.vmware.com/vcops/schema"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             key="example_adapter"
+             key="vcfcf_vcommunity"
              nameKey="1"
              version="1"
              xsi:schemaLocation="http://schemas.vmware.com/vcops/schema describeSchema.xsd">
 
 	<CredentialKinds>
-		<CredentialKind key="example_credentials" nameKey="2">
-			<CredentialField key="username" nameKey="3" type="string" required="true" dispOrder="1"/>
+		<CredentialKind key="vsphere_user" nameKey="2">
+			<CredentialField key="user" nameKey="3" type="string" required="true" dispOrder="1"/>
 			<CredentialField key="password" nameKey="4" type="string" required="true" password="true" dispOrder="2"/>
+			<CredentialField key="winUser" nameKey="5" type="string" required="false" dispOrder="3"/>
+			<CredentialField key="winPass" nameKey="6" type="string" required="false" password="true" dispOrder="4"/>
 		</CredentialKind>
 	</CredentialKinds>
 
 	<ResourceKinds>
 
-		<!-- ================================================================ -->
-		<!-- Adapter Instance (type=7): connection configuration              -->
-		<!-- ================================================================ -->
-		<!-- monitoringInterval (minutes) is the default collection interval;  -->
-		<!-- keep COLLECTION_INTERVAL_MS in ExampleAdapter.java in step (half  -->
-		<!-- of it is the snapshot's safety-net maximum age). An operator can  -->
-		<!-- change the interval per instance in the UI.                       -->
-		<ResourceKind key="example_adapter" nameKey="5" type="7"
-		              credentialKind="example_credentials"
+		<!-- Adapter instance (type 7). monitoringInterval 5 = a five minute cycle; the
+		     cycle stops starting new work 60 s before the next one is due. -->
+		<ResourceKind key="vcfcf_vcommunity" nameKey="7" type="7"
+		              credentialKind="vsphere_user"
 		              monitoringInterval="5">
-			<ResourceIdentifier key="host" nameKey="6" type="string"
-			                    required="true" dispOrder="1"/>
-			<ResourceIdentifier key="port" nameKey="7" type="string"
-			                    required="false" dispOrder="2" default="443"/>
-			<ResourceIdentifier key="allowInsecure" nameKey="8" type="string"
-			                    required="false" dispOrder="3" default="false"/>
-		</ResourceKind>
+			<ResourceIdentifier key="host" nameKey="8" type="string" required="true" dispOrder="1"/>
+			<ResourceIdentifier key="esxi_adv_settings_config_file" nameKey="9" type="string" required="false" dispOrder="2" default="esxi_advanced_system_settings"/>
+			<ResourceIdentifier key="esxi_vib_driver_config_file" nameKey="10" type="string" required="false" dispOrder="3" default="esxi_packages"/>
+			<ResourceIdentifier key="vm_adv_settings_config_file" nameKey="11" type="string" required="false" dispOrder="4" default="vm_advanced_parameters"/>
+			<ResourceIdentifier key="vm_configuration_config_file" nameKey="12" type="string" required="false" dispOrder="5" default="vm_options"/>
+			<ResourceIdentifier key="port" nameKey="13" type="integer" required="true" dispOrder="6" default="443" identType="2"/>
+			<ResourceIdentifier key="vcenter_tls_validation" nameKey="14" type="string" required="false" dispOrder="7" default="Trust on First Use" identType="2" enum="true">
+				<enum value="Trust on First Use"/>
+				<enum value="Enabled"/>
+				<enum value="Pinned"/>
+			</ResourceIdentifier>
+			<ResourceIdentifier key="vcenter_thumbprint" nameKey="15" type="string" required="false" dispOrder="8" identType="2"/>
+			<ResourceIdentifier key="cluster_check_period_hours" nameKey="16" type="string" required="false" dispOrder="9" default="24" identType="2" enum="true">
+				<enum value="01" nameKey="17"/>
+				<enum value="02" nameKey="18"/>
+				<enum value="04" nameKey="19"/>
+				<enum value="06" nameKey="20"/>
+				<enum value="08" nameKey="21"/>
+				<enum value="12" nameKey="22"/>
+				<enum value="24" nameKey="23"/>
+			</ResourceIdentifier>
+			<ResourceIdentifier key="periodic_cluster_check_time" nameKey="24" type="string" required="false" dispOrder="10" default="00:00" identType="2"/>
+			<ResourceIdentifier key="cluster_check_worst_percent" nameKey="25" type="integer" required="false" dispOrder="11" default="5" identType="2"/>
+			<ResourceIdentifier key="monster_vm_cpu_percent_of_cores" nameKey="26" type="integer" required="false" dispOrder="12" default="50" identType="2"/>
+			<ResourceIdentifier key="monster_vm_memory_percent_of_dram" nameKey="27" type="integer" required="false" dispOrder="13" default="40" identType="2"/>
+			<ResourceIdentifier key="monster_vm_memory_min_gb" nameKey="28" type="integer" required="false" dispOrder="14" default="256" identType="2"/>
+			<ResourceIdentifier key="win_service_config_file" nameKey="29" type="string" required="false" dispOrder="15" default="windows_service_list" identType="2"/>
+			<ResourceIdentifier key="win_event_config_file" nameKey="30" type="string" required="false" dispOrder="16" default="windows_event_list" identType="2"/>
+			<ResourceIdentifier key="serviceMonitoring" nameKey="31" type="string" required="false" dispOrder="17" default="Disabled" identType="2" enum="true">
+				<enum value="Enabled"/>
+				<enum value="Disabled"/>
+			</ResourceIdentifier>
+			<ResourceIdentifier key="guest_tls_validation" nameKey="32" type="string" required="false" dispOrder="18" default="Pinned" identType="2" enum="true">
+				<enum value="Pinned"/>
+				<enum value="Strict"/>
+				<enum value="Disabled"/>
+			</ResourceIdentifier>
+			<ResourceIdentifier key="winEventMonitoring" nameKey="33" type="string" required="false" dispOrder="19" default="Disabled" identType="2" enum="true">
+				<enum value="Enabled"/>
+				<enum value="Disabled"/>
+			</ResourceIdentifier>
 
-		<!-- ================================================================ -->
-		<!-- World: traversal entry point                                     -->
-		<!-- ================================================================ -->
-		<ResourceKind key="World" nameKey="10" type="1">
-			<ResourceIdentifier key="world_id" nameKey="11" type="string" required="true" dispOrder="1"/>
-		</ResourceKind>
-
-		<!-- ================================================================ -->
-		<!-- ExampleResource: the one monitored resource kind in this skeleton -->
-		<!-- ================================================================ -->
-		<ResourceKind key="ExampleResource" nameKey="20" type="1">
-			<ResourceIdentifier key="id" nameKey="21" type="string" required="true" dispOrder="1"/>
-
-			<ResourceGroup key="Status" nameKey="22" instanced="false">
-				<ResourceAttribute key="value" nameKey="23" dataType="float"
-				                   isProperty="false" defaultMonitored="true"/>
+			<!-- Self metrics of the pak, pushed on the adapter instance every cycle. A
+			     figure that was not measured is not sent (a failed push does not say how
+			     many series it carried). guest_vms_done and guest_vms_pending belong to the
+			     guest phase and stay empty until it exists. -->
+			<ResourceGroup key="Collection" nameKey="34" instanced="false">
+				<ResourceAttribute key="cycle_seconds" nameKey="35" dataType="float" isProperty="false" defaultMonitored="true" unit="sec"/>
+				<ResourceAttribute key="reads_failed" nameKey="36" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="values_withheld" nameKey="37" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="objects_unmatched" nameKey="38" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="checklist_entries_skipped" nameKey="39" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="series_pushed" nameKey="40" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="properties_pushed" nameKey="41" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="push_batches_failed" nameKey="42" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="deadline_hit" nameKey="43" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="vcenter_object_resolved" nameKey="44" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="guest_vms_done" nameKey="45" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="guest_vms_pending" nameKey="46" dataType="float" isProperty="false" defaultMonitored="true"/>
+				<ResourceAttribute key="last_error" nameKey="47" dataType="string" isProperty="true"/>
+				<ResourceAttribute key="failure_causes" nameKey="91" dataType="string" isProperty="true"/>
 			</ResourceGroup>
+		</ResourceKind>
 
-			<ResourceGroup key="Configuration" nameKey="24" instanced="false">
-				<ResourceAttribute key="name" nameKey="25" dataType="string" isProperty="true"/>
+		<!-- The per-account object the cycle runs for. Its identity is the account's own
+		     values (the vCenter Server, and the four identifying file names joined with a
+		     comma, as stored, trimmed only), known without a login, so the object exists
+		     while the vCenter is unreachable and the account can show DOWN. No metrics:
+		     the self metrics stay on the adapter instance. -->
+		<ResourceKind key="vCommunityCollector" nameKey="48" type="1">
+			<ResourceIdentifier key="vcenter" nameKey="49" type="string" required="true" dispOrder="1"/>
+			<ResourceIdentifier key="config_files" nameKey="50" type="string" required="true" dispOrder="2"/>
+		</ResourceKind>
+
+		<!-- Content Library: one per library of the vCenter. Keys as the original pack (rows 245-252 of the key map); filled in the library phase. -->
+		<ResourceKind key="Content Library" nameKey="51" type="1">
+			<ResourceIdentifier key="Library ID" nameKey="52" type="string" required="true" dispOrder="1"/>
+			<ResourceGroup key="vCommunity" nameKey="53" instanced="false">
+				<ResourceGroup key="Content Library" nameKey="54" instanced="false">
+					<ResourceAttribute key="Type" nameKey="55" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Subscription URL" nameKey="56" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Automatic Sync" nameKey="57" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="State" nameKey="58" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Items" nameKey="59" dataType="float" isProperty="false" defaultMonitored="true"/>
+					<ResourceAttribute key="Items Not Stored Locally" nameKey="60" dataType="float" isProperty="false" defaultMonitored="true"/>
+					<ResourceAttribute key="Items Not Security Compliant" nameKey="61" dataType="float" isProperty="false" defaultMonitored="true"/>
+					<ResourceAttribute key="Total Size (GB)" nameKey="62" dataType="float" isProperty="false" defaultMonitored="true"/>
+				</ResourceGroup>
+			</ResourceGroup>
+		</ResourceKind>
+
+		<!-- Library Item: one per item of every library (rows 234-244). -->
+		<ResourceKind key="Library Item" nameKey="63" type="1">
+			<ResourceIdentifier key="Item ID" nameKey="64" type="string" required="true" dispOrder="1"/>
+			<ResourceGroup key="vCommunity" nameKey="65" instanced="false">
+				<ResourceGroup key="Library Item" nameKey="66" instanced="false">
+					<ResourceAttribute key="Type" nameKey="67" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Description" nameKey="68" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Version" nameKey="69" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Content Version" nameKey="70" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Stored Locally" nameKey="71" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Security Compliant" nameKey="72" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Certificate Verification" nameKey="73" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Last Modified" nameKey="74" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Last Sync" nameKey="75" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Source Item ID" nameKey="76" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Size (GB)" nameKey="77" dataType="float" isProperty="false" defaultMonitored="true"/>
+				</ResourceGroup>
+			</ResourceGroup>
+		</ResourceKind>
+
+		<!-- VM Template: one per VM that is a template in the vCenter (rows 227-233). -->
+		<ResourceKind key="VM Template" nameKey="78" type="1">
+			<ResourceIdentifier key="VMEntityObjectID" nameKey="79" type="string" required="true" dispOrder="1"/>
+			<ResourceIdentifier key="VMEntityVCID" nameKey="80" type="string" required="true" dispOrder="2"/>
+			<ResourceGroup key="vCommunity" nameKey="81" instanced="false">
+				<ResourceGroup key="VM Template" nameKey="82" instanced="false">
+					<ResourceAttribute key="Guest OS" nameKey="83" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Hardware Version" nameKey="84" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="vCPUs" nameKey="85" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Memory (GB)" nameKey="86" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Datastore" nameKey="87" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="VM Folder" nameKey="88" dataType="string" isProperty="true"/>
+					<ResourceAttribute key="Disk Used (GB)" nameKey="89" dataType="float" isProperty="false" defaultMonitored="true"/>
+				</ResourceGroup>
 			</ResourceGroup>
 		</ResourceKind>
 
 	</ResourceKinds>
 
 	<TraversalSpecKinds>
-		<TraversalSpecKind name="Example Infrastructure"
-		                   nameKey="30"
-		                   rootAdapterKind="example_adapter"
-		                   rootResourceKind="World"
+		<TraversalSpecKind name="vCommunity Content Libraries"
+		                   nameKey="90"
+		                   rootAdapterKind="vcfcf_vcommunity"
+		                   rootResourceKind="Content Library"
 		                   filterType="GENERIC_RELATION"
 		                   usedFor="ALL">
-			<!-- Rooted at the World kind, not the adapter instance (see the
-			     header). Each path starts at the root kind, then ::child hops. -->
-			<!-- World > ExampleResource -->
-			<ResourcePath path="example_adapter::World||example_adapter::ExampleResource::child"/>
+			<!-- Content Library > Library Item (the library is the parent: design 3.4) -->
+			<ResourcePath path="vcfcf_vcommunity::Content Library||vcfcf_vcommunity::Library Item::child"/>
 		</TraversalSpecKind>
 	</TraversalSpecKinds>
 

@@ -1,0 +1,55 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: d2c977de-ef71-54d7-b47e-5658e8636e42
+name: vSphere Distributed Switch Configuration
+description: Table for distributed switches with host count, switch version, NIC teaming policy and the
+  teaming and VLAN/MTU health check results.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VmwareDistributedVirtualSwitch
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|total_number_hosts
+  display_name: Number of Hosts
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|version
+  display_name: Version
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: capability|nicTeamingPolicy
+  display_name: NIC Teaming Policy
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|health_check_config|health_check_config_teaming
+  display_name: Teaming
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|health_check_config|health_check_config_vlan_mtu
+  display_name: VLAN and MTU
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+distribution_color: F57600
+omit:
+- include_resource_creation_time

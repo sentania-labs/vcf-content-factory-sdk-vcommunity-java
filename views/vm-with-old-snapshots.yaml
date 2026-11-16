@@ -1,0 +1,47 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/vm with old snapshots vcommunity/VM with old Snapshots vCommunity.xml
+id: fe27ac2c-f319-51fd-911e-5b90b0612ee0
+name: VM with old Snapshots
+description: Count of snapshots grouped by age. Snapshot should only be used as protection of change.
+  Once change is successful, snapshot does more  harm as it impacts performance and take up space. Delete
+  them before they are forgotten.
+data_type: distribution
+presentation: pie-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+  filter:
+  - - filter_type: properties
+      metric_key: diskspace|snapshot|snapshotAge
+      condition: GREATER_THAN
+      value: 7
+      transform: CURRENT
+usage:
+- dashboard
+- report
+- content
+time_window:
+  unit: MINUTES
+  count: 1
+columns:
+- attribute: diskspace|snapshot|snapshotAge
+  display_name: Snapshot Age (Days)
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+  omit:
+  - roll_up_type
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: false
+  calc_function: SIMPLEMAXMIN
+  count: 10
+  min_value: 0
+  max_value: 100
+  is_sum: false
+distribution_color: D23292
+omit:
+- include_resource_creation_time

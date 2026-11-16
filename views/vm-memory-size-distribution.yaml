@@ -1,0 +1,58 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: 4be1059f-ce53-57b4-a14d-71655e46da3f
+name: VM Memory Size Distribution
+description: Bar chart counting virtual machines by configured memory in GB, in doubling buckets from
+  under 16 GB to above 512 GB.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+time_window:
+  unit: MINUTES
+  count: 1
+columns:
+- attribute: config|hardware|memoryKB
+  display_name: .
+  unit: gb
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: false
+  ranges:
+  - start: 0
+    end: 16
+  - start: 16
+    end: 32
+  - start: 32
+    end: 64
+  - start: 64
+    end: 128
+  - start: 128
+    end: 256
+  - start: 256
+    end: 512
+  - start: 512
+    end: 9999
+  min_value: 0
+  max_value: 0
+  is_sum: false
+distribution_color: 37B3EB
+additional_columns:
+- attribute: config|hardware|numCpu
+  localized_name: Configuration|Hardware|Number of virtual CPUs
+  display_name: vCPU
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+omit:
+- include_resource_creation_time

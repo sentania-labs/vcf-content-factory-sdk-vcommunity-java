@@ -1,0 +1,137 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 2ae1159e-d813-5cb3-94a6-b00da43defcc
+name: VM Performance List
+description: Lists powered-on VMs over the last 12 hours with guest hostname, three KPI scores, peak CPU
+  queue, CPU ready, memory contention, disk queue, disk latency and transmit packet drop, plus vCPU, memory
+  and virtual disk counts. Worst KPI first.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  filter:
+  - - filter_type: metrics
+      metric_key: sys|poweredOn
+      condition: EQUALS
+      value: 1
+usage:
+- dashboard
+- report
+- content
+time_window:
+  unit: HOURS
+  count: 12
+columns:
+- attribute: summary|guest|hostName
+  display_name: Hostname
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: vCommunity|VM Guest OS KPI
+  display_name: VM Guest OS KPI
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MIN
+  sort: asc
+  yellow_bound: 75
+  orange_bound: 50
+  red_bound: 25
+  ascending_range: true
+- attribute: vCommunity|Guest OS Performance|Guest OS Performance Score
+  display_name: Guest OS KPI
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MIN
+- attribute: vCommunity|VM Performance|VM Performance Score
+  display_name: VM KPI
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MIN
+- attribute: guest|20_sec_peak_cpu_queue
+  display_name: Peak CPU Queue
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MAX
+  yellow_bound: 2
+  orange_bound: 4
+  red_bound: 8
+  ascending_range: false
+- attribute: cpu|20_sec_peak_readyPct
+  display_name: Peak CPU Ready
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MAX
+  yellow_bound: 4
+  orange_bound: 8
+  red_bound: 16
+  ascending_range: false
+- attribute: mem|20_sec_peak_host_contentionPct
+  display_name: Peak Memory Contention
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MAX
+  yellow_bound: 2
+  orange_bound: 4
+  red_bound: 8
+  ascending_range: false
+- attribute: guest|20_sec_peak_disk_queue
+  display_name: Peak Disk Queue
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MAX
+  yellow_bound: 20
+  orange_bound: 40
+  red_bound: 80
+  ascending_range: false
+- attribute: virtualDisk|20_sec_peak_totalLatency_average
+  display_name: Peak Disk Latency
+  unit: msec
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MAX
+  yellow_bound: 20
+  orange_bound: 40
+  red_bound: 80
+  ascending_range: false
+- attribute: net|droppedTxPct_max
+  display_name: Peak TX Packet Drop
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: MAX
+  yellow_bound: 0.5
+  orange_bound: 1
+  red_bound: 2
+  ascending_range: false
+- attribute: config|hardware|numCpu
+  display_name: vCPU
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|hardware|memoryKB
+  display_name: Memory
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|numVMDKs
+  display_name: Virtual Disks
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

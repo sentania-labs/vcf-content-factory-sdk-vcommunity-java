@@ -1,0 +1,198 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/report - voa - distributed port groups for csv export/Report - VOA - Distributed Port Groups for CSV export.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: 7b7189bc-9209-5903-b70c-181c18e454b8
+name: 'Report: Distributed Port Groups for CSV export'
+description: "A simple table for export as a CSV file. Used in report only, hence it has no formatting.\
+  \ Just like the rest of the report, it is designed for weekly, not daily nor monthly. \n\nSchedule it\
+  \ to run end of the week, such as Sunday 23:59"
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: DistributedVirtualPortgroup
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|max_num_ports
+  display_name: Total Ports
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+- attribute: summary|used_num_ports
+  display_name: Used Ports
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|ports_down_pct
+  display_name: Ports down
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+- attribute: summary|active_uplink_ports
+  display_name: Active Uplinks
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: config|segmentID
+  display_name: Segment ID
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|security|vlan_id
+  display_name: VLAN ID
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|security|vlan_trunk_id
+  display_name: VLAN Trunk Range
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|override|block_override_allowed
+  display_name: Block Override
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|override|live_port_moving_allowed
+  display_name: Live Port Moving
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|override|ipfix_override_allowed
+  display_name: Netflow Override
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|override|network_resourcepool_moving_override_allowed
+  display_name: Network Resource Pool
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|override|port_config_reset_at_disconnect
+  display_name: Port Config Reset
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|override|security_policy_override_allowed
+  display_name: Security Policy
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|override|shaping_override_allowed
+  display_name: Shaping Override
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|override|uplink_teaming_override_allowed
+  display_name: Uplink Teaming
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|override|vendor_config_override_allowed
+  display_name: Vendor Config
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|override|vlan_override_allowed
+  display_name: VLAN Override
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|security|allow_promiscuous
+  display_name: Allow Promiscuous
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|security|forged_transmits
+  display_name: Forged Transmit
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|policies|security|mac_changes
+  display_name: MAC Address Change
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|uplink
+  display_name: Uplink
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|tag
+  display_name: vSphere Tag
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|folder
+  display_name: Folder
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

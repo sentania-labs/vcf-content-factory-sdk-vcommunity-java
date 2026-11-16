@@ -1,0 +1,20 @@
+id	builtin_name_9_1_1	pak_view_title	diff_class	dropped_from_files
+11dd432d-6c6f-4872-8c0a-2d9975856f66	Capacity | VM Capacity Remaining	VM Distribution by Capacity Remaining	rename_only(description+title)	Management Pack/content/reports/View - Set 3.xml
+40152c12-1d12-440c-b79e-e9d172deb9a1	Capacity | VM Memory Utilization	Guest OS Memory Utilization	rename_only(title)	Management Pack/content/reports/View - Set 3.xml
+c0b7e702-f550-4223-808c-aa14b35117a9	Capacity | VM Snapshot (Trend View)	VM Snapshot Trend	rename_only(description+title)	Management Pack/content/reports/View - Set 3.xml
+6dbbe2bc-2593-4288-9d4c-23995e28009d	Configuration | Complex | Port Group Forged Transmit Allowed	vSphere Port Group Forged Transmit Allowed	rename_only(description+title)	Management Pack/content/reports/View - Set 3.xml
+0a898851-197b-4e82-baf6-a2a89acd600a	Configuration | Complex | Port Group MAC Address Change	vSphere Port Group MAC Address Change	rename_only(description+title)	Management Pack/content/reports/View - Collection01.xml | Management Pack/content/reports/View - Set 2.xml
+d5b58361-bd8e-4102-969a-e4d9f887bcc0	Linux CPU Usage	Linux CPU Usage	identical	Management Pack/content/reports/View - Set 4.xml
+90f20c54-20c2-499c-8fb2-c609e65c325c	Linux Disk Partition Usage	Linux Disk Partition Usage	identical	Management Pack/content/reports/View - Set 4.xml
+ed44775e-bdbb-4342-a077-3d98f0250cf9	Linux Disk Performance	Linux Disk Performance	identical	Management Pack/content/reports/View - Set 4.xml
+e95aa10d-43c8-4d8a-bfda-2e4eb97996da	Linux Operating Systems	Linux Operating Systems	identical	Management Pack/content/reports/View - Set 4.xml
+42f8a97e-048a-4cb2-82cc-db121958722c	List of ESXi for Network Admin	ESXi Network Properties	rename_only(title)	Management Pack/content/reports/View - Collection01.xml | Management Pack/content/reports/View - Set 2.xml
+b963d4b9-12ba-41a2-86df-9e294a1c5f66	Performance | Datastore	Datastore Performance List	rename_only(description+title)	Management Pack/content/reports/View - Set 2.xml
+653ba701-c9df-4f98-9dd1-8b1d6b57612e	Performance | ESXi Hosts	ESXi Hosts Performance	rename_only(description+title)	Management Pack/content/reports/View - Set 2.xml
+c9fe7a11-79e3-4e98-9cba-8d732b15d150	Performance | VM	VM Performance	rename_only(description+title)	Management Pack/content/reports/View - Set 3.xml
+d975edde-111b-4e32-b63d-49df26a65cb1	Windows CPU Usage	Windows CPU Usage	identical	Management Pack/content/reports/View - Set 4.xml
+acb921e6-525a-41b6-bcd7-4a8e972f2acc	Windows Disk Partition Usage	Windows Disk Partition Usage	identical	Management Pack/content/reports/View - Set 4.xml
+4d1155bd-cb97-41b3-896f-843db27775fe	Windows Network Adapter	Windows Network Adapter	identical	Management Pack/content/reports/View - Set 4.xml
+3b33a0a0-d830-4640-8635-f1857bcb5ffd	Windows Operating Systems	Windows Operating Systems	identical	Management Pack/content/reports/View - Set 4.xml
+7bcdb50d-c015-4237-9014-832a74f07f91	vSphere ESXi CPU Utilization	vSphere ESXi CPU Utilization	rename_only(description)	Management Pack/content/reports/View - Set 3.xml
+a62de769-9b4b-462e-906c-b4a27457ec88	vSphere VM Time Remaining	VM Distribution by Time Remaining	rename_only(description+title)	Management Pack/content/reports/View - Set 4.xml

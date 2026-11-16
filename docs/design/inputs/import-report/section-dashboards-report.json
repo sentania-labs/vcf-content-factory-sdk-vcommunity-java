@@ -1,0 +1,642 @@
+{
+ "note": "Verification of the two Section dashboards, extracted from section-dashboards-source-report.json (the full report.json of the third-party run). The pak layout refuses a dashboard with a Section widget below 9.1.1, so import-local was run over the same source pak in the third-party layout with --target-min 8.18.7 --allow-partial --ids mint --mint-namespace vcfcf_vcommunity (naming unprefixed); the YAML it wrote for these two is the committed dashboards/*.yaml plus the dashboard-level section_fallback: omit key, which the importer does not write (see dashboards-port-comparison.md). The ids are the same deterministic uuid5 ids the pak-layout run mints for the other 50 dashboards (same namespace); these two source ids are not in id_map.tsv, they are the source_id fields below.",
+ "layout": "third-party",
+ "target_min": "8.18.7",
+ "ids": "mint",
+ "mint_namespace": "vcfcf_vcommunity",
+ "naming": "unprefixed",
+ "objects": [
+  {
+   "type": "dashboard",
+   "file": "dashboards/overall-daily-check.yaml",
+   "source_id": "555b7d86-b48e-4f26-ae9e-b19ba24369d4",
+   "id": "12abae81-ce8b-5916-8126-298487728f37",
+   "name": "Overall Daily Check",
+   "source_name": "Overall Daily Check",
+   "renamed": [],
+   "losses": [
+    {
+     "class": "adapterName",
+     "text": "adapterName is not modeled (dashboard_fidelity_wire_format.md \u00a7Dashboard level)",
+     "at": [
+      "dashboard.adapterName"
+     ]
+    },
+    {
+     "class": "config.widgetId naming no widget of the dashboard",
+     "text": "config.widgetId naming no widget of the dashboard is not modeled: the renderer writes the widget's own id (dashboard_fidelity_wire_format.md \u00a7Widget fields common to every type)",
+     "at": [
+      "widget[0:Section].config.widgetId",
+      "widget[10:HealthChart].config.widgetId",
+      "widget[11:HealthChart].config.widgetId",
+      "widget[12:HealthChart].config.widgetId",
+      "widget[13:Section].config.widgetId",
+      "widget[15:HealthChart].config.widgetId",
+      "widget[1:Scoreboard].config.widgetId",
+      "widget[20:MetricChart].config.widgetId",
+      "widget[21:Section].config.widgetId",
+      "widget[22:HealthChart].config.widgetId",
+      "widget[23:HealthChart].config.widgetId",
+      "widget[24:HealthChart].config.widgetId",
+      "widget[2:Scoreboard].config.widgetId",
+      "widget[31:View].config.widgetId",
+      "widget[32:Heatmap].config.widgetId",
+      "widget[3:HealthChart].config.widgetId",
+      "widget[4:HealthChart].config.widgetId",
+      "widget[5:Section].config.widgetId",
+      "widget[7:HealthChart].config.widgetId",
+      "widget[8:Section].config.widgetId",
+      "widget[9:HealthChart].config.widgetId"
+     ]
+    }
+   ],
+   "notes": [],
+   "deviations": [
+    {
+     "text": "dashboard 'Overall Daily Check': omit: temporary not emitted: its floor is 9.1.1, above the target 8.18.7; the render carries temporary where the source leaves it out (set aside only at dashboard.temporary)",
+     "at": [
+      "dashboard.temporary"
+     ]
+    },
+    {
+     "text": "dashboard 'Overall Daily Check': omit: widget_interactions not emitted: its floor is 9.1.1, above the target 8.18.7; the render carries widgetInteractions where the source leaves it out (set aside only at dashboard.widgetInteractions)",
+     "at": [
+      "dashboard.widgetInteractions"
+     ]
+    }
+   ],
+   "version_warnings": [],
+   "not_deliverable": [
+    "widget w0 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)",
+    "widget w5 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)",
+    "widget w8 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)",
+    "widget w13 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)",
+    "widget w21 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)",
+    "widget w25 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)"
+   ],
+   "verbatim_text": [
+    {
+     "field": "name",
+     "length": 19
+    },
+    {
+     "field": "description",
+     "length": 143
+    },
+    {
+     "field": "widget w0 title",
+     "length": 12
+    },
+    {
+     "field": "widget w0 description",
+     "length": 138
+    },
+    {
+     "field": "widget w1 title",
+     "length": 13
+    },
+    {
+     "field": "widget w1 description",
+     "length": 100
+    },
+    {
+     "field": "widget w2 title",
+     "length": 15
+    },
+    {
+     "field": "widget w3 title",
+     "length": 38
+    },
+    {
+     "field": "widget w4 title",
+     "length": 43
+    },
+    {
+     "field": "widget w5 title",
+     "length": 13
+    },
+    {
+     "field": "widget w5 description",
+     "length": 201
+    },
+    {
+     "field": "widget w6 title",
+     "length": 28
+    },
+    {
+     "field": "widget w6 description",
+     "length": 196
+    },
+    {
+     "field": "widget w7 title",
+     "length": 32
+    },
+    {
+     "field": "widget w7 description",
+     "length": 252
+    },
+    {
+     "field": "widget w8 title",
+     "length": 11
+    },
+    {
+     "field": "widget w8 description",
+     "length": 323
+    },
+    {
+     "field": "widget w9 title",
+     "length": 33
+    },
+    {
+     "field": "widget w10 title",
+     "length": 28
+    },
+    {
+     "field": "widget w11 title",
+     "length": 29
+    },
+    {
+     "field": "widget w12 title",
+     "length": 22
+    },
+    {
+     "field": "widget w13 title",
+     "length": 8
+    },
+    {
+     "field": "widget w13 description",
+     "length": 305
+    },
+    {
+     "field": "widget w14 title",
+     "length": 14
+    },
+    {
+     "field": "widget w14 description",
+     "length": 79
+    },
+    {
+     "field": "widget w15 title",
+     "length": 35
+    },
+    {
+     "field": "widget w16 title",
+     "length": 23
+    },
+    {
+     "field": "widget w16 description",
+     "length": 97
+    },
+    {
+     "field": "widget w17 title",
+     "length": 15
+    },
+    {
+     "field": "widget w17 description",
+     "length": 144
+    },
+    {
+     "field": "widget w18 title",
+     "length": 24
+    },
+    {
+     "field": "widget w18 description",
+     "length": 152
+    },
+    {
+     "field": "widget w19 title",
+     "length": 15
+    },
+    {
+     "field": "widget w19 description",
+     "length": 169
+    },
+    {
+     "field": "widget w20 title",
+     "length": 18
+    },
+    {
+     "field": "widget w20 description",
+     "length": 167
+    },
+    {
+     "field": "widget w21 title",
+     "length": 10
+    },
+    {
+     "field": "widget w21 description",
+     "length": 300
+    },
+    {
+     "field": "widget w22 title",
+     "length": 20
+    },
+    {
+     "field": "widget w22 description",
+     "length": 134
+    },
+    {
+     "field": "widget w23 title",
+     "length": 19
+    },
+    {
+     "field": "widget w23 description",
+     "length": 101
+    },
+    {
+     "field": "widget w24 title",
+     "length": 16
+    },
+    {
+     "field": "widget w24 description",
+     "length": 133
+    },
+    {
+     "field": "widget w25 title",
+     "length": 13
+    },
+    {
+     "field": "widget w25 description",
+     "length": 153
+    },
+    {
+     "field": "widget w26 title",
+     "length": 13
+    },
+    {
+     "field": "widget w26 description",
+     "length": 89
+    },
+    {
+     "field": "widget w27 title",
+     "length": 15
+    },
+    {
+     "field": "widget w28 title",
+     "length": 13
+    },
+    {
+     "field": "widget w28 description",
+     "length": 99
+    },
+    {
+     "field": "widget w29 title",
+     "length": 28
+    },
+    {
+     "field": "widget w30 title",
+     "length": 15
+    },
+    {
+     "field": "widget w30 description",
+     "length": 93
+    },
+    {
+     "field": "widget w31 title",
+     "length": 12
+    },
+    {
+     "field": "widget w31 description",
+     "length": 104
+    },
+    {
+     "field": "widget w32 title",
+     "length": 10
+    },
+    {
+     "field": "widget w32 description",
+     "length": 384
+    }
+   ],
+   "description_replaced": false,
+   "source_description_length": null
+  },
+  {
+   "type": "dashboard",
+   "file": "dashboards/vsphere-cluster-capacity-2-0.yaml",
+   "source_id": "c608ccb8-218a-4834-8a9d-af9241e01de1",
+   "id": "77e838ec-232b-5235-999e-9b47ceb95943",
+   "name": "vSphere Cluster Capacity 2.0",
+   "source_name": "vSphere Cluster Capacity 2.0",
+   "renamed": [],
+   "losses": [
+    {
+     "class": "adapterName",
+     "text": "adapterName is not modeled (dashboard_fidelity_wire_format.md \u00a7Dashboard level)",
+     "at": [
+      "dashboard.adapterName"
+     ]
+    },
+    {
+     "class": "config.widgetId naming no widget of the dashboard",
+     "text": "config.widgetId naming no widget of the dashboard is not modeled: the renderer writes the widget's own id (dashboard_fidelity_wire_format.md \u00a7Widget fields common to every type)",
+     "at": [
+      "widget[1:HealthChart].config.widgetId"
+     ]
+    }
+   ],
+   "notes": [
+    "widget 15 (View 'CPU Utilization (%)'): view 7bcdb50d-c015-4237-9014-832a74f07f91 is not in the input; referenced by raw id (it must exist on the target instance)"
+   ],
+   "deviations": [
+    {
+     "text": "dashboard 'vSphere Cluster Capacity 2.0': omit: folder_in_name not emitted: its floor is unknown (no product export shows it), above the target 8.18.7; the render carries name where the source leaves it out (set aside only at dashboard.name) (the dashboard name then carries its folder)",
+     "at": [
+      "dashboard.name"
+     ]
+    },
+    {
+     "text": "dashboard 'vSphere Cluster Capacity 2.0': omit: temporary not emitted: its floor is 9.1.1, above the target 8.18.7; the render carries temporary where the source leaves it out (set aside only at dashboard.temporary)",
+     "at": [
+      "dashboard.temporary"
+     ]
+    }
+   ],
+   "version_warnings": [],
+   "not_deliverable": [
+    "widget w2 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)",
+    "widget w12 (Section) needs VCF Operations 9.1.1 or later; the stated target 8.18.7 aborts the whole dashboard on import (issue #199); to deliver it without its Section rows, convert it at a target that imports Section (9.1.1 or later) or without --target-min, then add section_fallback: omit to the written dashboard YAML (the importer never adds it)"
+   ],
+   "verbatim_text": [
+    {
+     "field": "name",
+     "length": 28
+    },
+    {
+     "field": "description",
+     "length": 69
+    },
+    {
+     "field": "widget w0 title",
+     "length": 21
+    },
+    {
+     "field": "widget w0 description",
+     "length": 59
+    },
+    {
+     "field": "widget w1 title",
+     "length": 21
+    },
+    {
+     "field": "widget w1 description",
+     "length": 59
+    },
+    {
+     "field": "widget w2 title",
+     "length": 16
+    },
+    {
+     "field": "widget w3 title",
+     "length": 17
+    },
+    {
+     "field": "widget w4 title",
+     "length": 14
+    },
+    {
+     "field": "widget w5 title",
+     "length": 7
+    },
+    {
+     "field": "widget w6 title",
+     "length": 8
+    },
+    {
+     "field": "widget w7 title",
+     "length": 15
+    },
+    {
+     "field": "widget w8 title",
+     "length": 11
+    },
+    {
+     "field": "widget w9 title",
+     "length": 10
+    },
+    {
+     "field": "widget w10 title",
+     "length": 4
+    },
+    {
+     "field": "widget w11 title",
+     "length": 22
+    },
+    {
+     "field": "widget w12 title",
+     "length": 27
+    },
+    {
+     "field": "widget w13 title",
+     "length": 25
+    },
+    {
+     "field": "widget w14 title",
+     "length": 22
+    },
+    {
+     "field": "widget w15 title",
+     "length": 19
+    },
+    {
+     "field": "widget w16 title",
+     "length": 23
+    },
+    {
+     "field": "widget w17 title",
+     "length": 23
+    },
+    {
+     "field": "widget w18 title",
+     "length": 26
+    }
+   ],
+   "description_replaced": false,
+   "source_description_length": null
+  }
+ ],
+ "verify": {
+  "objects_detail": [
+   {
+    "type": "dashboard",
+    "name": "Overall Daily Check",
+    "file": "dashboards/overall-daily-check.yaml",
+    "fields": 1620,
+    "differences": [],
+    "at_recorded_losses": [
+     [
+      "dashboard.adapterName",
+      "missing",
+      "\"iSDK_vCommunity\""
+     ],
+     [
+      "widget[0:Section].config.widgetId",
+      "value",
+      "\"25b1e47f-769b-46f9-9382-41b8be97ec76\" vs \"w0\""
+     ],
+     [
+      "widget[10:HealthChart].config.widgetId",
+      "value",
+      "\"3df1e0bc-ab28-461f-bb0e-b1d8fe80b9e2\" vs \"w10\""
+     ],
+     [
+      "widget[11:HealthChart].config.widgetId",
+      "value",
+      "\"9b4ff433-5b1f-4c5d-a941-ed4ea386dc17\" vs \"w11\""
+     ],
+     [
+      "widget[12:HealthChart].config.widgetId",
+      "value",
+      "\"5b5bc568-efd6-4bcb-a88e-4506768c15ea\" vs \"w12\""
+     ],
+     [
+      "widget[13:Section].config.widgetId",
+      "value",
+      "\"64922b42-ce96-40b3-a8d5-6da49f1649e9\" vs \"w13\""
+     ],
+     [
+      "widget[15:HealthChart].config.widgetId",
+      "value",
+      "\"4d9c2e5a-ef9d-4fce-aa15-4f710a1d51a5\" vs \"w15\""
+     ],
+     [
+      "widget[1:Scoreboard].config.widgetId",
+      "value",
+      "\"098630f3-5e0f-4463-9a0f-232f9a5904a1\" vs \"w1\""
+     ],
+     [
+      "widget[20:MetricChart].config.widgetId",
+      "value",
+      "\"20d11e2e-07d2-4f83-a322-fdef03e97b4a\" vs \"w20\""
+     ],
+     [
+      "widget[21:Section].config.widgetId",
+      "value",
+      "\"54c0536e-9faa-4707-afa8-c37cb72480e5\" vs \"w21\""
+     ],
+     [
+      "widget[22:HealthChart].config.widgetId",
+      "value",
+      "\"99191a76-5159-4b90-b081-3d4c43bd2dcb\" vs \"w22\""
+     ],
+     [
+      "widget[23:HealthChart].config.widgetId",
+      "value",
+      "\"46cf2b20-2517-4202-9150-f55595900186\" vs \"w23\""
+     ],
+     [
+      "widget[24:HealthChart].config.widgetId",
+      "value",
+      "\"b875f44f-6754-49b3-b2dc-73393388a5dc\" vs \"w24\""
+     ],
+     [
+      "widget[2:Scoreboard].config.widgetId",
+      "value",
+      "\"b75465a0-cb3c-45e0-8bc8-7fd4da0944e3\" vs \"w2\""
+     ],
+     [
+      "widget[31:View].config.widgetId",
+      "value",
+      "\"ac93cd19-4074-4e3e-ac4c-1d29b111c56c\" vs \"w31\""
+     ],
+     [
+      "widget[32:Heatmap].config.widgetId",
+      "value",
+      "\"90ccfa01-58e0-48e9-a1c7-0bb522015218\" vs \"w32\""
+     ],
+     [
+      "widget[3:HealthChart].config.widgetId",
+      "value",
+      "\"ce3a6956-a0aa-48c4-9517-41910da0bd22\" vs \"w3\""
+     ],
+     [
+      "widget[4:HealthChart].config.widgetId",
+      "value",
+      "\"854e1b3c-50f2-4c8d-a0d7-63835dd40859\" vs \"w4\""
+     ],
+     [
+      "widget[5:Section].config.widgetId",
+      "value",
+      "\"06c9ab87-5b9f-4b96-9e13-f3de937692df\" vs \"w5\""
+     ],
+     [
+      "widget[7:HealthChart].config.widgetId",
+      "value",
+      "\"1d34b7ce-0878-49bd-9181-c9b25090cdac\" vs \"w7\""
+     ],
+     [
+      "widget[8:Section].config.widgetId",
+      "value",
+      "\"34aa65b7-ff58-4125-87d8-93de6bdb799e\" vs \"w8\""
+     ],
+     [
+      "widget[9:HealthChart].config.widgetId",
+      "value",
+      "\"40f7a080-aa3d-46a7-b2a7-451daafdfc58\" vs \"w9\""
+     ]
+    ],
+    "recorded_losses": [
+     "adapterName is not modeled (dashboard_fidelity_wire_format.md \u00a7Dashboard level)",
+     "config.widgetId naming no widget of the dashboard is not modeled: the renderer writes the widget's own id (dashboard_fidelity_wire_format.md \u00a7Widget fields common to every type)"
+    ],
+    "target_deviations": [
+     "dashboard 'Overall Daily Check': omit: temporary not emitted: its floor is 9.1.1, above the target 8.18.7; the render carries temporary where the source leaves it out (set aside only at dashboard.temporary)",
+     "dashboard 'Overall Daily Check': omit: widget_interactions not emitted: its floor is 9.1.1, above the target 8.18.7; the render carries widgetInteractions where the source leaves it out (set aside only at dashboard.widgetInteractions)"
+    ],
+    "at_target_deviations": [
+     [
+      "dashboard.temporary",
+      "extra",
+      "false"
+     ],
+     [
+      "dashboard.widgetInteractions",
+      "extra",
+      "\"[]\""
+     ]
+    ],
+    "status": "differs only at recorded losses"
+   },
+   {
+    "type": "dashboard",
+    "name": "vSphere Cluster Capacity 2.0",
+    "file": "dashboards/vsphere-cluster-capacity-2-0.yaml",
+    "fields": 1391,
+    "differences": [],
+    "at_recorded_losses": [
+     [
+      "dashboard.adapterName",
+      "missing",
+      "\"iSDK_vCommunity\""
+     ],
+     [
+      "widget[1:HealthChart].config.widgetId",
+      "value",
+      "\"928dd83b-6b33-4dc3-ac7c-95a78666cbbc\" vs \"w1\""
+     ]
+    ],
+    "recorded_losses": [
+     "adapterName is not modeled (dashboard_fidelity_wire_format.md \u00a7Dashboard level)",
+     "config.widgetId naming no widget of the dashboard is not modeled: the renderer writes the widget's own id (dashboard_fidelity_wire_format.md \u00a7Widget fields common to every type)"
+    ],
+    "target_deviations": [
+     "dashboard 'vSphere Cluster Capacity 2.0': omit: folder_in_name not emitted: its floor is unknown (no product export shows it), above the target 8.18.7; the render carries name where the source leaves it out (set aside only at dashboard.name) (the dashboard name then carries its folder)",
+     "dashboard 'vSphere Cluster Capacity 2.0': omit: temporary not emitted: its floor is 9.1.1, above the target 8.18.7; the render carries temporary where the source leaves it out (set aside only at dashboard.temporary)"
+    ],
+    "at_target_deviations": [
+     [
+      "dashboard.name",
+      "value",
+      "\"vSphere Cluster Capacity 2.0\" vs \"vCommunity/vSphere Cluster Capacity 2.0\""
+     ],
+     [
+      "dashboard.temporary",
+      "extra",
+      "false"
+     ]
+    ],
+    "status": "differs only at recorded losses"
+   }
+  ]
+ }
+}

@@ -1,0 +1,47 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: 9e3fb0cb-99e8-5f8b-b806-0367d1ced546
+name: vSphere Port Group Promiscuous Mode
+description: Count of distributed port groups that allow promiscuous mode. Minimize this for security
+  reason, and only use for the use case it's designed for.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: DistributedVirtualPortgroup
+  types:
+  - descendant
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: config|policies|security|allow_promiscuous
+  display_name: .
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  omit:
+  - roll_up_type
+  - transformation
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  is_sum: false
+distribution_color: 37B3EB
+additional_columns:
+- attribute: summary|used_num_ports
+  localized_name: Summary|Used Number of Ports
+  display_name: Used Ports
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  show_relative_timestamp: false
+- attribute: config|segmentID
+  localized_name: Configuration|Segment ID
+  display_name: Segment ID
+  is_string_attribute: true
+  is_property: true
+  roll_up_count: 0
+omit:
+- include_resource_creation_time

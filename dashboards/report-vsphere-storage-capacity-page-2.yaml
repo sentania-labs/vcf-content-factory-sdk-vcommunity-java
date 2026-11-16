@@ -1,0 +1,251 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: b16b790d-da2f-53f7-a6ba-90a64b6acaaa
+name: 'Report: vSphere Storage Capacity (page 2)'
+description: "Part of a report covering capacity. Designed to be run on a weekly basis, and be compared\
+  \ with previous week result. \nWorking with a VCF expert, tailor the dashboard and widget to the specific\
+  \ requirements.\n\nThe color in the Time Remaining widget reflects the number of days before the datastore\
+  \ will run out of capacity.\n\nThe size of each square on the heat map datastore reflects the relative\
+  \ size of the datastore actual size. Larger datastore is shown larger."
+name_path: VCF Optimization Assessment
+shared: false
+hidden: false
+disabled: true
+column_proportion: 1-1
+widgets:
+- id: w0
+  type: Heatmap
+  title: Remaining Capacity by Datacenter. Size by total capacity.
+  coords:
+    w: 6
+    x: 7
+    h: 15
+    y: 1
+  mode: all
+  depth: 10
+  selected_tab: 1
+  configs:
+  - name: Used Capacity By Datacenter
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+    color_by:
+      metric_key: capacity|usedSpacePct
+      label: Capacity|Used Space (%)
+    size_by:
+      metric_key: diskspace|capacity
+      label: Disk Space|Total Capacity (GB)
+    group_by:
+      adapter_kind: VMWARE
+      resource_kind: Datacenter
+      text: Datacenter
+      parent_text: vCenter Adapter
+    color:
+      thresholds:
+        values:
+        - 0
+        - 60
+        - 70
+        - 80
+        - 90
+        colors:
+        - '#8D8B8D'
+        - '#8D8B8D'
+        - '#74B43B'
+        - '#ECC33E'
+        - '#ED891F'
+        - '#DE3F30'
+      min_value: 0
+      max_value: 100
+    solid_coloring: true
+    focus_on_groups: true
+    model_id: true
+    tag_filter:
+      resource_kinds:
+      - adapter_kind: VMWARE
+        resource_kind: Datastore
+    custom_filter:
+    - adapter_kind: VMWARE
+      resource_kind: Datastore
+      conditions:
+      - filter_type: properties
+        metric_key: summary|isLocal
+        metric_name: Summary|Is Local
+        condition: EQUALS
+        value: 'false'
+        string_metric: true
+        metric_unit: null
+    omit:
+    - group_by_kind_keys
+  - name: Remaining Capacity
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+    color_by:
+      metric_key: OnlineCapacityAnalytics|capacityRemainingPercentage
+      label: Capacity Analytics Generated|Capacity Remaining Percentage (%)
+    size_by:
+      metric_key: diskspace|capacity
+      label: Disk Space|Total Capacity (GB)
+    group_by:
+      adapter_kind: VMWARE
+      resource_kind: Datacenter
+      text: Datacenter
+      parent_text: vCenter Adapter
+    color:
+      thresholds:
+        values:
+        - 0
+        - 5
+        - 10
+        - 80
+        colors:
+        - '#DE3F30'
+        - '#ED891F'
+        - '#ECC33E'
+        - '#74B43B'
+        - '#8D8B8D'
+      min_value: 0
+      max_value: 100
+    solid_coloring: true
+    focus_on_groups: true
+    tag_filter:
+      resource_kinds:
+      - adapter_kind: VMWARE
+        resource_kind: Datastore
+    custom_filter:
+    - adapter_kind: VMWARE
+      resource_kind: Datastore
+      conditions:
+      - filter_type: properties
+        metric_key: summary|isLocal
+        metric_name: Summary|Is Local
+        condition: EQUALS
+        value: 'false'
+        string_metric: true
+        metric_unit: null
+    omit:
+    - group_by_kind_keys
+  ui:
+    height: 837
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    - key: perm_HeatMap_
+      value: o%3A
+- id: w1
+  type: Heatmap
+  title: Time Remaining (days) By Datacenter. Size by total capacity.
+  coords:
+    w: 6
+    x: 1
+    h: 15
+    y: 1
+  mode: all
+  depth: 10
+  configs:
+  - name: Used Capacity By Datacenter
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+    color_by:
+      metric_key: OnlineCapacityAnalytics|timeRemaining
+      label: Capacity Analytics Generated|Time Remaining (Day(s))
+    size_by:
+      metric_key: diskspace|capacity
+      label: Disk Space|Total Capacity (GB)
+    group_by:
+      adapter_kind: VMWARE
+      resource_kind: Datacenter
+      text: Datacenter
+      parent_text: vCenter Adapter
+    color:
+      thresholds:
+        values:
+        - 0
+        - 60
+        - 70
+        - 80
+        - 90
+        colors:
+        - '#CE4C3C'
+        - '#CE4C3C'
+        - '#E18D3D'
+        - '#ECC33E'
+        - '#83AF50'
+        - '#8D8B8D'
+      min_value: 0
+      max_value: 100
+    solid_coloring: true
+    focus_on_groups: true
+    tag_filter:
+      resource_kinds:
+      - adapter_kind: VMWARE
+        resource_kind: Datastore
+    custom_filter:
+    - adapter_kind: VMWARE
+      resource_kind: Datastore
+      conditions:
+      - filter_type: properties
+        metric_key: summary|isLocal
+        metric_name: Summary|Is Local
+        condition: EQUALS
+        value: 'false'
+        string_metric: true
+        metric_unit: null
+    omit:
+    - group_by_kind_keys
+  - name: Remaining Capacity
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+    color_by:
+      metric_key: OnlineCapacityAnalytics|capacityRemainingPercentage
+      label: Capacity Analytics Generated|Capacity Remaining Percentage (%)
+    size_by:
+      metric_key: diskspace|capacity
+      label: Disk Space|Total Capacity (GB)
+    group_by:
+      adapter_kind: VMWARE
+      resource_kind: Datacenter
+      text: Datacenter
+      parent_text: vCenter Adapter
+    color:
+      thresholds:
+        values:
+        - 0
+        - 5
+        - 10
+        - 80
+        colors:
+        - '#DE3F30'
+        - '#ED891F'
+        - '#ECC33E'
+        - '#74B43B'
+        - '#8D8B8D'
+      min_value: 0
+      max_value: 100
+    solid_coloring: true
+    focus_on_groups: true
+    model_id: true
+    tag_filter:
+      resource_kinds:
+      - adapter_kind: VMWARE
+        resource_kind: Datastore
+    filter_mode: customFilter
+    custom_filter:
+    - adapter_kind: VMWARE
+      resource_kind: Datastore
+      conditions:
+      - filter_type: properties
+        metric_key: summary|isLocal
+        metric_name: Summary|Is Local
+        condition: EQUALS
+        value: 'false'
+        string_metric: true
+        metric_unit: null
+    omit:
+    - group_by_kind_keys
+  ui:
+    height: 837
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    - key: perm_HeatMap_
+      value: o%3A
+interactions: []

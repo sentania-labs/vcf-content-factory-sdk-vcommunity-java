@@ -1,0 +1,31 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: e292932e-aea0-506b-88b9-9eafa8c1f089
+name: ESXi Storage Adapters
+description: List of HBA (host based adapter) and their driver type. Ensure this matches best practices
+  and the expected setting for the adapter.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- instanced_group:
+    name: GROUP_storageAdapter
+    show_instance_name: true
+    keep_instance_summary: false
+  omit:
+  - display_name
+- attribute: storageAdapter:vmhba0|hbaDriver
+  display_name: Driver
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+omit:
+- include_resource_creation_time

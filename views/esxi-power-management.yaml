@@ -1,0 +1,38 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 7b010e95-d214-5f60-979f-6992f63416be
+name: ESXi Power Management
+description: The power management setting at ESXi level. Compare with the value at BIOS level
+data_type: distribution
+presentation: donut-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+  types:
+  - descendant
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: hardware|powerManagementPolicy
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  omit:
+  - display_name
+  - roll_up_type
+  - transformation
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  is_sum: false
+additional_columns:
+- attribute: hardware|powerManagementTechnoloy
+  localized_name: Hardware|BIOS Power Management Setting
+  display_name: BIOS Setting
+  is_string_attribute: true
+  is_property: true
+  roll_up_count: 0
+omit:
+- include_resource_creation_time

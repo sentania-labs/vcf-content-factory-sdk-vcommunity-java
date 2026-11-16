@@ -1,0 +1,34 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: f2374f47-c57f-5452-830d-ff932a3bc91b
+name: ESXi Security Policy List
+description: List of ESXi services and their status. Ensure this matches security best practices and your
+  expectation for the host
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- instanced_group:
+    name: GROUP_config
+    show_instance_name: true
+    keep_instance_summary: false
+  display_name: Services
+  sort: asc
+- attribute: config|security|service:Direct Console UI|policy
+  display_name: Policy
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  red_bound: 'off'
+  ascending_range: true
+  omit:
+  - roll_up_type
+page_size: 50
+hide_object_name: true
+omit:
+- include_resource_creation_time

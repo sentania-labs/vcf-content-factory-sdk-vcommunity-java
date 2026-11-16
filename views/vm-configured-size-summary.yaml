@@ -1,0 +1,69 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: b07a6546-2d32-5c10-b824-2c004c35bdad
+name: VM Configured Size Summary
+description: 'A summary table showing the average, largest and smallest VM in the environment by their
+  configured size. '
+data_type: list
+presentation: summary
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: config|hardware|numCpu
+  display_name: CPU
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|hardware|memoryKB
+  display_name: Memory
+  unit: gb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|hardware|diskSpace
+  display_name: Disk Space
+  unit: tb
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|numVMDKs
+  display_name: vDisk
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+summary:
+- display_name: Average
+  aggregation: AVG
+  columns:
+  - 0
+  - 1
+  - 2
+  - 3
+- display_name: Largest
+  aggregation: MAX
+  columns:
+  - 0
+  - 1
+  - 2
+  - 3
+- display_name: Smallest
+  aggregation: MIN
+  columns:
+  - 0
+  - 1
+  - 2
+  - 3
+page_size: 50
+omit:
+- metadata

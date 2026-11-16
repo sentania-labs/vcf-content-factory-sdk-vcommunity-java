@@ -1,0 +1,332 @@
+type	file	name	class(a=builtin only,b=vCommunity keys/kind,c=super metric)	vCommunity_keys	super_metrics	extra
+view	ESXi Host Details vCommunity.xml	ESXi Host Details vCommunity [d0002f17-5acb-46dd-b69f-4a89f31f0c3b]	b	vCommunity|Configuration|Install Date|UTC		subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	ESXi Host Hardware Models vCommunity.xml	ESXi Host Hardware vCommunity [8342e94a-ffdd-4630-9384-0d876026b520]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	ESXi Host License Information vCommunity.xml	ESXi Host License Information vCommunity [810958f4-e511-4e44-afaa-c04956768daf]	b	vCommunity|Licensing:Evaluation Mode|Edition Key;vCommunity|Licensing:Evaluation Mode|License Expiration Date;vCommunity|Licensing:Evaluation Mode|License Key;vCommunity|Licensing:Evaluation Mode|Remaining Days		subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	ESXi Host Maintenance State vCommunity.xml	ESXi Host Maintenance Mode vCommunity [2a1ce101-dea2-4866-adb0-16516dae9217]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	ESXi Host NIC Details View.xml	ESXi Host NIC Details [59c6f945-e83b-4668-a6a3-d789b9d05166]	b	vCommunity|Network|Device:vmnic0|Driver Version;vCommunity|Network|Device:vmnic0|Firmware Version;vCommunity|Network|Device:vmnic0|Status		subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	ESXi Host Power State vCommunity.xml	ESXi Host Power State vCommunity [56f47a85-150b-4bfe-b693-a42337bf1985]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	ESXi Host Versions vCommunity.xml	ESXi Host Versions vCommunity [8a6d966f-76f4-4cd0-8e33-97fa3c6c0e0d]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	ESXi Packages.xml	ESXi Packages [5de4b799-4532-4b31-84c8-aa41840858bf]	b	vCommunity|Configuration|Packages:atlantic|Package Name;vCommunity|Configuration|Packages:atlantic|Package Version		subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	Report - VOA - Datastore for CSV export.xml	Report: Datastore for CSV export [f66bed30-c7fd-4072-8bf8-1b0e4bce1ce7]	a			subjects=[('VMWARE', 'Datastore')] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	Report: Datastore for CSV export [f66bed30-c7fd-4072-8bf8-1b0e4bce1ce7]	a			subjects=[('VMWARE', 'Datastore')] adapterKind_vCommunity=False copies=2
+view	Report - VOA - Distributed Port Groups for CSV export.xml	Report: Distributed Port Groups for CSV export [9e7dc458-f39f-4520-85bf-c87c525e061b]	a			subjects=[('VMWARE', 'DistributedVirtualPortgroup')] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	Report: Distributed Port Groups for CSV export [9e7dc458-f39f-4520-85bf-c87c525e061b]	a			subjects=[('VMWARE', 'DistributedVirtualPortgroup')] adapterKind_vCommunity=False copies=2
+view	Report - VOA - Distributed Switch for CSV export.xml	Report: Distributed Switch for CSV export [da229455-b8ec-440b-a890-48db49fcf57e]	c		3ec095da-c812-4baf-b0fa-3c2413392518	subjects=[('VMWARE', 'VmwareDistributedVirtualSwitch')] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	Report: Distributed Switch for CSV export [da229455-b8ec-440b-a890-48db49fcf57e]	c		3ec095da-c812-4baf-b0fa-3c2413392518	subjects=[('VMWARE', 'VmwareDistributedVirtualSwitch')] adapterKind_vCommunity=False copies=2
+view	Report - VOA - ESXi Hosts for CSV Export.xml	Report: ESXi Hosts for CSV Export [fc838325-c254-4212-95a5-1ae3bbdf1865]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	Report: ESXi Hosts for CSV Export [fc838325-c254-4212-95a5-1ae3bbdf1865]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	Report - VOA - Namespace for CSV export.xml	Report: Namespace for CSV export [f872c0eb-4db4-43bf-85ee-4332387352a9]	a			subjects=[('VMWARE', 'NamespaceV2')] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	Report: Namespace for CSV export [f872c0eb-4db4-43bf-85ee-4332387352a9]	a			subjects=[('VMWARE', 'NamespaceV2')] adapterKind_vCommunity=False copies=2
+view	Report - VOA - Supervisor Cluster for CSV export.xml	Report: Supervisor Cluster for CSV export [9b448057-cc98-4daa-9d08-6e25213acea8]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	Report: Supervisor Cluster for CSV export [9b448057-cc98-4daa-9d08-6e25213acea8]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	Report - VOA - Virtual Machines for CSV export.xml	Report: Virtual Machines for CSV export [5bf51a21-b981-4823-b8a5-02297aa40be4]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	Report: Virtual Machines for CSV export [5bf51a21-b981-4823-b8a5-02297aa40be4]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	Report - VOA - vCenter for CSV Export.xml	Report: vCenter for CSV Export [c5f9d0b8-07e5-488e-b4ec-bece54158bb0]	a			subjects=[('VMWARE', 'VMwareAdapter Instance')] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	Report: vCenter for CSV Export [c5f9d0b8-07e5-488e-b4ec-bece54158bb0]	a			subjects=[('VMWARE', 'VMwareAdapter Instance')] adapterKind_vCommunity=False copies=2
+view	Report - VOA - vSphere Clusters for CSV Export.xml	Report: vSphere Clusters for CSV Export [f778d977-0007-414f-bc0c-4b373bfd5025]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	Report: vSphere Clusters for CSV Export [f778d977-0007-414f-bc0c-4b373bfd5025]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	Report - VOA - vSphere Data Center for CSV export.xml	Report: vSphere Data Center for CSV export [7dbe89b5-3ad1-4bf4-92da-20517356bcef]	a			subjects=[('VMWARE', 'Datacenter')] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	Report: vSphere Data Center for CSV export [7dbe89b5-3ad1-4bf4-92da-20517356bcef]	a			subjects=[('VMWARE', 'Datacenter')] adapterKind_vCommunity=False copies=2
+view	Report - VOA - vSphere Pod for CSV export.xml	Report: vSphere Pod for CSV export [e2ccf269-9772-4d07-a71c-1df10d69285c]	a			subjects=[('VMWARE', 'Pod'), ('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	Report: vSphere Pod for CSV export [e2ccf269-9772-4d07-a71c-1df10d69285c]	a			subjects=[('VMWARE', 'Pod'), ('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	VCF Management Services Components View.xml	 [df8479d3-45c0-4e1a-9cb3-9c3412f93579]	a			subjects=[('VMSP', 'ops-logs'), ('VMSP', 'salt'), ('VMSP', 'salt-raas'), ('VMSP', 'telemetry-acceptor'), ('VMSP', 'vcf-distribution'), ('VMSP', 'vcf-fleet-depot'), ('VMSP', 'vcf-fleet-lcm'), ('VMSP', 'vcf-obs-data-platform'), ('VMSP', 'vcf-sddc-lcm'), ('VMSP', 'vidb'), ('VMSP', 'vsp')] adapterKind_vCommunity=False copies=1
+view	VCF Management Services Nodes View.xml	VCF Management Services Nodes View [4747af30-e22c-44b8-b2cf-e206e7310f12]	a			subjects=[('VMSP', 'vmsp-platform-node')] adapterKind_vCommunity=False copies=1
+view	VCF Management Services Volumes View.xml	VCF Management Services Volumes View [cadb4cc0-aba9-4ca1-a035-64a0d0cae5c1]	a			subjects=[('VMSP', 'vmsp-platform-volume')] adapterKind_vCommunity=False copies=1
+view	VCF Management Services.xml	VCF Management Services [9170baca-1e15-4a8e-be52-8bed7ef73f72]	a			subjects=[('VMSP', 'VMSP_CLUSTER')] adapterKind_vCommunity=False copies=1
+view	VM Details vCommunity.xml	VM Details vCommunity [f12d5911-bcd2-48c9-b7b9-5ae57eef8a41]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	VM Outdated Hardware Version vCommunity.xml	VM Outdated Hardware Version [a694a0d6-0bfa-4129-a19c-2bad4e49e639]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	VM Tools not running vCommunity.xml	VM Tools not running [35584e40-c780-48c2-8b7a-7a8db67a78c5]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	VM Tools outdated vCommunity.xml	VM Tools outdated [75d99f2b-4f61-49df-ab8f-952689728ae6]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	VM with large Snapshot vCommunity.xml	VM with large Snapshot [5f2b8152-2e2e-4fc9-8fd6-62c6c946b541]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	VM with old Snapshots vCommunity.xml	VM with old Snapshots  [ca5859dc-1574-4c4a-88c6-b45beceff0f2]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Cluster nenic nfnic VIBs.xml	nfnic VIB Vendor Distribution [189af936-64df-40f2-bf4f-61c23de0fcbe]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	Cluster_VIB_Content.xml	nfnic VIB Vendor Distribution [189af936-64df-40f2-bf4f-61c23de0fcbe]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Cluster nenic nfnic VIBs.xml	nenic VIB Version Distribution [ada5a50b-6261-4068-a761-c6a48e20e2bf]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	Cluster_VIB_Content.xml	nenic VIB Version Distribution [ada5a50b-6261-4068-a761-c6a48e20e2bf]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Cluster nenic nfnic VIBs.xml	VIB Info [b4c1708e-611d-4db0-bccb-b6a381ee2b0b]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	Cluster_VIB_Content.xml	VIB Info [b4c1708e-611d-4db0-bccb-b6a381ee2b0b]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Cluster nenic nfnic VIBs.xml	nenic VIB Vendor Distribution [ebf5961e-c67a-4662-a6bf-c52ad8d450f4]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	Cluster_VIB_Content.xml	nenic VIB Vendor Distribution [ebf5961e-c67a-4662-a6bf-c52ad8d450f4]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Cluster nenic nfnic VIBs.xml	nfnic VIB Version Distribution [9599d437-6495-42f4-9530-bdd52d82dfd1]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	Cluster_VIB_Content.xml	nfnic VIB Version Distribution [9599d437-6495-42f4-9530-bdd52d82dfd1]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Network Top Talkers [fc20d8a6-9f74-4b78-9022-7441c6d877e9]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 1.xml	VM Network Top Talkers [fc20d8a6-9f74-4b78-9022-7441c6d877e9]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Shares by RP [c92c7819-bd0c-4ba7-94ab-f6c0980da959]	b	vCommunity|Configuration|Share per MB of Memory;vCommunity|Configuration|Share per vCPU		subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 1.xml	VM Shares by RP [c92c7819-bd0c-4ba7-94ab-f6c0980da959]	b	vCommunity|Configuration|Share per MB of Memory;vCommunity|Configuration|Share per vCPU		subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Memory to reclaim (idle) [5c3441f2-4619-441c-ad02-0b01ead34813]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 1.xml	VM Memory to reclaim (idle) [5c3441f2-4619-441c-ad02-0b01ead34813]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Memory Contention Distribution for Profiling [3ede5e0a-2121-4579-a250-26648589cb4a]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 1.xml	VM Memory Contention Distribution for Profiling [3ede5e0a-2121-4579-a250-26648589cb4a]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere Port Group Configuration  [49b13b68-dee2-483d-8df8-1b6d7957d01c]	c		3ec095da-c812-4baf-b0fa-3c2413392518	subjects=[('VMWARE', 'DistributedVirtualPortgroup')] adapterKind_vCommunity=False copies=2
+view	View - Set 1.xml	vSphere Port Group Configuration  [49b13b68-dee2-483d-8df8-1b6d7957d01c]	c		3ec095da-c812-4baf-b0fa-3c2413392518	subjects=[('VMWARE', 'DistributedVirtualPortgroup')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere Cluster DRS Automation Status [94b25c6a-bc08-4b7f-83e5-d55d4b6d89e1]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Set 1.xml	vSphere Cluster DRS Automation Status [94b25c6a-bc08-4b7f-83e5-d55d4b6d89e1]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere Cluster DRS Status [fcab0100-1881-48b6-bd07-aaeaa3ee669e]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Set 1.xml	vSphere Cluster DRS Status [fcab0100-1881-48b6-bd07-aaeaa3ee669e]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	Datastores Distribution by VM Count [4c8fbab0-9d2c-40de-9fe1-8a530f2ffb9c]	a			subjects=[('VMWARE', 'Datastore')] adapterKind_vCommunity=False copies=2
+view	View - Set 1.xml	Datastores Distribution by VM Count [4c8fbab0-9d2c-40de-9fe1-8a530f2ffb9c]	a			subjects=[('VMWARE', 'Datastore')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere Port Group MAC Address Change [0a898851-197b-4e82-baf6-a2a89acd600a]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	vSphere Port Group MAC Address Change [0a898851-197b-4e82-baf6-a2a89acd600a]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere Cluster HA Status [e041c79b-910f-477b-9d7a-d84e495119cb]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	vSphere Cluster HA Status [e041c79b-910f-477b-9d7a-d84e495119cb]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi on Maintenance Mode [6d865efb-5dcd-496f-9a07-ced99f530142]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi on Maintenance Mode [6d865efb-5dcd-496f-9a07-ced99f530142]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere Cluster Memory Reservation [f83a4c60-9931-4305-95f9-93f724be86fe]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	vSphere Cluster Memory Reservation [f83a4c60-9931-4305-95f9-93f724be86fe]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Virtual Disks counts [e0e0972a-2da0-4544-a53f-9e55b09c74a3]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM Virtual Disks counts [e0e0972a-2da0-4544-a53f-9e55b09c74a3]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi NTP Running [680f4627-e5c6-4ac5-8c54-87f02ad2b122]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi NTP Running [680f4627-e5c6-4ac5-8c54-87f02ad2b122]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi Distribution by Memory Size  [5c20ba39-9d8b-4272-b01d-8dbafeded995]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi Distribution by Memory Size  [5c20ba39-9d8b-4272-b01d-8dbafeded995]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi Distribution by Versions  [524d0468-8f9d-460b-a2a5-95c2d8846661]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi Distribution by Versions  [524d0468-8f9d-460b-a2a5-95c2d8846661]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM with Hot Add CPU [40b1d206-8616-47e2-9bee-6142b4427180]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM with Hot Add CPU [40b1d206-8616-47e2-9bee-6142b4427180]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Distribution by CPU to add [ad2f56bc-3a78-4045-b2b5-c953781b5c76]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM Distribution by CPU to add [ad2f56bc-3a78-4045-b2b5-c953781b5c76]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi Distribution by NIC Count [39e00d79-920b-4d6a-bf44-e7eb2eb69df8]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi Distribution by NIC Count [39e00d79-920b-4d6a-bf44-e7eb2eb69df8]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi Network Properties [42f8a97e-048a-4cb2-82cc-db121958722c]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi Network Properties [42f8a97e-048a-4cb2-82cc-db121958722c]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Distribution by CPU Share [40c5bbc9-db9d-468c-8094-2137d22e53a7]	b	vCommunity|Configuration|Share per vCPU		subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM Distribution by CPU Share [40c5bbc9-db9d-468c-8094-2137d22e53a7]	b	vCommunity|Configuration|Share per vCPU		subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere VMs Context [e8c8b1c6-02de-438f-973d-f64ba76c7d5f]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	vSphere VMs Context [e8c8b1c6-02de-438f-973d-f64ba76c7d5f]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Disk Latency Distribution [0ef97d2c-770b-4c74-9c82-28a766164a39]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM Disk Latency Distribution [0ef97d2c-770b-4c74-9c82-28a766164a39]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Distribution by Reclaimable Disk [8161f003-c456-47b2-9ce3-b88affa8c7d1]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM Distribution by Reclaimable Disk [8161f003-c456-47b2-9ce3-b88affa8c7d1]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Configuration  [9a77a4b5-0329-459c-9f42-7087f0d911a6]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	VM Configuration  [9a77a4b5-0329-459c-9f42-7087f0d911a6]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Distribution by Memory Share [23b3812d-fac8-449a-acb7-488a388a0716]	b	vCommunity|Configuration|Share per MB of Memory		subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM Distribution by Memory Share [23b3812d-fac8-449a-acb7-488a388a0716]	b	vCommunity|Configuration|Share per MB of Memory		subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi Distribution by CPU Socket  [41127d01-e62b-4d46-89d4-7293ed86103c]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi Distribution by CPU Socket  [41127d01-e62b-4d46-89d4-7293ed86103c]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Distribution by Reclaimable Memory [7e913396-7712-438c-a22f-97140fea9892]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM Distribution by Reclaimable Memory [7e913396-7712-438c-a22f-97140fea9892]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere Data Center Network List [86d58689-64de-4faf-9a53-2425decfe6a6]	a			subjects=[('VMWARE', 'Datacenter')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	vSphere Data Center Network List [86d58689-64de-4faf-9a53-2425decfe6a6]	a			subjects=[('VMWARE', 'Datacenter')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi Distribution by CPU GHz [e2d1f3c7-336f-4eeb-80a1-144d1252bc5e]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi Distribution by CPU GHz [e2d1f3c7-336f-4eeb-80a1-144d1252bc5e]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere Data Centers Inventory [3a88e1a7-511c-440d-868b-65df4a2c7898]	a			subjects=[('VMWARE', 'Datacenter'), ('VMWARE', 'vSphere World')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	vSphere Data Centers Inventory [3a88e1a7-511c-440d-868b-65df4a2c7898]	a			subjects=[('VMWARE', 'Datacenter'), ('VMWARE', 'vSphere World')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Configured Size Summary [69ec6689-a037-447b-926d-6efc4b1ba6db]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM Configured Size Summary [69ec6689-a037-447b-926d-6efc4b1ba6db]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi Distribution by Hardware Model [614c2d3f-98f0-4862-8dcd-fd6b0b4c799d]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi Distribution by Hardware Model [614c2d3f-98f0-4862-8dcd-fd6b0b4c799d]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	Guest OS List of Services [caa77302-9958-4ac0-bcf0-aefcc386b634]	a			subjects=[('APPLICATIONDISCOVERY', 'Services')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	Guest OS List of Services [caa77302-9958-4ac0-bcf0-aefcc386b634]	a			subjects=[('APPLICATIONDISCOVERY', 'Services')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Distribution by Memory Reservation [f752ddef-406d-4868-bd78-8b00aaa425cc]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM Distribution by Memory Reservation [f752ddef-406d-4868-bd78-8b00aaa425cc]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere Cluster Distribution by CPU Reservation [b5f3660a-082c-4af9-b89e-bc670d932e99]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	vSphere Cluster Distribution by CPU Reservation [b5f3660a-082c-4af9-b89e-bc670d932e99]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Distribution by Snapshots Age [7bcb4d10-700f-4bee-94f1-03ffada5ae65]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM Distribution by Snapshots Age [7bcb4d10-700f-4bee-94f1-03ffada5ae65]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM with no Guest counters [97e71e70-094d-435d-b4f4-99da4e489ec2]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM with no Guest counters [97e71e70-094d-435d-b4f4-99da4e489ec2]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere Cluster Resource Management [25c8dd87-54b1-47b2-9de1-766253da9f01]	b	vCommunity|Cluster Risk|Highest ESXi CPU Reservation;vCommunity|Cluster Risk|Highest ESXi Memory Reservation;vCommunity|Resource Pools|Cascading Resource Pools;vCommunity|Resource Pools|Number of Resource Pools		subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	vSphere Cluster Resource Management [25c8dd87-54b1-47b2-9de1-766253da9f01]	b	vCommunity|Cluster Risk|Highest ESXi CPU Reservation;vCommunity|Cluster Risk|Highest ESXi Memory Reservation;vCommunity|Resource Pools|Cascading Resource Pools;vCommunity|Resource Pools|Number of Resource Pools		subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi Distribution by Core Counts [45281acb-5643-4a0c-b4d2-300548289b89]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi Distribution by Core Counts [45281acb-5643-4a0c-b4d2-300548289b89]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM with Hot Remove CPU [ea6cf8d9-087a-4882-b98b-9acd2d4021ed]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM with Hot Remove CPU [ea6cf8d9-087a-4882-b98b-9acd2d4021ed]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere Port Group Promiscuous Mode Allowed [24bd3eec-5fe8-4a90-9ad9-fa570b791973]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	vSphere Port Group Promiscuous Mode Allowed [24bd3eec-5fe8-4a90-9ad9-fa570b791973]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM CPU Allocation Trend [09c901e7-d651-46dc-8dd0-c2b8dcd6b192]	a			subjects=[('VMWARE', 'vSphere World')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM CPU Allocation Trend [09c901e7-d651-46dc-8dd0-c2b8dcd6b192]	a			subjects=[('VMWARE', 'vSphere World')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	Local Datastore with VM [5fc79159-ddc9-4f38-8dc6-461c79b379f4]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	Local Datastore with VM [5fc79159-ddc9-4f38-8dc6-461c79b379f4]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi Network Interfaces [39b1dc9d-2218-4ade-8fd7-a75f07dda262]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi Network Interfaces [39b1dc9d-2218-4ade-8fd7-a75f07dda262]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi Unavailable [617644c5-bb68-43e0-b388-057358525ec6]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi Unavailable [617644c5-bb68-43e0-b388-057358525ec6]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	vSphere Distributed Switch Inventory [8d497409-b506-4027-bc22-27cda696116e]	c		3ec095da-c812-4baf-b0fa-3c2413392518	subjects=[('VMWARE', 'VmwareDistributedVirtualSwitch')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	vSphere Distributed Switch Inventory [8d497409-b506-4027-bc22-27cda696116e]	c		3ec095da-c812-4baf-b0fa-3c2413392518	subjects=[('VMWARE', 'VmwareDistributedVirtualSwitch')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	ESXi Distribution by Storage Path Counts [51ea3aa0-2671-44da-ac00-8c265767ad83]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	ESXi Distribution by Storage Path Counts [51ea3aa0-2671-44da-ac00-8c265767ad83]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Distribution by CPU Size  [850c16a9-3fa6-416a-a4e2-35a6509928aa]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Set 2.xml	VM Distribution by CPU Size  [850c16a9-3fa6-416a-a4e2-35a6509928aa]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=2
+view	View - Collection01.xml	VM Distribution by Disk Size [c655b25c-42be-4512-9c9b-8b4d6beefd71]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 4.xml	VM Distribution by Disk Size [c655b25c-42be-4512-9c9b-8b4d6beefd71]	a			subjects=[] adapterKind_vCommunity=False copies=2
+view	View - Set 1.xml	VM Memory Allocation Trend [8f46e7de-d976-45c4-b7ad-b2477cc96da3]	a			subjects=[('VMWARE', 'vSphere World')] adapterKind_vCommunity=False copies=1
+view	View - Set 1.xml	ESXi Distribution by NIC Speed [d4ba9e73-bc26-4f5f-8cef-504a37cfc988]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 1.xml	VM Distribution by Reclaimable CPU [6c06a467-d9b3-4965-8164-4e5c43940924]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 1.xml	VM Distribution by CPU Reservation [8d44e30e-9bb1-4df1-bf1f-8d2f44276af4]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 1.xml	Datastores Distribution by Size [3ebeebb7-6df6-4e7d-a57f-db20b3fdf29d]	a			subjects=[('VMWARE', 'Datastore')] adapterKind_vCommunity=False copies=1
+view	View - Set 1.xml	VM Distribution by Memory to add [95416c42-b863-415c-88b8-c5294f43daa1]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 2.xml	ESXi High Memory Trend [26d914f9-06d9-4126-9357-887261117d99]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 2.xml	VM CPU Size Distribution [ccfc42fb-aaf3-439e-8111-3a0f1bf7713a]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 2.xml	ESXi Hosts Performance  [653ba701-c9df-4f98-9dd1-8b1d6b57612e]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 2.xml	Datastore Performance List [b963d4b9-12ba-41a2-86df-9e294a1c5f66]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 2.xml	VM CPU Ready Distribution [3b0e097b-b3f1-453f-adc9-ad47c9c5ca4c]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 2.xml	ESXi Power Management [224daf12-865a-44da-9763-55a2841c8bab]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 2.xml	Guest OS Utilization List [b669d11e-3eb1-41b1-9f56-b5a5823ba385]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 2.xml	vSphere Cluster Utilization  [e6404a9a-40b2-4687-9d41-f23b79bc7f93]	c		99152539-e2c3-473d-a4bf-26fc56988f50	subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+view	View - Set 2.xml	VM Performance List [3c32ba9d-e71c-4f2c-bf46-844d1b07857f]	b	vCommunity|Guest OS Performance|Guest OS Performance Score;vCommunity|VM Guest OS KPI;vCommunity|VM Performance|VM Performance Score		subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 2.xml	VM Memory Distribution [bf6bb2c6-12e3-417e-916f-70ab5ec411ad]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Memory Size Distribution [a3849f91-76c6-4791-81d7-65245e321233]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Hardware Version [7bb1bf81-8895-4008-b770-5c7fc106c22a]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Snapshot Size [4d71034d-6368-4284-be94-94887f87eddc]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Resource Pool Configuration [2788178d-7df4-47d7-81de-016f7a1cd18d]	a			subjects=[('VMWARE', 'ResourcePool')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Cluster Configuration List [dadb69af-f77f-4644-8355-588f41c2f4f0]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	ESXi BIOS Versions [16d4447f-ae24-4d6d-b4ef-c5f2a3321351]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	Guest OS Partition List [72cefd21-9a01-45e6-a33c-ea2a6897ac5d]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Growth Trend [c97499b0-cef8-4eff-a70c-dc14b867d8ab]	a			subjects=[('VMWARE', 'vSphere World')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	ESXi HyperThread Active [3af58d7d-168f-4edf-be3e-857cfb5c4d8e]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	ESXi Power Management (BIOS) [d204cfc6-c31e-480f-9d12-008fb57a3dfa]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Disk Latency Distribution for Profiling [a8b54a14-038c-4f1b-ab93-1cc0a6f4bc00]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Cluster Performance List 1 [cd6c06c5-7ac5-4edc-a2c8-5b8777512d59]	b	vCommunity|Cluster Performance|Cluster Performance Score		subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Port Group Forged Transmit [2322a154-f818-4161-9a9d-4ed8421c3e1e]	a			subjects=[('VMWARE', 'DistributedVirtualPortgroup')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Cluster Admission Control Policy [27f6a2e8-ddac-4dc2-b3bf-5f222af701db]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere ESXi Memory Utilization [87399ea9-d93a-4591-b15b-d30a9003972e]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Port Group Inventory [7888104e-2210-4539-a589-8cefa7a0361d]	c		3ec095da-c812-4baf-b0fa-3c2413392518	subjects=[('VMWARE', 'DistributedVirtualPortgroup')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Storage Heavy Hitters [02230501-23d6-4512-858e-381d60876e73]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	Guest OS Memory Utilization [40152c12-1d12-440c-b79e-e9d172deb9a1]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	Datastore Type [2486078e-790e-485b-8ab5-70c1da351a0d]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Performance Profiling [9911f98d-0e2a-4d4f-aefe-973e28ecf1cc]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM with many Network Cards [40e416d0-0ee4-4aa2-9ad6-93d162f668a0]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSAN Host Distribution [b0ce23da-35a1-4c11-89cd-eec7efc5303f]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Snapshot by Size [bf0d0ad1-53d5-42d7-a1a1-67f908642d5d]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	ESXi CPU Speed [44fe1b68-813f-4381-a74f-74432b97c1e7]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM with RDM disks [3ab2df38-8a5e-40df-912c-a354b5526d3f]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere ESXi CPU Utilization [7bcdb50d-c015-4237-9014-832a74f07f91]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	ESXi CPU Models [38896046-e276-47f0-9c78-fd0e1c74b364]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	Guest OS Memory Paging Trend [df2e3054-5db5-478f-bb7d-fbcaccd7960e]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Performance [c9fe7a11-79e3-4e98-9cba-8d732b15d150]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Cluster CPU Utilization [cbc201a7-8e51-4e97-8736-6e6550352cad]	c		99152539-e2c3-473d-a4bf-26fc56988f50	subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Tools States [81ef5dfc-b519-4981-8a8e-ee1dbb516aca]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Port Group Forged Transmit Allowed [6dbbe2bc-2593-4288-9d4c-23995e28009d]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Cluster Memory Utilization [b33aa854-8314-450b-ac66-a86f2f891af4]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Cluster Allocation [18dae631-fa3f-4a08-9cf5-00d89878ca29]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Cluster Performance Profiling [c20dadab-e990-4917-aa75-04d8433da27e]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	Guest OS CPU Queue Trend [fa10900c-2d88-41d6-86c9-046349ccc5bf]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Network Card Configuration [f129ab04-a919-4b80-b0ad-39783db28adf]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Memory Contention Distribution [de1ff68b-1a78-4939-996d-600b0abef33e]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	ESXi HyperThread Capability [74639bd8-2ece-4032-b22f-ffc23e65598f]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	ESXi Utilization List [493527e2-d992-4e56-98ae-d9245c255174]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	ESXi Switch property [6f0a54e7-c3a5-42bb-a989-fda47cf1c50a]	a			subjects=[('VMWARE', 'VmwareDistributedVirtualSwitch')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM CPU Ready Distribution for Profiling [3b6b0e60-7924-4d26-9a11-5fdde36e8a77]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Distribution by Capacity Remaining [11dd432d-6c6f-4872-8c0a-2d9975856f66]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VMware Tools Version  [f1474ada-0abe-4e6b-937a-ec4e7d82e420]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Distributed Switch Configuration  [ba5d47b2-2a6d-4f19-8e11-105fb13c5bf9]	a			subjects=[('VMWARE', 'VmwareDistributedVirtualSwitch')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Snapshot Trend [c0b7e702-f550-4223-808c-aa14b35117a9]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	ESXi Network Cards List [e77a32c0-16f4-4d3e-aabe-0d1354154d4b]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Cluster DPM Status [9030cd79-ee63-42a2-9f03-7b2ac3f56d22]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	vSphere Cluster HA Admission Control status [fc64c67a-d5b0-4a03-a10b-767b9b247120]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+view	View - Set 3.xml	VM Virtual Disk Distribution [3a424415-c06f-4b5b-b742-5b8d25c7e5ba]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	vSphere Cluster distribution by VM count [8986cc9d-5a60-407d-bdbf-25a1bc082b18]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	 [d975edde-111b-4e32-b63d-49df26a65cb1]	a			subjects=[('APPOSUCP', 'win')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	 [e95aa10d-43c8-4d8a-bfda-2e4eb97996da]	a			subjects=[('APPOSUCP', 'linux')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	 [3b33a0a0-d830-4640-8635-f1857bcb5ffd]	a			subjects=[('APPOSUCP', 'win')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	VM Storage Configuration [f6d0ed4e-9a22-4129-8d5c-150846b6a37b]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	 [ed44775e-bdbb-4342-a077-3d98f0250cf9]	a			subjects=[('APPOSUCP', 'linux')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	 [90f20c54-20c2-499c-8fb2-c609e65c325c]	a			subjects=[('APPOSUCP', 'linux')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	ESXi Security Policy List [c91284fc-127a-483f-8ed2-84cc161c44ad]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	ESXi Configuration List [4d9b6ad6-3325-42ff-8593-77793e547a4d]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	ESXi Storage Adapters [8069cc3c-0866-4b7a-850d-1b82ab5f080e]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	vSphere Switch Version [1fa18cd9-f908-4120-9c81-797282a3db37]	c		3ec095da-c812-4baf-b0fa-3c2413392518	subjects=[('VMWARE', 'VmwareDistributedVirtualSwitch')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	ESXi BIOS version distribution [c94b11bf-18c5-41c4-80fe-26ae5882dd45]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	VM Memory Limit [6db204b2-0315-4488-8cbc-bbe33c74dac9]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	VM with Hot Add Memory [2805f0a4-e58b-432b-861d-cffe1604fbfc]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	Guest OS Distribution [9d5498ba-848f-4d23-8b6e-765a566a0659]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	ESXi vMotion Status [d1ba847b-582f-427f-b041-feab824feaa8]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	vSphere Cluster DRS Automation Level [9e427b59-a30a-475c-bafc-a1943d9f2f0d]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	ESXi CPU Core Distribution [f0c282da-d769-459b-9f95-10abcd1669f3]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	vSphere Port Group MAC Address [6acf33b5-1247-4969-8837-e104ec0b3c8b]	a			subjects=[('VMWARE', 'DistributedVirtualPortgroup')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	vSphere Clusters distribution by ESXi count [de04afbf-832d-4bb9-a13c-c7680356c00f]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	VM Capacity Consumption [c59b828f-5840-4aa7-8bda-2b3639323a89]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	vSphere Clusters by datastores count [2d600ae5-36cc-489f-88aa-4825b93c964b]	a			subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	ESXi Cluster Settings [9a556ea6-db06-4ad5-b1a1-84bb1ae7032e]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	 [acb921e6-525a-41b6-bcd7-4a8e972f2acc]	a			subjects=[('APPOSUCP', 'win')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	 [d5b58361-bd8e-4102-969a-e4d9f887bcc0]	a			subjects=[('APPOSUCP', 'linux')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	vSphere Port Group Promiscuous Mode [c0f64b55-a79f-4b79-9fcd-87f3099c7102]	a			subjects=[('VMWARE', 'DistributedVirtualPortgroup')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	VM Snapshots List [7d0d858d-628d-49e9-b076-4fb15d757cc3]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	VM Virtual Disks  [56abf797-0534-4b73-bc27-693317a206ac]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	 [4d1155bd-cb97-41b3-896f-843db27775fe]	a			subjects=[('APPOSUCP', 'win')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	ESXi Hardware Model [998cf7f2-b636-4ac5-96b2-833c81f3097c]	a			subjects=[('VMWARE', 'HostSystem')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	VM Distribution by Time Remaining [a62de769-9b4b-462e-906c-b4a27457ec88]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	VM CPU Utilization [b8af9e79-a062-4e3b-8501-7bbc64a6a3f9]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	VM Network Configuration [f982ee15-5502-49e2-8efc-0a405b5bfa83]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	vSphere Resource Pool List [6efeb9b2-3c38-4842-8ee9-88f6b25e5460]	a			subjects=[('VMWARE', 'ResourcePool')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	Guest OS from vCenter [202efe69-762e-4934-8cbf-779b56b0a2cb]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	Guest OS from Tools [19729c38-20e3-4fea-bb9f-0576126c25ec]	a			subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	View - Set 4.xml	VM CPU Limit [0f5cd0c6-a06c-4be0-9af1-16adc6eac7ac]	a			subjects=[] adapterKind_vCommunity=False copies=1
+view	Windows Services vCommunity.xml	Windows Services vCommunity [ae751947-1782-466f-b560-9a950be3c1f9]	b	vCommunity|Guest OS|Services:DHCP Client|Service Name;vCommunity|Guest OS|Services:DHCP Client|Service Start Type;vCommunity|Guest OS|Services:DHCP Client|Service Status		subjects=[('VMWARE', 'VirtualMachine')] adapterKind_vCommunity=False copies=1
+view	vSphere Clusters Capacity List.xml	vSphere Clusters Capacity List [1368320e-8ad7-4b01-a84e-85f510c293dc]	b	vCommunity|Periodic Cluster Check|Close for Business;vCommunity|Periodic Cluster Check|Worst Cluster Consumption;vCommunity|Periodic Cluster Check|Worst Cluster Performance;vCommunity|Periodic Cluster Check|Worst Cluster Risk		subjects=[('VMWARE', 'ClusterComputeResource')] adapterKind_vCommunity=False copies=1
+dashboard	dashboards/Critical Business Applications.json	vCommunity/Critical Business Applications	b	vCommunity|Business Application|Business Application Performance;vCommunity|Business Application|Business Applications Performance;vCommunity|Business Application|Tier Performance;vCommunity|VM Guest OS KPI		direct=b views_embedded=2 adapterKind_vCommunity=False
+dashboard	dashboards/DatastoreFolder/dashboard.json	. Object Summary Page for Storage Folder	a			direct=a views_embedded=1 adapterKind_vCommunity=False
+dashboard	dashboards/DistributedVirtualPortgroup/dashboard.json	. Object Summary Page for Distributed Port Groups	a			direct=a views_embedded=2 adapterKind_vCommunity=False
+dashboard	dashboards/ESXi Configuration 2.0.json	vCommunity/ESXi Configuration 2.0	a			direct=a views_embedded=20 adapterKind_vCommunity=False
+dashboard	dashboards/HostFolder/dashboard.json	. Object Summary Page for Compute Folder	a			direct=a views_embedded=0 adapterKind_vCommunity=False
+dashboard	dashboards/NetworkFolder/dashboard.json	. Object Summary Page for Network Folder	c			direct=a views_embedded=1 adapterKind_vCommunity=False
+dashboard	dashboards/Overall Daily Check.json	vCommunity/Overall Daily Check	b	vCommunity|Availability|ESXi Hosts Operational Availability;vCommunity|Availability|Worst Cluster Operational Availability;vCommunity|Highest 10 Percent Cluster Utilization;vCommunity|Number of Port Groups;vCommunity|Worst 10 Percent Cluster Performance;vCommunity|Worst 10 Percent Cluster Risk;vCommunity|Worst Cluster Performance;vCommunity|Worst Cluster Risk		direct=b views_embedded=6 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: ESXi Hardware Configuration	a			direct=a views_embedded=7 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: ESXi Software Configuration	a			direct=a views_embedded=7 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: Executive Summary	a			direct=a views_embedded=3 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: Executive Summary (page 2)	a			direct=a views_embedded=4 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: Executive Summary (page 3)	bc	vCommunity|Worst 10 Percent Cluster Performance	dda97f70-65e0-4c5a-b6f0-7acec936a0bd	direct=bc views_embedded=1 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: Executive Summary (page 4)	a			direct=a views_embedded=4 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: Executive Summary (page 5)	a			direct=a views_embedded=2 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: Guest OS Configuration	a			direct=a views_embedded=4 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: Reclamable Capacity	a			direct=a views_embedded=4 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: VM Capacity	a			direct=a views_embedded=2 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: VM Capacity (page 2)	a			direct=a views_embedded=4 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: VM Capacity (page 3)	a			direct=a views_embedded=2 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: VM Configuration	a			direct=a views_embedded=8 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: VM Configuration (page 2)	b			direct=a views_embedded=4 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: VM Inventory	a			direct=a views_embedded=5 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: VM Inventory (page 2)	a			direct=a views_embedded=0 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: VM Inventory (page 3)	a			direct=a views_embedded=0 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: VM Performance	a			direct=a views_embedded=3 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: VM Performance (page 2)	a			direct=a views_embedded=1 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: VM Size Distribution	a			direct=a views_embedded=3 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Cluster Configuration	a			direct=a views_embedded=8 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Compute Capacity	a			direct=a views_embedded=0 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Compute Capacity (page 2)	a			direct=a views_embedded=4 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Compute Capacity (page 3)	b	vCommunity|Cluster Risk|Highest ESXi CPU Reservation;vCommunity|Cluster Risk|Highest ESXi Memory Reservation		direct=b views_embedded=0 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Compute Performance	bc	vCommunity|Worst 10 Percent Cluster Performance	dda97f70-65e0-4c5a-b6f0-7acec936a0bd	direct=bc views_embedded=0 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Compute Performance (page 2)	bc	vCommunity|Cluster Risk|Worst ESXi Memory Ballooned	99152539-e2c3-473d-a4bf-26fc56988f50	direct=bc views_embedded=0 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Inventory	c		3ec095da-c812-4baf-b0fa-3c2413392518	direct=c views_embedded=3 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Inventory (page 2)	c		3ec095da-c812-4baf-b0fa-3c2413392518	direct=c views_embedded=1 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Network Configuration	bc	vCommunity|Network|Total Network Speed Degradation		direct=b views_embedded=4 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Storage Capacity	a			direct=a views_embedded=2 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Storage Capacity (page 2)	a			direct=a views_embedded=0 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Storage Capacity (page 3)	a			direct=a views_embedded=0 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Storage Performance	a			direct=a views_embedded=0 adapterKind_vCommunity=False
+dashboard	dashboards/To be used in reports/Input dashboards.json	VCF Optimization Assessment/Report: vSphere Storage Performance (page 2)	a			direct=a views_embedded=0 adapterKind_vCommunity=False
+dashboard	dashboards/VCF Management Service.json	VCF Management Service	a			direct=a views_embedded=4 adapterKind_vCommunity=False
+dashboard	dashboards/VM Capacity 2.0.json	Capacity/VM Capacity (new)	a			direct=a views_embedded=9 adapterKind_vCommunity=False
+dashboard	dashboards/VM Performance 2.0.json	vCommunity/VM Performance 2.0	b	vCommunity|Guest OS Performance|Guest OS Performance Score;vCommunity|VM Performance|VM Performance Score		direct=b views_embedded=2 adapterKind_vCommunity=False
+dashboard	dashboards/VM Storage Configuration.json	vCommunity/VM Storage Configuration	a			direct=a views_embedded=9 adapterKind_vCommunity=False
+dashboard	dashboards/VMFolder/dashboard.json	. Object Summary Page for VM Folder	a			direct=a views_embedded=3 adapterKind_vCommunity=False
+dashboard	dashboards/VmwareDistributedVirtualSwitch/dashboard.json	. Object Summary Page for Distributed Switch	a			direct=a views_embedded=1 adapterKind_vCommunity=False
+dashboard	dashboards/vSphere Cluster Capacity 2.0.json	vSphere Cluster Capacity 2.0	b	vCommunity|Cluster Consumption|Cluster Consumption Score;vCommunity|Cluster Consumption|Cluster-wide ESXi CPU Thread Utilization;vCommunity|Cluster Consumption|Cluster-wide ESXi Memory Ballooned;vCommunity|Cluster Consumption|Cluster-wide ESXi Memory Consumed;vCommunity|Cluster Consumption|Cluster-wide ESXi Memory Zip Swap;vCommunity|Cluster Delta Open Count;vCommunity|Cluster Performance|Cluster Performance Score;vCommunity|Cluster Performance|Highest ESXi Bad Network Packets;vCommunity|Cluster Performance|Worst VM CPU Co-Stop;vCommunity|Cluster Performance|Worst VM CPU Ready;vCommunity|Cluster Performance|Worst VM Disk Latency;vCommunity|Cluster Performance|Worst VM Memory Latency;vCommunity|Cluster Risk|Cluster Risk Score;vCommunity|Cluster Risk|Highest CPU Monster VM to Host Ratio;vCommunity|Cluster Risk|Highest ESXi CPU Overcommit Ratio;vCommunity|Cluster Risk|Highest ESXi CPU Reservation;vCommunity|Cluster Risk|Highest ESXi CPU Thread Utilization;vCommunity|Cluster Risk|Highest ESXi Memory Consumed;vCommunity|Cluster Risk|Highest ESXi Memory Overcommit Ratio;vCommunity|Cluster Risk|Highest ESXi Memory Reservation;vCommunity|Cluster Risk|Highest Memory Monster VM to Host Ratio;vCommunity|Cluster Risk|Worst ESXi CPU Imbalance;vCommunity|Cluster Risk|Worst ESXi Memory Ballooned;vCommunity|Cluster Risk|Worst ESXi Memory Zip Swap		direct=b views_embedded=6 adapterKind_vCommunity=False
+dashboard	dashboards/vSphere Cluster Configuration 2.0.json	vCommunity/vSphere Cluster Configuration 2.0	a			direct=a views_embedded=12 adapterKind_vCommunity=False
+dashboard	dashboards/vSphere Cluster Performance 2.0.json	vCommunity/vSphere Cluster Performance 2.0	b	vCommunity|Cluster Consumption|Cluster-wide ESXi CPU Thread Utilization;vCommunity|Cluster Performance|90th Percentile VM CPU Co-Stop;vCommunity|Cluster Performance|90th Percentile VM CPU Ready;vCommunity|Cluster Performance|90th Percentile VM Disk Latency;vCommunity|Cluster Performance|90th Percentile VM Memory Latency;vCommunity|Cluster Performance|Cluster Performance Score;vCommunity|Cluster Performance|Highest ESXi Bad Network Packets;vCommunity|Cluster Performance|Worst VM CPU Co-Stop;vCommunity|Cluster Performance|Worst VM CPU Ready;vCommunity|Cluster Performance|Worst VM Disk Latency;vCommunity|Cluster Performance|Worst VM Memory Latency;vCommunity|Cluster Risk|Highest CPU Monster VM to Host Ratio;vCommunity|Cluster Risk|Highest ESXi CPU Overcommit Ratio;vCommunity|Cluster Risk|Highest ESXi CPU Reservation;vCommunity|Cluster Risk|Highest ESXi CPU Thread Utilization;vCommunity|Cluster Risk|Highest ESXi Memory Consumed;vCommunity|Cluster Risk|Worst ESXi CPU Imbalance;vCommunity|Cluster Risk|Worst ESXi Memory Ballooned;vCommunity|Cluster Risk|Worst ESXi Memory Zip Swap		direct=b views_embedded=6 adapterKind_vCommunity=False
+dashboard	dashboards/vSphere Network Configuration 2.0.json	vCommunity/vSphere Network Configuration 2.0	bc	vCommunity|Network|Total Network Speed Degradation	3ec095da-c812-4baf-b0fa-3c2413392518	direct=bc views_embedded=9 adapterKind_vCommunity=False
+dashboard	dashboards/vSphere Resource Management.json	vCommunity/vSphere Resource Management	b	vCommunity|Resource Pools|Cascading Resource Pools;vCommunity|Resource Pools|Number of Resource Pools		direct=b views_embedded=14 adapterKind_vCommunity=False
+supermetric	CPU Usable Capacity Utilization.json	CPU Usable Capacity Utilization	a			formula=avg(${adaptertype=VMWARE, objecttype=HostSystem, attribute=cpu|utilization_average, depth=1}) *  ${this, metric=cpu|capacity_provisioned} /${this, metric=cpu|haTotalCapacity_average} 
+supermetric	Number of VM.json	Number of VM	a			formula=count(${adaptertype=VMWARE, objecttype=VirtualMachine, attribute=badge|health, depth=2})
+alertdefs	Collection Warnings.xml	vCommunity Collection Warnings; vCommunity Collection Warnings	b	vCommunity|Collection Health|First Warning': it is the first warning of the cycle. (2) Search adapter.log, on the Cloud Proxy that runs this adapter instance, for these keywords. 'Failed to': one value could not be read for one object. 'Skipping': one object was left out of this cycle. 'Unexpected collection error': the whole cycle failed, and the traceback follows it. The log line shows the object and the reason. The alert clears by itself when a cycle has no warnings.;vCommunity|Collection Health|Warnings in Last Cycle		adapterKind_vCommunity=False
+alertdefs	ESXi Host License Expiring.xml	ESXi Host License Expiring; Condition_c6a38afa-6d69-4c73-a88c-c764e66db49b; Condition_d2f954fc-3121-49db-bb9a-33c04afb8de2; Condition_b8e3e3de-2a06-4dbd-9829-a12ffe048677; Condition_191895ee-451e-43f5-9237-3c24344ffe70; Condition_93e95c4e-63aa-4e04-b332-cc27317966e2; Condition_b9573d67-e858-44b2-afa5-d04d757dab0c; Condition_eefdbe0c-98aa-49a0-ba96-e398864ea68e	b	vCommunity|Licensing:vSphere 8 Enterprise Plus for VCF|Remaining Days		adapterKind_vCommunity=False
+alertdefs	ESXi Host NIC Disconnected Alert.xml	ESXi Host NIC Disconnected; ESXi Host NIC Disconnected	b	vCommunity|Network|Device:vmnic0|Status		adapterKind_vCommunity=False
+alertdefs	Windows Service Down.xml	Windows Service Down; Windows Service Status Down	b	vCommunity|Guest OS|Services:DHCP Client|Service Status		adapterKind_vCommunity=False
+symptomdefs	ESXi Host NIC Disconnected Symptom.xml	ESXi Host NIC Disconnected	b	vCommunity|Network|Device:vmnic0|Status		adapterKind_vCommunity=False
+symptomdefs	Windows Service Down Symptom.xml	Windows Service Down	b	vCommunity|Guest OS|Services:DHCP Client|Service Status		adapterKind_vCommunity=False
+report	Report - VOA - Capacity.xml	VOA - Capacity				views=10
+report	Report - VOA - Configuration.xml	VOA - Configuration				views=8
+report	Report - VOA - Datastore for CSV export.xml	VOA - Datastores for CSV Export				views=1
+report	Report - VOA - Distributed Port Groups for CSV export.xml	VOA - Distributed Port Groups for CSV Export				views=1
+report	Report - VOA - Distributed Switch for CSV export.xml	VOA - Distributed Switch for CSV Export				views=1
+report	Report - VOA - ESXi Hosts for CSV Export.xml	VOA - ESXi Hosts CSV Export				views=1
+report	Report - VOA - Executive Summary.xml	VOA - Executive Summary				views=5
+report	Report - VOA - Inventory.xml	VOA - Inventory				views=5
+report	Report - VOA - Namespace for CSV export.xml	VOA - vSphere Namespace for CSV Export				views=1
+report	Report - VOA - Performance.xml	VOA - Performance				views=6
+report	Report - VOA - Supervisor Cluster for CSV export.xml	VOA - vSphere Supervisor for CSV export				views=1
+report	Report - VOA - Virtual Machines for CSV export.xml	VOA - Virtual Machine CSV Export				views=1
+report	Report - VOA - vCenter for CSV Export.xml	VOA - vCenter for CSV Export				views=1
+report	Report - VOA - vSphere Clusters for CSV Export.xml	VOA - vSphere Clusters CSV Export				views=1
+report	Report - VOA - vSphere Data Center for CSV export.xml	VOA - vSphere Data Centers CSV Export				views=1
+report	Report - VOA - vSphere Pod for CSV export.xml	VOA - vSphere Pod for CSV Export				views=1

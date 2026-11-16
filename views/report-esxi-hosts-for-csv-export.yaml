@@ -1,0 +1,358 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/report - voa - esxi hosts for csv export/Report - VOA - ESXi Hosts for CSV Export.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: b55ca8d2-fa27-5a89-8065-45373a21adf9
+name: 'Report: ESXi Hosts for CSV Export'
+description: "A simple table for export as a CSV file. Used in report only, hence it has no formatting.\
+  \ Just like the rest of the report, it is designed for weekly, not daily nor monthly. \n\nSchedule it\
+  \ to run end of the week, such as Sunday 23:59"
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: net|mgmt_address
+  display_name: IP Address
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: hardware|vendor
+  display_name: Vendor
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: hardware|vendorModel
+  display_name: Hardware Model
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: config|product|apiVersion
+  display_name: ESXi Version
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: summary|version
+  display_name: ESXi Version Details
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: hardware|biosVersion
+  display_name: BIOS Version
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|cpuModel
+  display_name: CPU Model
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: hardware|cpuInfo|numCpuPackages
+  display_name: CPU Sockets
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+  orange_bound: 2
+  red_bound: 4
+  ascending_range: false
+- attribute: hardware|cpuInfo|hz
+  display_name: CPU Speed
+  unit: auto
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: hardware|cpuInfo|numCpuCores
+  display_name: Total Cores
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+  yellow_bound: 60
+  orange_bound: 40
+  red_bound: 20
+  ascending_range: true
+- attribute: config|hyperThread|active
+  display_name: Hyperthreading Active?
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|hyperThread|available
+  display_name: Hyperthreading Available?
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: mem|totalCapacity_average
+  display_name: Memory
+  unit: gb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+  yellow_bound: 0.9
+  orange_bound: 0.6
+  red_bound: 0.3
+  ascending_range: true
+- attribute: hardware|powerManagementTechnoloy
+  display_name: BIOS Power Management
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: hardware|powerManagementPolicy
+  display_name: ESXi Power Management
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: sys|vmotionEnabled
+  display_name: vMotion (1=Enabled)
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 0
+  orange_bound: -10
+  red_bound: -20
+  ascending_range: true
+- attribute: config|security|service:NTP Daemon|isRunning
+  display_name: NTP Running?
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 'false'
+  orange_bound: 'false'
+  red_bound: 'false'
+  ascending_range: true
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: config|security|service:SNMP Server|isRunning
+  display_name: SNMP Running?
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 'false'
+  orange_bound: 'false'
+  red_bound: 'false'
+  ascending_range: true
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: config|security|service:SSH|isRunning
+  display_name: SSH Enabled?
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 'true'
+  orange_bound: 'true'
+  red_bound: 'true'
+  ascending_range: true
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: config|storageDevice|multipathInfo|numberofActivePath
+  display_name: '# of Active Paths'
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: config|storageDevice|multipathInfo|multipathPolicy
+  display_name: Multipath Policy
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|storageDevice|multipathInfo|numberofActivePath
+  display_name: Active Storage Paths
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|storageDevice|plugStoreTopology|numberofPath
+  display_name: Total Storage Paths
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: runtime|cryptoState
+  display_name: Crypto States
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  red_bound: incapable
+  ascending_range: true
+  omit:
+  - roll_up_type
+- attribute: config|network|nnic
+  display_name: Network Cards
+  is_property: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: config|network|linkspeed
+  display_name: Average NIC Speed
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 20000
+  orange_bound: 10000
+  red_bound: 1000
+  ascending_range: true
+  omit:
+  - roll_up_type
+- attribute: summary|parentCluster
+  display_name: Cluster
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|parentDatacenter
+  display_name: Datacenter
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|parentVcenter
+  display_name: vCenter
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: config|network|portgroup|allow_promiscuous_rollup
+  display_name: Port Group (allow promiscuous)
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|network|portgroup|forged_transmits_rollup
+  display_name: Port Group (forged transmit)
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|network|portgroup|mac_changes_rollup
+  display_name: Port Group (MAC Changes)
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: hardware|biosReleaseDate
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - display_name
+  - roll_up_type
+- attribute: hardware|enclosureSerialNumberTag
+  display_name: Enclosure Serial Number
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: hardware|serialNumberTag
+  display_name: Serial Number
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: hardware|serviceTag
+  display_name: Service Tag
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|security|service:Direct Console UI|policy
+  display_name: Direct Console UI
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: config|security|service:ESXi Shell|isRunning
+  display_name: Shell
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: DNS|FORWARD_LOOKUP_STATUS
+  display_name: DNS Forward Lookup
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: DNS|REVERSE_LOOKUP_STATUS
+  display_name: DNS Reverse Lookup
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

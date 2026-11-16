@@ -1,0 +1,177 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: 03d85620-2f9c-5ae6-8b65-d1ff430fa9aa
+name: 'Report: vSphere Storage Performance (page 2)'
+description: "Part of a report covering performance, as opposed to capacity. Designed to be run on a weekly\
+  \ basis, and be compared with previous week result. \nWorking with a VCF expert, tailor the dashboard\
+  \ and widget to the specific requirements."
+name_path: VCF Optimization Assessment
+shared: false
+hidden: true
+disabled: true
+time_range: last7Days
+doc_center_key: vcom_788
+column_proportion: 1-1
+widgets:
+- id: w0
+  type: ParetoAnalysis
+  title: Top-10 Worst Datastore Read Latency
+  coords:
+    w: 6
+    x: 1
+    h: 8
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: Datastore
+  metric_key: datastore|totalReadLatency_average
+  metric_name: Datastore|Read Latency (ms)
+  mode: all
+  top_n: 10
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Read Latency
+  refresh_content: false
+  relationship_mode: children
+  max_value: null
+  metric_unit:
+    id: msec
+    name: ms
+  yellow_bound: 20
+  orange_bound: 40
+  red_bound: 80
+  additional_columns:
+  - metric_key: summary|total_number_vms
+    metric_name: Summary|Total Number of VMs
+    label: VMs
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  - metric_key: summary|total_number_hosts
+    metric_name: Summary|Total Number of Hosts
+    label: ESXi
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  ui:
+    height: 437
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A1
+- id: w1
+  type: ParetoAnalysis
+  title: Top-10 Worst Datastore Read Latency
+  coords:
+    w: 6
+    x: 7
+    h: 8
+    y: 1
+  adapter_kind: VMWARE
+  resource_kind: Datastore
+  metric_key: datastore|totalReadLatency_average
+  metric_name: Datastore|Read Latency (ms)
+  mode: all
+  top_n: 10
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Read Latency
+  refresh_content: false
+  relationship_mode: children
+  max_value: null
+  metric_unit:
+    id: msec
+    name: ms
+  yellow_bound: 20
+  orange_bound: 40
+  red_bound: 80
+  additional_columns:
+  - metric_key: summary|total_number_vms
+    metric_name: Summary|Total Number of VMs
+    label: VMs
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  - metric_key: summary|total_number_hosts
+    metric_name: Summary|Total Number of Hosts
+    label: ESXi
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  ui:
+    height: 437
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A1
+- id: w2
+  type: ParetoAnalysis
+  title: Top-10 Datastore Reads/second
+  coords:
+    w: 6
+    x: 1
+    h: 8
+    y: 9
+  adapter_kind: VMWARE
+  resource_kind: Datastore
+  metric_key: datastore|numberReadAveraged_average
+  metric_name: Datastore|Read IOPS
+  mode: all
+  top_n: 10
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Read IOPS
+  refresh_content: false
+  relationship_mode: children
+  additional_columns:
+  - metric_key: summary|total_number_vms
+    metric_name: Summary|Total Number of VMs
+    label: VMs
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  - metric_key: summary|total_number_hosts
+    metric_name: Summary|Total Number of Hosts
+    label: ESXi
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  ui:
+    height: 438
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A1
+- id: w3
+  type: ParetoAnalysis
+  title: Top-10 Datastore Writes/second
+  coords:
+    w: 6
+    x: 7
+    h: 8
+    y: 9
+  adapter_kind: VMWARE
+  resource_kind: Datastore
+  metric_key: datastore|numberWriteAveraged_average
+  metric_name: Datastore|Write IOPS
+  mode: all
+  top_n: 10
+  top_option: metricsHighestUtilization
+  depth: 10
+  regeneration_time: 15
+  round_decimals: 0
+  metric_label: Writes/second
+  refresh_content: false
+  relationship_mode: children
+  additional_columns:
+  - metric_key: summary|total_number_vms
+    metric_name: Summary|Total Number of VMs
+    label: VMs
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  - metric_key: summary|total_number_hosts
+    metric_name: Summary|Total Number of Hosts
+    label: ESXi
+    adapter_kind: VMWARE
+    resource_kind: Datastore
+  ui:
+    height: 438
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A1
+interactions: []

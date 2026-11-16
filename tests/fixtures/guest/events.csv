@@ -1,0 +1,4 @@
+"Level","LevelNumber","Event","Failed"
+"Error","2","[Timestamp=11/13/2026 09:58:01] [Category=System] [EventID=7036] [Source=Service Control Manager] [Message=line1
+line2 ""quoted"", comma  ü 日本語]",""
+"","","","2"

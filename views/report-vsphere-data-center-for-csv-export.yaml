@@ -1,0 +1,191 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/report - voa - vsphere data center for csv export/Report - VOA - vSphere Data Center for CSV export.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: 87eabbe0-f7e3-5d3a-8cca-7e23b50b20d1
+name: 'Report: vSphere Data Center for CSV export'
+description: "A simple table for export as a CSV file. Used in report only, hence it has no formatting.\
+  \ Just like the rest of the report, it is designed for weekly, not daily nor monthly. \n\nSchedule it\
+  \ to run end of the week, such as Sunday 23:59"
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: Datacenter
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|total_number_clusters
+  display_name: Clusters
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|total_number_hosts
+  display_name: Hosts
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: summary|number_running_hosts
+  display_name: Running Hosts
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: summary|total_number_vms
+  display_name: VMs
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: summary|number_running_vms
+  display_name: Running VMs
+  unit: '7002'
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: summary|number_poweredOff_vms
+  display_name: Powered Off VMs
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: cpu|capacity_provisioned
+  display_name: CPU Total Capacity
+  unit: ghz
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|haTotalCapacity_average
+  display_name: CPU Usable Capacity
+  unit: ghz
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|vm_capacity_provisioned
+  display_name: CPU Provisioned Capacity
+  unit: ghz
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: cpu|corecount_provisioned
+  display_name: CPU Total Cores
+  unit: '7001'
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: mem|host_provisioned
+  display_name: Total Memory
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: mem|host_usable
+  display_name: Memory Usable Capacity
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|total_number_datastores
+  display_name: Datastores
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|avg_vm_density
+  display_name: VM to Host Ratio
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: reclaimable|vm_count
+  display_name: Reclaimable VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: reclaimable|cpu
+  display_name: Reclaimable CPU
+  unit: '7004'
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: reclaimable|mem
+  display_name: Reclaimable Memory
+  unit: tb
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: reclaimable|idle_vms|vm_count
+  display_name: Reclaimable Idle VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: reclaimable|poweredOff_vms|vm_count
+  display_name: Reclaimable Powered-off VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: reclaimable|vm_snapshots|vm_count
+  display_name: Reclaimable Snapshots
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: vmop|inventoryChange|numCreate_latest
+  display_name: VM Created
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|inventoryChange|numDestroy_latest
+  display_name: VM Deleted
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|inventoryChange|numReconfigure_latest
+  display_name: VM Reconfigured
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|stateChange|numReset_latest
+  display_name: VM Reset
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|stateChange|numRebootGuest_latest
+  display_name: Guest OS Rebooted
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: vmop|stateChange|numPoweroff_latest
+  display_name: VM Powered Off
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: SUM
+- attribute: summary|parentVcenter
+  display_name: vCenter Server
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|tag
+  display_name: vSphere Tag
+  is_property: true
+  is_string_attribute: true
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

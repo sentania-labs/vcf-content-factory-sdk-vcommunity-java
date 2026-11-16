@@ -1,0 +1,225 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+id: 17c1f4bd-1fd1-560f-a81c-de279bb91d9d
+name: 'Report: Executive Summary (page 5)'
+description: "Part of a report for senior IT Leadership. Designed to be run on a weekly basis, and be\
+  \ compared with previous report. \nWorking with a VCF Consultant, tailor the dashboard and widget to\
+  \ the specific requirements."
+name_path: VCF Optimization Assessment
+shared: false
+hidden: false
+disabled: true
+column_proportion: 1-1
+widgets:
+- id: w0
+  type: View
+  title: Idle VMs Distribution by Memory Footprint
+  coords:
+    w: 6
+    x: 7
+    h: 9
+    y: 8
+  view: VM Memory to reclaim (idle)
+  chart_view_items:
+  - labels
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 495
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w1
+  type: View
+  title: Powered-off VMs Distribution by Size
+  coords:
+    w: 6
+    x: 1
+    h: 9
+    y: 8
+  view: VM Distribution by Reclaimable Disk
+  chart_view_items:
+  - labels
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 495
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+- id: w2
+  type: Scoreboard
+  title: Summary
+  coords:
+    w: 12
+    x: 1
+    h: 3
+    y: 5
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: diskspace-waste|wasteValue
+    metric_name: Disk Space Reclaimable|Reclaimable Capacity
+    color_method: 0
+    yellow_bound: 2
+    orange_bound: 4
+    red_bound: 8
+    label: Reclaimable Disk Space
+    unit_id: tb
+    unit: TB
+    resource_kind_name: vSphere World
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: diskspace-waste|reclaimable_diskspace_from_vm_snapshots
+    metric_name: Disk Space Reclaimable|VM Snapshots
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 2
+    red_bound: 4
+    label: Snapshots
+    unit_id: tb
+    unit: TB
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: diskspace-waste|reclaimable_diskspace_from_poweredOff_vms
+    metric_name: Disk Space Reclaimable|Powered Off VMs
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 2
+    red_bound: 4
+    label: Powered Off VMs
+    unit_id: tb
+    unit: TB
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: diskspace-waste|reclaimable_diskspace_from_orphaned_disks
+    metric_name: Disk Space Reclaimable|Orphaned Disks
+    color_method: 0
+    yellow_bound: 1
+    orange_bound: 2
+    red_bound: 4
+    label: Orphaned Disks
+    unit_id: tb
+    unit: TB
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: compute_reclaimable|idle|reclaimable_mem_from_idle_vms
+    metric_name: Compute Reclaimable|Idle|Memory
+    color_method: 0
+    yellow_bound: 512
+    orange_bound: 1024
+    red_bound: 2048
+    label: Idle VM Memory
+    unit_id: gb
+    unit: GB
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+  self_provider: true
+  visual_theme: 8
+  layout_mode: fixedView
+  box_columns: 5
+  value_size: 24
+  label_size: 16
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: false
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  refresh_content: false
+  old_metric_values: false
+  ui:
+    height: 153
+- id: w3
+  type: Scoreboard
+  title: Summary
+  coords:
+    w: 12
+    x: 1
+    h: 4
+    y: 1
+  metrics:
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: compute_reclaimable|oversized|oversized_memory_toberemoved
+    metric_name: Compute Reclaimable|Oversized|Memory
+    color_method: 0
+    yellow_bound: 0.5
+    orange_bound: 1
+    red_bound: 2
+    label: Oversized Memory
+    unit_id: tb
+    unit: TB
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: compute_increase|undersized|undersized_memory_tobeadded
+    metric_name: Compute Increase|Undersized|Memory
+    color_method: 0
+    yellow_bound: 0.5
+    orange_bound: 1
+    red_bound: 2
+    label: Undersized Memory
+    unit_id: tb
+    unit: TB
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: compute_reclaimable|oversized|oversized_vcpus_toberemoved
+    metric_name: Compute Reclaimable|Oversized|vCPU(s)
+    color_method: 0
+    yellow_bound: 100
+    orange_bound: 200
+    red_bound: 400
+    label: Oversized CPU
+    unit_id: -1
+    unit: Auto
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+  - adapter_kind: VMWARE
+    resource_kind: vSphere World
+    metric_key: compute_increase|undersized|undersized_vcpus_tobeadded
+    metric_name: Compute Increase|Undersized|vCPU(s)
+    color_method: 0
+    yellow_bound: 100
+    orange_bound: 200
+    red_bound: 400
+    label: Undersized CPU
+    unit_id: -1
+    unit: Auto
+    resource_kind_name: vSphere World
+    omit:
+    - max_value
+  self_provider: true
+  visual_theme: 4
+  layout_mode: fixedView
+  box_columns: 4
+  value_size: 24
+  label_size: 16
+  round_decimals: 0
+  max_cell_count: 100
+  show_sparkline: false
+  show_resource_name: false
+  show_metric_name: true
+  show_metric_unit: true
+  show_dt: false
+  refresh_content: false
+  old_metric_values: false
+  ui:
+    height: 209
+interactions: []

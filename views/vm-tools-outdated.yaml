@@ -1,0 +1,78 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/vm tools outdated vcommunity/VM Tools outdated vCommunity.xml
+id: 2eda0c3a-3d2c-55d4-8022-c92ab8fe3831
+name: VM Tools outdated
+description: 'Count of VMs with VMware Tools not current. Tools are part of vSphere best practices as
+  it provides a set of drivers and improve visibility.
+
+
+  A blank status means the VMware Tools are not even installed.
+
+  '
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+  filter:
+  - - filter_type: properties
+      metric_key: summary|guest|toolsVersionStatus2
+      condition: NOT_EQUALS
+      value: Guest Tools Current
+      transform: CURRENT
+    - filter_type: metrics
+      metric_key: sys|poweredOn
+      condition: EQUALS
+      value: 1
+      transform: CURRENT
+    - filter_type: properties
+      metric_key: summary|guest|toolsVersionStatus2
+      condition: NOT_EQUALS
+      value: Guest Tools Running
+      transform: CURRENT
+usage:
+- dashboard
+- report
+- content
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|guest|toolsVersionStatus2
+  display_name: .
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  omit:
+  - roll_up_type
+  - transformation
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  count: 1
+  is_sum: false
+distribution_color: 0099DB
+additional_columns:
+- attribute: summary|guest|toolsRunningStatus
+  localized_name: Summary|Guest Operating System|Tools Running Status
+  display_name: Running Status
+  is_string_attribute: true
+  is_property: true
+  roll_up_count: 0
+- attribute: summary|guest|toolsVersionStatus2
+  localized_name: Summary|Guest Operating System|Tools Version Status
+  display_name: Tools Running Status
+  is_string_attribute: true
+  is_property: true
+  roll_up_count: 0
+- attribute: summary|guest|toolsVersion
+  localized_name: Summary|Guest Operating System|Tools Version
+  display_name: Version
+  is_string_attribute: true
+  is_property: true
+  roll_up_count: 0
+omit:
+- include_resource_creation_time

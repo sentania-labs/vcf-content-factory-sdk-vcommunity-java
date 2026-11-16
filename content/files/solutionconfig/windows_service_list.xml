@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<windowsServices>
+<!--
+  Windows services to check (VCF Content Factory vCommunity).
+
+  This list matters only if the account's Guest OS Service Monitoring
+  Status is Enabled. Name
+  the services by their service name (the short name shown in the service's
+  properties, not the display name). For each Windows virtual machine the
+  adapter asks the guest for the state of each listed service.
+
+  A name may hold letters, digits, spaces and the characters _ . $ # @ ( ) + -
+  The first character must be a letter, a digit or an underscore, and a name
+  is at most 256 characters long. Any other name is skipped and reported,
+  because the name is put inside a command that runs in every monitored guest.
+  A name that contains the two characters $( is skipped as well.
+
+  Format
+    - Separate entries with commas. A line break does NOT separate entries.
+    - An XML comment, like this one, is ignored. To switch an entry on, move
+      it out of the comment, and keep the comma after it.
+    - Do not write two hyphens in a row inside a comment.
+
+  Do not edit this shipped file: every upgrade of the pack replaces it and
+  your edits are lost (measured on VCF Operations 9.0.2 and 9.1.1, even without force
+  content update). Back the files up before an upgrade. Make a copy under another name in the VCF Operations configuration-file store, and
+  enter that name (no .xml) in the account's Windows Service Configuration
+  File field. As shipped, every entry is commented out, so no service is
+  checked.
+
+  Examples, one per line:
+    W32Time,
+    Spooler,
+    EventLog,
+    WinRM,
+    MSSQLSERVER,
+-->
+</windowsServices>

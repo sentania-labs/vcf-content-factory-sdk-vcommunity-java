@@ -1,0 +1,67 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 0eba3bf5-4c51-56df-a207-65ac7c2d3f24
+name: vSphere Cluster Resource Management
+description: List of vSphere Clusters with relevant information for CPU and memory resources analysis.
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: vCommunity|Resource Pools|Cascading Resource Pools
+  display_name: Level 2+ Resource Pools
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+  yellow_bound: 1
+  orange_bound: 2
+  red_bound: 4
+  ascending_range: false
+- attribute: vCommunity|Resource Pools|Number of Resource Pools
+  display_name: Resource Pools
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: desc
+  yellow_bound: 1
+  orange_bound: 4
+  red_bound: 16
+  ascending_range: false
+- attribute: summary|number_running_vms
+  display_name: Running VM
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: summary|number_running_hosts
+  display_name: Running ESXi
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+- attribute: vCommunity|Cluster Risk|Highest ESXi CPU Reservation
+  display_name: Highest ESXi CPU Reservation
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 10
+  orange_bound: 20
+  red_bound: 40
+  ascending_range: false
+- attribute: vCommunity|Cluster Risk|Highest ESXi Memory Reservation
+  display_name: Highest ESXi Memory Reservation
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  yellow_bound: 5
+  orange_bound: 10
+  red_bound: 20
+  ascending_range: false
+page_size: 50
+distribution_color: 6870C4
+omit:
+- include_resource_creation_time

@@ -1,0 +1,11 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/supermetrics/Number of VM.json
+id: 865fc00c-6d54-56bb-affb-7404e85c155b
+name: Number of VM
+formula: count(${adaptertype=VMWARE, objecttype=VirtualMachine, attribute=badge|health, depth=2})
+description: Total count of virtual machines (running or not) connected to the switch
+unit_id: ''
+resource_kinds:
+- resource_kind_key: DistributedVirtualPortgroup
+  adapter_kind_key: VMWARE
+- resource_kind_key: VmwareDistributedVirtualSwitch
+  adapter_kind_key: VMWARE

@@ -1,0 +1,31 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+id: 4b208072-90d1-5f4b-8e1e-595b2d7b5623
+name: Guest OS CPU Queue Trend
+description: Line chart of the 20-second peak guest CPU queue length for virtual machines, covering the
+  previous 90 days.
+data_type: trend
+presentation: line-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+time_window:
+  unit: DAYS
+  count: 90
+transformations:
+- NONE
+columns:
+- attribute: guest|20_sec_peak_cpu_queue
+  display_name: 20-sec CPU Queue
+  roll_up_type: NONE
+  roll_up_count: 0
+  yellow_bound: 3
+  orange_bound: 12
+  red_bound: 48
+  use_symptom_thresholds: false
+  omit:
+  - ascending_range
+  - add_timestamp_as_column
+  - show_relative_timestamp
+page_size: 25
+omit:
+- metadata

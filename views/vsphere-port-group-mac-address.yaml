@@ -1,0 +1,34 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: 775b0a76-7156-58ef-9195-e7977e8e4c4c
+name: vSphere Port Group MAC Address
+description: Count of distributed port group that allows network MAC address to be changed. Minimize this
+  as it allows MAC address impersonation. If allowed, ESXi host does not drop the packet when the Guest
+  OS MAC address does not match the VM MAC address.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: DistributedVirtualPortgroup
+  types:
+  - descendant
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: config|policies|security|mac_changes
+  display_name: .
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  omit:
+  - roll_up_type
+  - transformation
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  is_sum: false
+distribution_color: 37B3EB
+omit:
+- include_resource_creation_time

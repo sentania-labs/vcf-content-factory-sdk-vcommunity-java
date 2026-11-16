@@ -1,0 +1,45 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: 0ed0e7e0-8ae3-51ee-bb55-6047c2db11b1
+name: vSphere Cluster distribution by VM count
+description: Bar chart counting clusters by total number of virtual machines, in buckets of 250 up to
+  1000, then 2000 and above.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  types:
+  - descendant
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: summary|total_number_vms
+  display_name: .
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+page_size: 25
+buckets:
+  dynamic: false
+  ranges:
+  - start: 0
+    end: 250
+  - start: 250
+    end: 500
+  - start: 500
+    end: 750
+  - start: 750
+    end: 1000
+  - start: 1000
+    end: 2000
+  - start: 2000
+    end: 9999
+  min_value: 0
+  max_value: 0
+  is_sum: false
+distribution_color: 37B3EB
+omit:
+- include_resource_creation_time

@@ -1,0 +1,61 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 1/View - Set 1.xml
+id: 3c2ffaeb-63e2-5d74-8252-085d23baac7e
+name: VM Memory Contention Distribution for Profiling
+description: Bar chart placing virtual machines in six buckets by 99th percentile peak memory contention
+  over one week, from 0 to 10 percent and above, colored green to red.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+time_window:
+  unit: WEEKS
+  count: 1
+columns:
+- attribute: mem|20_sec_peak_host_contentionPct
+  display_name: Peak Memory Contention
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 99
+  omit:
+  - add_timestamp_as_column
+buckets:
+  dynamic: false
+  ranges:
+  - start: 0
+    end: 2
+    color: 44D5CB
+  - start: 2
+    end: 4
+    color: 74B43B
+  - start: 4
+    end: 6
+    color: C4E078
+  - start: 6
+    end: 8
+    color: ECC33E
+  - start: 8
+    end: 10
+    color: ED891F
+  - start: 10
+    end: 100
+    color: DE3F30
+  min_value: 0
+  max_value: 0
+  is_sum: false
+additional_columns:
+- attribute: mem|20_sec_peak_host_contentionPct
+  localized_name: Memory|Peak Contention within collection cycle (%)
+  display_name: Contention at 95th Percentile
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+  show_relative_timestamp: false
+omit:
+- include_resource_creation_time

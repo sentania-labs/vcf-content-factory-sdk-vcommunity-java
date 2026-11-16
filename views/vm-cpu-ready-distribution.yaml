@@ -1,0 +1,60 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 1c266ff5-60ab-53d8-8f5c-29d7a3d991ab
+name: VM CPU Ready Distribution
+description: Bar chart of powered-on virtual machines by peak CPU ready percentile over the last day,
+  in four buckets that end with 16 percent and above.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+  filter:
+  - - filter_type: metrics
+      metric_key: sys|poweredOn
+      condition: EQUALS
+      value: 1
+time_window:
+  unit: DAYS
+  count: 1
+columns:
+- attribute: cpu|20_sec_peak_readyPct
+  display_name: .
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 99
+  omit:
+  - add_timestamp_as_column
+buckets:
+  dynamic: false
+  ranges:
+  - start: 0
+    end: 4
+    color: 62A420
+  - start: 4
+    end: 8
+    color: FAC400
+  - start: 8
+    end: 16
+    color: F57600
+  - start: 16
+    end: 100
+    color: ED186F
+  min_value: 0
+  max_value: 0
+  is_sum: false
+additional_columns:
+- attribute: cpu|20_sec_peak_readyPct
+  localized_name: CPU|Peak vCPU Ready within collection cycle (%)
+  display_name: Ready at 95th percentile
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: PERCENTILE
+  percentile: 95
+  show_relative_timestamp: false
+omit:
+- include_resource_creation_time

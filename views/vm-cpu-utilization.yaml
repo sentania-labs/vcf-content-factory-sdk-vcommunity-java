@@ -1,0 +1,39 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+id: d1de2f03-0e7a-5b54-9c7e-70f2f66bbbc2
+name: VM CPU Utilization
+description: Line chart of virtual machine CPU net run time and CPU usage percent over the previous week.
+data_type: trend
+presentation: line-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+time_window:
+  unit: WEEKS
+  count: 1
+transformations:
+- NONE
+columns:
+- attribute: cpu|net_run
+  display_name: Net Run
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  yellow_bound: 80
+  orange_bound: 90
+  red_bound: 95
+  use_symptom_thresholds: false
+  omit:
+  - ascending_range
+  - add_timestamp_as_column
+  - show_relative_timestamp
+- attribute: cpu|usage_average
+  display_name: Usage
+  unit: percent
+  roll_up_type: NONE
+  roll_up_count: 0
+  omit:
+  - add_timestamp_as_column
+  - show_relative_timestamp
+page_size: 25
+omit:
+- metadata

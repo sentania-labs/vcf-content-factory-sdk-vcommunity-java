@@ -1,0 +1,101 @@
+view	bfe9ee51-4b55-448f-ab45-9ef42c7370f4	Donut chart that splits non-local datastores by their storage type property, with one slice per type found. Datastores flagged as local are left out.
+view	6db76c99-efb6-4643-9ff2-4501ccecc7f4	Donut chart showing how many ESXi hosts run each distinct BIOS version, with one slice per version string found.
+view	21302225-dc45-4938-9123-f1422480cdca	Donut chart grouping ESXi hosts by their reported BIOS version, one slice per version. Useful for spotting hosts that lag the firmware standard.
+view	16b9b05c-c0e0-4c1c-b7d5-7232d0a64687	Per-host table of ESXi version and build, BIOS, CPU sockets, cores, model and speed, memory, datastore and NIC counts, hyperthreading, power policy, vMotion, shell and SSH state, and active storage paths. Ends with an average row.
+view	34fd21d0-0853-4f9c-b3f2-e52216842d91	Wide per-host inventory table covering hardware vendor and model, ESXi and BIOS versions, CPU, memory, NTP and SNMP and SSH service state, storage paths, NICs, port group security rollups, parent cluster, datacenter and vCenter, and serial and service tags.
+view	bc0cd2ec-f609-4c91-8ff6-2c87e37de38a	Bar chart counting ESXi hosts by physical core count, using fixed buckets that run from 0 to 100 cores and a final open-ended bucket for larger hosts.
+view	43b5a59e-d45b-4cef-b5a3-debb9a4e566f	Bar chart counting ESXi hosts by total CPU capacity in GHz, in fixed buckets that step from 0 up to 300 GHz and beyond.
+view	2a643d45-6706-43f4-86d6-d68419f9b9e4	Donut chart showing how many ESXi hosts have each physical CPU socket count, one slice per distinct value.
+view	23acd23f-1310-46ce-88fd-9ee7a5783635	Donut chart showing the share of ESXi hosts by hardware vendor model, one slice per model string.
+view	203336f6-7ecf-46b6-bfd1-1f746e6ce117	Bar chart counting ESXi hosts by installed physical memory, in fixed buckets of a quarter terabyte up to more than 2 TB.
+view	182a4bfa-b9c9-448d-a41a-5982673f33dc	Donut chart showing how many ESXi hosts report each network link speed, one slice per distinct speed value.
+view	31b26c6d-5c86-46db-b6be-0385af92bafc	Donut chart showing how many ESXi hosts have each number of active storage paths, one slice per distinct count.
+view	1190d0fc-a95d-434b-84c5-d932a66ab1ea	Donut chart of ESXi hosts grouped by their full version and build string, one slice per version found in the environment.
+view	3bd0917a-f9cb-4097-a640-d81dc24da94a	Donut chart showing the share of ESXi hosts by hardware vendor, one slice per vendor name.
+view	cc809d78-008b-4715-a603-4a43d4c274da	Donut chart showing how many ESXi hosts are capable of hyperthreading and how many are not.
+view	4e41a54d-a13c-409b-8c97-06e028f72bcc	Pie chart splitting ESXi hosts by whether the NTP daemon service is running.
+view	f3dc056c-bd52-42f4-b821-bd8e37bd092b	Lists ESXi hosts whose maintenance state is in maintenance, with connection state, power state, powered-on flag, hardware model and parent cluster, ordered by cluster.
+view	f62618d5-7f91-47cf-a3b1-172d7da0b7da	Table for distributed virtual switches with per-host check results for configuration sync, teaming mismatch, MTU mismatch, unsupported MTU and unsupported VLAN. Its host columns are bound to one specific host instance.
+view	dde0721f-7e54-4233-a29c-5558636b5301	Lists ESXi hosts that are powered off, not connected, unavailable, in maintenance or in quarantine, with their power, connection, maintenance and quarantine states, version and cluster. A host matching any one condition appears.
+view	a7131dd9-a7e0-460e-b372-69150892a7e7	Per-host table over the last day of core and thread CPU utilization, memory consumed and demand, ballooned, compressed and swapped memory, VM co-stop and ready percentages, and worst co-stop and ready values. Sorted by core utilization, highest first.
+view	d5410074-fc36-48bb-93e2-197d2f276b20	Donut chart showing how many ESXi hosts have vMotion enabled and how many do not.
+view	ac9078f7-cca4-402c-a837-66531a1e83e8	Line chart of the 20-second peak guest CPU queue length for virtual machines, covering the previous 90 days.
+view	3dae7fec-9531-45df-8e0b-8e6615e235e6	Donut chart showing how many virtual machines run each guest operating system name, one slice per name.
+view	cc508013-e7d0-4fbf-98e2-d22c881b7812	Donut chart of virtual machines grouped by the guest operating system name reported by VMware Tools, one slice per name.
+view	79879a4a-e36e-4854-9c61-d21332a2ddab	Line chart of guest memory page-in and page-out rates for virtual machines over the last week.
+view	0babc727-6938-4e90-b91d-5e13a3d8b564	Table of guest file system partitions for a virtual machine, showing capacity in GB, used space in GB and percent used. The columns are tied to the root partition.
+view	a2f50231-b339-4cd0-98dd-8ed4a25a57a9	Lists datastores flagged as local that hold at least one virtual machine, showing the VM count per datastore, highest first.
+view	181c5479-8b1b-40e7-ae36-9aee36746eda	Table for management services components with a 15-minute availability value and the peak and average memory utilization against requests.
+view	5950ce2d-c619-49de-b854-06c4110e9197	Lists platform nodes of the management services with maximum CPU usage, memory usage, disk usage and status, each ordered highest first.
+view	1a7a6700-bdfe-4918-9600-16adcccf063a	Lists platform volumes of the management services with their volume group, component name and volume utilization percent, highest utilization first.
+view	f0a5f04e-17c3-4c6d-817c-eb65e296c9cd	Per-VM configuration table with guest hostname, hardware version, guest OS as set in vCenter and as reported by Tools, vCPU and socket counts, memory, NIC count, missing guest counter flag, creation date, encryption state and snapshot consolidation need.
+view	dd0b0eb1-f968-423f-914f-515d5629fc95	Pie chart of virtual machines that have a CPU limit above zero, grouped by the limit value.
+view	a4c37007-25d1-4ab8-a197-e2418142cc06	Bar chart placing virtual machines in 2 percent-wide buckets of 99th percentile peak CPU ready over one week, from 0 to 10 percent and above, with buckets colored green to red.
+view	02184055-983a-4242-b105-a04d94999ada	Bar chart of powered-on virtual machines by peak CPU ready percentile over the last day, in four buckets that end with 16 percent and above.
+view	fef92c3c-3c4f-4313-b457-ea93668ee64b	Bar chart counting virtual machines by configured vCPU count, in buckets of 8 up to 32, then 48, 64 and larger.
+view	cd47bb2a-0514-468d-b79c-b2ca3ee969c6	Line chart of virtual machine CPU net run time and CPU usage percent over the previous week.
+view	f9047c09-a372-4f0a-95c2-7bc0eefaace4	Bar chart placing virtual machines in six buckets by 99th percentile peak virtual disk latency over one week, from under 50 ms to above 1000 ms, colored green to red.
+view	8140bbaf-f202-4e0d-b66e-778ed9061722	Bar chart placing virtual machines in four buckets by 99th percentile peak disk latency over one week: under 25 ms, 25 to 50, 50 to 100 and above 100 ms.
+view	88914dd5-ad98-45d9-85e0-6dd1bb8f5f5a	Donut chart of virtual machines that have a CPU reservation above zero, one slice per reservation value in GHz.
+view	dcafd7ee-a0f7-4963-bbb1-b30f4043511a	Donut chart showing how many virtual machines have each CPU shares-per-vCPU value, one slice per value.
+view	217aafe0-9e16-4f47-b98b-31f99273312c	Donut chart showing how many virtual machines are configured with each vCPU count, one slice per size.
+view	36f0222e-a1b2-4260-a286-b17fdbdc6c9e	Bar chart counting virtual machines by the number of vCPUs recommended for addition, in buckets of 1, 2 to 4, 4 to 8, 8 to 12 and more.
+view	72a85fd6-5824-444f-9ae9-f91408e4fcbe	Bar chart of virtual machines whose provisioned disk space is above 500 GB, grouped in terabyte-scale buckets from under 0.25 TB to over 8 TB.
+view	c2a9ba5f-747d-4284-a09b-d63b40a49728	Donut chart of virtual machines with a memory reservation above zero, one slice per reservation value in GB.
+view	eefb0c9f-31d1-4971-800e-00f480abc919	Donut chart showing how many virtual machines have each memory shares-per-MB value, one slice per value.
+view	2c7a6092-6c3f-427f-87c5-5a7a2cccb9cf	Bar chart counting virtual machines by the amount of memory in GB recommended for addition, in buckets from 1 GB up to 32 GB and above.
+view	68de2830-eeaf-49df-aeda-a60fadc2b9e9	Bar chart counting oversized virtual machines by how many vCPUs could be reclaimed, in buckets from 1 up to 16 and above.
+view	eadc211b-772e-4178-863a-b1fe018929ae	Bar chart of powered-off virtual machines grouped by disk space used, in terabyte buckets from under 1 TB to over 20 TB.
+view	b1d06f85-bef9-42c2-89ca-bddf5a5613ef	Bar chart counting oversized virtual machines by how much memory in GB could be reclaimed, in buckets from 1 GB up to 32 GB and above.
+view	d78a2e36-e12f-4d98-9b49-71c8043822fa	Bar chart counting virtual machines by snapshot age in days, in buckets of up to 2, 2 to 7, 7 to 14 and over 14 days.
+view	ec868fe4-b7b4-4620-8e20-38f23667b21f	Bar chart showing how many virtual machines use each virtual hardware version, one bar per version.
+view	76e2cd25-11ac-4923-a4a2-0deb5ed794a7	Bar chart placing virtual machines in six buckets by 99th percentile peak memory contention over one week, from 0 to 10 percent and above, colored green to red.
+view	093a55c0-332c-486a-a346-4b549fc63a21	Bar chart placing virtual machines in four buckets by 99th percentile peak memory contention over the last day: under 2, 2 to 4, 4 to 8 and above 8 percent.
+view	62f0a9c3-bef0-4c27-8f3c-da3f08b169b8	Donut chart showing how many virtual machines are configured with each memory size in GB, one slice per size.
+view	223a2177-e1a6-4e2b-a207-b28db8339245	Pie chart of virtual machines that have a memory limit above zero. Its charted column reads the CPU limit value rather than a memory value, so the slices need checking before use.
+view	4f798a43-fc5b-4760-b744-1b159644f9a9	Bar chart counting virtual machines by configured memory in GB, in doubling buckets from under 16 GB to above 512 GB.
+view	65ad9e7b-a972-48f4-9d0f-f59e03f27d99	Bar chart of idle virtual machines grouped by consumed memory in GB, in buckets of up to 32, 64, 128 and larger.
+view	1304ea60-5615-4a71-9454-68140418006f	Per-VM table of network adapter details: IP address, MAC address, port group and adapter type for the first adapter instance.
+view	f22f2ab7-f504-4718-9bb8-9d24d51e72ba	Per-VM table of power state, NIC count, IP address, MAC address count, datacenter, cluster and guest operating system.
+view	8f50f651-58b8-4545-9711-ba8fd07e003c	Lists virtual machines whose average network throughput exceeds 12 over the last week, with 20-second, 5-minute and 1-hour peak throughput in Gbit/s, peak packet rate, NIC count, IP address and datacenter.
+view	ba5453bc-3da3-4b4c-b63a-ad3649fcd8a0	Lists powered-on VMs over the last 12 hours with guest hostname, three KPI scores, peak CPU queue, CPU ready, memory contention, disk queue, disk latency and transmit packet drop, plus vCPU, memory and virtual disk counts. Worst KPI first.
+view	77cb575f-e70d-4549-9779-281203327307	Bar chart of virtual machines whose snapshot age is above one day, grouped by snapshot size in GB: under 100, 100 to 200, 200 to 400 and larger.
+view	6f55b53b-5d64-4ee8-9f7f-0969d6d3d090	Bar chart counting virtual machines by total snapshot size in GB, in buckets of up to 50, 100, 250 and 500 GB and larger.
+view	7ae0e346-6f45-41e6-84df-8bfd94f04223	Lists virtual machines that use snapshot space, with snapshot name, age in days, size in GB and last access time. The columns point at a single snapshot instance.
+view	a54e74b2-06dc-4645-a64d-5040e5ba4c3d	Lists virtual machines whose average disk IOPS exceeds 10 over the last week, with peak IOPS and throughput at 5-minute and 1-hour granularity, plus datacenter. Highest 5-minute IOPS first.
+view	6ec4c367-a145-420e-b205-95247739a82c	Donut chart showing how many virtual machines are in each VMware Tools version status, one slice per status.
+view	561d5ce1-c473-401a-bfc6-47472a305412	Pie chart of virtual machines that have more than one virtual disk, grouped by disk count.
+view	ded11263-20b6-48fc-9879-87cc5790cd30	Bar chart counting virtual machines by number of virtual disks, in buckets of five from 0 up to 30 and above.
+view	7ccaaa23-fb7c-4d4d-9258-e2f018681d60	Per-VM table of virtual disk details: label, size in GB, datastore, raw device mapping flag, IOPS limit, provisioning format, SCSI controller type and bus sharing. Columns are bound to the first disk instance.
+view	506b9eae-b51c-4467-abfb-890bbd824117	Bar chart counting virtual machines that have CPU hot add set to true.
+view	b69238ce-fc85-40a7-80c7-800549985196	Bar chart counting virtual machines whose memory hot add setting is anything other than false.
+view	8b84e50a-7040-4648-93b5-a4012ab39062	Bar chart counting virtual machines that have CPU hot remove set to true.
+view	d94478fc-f741-4508-87f9-962ad34ae8ed	Bar chart of virtual machines that have more than one network adapter, grouped by adapter count.
+view	7609bc5e-ef78-414e-9d6c-7f7119545bf6	Bar chart counting running virtual machines that are not reporting guest memory counters.
+view	415075d8-dadd-4f7a-890f-b49ee1674344	Donut chart showing how many virtual machines run each VMware Tools version, one slice per version number.
+view	c87c6499-8beb-4caa-89c4-b6865d5692ea	Donut chart of clusters with HA admission control enabled, grouped by the admission control policy in use.
+view	23c3c66b-cc72-4070-a67b-326841e7e5dd	Per-cluster configuration table covering type, host and datastore counts, HA and admission control settings, DRS enablement, automation, affinity rules, migration and imbalance thresholds, plus profile and workload management flags. Has a totals row.
+view	7cec1e92-feb7-40a5-996f-ccc06bff1581	Bar chart counting clusters by reserved CPU capacity in GHz, in five equal buckets across the observed range.
+view	5f3896e4-6823-4a66-9aa0-d477f2182dc1	Bar chart counting clusters by total number of virtual machines, in buckets of 250 up to 1000, then 2000 and above.
+view	eb16757e-5f8d-46c3-a990-f84c22273f74	Donut chart showing how many clusters have DPM enabled and how many do not.
+view	818ca87d-feb3-4b3c-8534-ba47cfeaf610	Donut chart of clusters grouped by their DRS migration threshold setting, one slice per value, sorted ascending.
+view	f1096f58-89ab-464e-beab-c81738a706e3	Donut chart of clusters grouped by the default DRS VM behavior, such as manual or fully automated, one slice per value.
+view	825a660e-b021-46ad-b905-f88a519dab8d	Donut chart showing how many clusters have DRS enabled and how many do not.
+view	4e1d6191-5a75-4e7f-b8c5-c48a5576347e	Donut chart showing how many clusters have HA admission control enabled, using a window from the previous 7 days to now.
+view	9ebf801c-6e49-4aab-a462-3db925de984e	Donut chart showing how many clusters have vSphere HA enabled and how many do not.
+view	cb5ca3cc-1fda-4216-99e3-72d5565bfd59	Bar chart counting clusters by reserved memory in TB, in five equal buckets across the observed range.
+view	ae50759f-16c4-4465-a735-36043f7e9767	Top 20 clusters over the last day by performance score (current, minimum and percentile), with worst CPU ready, worst co-stop, VM memory contention, running VM count and vSAN flag. Lowest score first.
+view	3c9878e2-f570-4309-8093-8b8de7c5c81b	Top 20 clusters with running VMs over the last month: worst VM CPU ready and memory contention at the percentile, share of VMs affected by each, and average running VMs. Has an average row.
+view	58383fdc-6074-4310-aa1e-b0aa577e23df	Bar chart showing how many clusters contain each number of ESXi hosts, one bar per host count.
+view	43b5dc53-b296-4eb7-87fa-7a435386488f	Per-datacenter table of peak total, physical and virtual network throughput in Gbit/s, running VMs and running hosts, highest throughput first. Has an average row.
+view	2b76463b-40e5-41ea-b575-8d03736239ee	Inventory table showing, for each datacenter, the number of clusters, hosts, datastores and VMs, plus the parent vCenter. Sorted by clusters then hosts, highest first.
+view	d53cbf8a-6b5a-4ce2-8f0f-15babc4a6e30	Table for distributed switches with host count, switch version, NIC teaming policy and the teaming and VLAN/MTU health check results.
+view	9b1f2a63-57bb-4eb3-8420-af311d165bf5	Inventory table for distributed switches: used and maximum port counts, VM count, host count, folder and tag.
+view	28042bb1-5d32-455c-86c0-b65af38c02ac	Line chart for ESXi hosts of provisioned, usable and consumed memory and memory demand in GB over the previous week.
+view	1045bd7c-eae6-441b-99c8-ac2fc102336f	Lists VMs by 99th percentile peak memory contention, disk latency and CPU ready over one week. Summary rows show the average and worst value across all VMs.
+view	1be018ca-1588-40c4-9bc4-9dfc4849d6a5	Wide table for distributed port groups with used and maximum ports, VM count, backing type, VLAN and trunk, override permissions, security policy settings, segment and switch IDs and uplink. Highest used ports first.
+view	82883181-5199-4666-aa3e-4c5521086ab1	Inventory table for distributed port groups showing uplink, active uplinks, port count, VM count and used ports.
+view	ae763586-1fb7-4328-9c0a-d9290114766c	Bar chart counting distributed port groups where promiscuous mode is allowed.
+view	f31188cc-6862-4885-9bfc-67c644a12cba	Table of resource pool settings: CPU and memory limits, reservations, expandable flags and shares, running and total VM counts, and tag.
+view	a746c425-7fd0-4106-bdb1-c7684081d1ba	Resource pool table combining running VM count, CPU and memory contention, CPU usage, effective limit, and CPU and memory limits, reservations, shares and expandable flags.
+view	4b68ff93-9213-418c-8b7a-ee389e360979	Bar chart showing how many distributed switches run each switch version, one bar per version.

@@ -1,0 +1,33 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/esxi host maintenance state vcommunity/ESXi Host Maintenance State vCommunity.xml
+id: f9655ee4-3194-5a3e-a727-7ce58ab3c129
+name: ESXi Host Maintenance Mode vCommunity
+description: ESXi Host Maintenance Mode vCommunity
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+  types:
+  - descendant
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: runtime|maintenanceState
+  display_name: Maintenance State
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  omit:
+  - roll_up_type
+  - transformation
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+  count: 2
+  is_sum: false
+distribution_color: ED665A
+omit:
+- include_resource_creation_time

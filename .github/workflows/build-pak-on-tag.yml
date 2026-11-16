@@ -65,8 +65,8 @@ env:
   # cannot reach a release build until this pin and checksum are changed
   # here, in review. To move to a new kit: take the tarball's line from that
   # release's SHA256SUMS and update both values together.
-  BUILDKIT_TAG: sdk-buildkit-v1.0.27
-  BUILDKIT_SHA256: 0a9aa19c212535c0e1156bfe3732be62d8d0ab323e1d7946187508bad1250641
+  BUILDKIT_TAG: sdk-buildkit-v1.0.29
+  BUILDKIT_SHA256: 1596ded3f26236ed24240c665c01696a859b8c12242a3e00ad2622826cce633d
   BUILDKIT_REPO: sentania-labs/vcf-content-factory
   # Review registry updates together with the release source.
   DEFECT_REGISTRY_COMMIT: 10b1ad0ed51b1fdc56dfe88c8c13376ec0e1595c

@@ -1,0 +1,42 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 4f5c7654-0f1a-5490-a68c-51a727f76c2c
+name: VM Distribution by CPU to add
+description: Bar chart counting virtual machines by the number of vCPUs recommended for addition, in buckets
+  of 1, 2 to 4, 4 to 8, 8 to 12 and more.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  types:
+  - descendant
+time_window:
+  unit: MINUTES
+  count: 1
+columns:
+- attribute: summary|undersized|vcpus
+  display_name: CPU to add
+  roll_up_type: NONE
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - add_timestamp_as_column
+buckets:
+  dynamic: false
+  ranges:
+  - start: 1
+    end: 2
+  - start: 2
+    end: 4
+  - start: 4
+    end: 8
+  - start: 8
+    end: 12
+  - start: 12
+    end: 99
+  min_value: 0
+  max_value: 0
+  is_sum: false
+distribution_color: 4DABD5
+omit:
+- include_resource_creation_time

@@ -1,0 +1,47 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/windows services vcommunity/Windows Services vCommunity.xml
+id: adbabc79-e491-5fd7-84e1-49446d5dcefc
+name: Windows Services vCommunity
+description: Windows Services vCommunity
+data_type: list
+presentation: list
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- instanced_group:
+    name: GROUP_vCommunity
+    show_instance_name: true
+    keep_instance_summary: true
+  display_name: Service
+- attribute: vCommunity|Guest OS|Services:DHCP Client|Service Name
+  display_name: Service Name
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+- attribute: vCommunity|Guest OS|Services:DHCP Client|Service Status
+  display_name: Service Status
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  red_bound: Stopped
+  ascending_range: true
+  omit:
+  - roll_up_type
+- attribute: vCommunity|Guest OS|Services:DHCP Client|Service Start Type
+  display_name: Service Start Type
+  is_property: true
+  is_string_attribute: true
+  roll_up_count: 0
+  transformation: CURRENT
+  omit:
+  - roll_up_type
+page_size: 50
+omit:
+- include_resource_creation_time

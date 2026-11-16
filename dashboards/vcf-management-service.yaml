@@ -1,0 +1,258 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/vcf management service/VCF Management Service.json
+id: 129e9154-6b3e-579b-accb-e8cab804e3ba
+name: VCF Management Service
+description: Health monitoring of VCF 9.1 Management Service platform.
+name_path: ''
+omit:
+- name_path
+shared: false
+hidden: false
+time_range: last6Hour
+edit_allowed: true
+column_count: 0
+widgets:
+- id: w0
+  type: View
+  title: VCF Management Instance
+  coords:
+    w: 12
+    x: 1
+    h: 3
+    y: 1
+  description: ''
+  title_localized: VCF Management Instance
+  view_details: ''
+  view: VCF Management Services
+  select_first_row: false
+  self_provider: true
+  pin:
+    adapter_kind: Container
+    resource_kind: Universe
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permSelectedDate_
+      value: s%3A%7B%22minType%22%3A%22.TimeIntervalControl%22%2C%22advancedTimeMode%22%3Afalse%2C%22fromTime%22%3Anull%2C%22unit%22%3A%22DAYS%22%2C%22count%22%3A7%2C%22priorUnit%22%3Anull%2C%22priorCount%22%3Anull%2C%22startSubUnit%22%3Anull%2C%22startPeriod%22%3Anull%2C%22toTime%22%3Anull%2C%22endUnit%22%3Anull%2C%22endCount%22%3Anull%2C%22endSubUnit%22%3Anull%2C%22endPeriod%22%3Anull%2C%22mondayHours%22%3A%5B%5D%2C%22tuesdayHours%22%3A%5B%5D%2C%22wednesdayHours%22%3A%5B%5D%2C%22thursdayHours%22%3A%5B%5D%2C%22fridayHours%22%3A%5B%5D%2C%22saturdayHours%22%3A%5B%5D%2C%22sundayHours%22%3A%5B%5D%7D
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%25255Ewidth%25253Dn%2525253A247.60000610351562%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Ccomponents%2525257Ccritical_availability_issues1%25255Ehidden%25253Db%2525253A0%25255Ewidth%25253Dn%2525253A134.20001220703125%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257Ccomponents%2525257Cno_availability_issues2%25255Ehidden%25253Db%2525253A0%25255Ewidth%25253Dn%2525253A339%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-cpu%2525257Cusage_percent3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-disk%2525257Cusage_percent4%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-memory%2525257Cusage_percent5%25255Ehidden%25253Db%2525253A0
+    widget_id: true
+- id: w1
+  type: View
+  title: K8 Nodes
+  coords:
+    w: 4
+    x: 1
+    h: 9
+    y: 4
+  description: ''
+  view_details: ''
+  view: VCF Management Services Node Resource List
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-cpu%2525257Ccpu_usage_percent_15min1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-memory%2525257Cmem_usage_15min2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-disk%2525257Cusage_percent_15min3%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-status%2525257Cstatus4%25255Ehidden%25253Db%2525253A0
+    widget_id: true
+    view_type: LIST
+- id: w2
+  type: View
+  title: Volumes
+  coords:
+    w: 4
+    x: 5
+    h: 9
+    y: 4
+  description: VCF Management Services storage volume
+  view_details: ''
+  view: VCF Management Services Volume Usage List
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257CvolumeGroupName1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-summary%2525257CcomponentName2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-disk%2525257Cusage3%25255Ehidden%25253Db%2525253A0
+    widget_id: true
+    view_type: LIST
+- id: w3
+  type: View
+  title: Services
+  coords:
+    w: 4
+    x: 9
+    h: 9
+    y: 4
+  description: VCF Services Runtime Component
+  title_localized: Services
+  view_details: ''
+  view: VCF Management Services Component Health List
+  select_first_row: false
+  traversal_spec_id: ''
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permPageSize_
+      value: n%3A50
+    - key: permTableView_
+      value: o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253ApermTableView_{self}-column-0%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-status%2525257Chealth_15min1%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-memory%2525257CutilizationVsRequests-max-15min2%25255Ehidden%25253Db%2525253A0%255Eo%25253Aid%25253Ds%2525253ApermTableView_{self}-column-memory%2525257CutilizationVsRequests-avg-15min3%25255Ehidden%25253Db%2525253A0
+    - key: permSelectedDate_
+      value: s%3A%7B%22minType%22%3A%22.TimeIntervalControl%22%2C%22advancedTimeMode%22%3Afalse%2C%22fromTime%22%3Anull%2C%22unit%22%3A%22DAYS%22%2C%22count%22%3A7%2C%22priorUnit%22%3Anull%2C%22priorCount%22%3Anull%2C%22startSubUnit%22%3Anull%2C%22startPeriod%22%3Anull%2C%22toTime%22%3Anull%2C%22endUnit%22%3Anull%2C%22endCount%22%3Anull%2C%22endSubUnit%22%3Anull%2C%22endPeriod%22%3Anull%2C%22mondayHours%22%3Anull%2C%22tuesdayHours%22%3Anull%2C%22wednesdayHours%22%3Anull%2C%22thursdayHours%22%3Anull%2C%22fridayHours%22%3Anull%2C%22saturdayHours%22%3Anull%2C%22sundayHours%22%3Anull%7D
+    widget_id: true
+    view_type: LIST
+- id: w4
+  type: ResourceRelationshipAdvanced
+  title: Infrastructure Context
+  coords:
+    w: 2
+    x: 1
+    h: 15
+    y: 13
+  description: Shows the associated vSphere VM
+  title_localized: Infrastructure Context
+  view_details: ''
+  resource_relationship_advanced:
+    depth: 3,0
+    self_provider: false
+    resource_kinds:
+    - adapter_kind: VMWARE
+      resource_kind: Datastore
+    - adapter_kind: VMWARE
+      resource_kind: ClusterComputeResource
+    - adapter_kind: VMWARE
+      resource_kind: HostSystem
+    - adapter_kind: VMWARE
+      resource_kind: VirtualMachine
+    pagination_number: 5
+  select_first_row: true
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: perm_toolbarVisible_
+      value: b%3A0
+    widget_id: true
+    custom_filter_mode: tagPicker
+    blank_relationship_mode: true
+    visual_theme_false: true
+- id: w5
+  type: HealthChart
+  title: Pod CPU Throttled
+  coords:
+    w: 5
+    x: 3
+    h: 15
+    y: 13
+  description: ''
+  title_localized: Pod CPU Throttled
+  view_details: ''
+  adapter_kind: VMSP
+  resource_kind: pgdatabase-resource
+  metric_key: cpu|throttlingPercent
+  metric_name: CPU|CPU Throttling (%)
+  metric_full_name: CPU|CPU Throttling (%)
+  mode: all
+  depth: 2
+  chart_height: 135
+  pagination_number: 30
+  sort_by_dir: desc
+  yellow_bound: 2
+  orange_bound: 4
+  red_bound: 8
+  show_resource_name: true
+  relationship_mode: children
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    undefined:
+    - name: '%'
+      id: percent
+    custom_filter_mode: tagPicker
+- id: w6
+  type: HealthChart
+  title: Pod Memory Usage
+  coords:
+    w: 5
+    x: 8
+    h: 15
+    y: 13
+  description: Utilization against Limit
+  title_localized: Pod Memory Usage
+  view_details: ''
+  adapter_kind: VMSP
+  resource_kind: registry-service-resource
+  metric_key: memory|utilizationVsLimits
+  metric_name: Memory|Utilization vs Limits (%)
+  metric_full_name: Memory|Utilization vs Limits (%)
+  mode: all
+  depth: 2
+  chart_height: 135
+  pagination_number: 30
+  sort_by_dir: desc
+  yellow_bound: 85
+  orange_bound: 90
+  red_bound: 95
+  show_resource_name: true
+  relationship_mode: children
+  tag_filter:
+    states:
+    - '2'
+    statuses:
+    - '4'
+  ui:
+    height: 0
+    state: ''
+    tab_id: true
+    states:
+    - key: permDateRange_HealthChart_
+      value: s%3A%7B%22dateRange%22%3A%22dashboardTime%22%2C%22dateFrom%22%3Anull%2C%22dateTo%22%3Anull%2C%22timeFrom%22%3Anull%2C%22timeTo%22%3Anull%7D
+    widget_id: true
+    undefined:
+    - name: '%'
+      id: percent
+    custom_filter_mode: tagPicker
+interactions:
+- from: w1
+  to: w4
+  type: resourceId
+- from: w0
+  to: w1
+  type: resourceId
+- from: w0
+  to: w2
+  type: resourceId
+- from: w0
+  to: w3
+  type: resourceId
+- from: w1
+  to: w5
+  type: resourceId
+- from: w0
+  to: w5
+  type: resourceId
+- from: w0
+  to: w6
+  type: resourceId
+- from: w0
+  to: w4
+  type: resourceId
+- from: w1
+  to: w6
+  type: resourceId

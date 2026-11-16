@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vmConfigs>
+<!--
+  Virtual machine configuration properties to collect (VCF Content Factory
+  vCommunity).
+
+  Name vSphere API properties of a virtual machine, as dotted paths, whose
+  value you want on each virtual machine. A path is one or more names
+  separated by dots; each name starts with a letter and holds only letters and
+  digits (no spaces, brackets, slashes or trailing dot). A path that is not
+  written this way is skipped and reported before anything is read. A path
+  that vCenter does not know is dropped and reported, and costs no other value.
+  Only values that are a single text, number, flag or choice are published;
+  a path that leads to a whole object or a list is skipped and reported.
+
+  Format
+    - Separate entries with commas. A line break does NOT separate entries.
+    - An XML comment, like this one, is ignored. To switch an entry on, move
+      it out of the comment, and keep the comma after it.
+    - Do not write two hyphens in a row inside a comment.
+
+  Do not edit this shipped file: every upgrade of the pack replaces it and
+  your edits are lost (measured on VCF Operations 9.0.2 and 9.1.1, even without force
+  content update). Back the files up before an upgrade. Make a copy under another name in the VCF Operations configuration-file store, and
+  enter that name (no .xml) in the account's VM Options Config File field. As shipped,
+  every entry is commented out, so nothing is collected.
+
+  Examples, one per line:
+    config.firmware,
+    config.cpuHotAddEnabled,
+    config.memoryHotAddEnabled,
+    config.changeTrackingEnabled,
+    config.hardware.numCoresPerSocket,
+-->
+</vmConfigs>

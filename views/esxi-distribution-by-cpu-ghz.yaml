@@ -1,0 +1,72 @@
+# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+id: 0c7acc14-dec9-5b65-97d1-f90efc5ac933
+name: ESXi Distribution by CPU GHz
+description: Bar chart counting ESXi hosts by total CPU capacity in GHz, in fixed buckets that step from
+  0 up to 300 GHz and beyond.
+data_type: distribution
+presentation: bar-chart
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+  types:
+  - descendant
+usage:
+- dashboard
+- report
+- content
+time_window:
+  unit: DAYS
+  count: 7
+columns:
+- attribute: cpu|speed
+  display_name: .
+  unit: ghz
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+  omit:
+  - roll_up_type
+  - add_timestamp_as_column
+  - show_relative_timestamp
+buckets:
+  dynamic: false
+  ranges:
+  - start: 0
+    end: 50
+  - start: 50
+    end: 100
+  - start: 100
+    end: 200
+  - start: 200
+    end: 300
+  - start: 300
+    end: 999
+  min_value: 0
+  max_value: 0
+  is_sum: false
+distribution_color: 37B3EB
+additional_columns:
+- attribute: hardware|cpuInfo|hz
+  localized_name: Hardware|CPU Information|CPU Speed per Core (GHz)
+  display_name: Speed
+  unit: ghz
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+- attribute: cpu|cpuModel
+  localized_name: CPU|CPU Model
+  display_name: Model
+  is_string_attribute: true
+  is_property: true
+  roll_up_count: 0
+- attribute: cpu|numCpuSockets
+  localized_name: CPU|Number of CPU Sockets
+  display_name: Socket
+  is_property: true
+  roll_up_count: 0
+  transformation: CURRENT
+  sort: asc
+omit:
+- include_resource_creation_time
