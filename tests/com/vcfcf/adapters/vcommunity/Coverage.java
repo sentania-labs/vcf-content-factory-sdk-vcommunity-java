@@ -110,35 +110,49 @@ final class Coverage {
         return null;
     }
 
+    /** The rows whose value can be unset on a read that worked: nothing is sent for them (DV-112). */
+    static boolean unsetSendsNothing(int row) {
+        return row == 1 || (row >= 7 && row <= 25) || (row >= 31 && row <= 38) || row == 47
+                || (row >= 50 && row <= 52) || (row >= 60 && row <= 69) || row == 96
+                || (row >= 82 && row <= 104) || (row >= 107 && row <= 120) || row == 122 || row == 123
+                || (row >= 126 && row <= 130) || (row >= 132 && row <= 151) || row == 220 || row == 226;
+    }
+
     /** Notes of implemented rows, where something differs from the plain read. */
     static String note(int row) {
+        String n = baseNote(row);
+        if (!unsetSendsNothing(row) || n.contains("DV-112")) return n;
+        return n.isEmpty() ? "unset: nothing is sent (DV-112)" : n + "; unset: nothing is sent (DV-112)";
+    }
+
+    private static String baseNote(int row) {
         switch (row) {
-            case 1: return "ISO UTC text; no image manager or no date is \"null\" (Q9); a failed call is counted (F-HOST-INSTALLDATE), not sent as null (DV-10)";
+            case 1: return "ISO UTC text; no image manager or no date: nothing is sent (DV-112); a failed call is counted (F-HOST-INSTALLDATE), not sent as null (DV-10)";
             case 3: return "masked to the last group (DV-25)";
             case 6: return "metric, floor of days";
-            case 7: return "count of the adapters read; a list that came back empty is a real 0; a list not returned sends nothing (Q9, DV-111)";
-            case 31: case 32: return "no PCI device for the NIC: \"N/A\" (Q9)";
-            case 33: case 34: case 35: return "signed 16-bit text, as upstream (Q3); \"N/A\" with no device (Q9)";
+            case 7: return "count of the adapters read; a list that came back empty is a real 0; a list not returned sends nothing (DV-111, DV-112)";
+            case 31: case 32: return "no PCI device for the NIC: nothing is sent (DV-112)";
+            case 33: case 34: case 35: return "signed 16-bit text, as upstream (Q3); nothing with no device (DV-112)";
             case 39: return "half-duplex while the link is down, as upstream (Q10)";
             case 43: return "numeric property (framework typed push)";
-            case 47: return "\"0\" for a datastore with no VMFS extents, as upstream (Q9)";
+            case 47: return "a datastore with no VMFS information has no count: nothing is sent (DV-112)";
             case 56: return "withheld on a failed read-back or probe (DV-23)";
-            case 96: return "negative value read becomes 0, as the original; unset is 0 (Q9)";
-            case 120: return "metric; a device list that came back with no controller is a real 0; a list not returned sends nothing (Q9, DV-111)";
+            case 96: return "negative value read becomes 0, as the original (Q5); unset: nothing is sent (DV-112)";
+            case 120: return "metric; a device list that came back with no controller is a real 0; a list not returned sends nothing (DV-111, DV-112)";
             case 121: return "type text of an unmapped controller is its vim25 type name (DV-34)";
             case 131: case 257: return "invalid entry dropped and reported (DV-26)";
             case 132: case 133: case 134: case 135: case 136: case 137: case 138: case 139: case 140:
             case 141: case 142:
-                return "HA off or host monitoring disabled: \"null\"; unset: \"None\" (Q9)";
+                return "HA off or host monitoring disabled, or unset: nothing is sent (DV-112)";
             case 144: return "False when the cluster summary was read and names no mode (kept, Q2)";
-            case 145: return "\"null\" when EVC is off (Q9)";
-            case 146: case 147: case 148: case 149: return "DRS off, or the value missing: \"null\"; no proactive configuration: none, as upstream (Q9)";
-            case 151: return "metric; not returned: 0, as upstream's default (Q9)";
-            case 220: return "metric; nothing while DRS is off or vCenter gives a negative score (Q9, DV-111); a score of 0 vCenter gave is sent";
+            case 145: return "nothing when EVC is off (DV-112)";
+            case 146: case 147: case 148: case 149: return "DRS off, or the value missing: nothing is sent (DV-112)";
+            case 151: return "metric; not returned: nothing is sent (DV-112)";
+            case 220: return "metric; nothing while DRS is off or vCenter gives a negative score (DV-111, DV-112); a score of 0 vCenter gave is sent";
             case 253: case 254: return "built in P1; counted here because the cycle pushes them with the property keys";
-            case 226: return "unset: \"None\" (Q9)";
+            case 226: return "unset: nothing is sent (DV-112)";
             default:
-                if (row >= 60 && row <= 69) return "a setting vCenter lacks or leaves blank: \"null\" (Q9)";
+                if (row >= 60 && row <= 69) return "a setting vCenter lacks: nothing is sent; one it returns blank is sent as it is (DV-112)";
                 return "";
         }
     }

@@ -453,9 +453,17 @@ public final class KpiTest {
         // tiering latency counts only on a host that has memory tiering
         st = new HashMap<>(healthy);
         Map<String, Double> tiered = healthyHost();
-        tiered.put(StatKeys.MEM_TIERING_LATENCY, 300.0);
+        tiered.put(StatKeys.MEM_TIERING_LATENCY, 300000.0); // nanoseconds
         st.put("host-2", tiered);
         eq(300.0, risk(hosts, st, MonsterVm.DEFAULT).rows.get("Worst ESXi Memory Tiering Latency"), "tiering latency");
+        // DV-113: the statistic is in nanoseconds; the row is scored in microseconds. Measured on 9.1.1: about 283,000
+        tiered.put(StatKeys.MEM_TIERING_LATENCY, 283000.0);
+        eq(283.0, risk(hosts, st, MonsterVm.DEFAULT).rows.get("Worst ESXi Memory Tiering Latency"), "283,000 ns is 283 us");
+        // a reading of 0.0 is a reading, not no value
+        tiered.put(StatKeys.MEM_TIERING_LATENCY, 0.0);
+        eq(0.0, risk(hosts, st, MonsterVm.DEFAULT).rows.get("Worst ESXi Memory Tiering Latency"), "0.0 is a real reading");
+        tiered.put(StatKeys.MEM_TIERING_LATENCY, 61692.0);
+        eq(61.69, risk(hosts, st, MonsterVm.DEFAULT).rows.get("Worst ESXi Memory Tiering Latency"), "61,692 ns");
 
         // formulas
         HostInv big = host("b", 32, 64, 0, 0, 0);

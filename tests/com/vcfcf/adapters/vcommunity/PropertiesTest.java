@@ -280,8 +280,8 @@ public final class PropertiesTest {
             eq(r, H, "Storage Adapter:vmhba64|Device", "vmhba64"); // device "null": last segment of the key
             eq(r, H, "Storage Adapter:vmhba64|Bus", "0");
             eq(r, H, "Storage Adapter:vmhba1|Model", ""); // spaces are stripped to the empty string, and pushed, as upstream does (Q4)
-            eq(r, H, "Storage Adapter:vmhba1|PCI", "null"); // a field the adapter lacks is the original's "null" (Q9)
-            eq(r, H, "Storage Adapter:vmhba1|Type", "null");
+            none(r, H, "Storage Adapter:vmhba1|PCI"); // unset: nothing is sent (DV-112)
+            none(r, H, "Storage Adapter:vmhba1|Type"); // unset: nothing is sent (DV-112)
             eq(r, H, "Storage Adapter:vmhba1|Status", "unknown");
             // NICs
             String n0 = "Network|Device:vmnic0|";
@@ -302,13 +302,13 @@ public final class PropertiesTest {
             eq(r, H, n1 + "Status", "Disconnected");
             eq(r, H, n1 + "Duplex", "half-duplex"); // a link that is down is half-duplex to the original (Q10)
             none(r, H, n1 + "Driver Version"); // unset on the NIC: the original passes None to the SDK, which refuses it
-            eq(r, H, n1 + "Wake On Lan Supported", "None"); // str(None) (Q9)
+            none(r, H, n1 + "Wake On Lan Supported"); // unset: nothing is sent (DV-112)
             eq(r, H, n1 + "PCI Vendor ID (VID)", "15b3");
             String n2 = "Network|Device:vmnic2|"; // up, half duplex, no PCI device matches
             eq(r, H, n2 + "Duplex", "half-duplex");
-            eq(r, H, n2 + "PCI Vendor Name", "N/A"); // no PCI device matches the NIC: the original's "N/A" (Q9)
-            eq(r, H, n2 + "PCI Vendor ID (VID)", "N/A");
-            eq(r, H, n2 + "MAC", "None"); // no MAC: str(None)
+            none(r, H, n2 + "PCI Vendor Name"); // unset: nothing is sent (DV-112)
+            none(r, H, n2 + "PCI Vendor ID (VID)"); // unset: nothing is sent (DV-112)
+            none(r, H, n2 + "MAC"); // unset: nothing is sent (DV-112)
             // packages
             String pk = "Configuration|Packages:esx-base|";
             eq(r, H, pk + "Package Name", "esx-base");
@@ -340,15 +340,15 @@ public final class PropertiesTest {
             // hosts that are not connected, or that returned nothing
             T.check(r.ops.pushedProps.get(0).get("res-host-3") == null, "a disconnected host gets no keys");
             // a connected host that returned nothing: each property it lacks is the text the original prints (Q9)
-            eq(r, "res-host-2", "Configuration|Config Status", "None");
-            eq(r, "res-host-2", "Hardware|BIOS Vendor", "None");
-            eq(r, "res-host-2", "Configuration|Max EVC", "[]");
-            eq(r, "res-host-2", "Network|DHCP", "null");
-            eq(r, "res-host-2", "Network|Search Domain", "null");
+            none(r, "res-host-2", "Configuration|Config Status"); // unset: nothing is sent (DV-112)
+            none(r, "res-host-2", "Hardware|BIOS Vendor"); // unset: nothing is sent (DV-112)
+            none(r, "res-host-2", "Configuration|Max EVC"); // unset: nothing is sent (DV-112)
+            none(r, "res-host-2", "Network|DHCP"); // unset: nothing is sent (DV-112)
+            none(r, "res-host-2", "Network|Search Domain"); // unset: nothing is sent (DV-112)
             none(r, "res-host-2", "Storage Adapter|Number of HBA"); // the list was not returned: no count is known (DV-111)
             eq(r, "res-host-4", "Storage Adapter|Number of HBA", "0"); // a returned empty list is a count of 0
             eq(r, "res-host-4", "Network|DHCP", "True");
-            eq(r, "res-host-4", "Network|Search Domain", "null"); // no search domain: "null"
+            none(r, "res-host-4", "Network|Search Domain"); // unset: nothing is sent (DV-112)
             // the hosts' install-date and packages calls went only to the connected host that has the manager
             T.eq(1, r.count("installDate"), "one install date call");
             T.eq(1, r.count("fetchSoftwarePackages"), "one packages call");
@@ -398,7 +398,7 @@ public final class PropertiesTest {
             eq(r, VM, "Guest|Detailed Data|Distro Version", "10.0.22000");
             eq(r, VM, "Guest|Detailed Data|Kernel Version", "22000");
             eq(r, VM, "Guest|Detailed Data|Pretty Name", "Windows");
-            eq(r, VM, "Guest|Detailed Data|Distro Additional Version", "null");
+            none(r, VM, "Guest|Detailed Data|Distro Additional Version"); // unset: nothing is sent (DV-112)
             // advanced parameters: exact keys, a present empty value is a value
             eq(r, VM, c + "Advanced Parameters|disk.EnableUUID", "TRUE");
             eq(r, VM, c + "Advanced Parameters|tools.guest.desktop.autolock", "");
@@ -419,8 +419,8 @@ public final class PropertiesTest {
             eq(r, VM, "Network|Network Adapters:Network adapter 1|Starts Connected", "True");
             eq(r, VM, "Network|Network Adapters:Network adapter 2|Type", "manual");
             eq(r, VM, "Network|Network Adapters:Network adapter 2|Starts Connected", "False");
-            eq(r, VM, "Network|Network Adapters:Network adapter 4|Type", "None"); // no address type returned: str(None)
-            eq(r, VM, "Network|Network Adapters:Network adapter 4|Starts Connected", "null"); // no connectable: "null"
+            none(r, VM, "Network|Network Adapters:Network adapter 4|Type"); // unset: nothing is sent (DV-112)
+            none(r, VM, "Network|Network Adapters:Network adapter 4|Starts Connected"); // unset: nothing is sent (DV-112)
             for (String k : r.ops.pushedProps.get(0).get(VM).keySet()) {
                 T.check(!k.contains("Network Adapters:|") && !k.contains("Unknown Adapter"), "no sentinel adapter: " + k);
             }
@@ -436,13 +436,13 @@ public final class PropertiesTest {
             String d2 = "Virtual Disk:Hard disk 2|"; // a raw device mapping has none of the flat-file flags, and no shares
             eq(r, VM, d2 + "Key", "2001");
             eq(r, VM, d2 + "Controller Key", "1000");
-            eq(r, VM, d2 + "Eagerly Scrub", "None"); // a backing without the flag: str(None) (Q9)
-            eq(r, VM, d2 + "Split", "None");
-            eq(r, VM, d2 + "Write Through", "None");
-            eq(r, VM, d2 + "Storage Allocation Share Level", "Unknown"); // no shares: the original's "Unknown"
+            none(r, VM, d2 + "Eagerly Scrub"); // unset: nothing is sent (DV-112)
+            none(r, VM, d2 + "Split"); // unset: nothing is sent (DV-112)
+            none(r, VM, d2 + "Write Through"); // unset: nothing is sent (DV-112)
+            none(r, VM, d2 + "Storage Allocation Share Level"); // unset: nothing is sent (DV-112)
             String d3 = "Virtual Disk:Hard disk 3|"; // no controller key returned
             eq(r, VM, d3 + "Key", "2002");
-            eq(r, VM, d3 + "Controller Key", "None");
+            none(r, VM, d3 + "Controller Key"); // unset: nothing is sent (DV-112)
             eq(r, VM, d3 + "Split", "True");
             eq(r, VM, d3 + "Storage Allocation Share Level", "custom");
             // a disk with no label has no instance name
@@ -456,14 +456,14 @@ public final class PropertiesTest {
             eq(r, "res-vm-2", "Configuration|Op Notification Timeout", "0"); // a negative value read is 0, as the original
             eq(r, "res-vm-2", "Configuration|SCSI Controllers|Count", 0.0); // a returned empty device list
             // what it did not return is the text upstream prints for an unset value (Q9)
-            eq(r, "res-vm-2", "Configuration|Firmware", "None");
-            eq(r, "res-vm-2", "Configuration|NUMA|Hot Add Exposed", "None");
-            eq(r, "res-vm-2", "Configuration|Boot Options|Delay", "None");
-            eq(r, "res-vm-2", "Guest|Application Status", "None");
-            eq(r, "res-vm-2", "Guest|Customization Status", "null");
-            eq(r, "res-vm-2", "Guest|Detailed Data|CPE String", "null");
-            eq(r, "res-vm-2", "Runtime|DAS protection", "None");
-            eq(r, "res-vm-2", "Summary|VM Path Name", "None");
+            none(r, "res-vm-2", "Configuration|Firmware"); // unset: nothing is sent (DV-112)
+            none(r, "res-vm-2", "Configuration|NUMA|Hot Add Exposed"); // unset: nothing is sent (DV-112)
+            none(r, "res-vm-2", "Configuration|Boot Options|Delay"); // unset: nothing is sent (DV-112)
+            none(r, "res-vm-2", "Guest|Application Status"); // unset: nothing is sent (DV-112)
+            none(r, "res-vm-2", "Guest|Customization Status"); // unset: nothing is sent (DV-112)
+            none(r, "res-vm-2", "Guest|Detailed Data|CPE String"); // unset: nothing is sent (DV-112)
+            none(r, "res-vm-2", "Runtime|DAS protection"); // unset: nothing is sent (DV-112)
+            none(r, "res-vm-2", "Summary|VM Path Name"); // unset: nothing is sent (DV-112)
             eq(r, "res-vm-2", "Guest|Tools Sync Time", "None");
         }
     }
@@ -517,43 +517,43 @@ public final class PropertiesTest {
                 "Response \\ Default VM Restart Priority", "Response \\ Datastore APD", "Response \\ Datastore PDL",
                 "VM Monitoring", "Heartbeat Datastore", "Failure Interval", "Max Failure Window", "Max Failures",
                 "Minimum Up Time"}) {
-                eq(r, c2, ha + k, "null");
+                none(r, c2, ha + k); // unset: nothing is sent (DV-112)
             }
             for (String k : new String[] {"Proactive DRS", "Scale Descendants Shares", "CPU Over-Commitment",
                 "Virtual Machine Automation Enabled"}) {
-                eq(r, c2, drs + k, "null");
+                none(r, c2, drs + k); // unset: nothing is sent (DV-112)
             }
             none(r, c2, drs + "DRS Score"); // DRS off: nothing to score, not the worst score (DV-111)
             eq(r, c2, "Cluster Configuration|EVC|Enabled", "False"); // the summary was read and names no mode
-            eq(r, c2, "Cluster Configuration|EVC|Mode", "null");
+            none(r, c2, "Cluster Configuration|EVC|Mode"); // unset: nothing is sent (DV-112)
             none(r, c2, "Cluster Configuration|DPM|Host Power Action Rate"); // no dpmConfigInfo: nothing, as the original
-            eq(r, c2, "Cluster Configuration|Number of Effective Hosts", 0.0); // not returned: the original's default 0
+            none(r, c2, "Cluster Configuration|Number of Effective Hosts"); // not returned: nothing, not a 0 (DV-112)
             // HA on with host monitoring disabled: the five responses are not sent, the rest is
             String c3 = "res-domain-c3";
             for (String k : new String[] {"Host Monitoring", "Response \\ Host Isolation",
                 "Response \\ Default VM Restart Priority", "Response \\ Datastore APD", "Response \\ Datastore PDL"}) {
-                eq(r, c3, ha + k, "null");
+                none(r, c3, ha + k); // unset: nothing is sent (DV-112)
             }
             eq(r, c3, ha + "VM Monitoring", "vmMonitoringDisabled");
             eq(r, c3, ha + "Failure Interval", "60");
-            eq(r, c3, ha + "Max Failures", "None"); // not returned: str(None)
+            none(r, c3, ha + "Max Failures"); // unset: nothing is sent (DV-112)
             // DRS on without the over-commitment option: that one is "null"
             eq(r, c3, drs + "Proactive DRS", "True");
-            eq(r, c3, drs + "CPU Over-Commitment", "null");
+            none(r, c3, drs + "CPU Over-Commitment"); // unset: nothing is sent (DV-112)
             none(r, c3, drs + "DRS Score"); // a negative score is vCenter's "no score": nothing (DV-111)
             eq(r, c3, "Cluster Configuration|Number of Effective Hosts", 0.0); // a returned 0 is a count
-            eq(r, c3, "Cluster Configuration|DPM|Host Power Action Rate", "None"); // dpmConfigInfo has no rate: str(None)
+            none(r, c3, "Cluster Configuration|DPM|Host Power Action Rate"); // unset: nothing is sent (DV-112)
             // nothing returned at all: what the original prints for each unset value, and nothing it would not send
-            eq(r, "res-domain-c4", "Cluster Configuration|Configuration Status", "None");
-            eq(r, "res-domain-c4", "Cluster Configuration|EVC|Mode", "null");
-            eq(r, "res-domain-c4", ha + "Host Monitoring", "None"); // HA enabled flag unset: not False, so the values are str(None)
+            none(r, "res-domain-c4", "Cluster Configuration|Configuration Status"); // unset: nothing is sent (DV-112)
+            none(r, "res-domain-c4", "Cluster Configuration|EVC|Mode"); // unset: nothing is sent (DV-112)
+            none(r, "res-domain-c4", ha + "Host Monitoring"); // unset: nothing is sent (DV-112)
             none(r, "res-domain-c4", drs + "DRS Score"); // no summary: the original raises, no score
             none(r, "res-domain-c4", drs + "Proactive DRS"); // no proactive configuration: the original raises
-            // DRS on but the proactive configuration missing: the original raises and sends none of the four
-            for (String k : new String[] {"Proactive DRS", "Scale Descendants Shares", "CPU Over-Commitment",
-                "Virtual Machine Automation Enabled"}) {
-                none(r, "res-domain-c5", drs + k);
-            }
+            // DRS on but the proactive configuration missing: that one setting is not sent, and the ones it has are
+            none(r, "res-domain-c5", drs + "Proactive DRS");
+            none(r, "res-domain-c5", drs + "CPU Over-Commitment");
+            none(r, "res-domain-c5", drs + "Virtual Machine Automation Enabled");
+            eq(r, "res-domain-c5", drs + "Scale Descendants Shares", "disabled");
             eq(r, "res-domain-c5", drs + "DRS Score", 0.0); // DRS on and vCenter gave 0: a real score, sent
         }
     }
@@ -575,14 +575,14 @@ public final class PropertiesTest {
             String ds2 = "res-datastore-2"; // NFS: no VMFS information
             eq(r, ds2, "Summary|Status", "yellow");
             eq(r, ds2, "Summary|SIOC Enabled", "False");
-            eq(r, ds2, "Summary|SIOC Threshold", "None"); // unset: str(None)
-            eq(r, ds2, "Identifiers|Number of Extents", "0"); // no extents on a datastore that is not VMFS: 0 (the live differential)
+            none(r, ds2, "Summary|SIOC Threshold"); // unset: nothing is sent (DV-112)
+            none(r, ds2, "Identifiers|Number of Extents"); // not VMFS: no extent list, no count (DV-112)
             none(r, ds2, "Summary|Block Size");
             none(r, ds2, "Summary|Max Blocks");
             none(r, ds2, "Summary|VMFS Upgradable");
             String ds3 = "res-datastore-3";
             eq(r, ds3, "Summary|MOID", "datastore-3");
-            eq(r, ds3, "Summary|Status", "None");
+            none(r, ds3, "Summary|Status"); // unset: nothing is sent (DV-112)
             // the vCenter object
             String c = "Configuration|";
             eq(r, VC, c + "User Directory Timeout", "5000");
@@ -593,8 +593,8 @@ public final class PropertiesTest {
             eq(r, VC, c + "Database|Task Cleanup Enabled", "True");
             eq(r, VC, c + "Runtime|vCenter managed address", "10.1.1.1");
             eq(r, VC, c + "Database|Maximum Connections", "50");
-            eq(r, VC, c + "Runtime|vCenter Unique ID", "null"); // blank setting: the original's "null"
-            eq(r, VC, c + "Log Level", "null"); // not a setting this vCenter has: "null"
+            eq(r, VC, c + "Runtime|vCenter Unique ID", "  "); // a blank setting vCenter returned is sent as it is (DV-112)
+            none(r, VC, c + "Log Level"); // unset: nothing is sent (DV-112)
             eq(r, VC, c + "Patch Level", "8.0.3.00200");
             T.eq(1, r.count("QueryOptions"), "one call for every setting (DV-37)");
         }
@@ -606,13 +606,13 @@ public final class PropertiesTest {
                 SoapFx.str("distroAddlVersion='SP1' prettyName='Plain'")));
         try (Rig r = standard(fake, old)) {
             r.run();
-            eq(r, VC, "Configuration|Patch Level", "None");
+            none(r, VC, "Configuration|Patch Level"); // unset: nothing is sent (DV-112)
             eq(r, VC, "Configuration|Runtime|vCenter Unique ID", "7");
-            eq(r, VC, "Configuration|Runtime|vCenter managed address", "null");
+            none(r, VC, "Configuration|Runtime|vCenter managed address"); // unset: nothing is sent (DV-112)
             eq(r, VC, "Configuration|Log Level", "info");
             eq(r, "res-vm-7", "Guest|Detailed Data|Distro Additional Version", "SP1");
             eq(r, "res-vm-7", "Guest|Detailed Data|Pretty Name", "Plain");
-            eq(r, "res-vm-7", "Guest|Detailed Data|Build Number", "null");
+            none(r, "res-vm-7", "Guest|Detailed Data|Build Number"); // unset: nothing is sent (DV-112)
         }
     }
 
@@ -800,8 +800,8 @@ public final class PropertiesTest {
             T.check(r.p(0, vm9, V + "Guest|Application Status") == null, "a refused path: not \"None\" on any VM");
             T.check(r.p(0, vm9, V + "Configuration|Firmware") == null, "a path vCenter could not read for this VM: not \"None\"");
             T.check(r.p(0, vm9, V + "Guest|State") == null, "likewise");
-            eq(r, "res-vm-2", "Configuration|Firmware", "None"); // unset on a read that worked: the text
-            eq(r, "res-host-12", "Network|DHCP", "None"); // the DNS configuration without the flag: str(None)
+            none(r, "res-vm-2", "Configuration|Firmware"); // unset: nothing is sent (DV-112)
+            none(r, "res-host-12", "Network|DHCP"); // unset: nothing is sent (DV-112)
             eq(r, "res-host-4", "Network|DHCP", "True");
             T.check(r.p(0, vm9, V + "Configuration|Boot Options|Delay") != null, "what read is sent");
             T.contains(firstFailure(r, 0), "F-SOAP", "the failed reads are counted");
@@ -809,7 +809,7 @@ public final class PropertiesTest {
         }
     }
 
-    /** Objects that return nothing: what was not returned is the original's text; what could not exist is counted. */
+    /** Objects that return nothing: what was not returned is not sent and not counted (DV-112). */
     static void sparse(FakeVc fake) throws Exception {
         FakeVcenter vc = new FakeVcenter();
         vc.add(P2Fixtures.hostSparse("host-2", "esx2")).add(P2Fixtures.vmSparse("vm-2", "off01"))
@@ -822,12 +822,12 @@ public final class PropertiesTest {
             none(r, "res-vm-3", "Configuration|SCSI Controllers|Count"); // not returned: no count, not a 0 (DV-111)
             eq(r, "res-vm-2", "Configuration|SCSI Controllers|Count", 0.0); // returned with none in it: a real 0
             // objects that returned nothing, on reads that worked, get what the original prints for unset values (Q9)
-            eq(r, "res-host-2", "Hardware|BIOS Vendor", "None");
-            eq(r, "res-domain-c4", "Cluster Configuration|Overall Status", "None");
-            eq(r, "res-vm-2", "Configuration|Firmware", "None");
-            // what has no source even so (an unset NIC driver, a cluster with no summary) is counted
+            none(r, "res-host-2", "Hardware|BIOS Vendor"); // unset: nothing is sent (DV-112)
+            none(r, "res-domain-c4", "Cluster Configuration|Overall Status"); // unset: nothing is sent (DV-112)
+            none(r, "res-vm-2", "Configuration|Firmware"); // unset: nothing is sent (DV-112)
+            // what vCenter answered without is not a failure: nothing is counted as withheld (DV-112)
             Double withheld = (Double) r.health(0, "Values Withheld in Last Cycle");
-            T.check(withheld != null && withheld > 0, "the values left out are counted: " + withheld);
+            T.eq(0.0, withheld, "an unset value is not counted");
             T.eq(0.0, r.health(0, "Reads Failed in Last Cycle"), "no read failed");
             T.eq("OK", r.health(0, "Collector:host|Status"), "a successful read is OK");
             T.eq("OK", r.health(0, "Collector:vm|Status"), "a successful read is OK");
@@ -972,7 +972,7 @@ public final class PropertiesTest {
             none(r, h5, "Configuration|Install Date|UTC");
             none(r, h5, "Configuration|Packages:esx-base|Package Name");
             eq(r, h5, "Configuration|Config Status", "green"); // the rest of the host is sent
-            eq(r, "res-host-6", "Configuration|Install Date|UTC", "null"); // no date returned: not a failure, the original's "null"
+            none(r, "res-host-6", "Configuration|Install Date|UTC"); // unset: nothing is sent (DV-112)
             none(r, "res-host-6", "Configuration|Packages:esx-base|Package Name");
             eq(r, H, "Configuration|Install Date|UTC", "2025-01-02T03:04:05.123456+00:00");
             T.eq(2.0, r.health(0, "Reads Failed in Last Cycle"), "the two failed calls are counted, once each");
@@ -1008,8 +1008,8 @@ public final class PropertiesTest {
             // the edge of Q1: with config.tools in the list the original's read holds it, so the two keys are real
             eq(r, VM, "Guest|Tools Sync Time", "False");
             eq(r, VM, "Guest|Tools Upgrade Policy", "manual");
-            // a VM with no tools configuration: None
-            eq(r, "res-vm-2", "Guest|Tools Sync Time", "None");
+            // a VM with no tools configuration: nothing is sent (DV-112)
+            none(r, "res-vm-2", "Guest|Tools Sync Time");
             none(r, VM, "Options|config.hardware");
             T.eq(1.0, r.health(0, "Check-List Entries Skipped"), "the entry that is not reproduced is counted");
             r.run();
@@ -1573,16 +1573,16 @@ public final class PropertiesTest {
             eq(r, h20, "Network|Device:vmnic9|Driver Version", "");
             eq(r, h20, "Network|Device:vmnic9|MAC", " ");
             eq(r, h20, "Network|Device:vmnic9|PCI", "");
-            eq(r, h20, "Storage Adapter:vmhba5|Model", "null"); // an empty value is falsy for upstream: its "null"
+            eq(r, h20, "Storage Adapter:vmhba5|Model", ""); // returned empty: a value, sent as it is (DV-112)
             eq(r, h20, "Storage Adapter:vmhba5|Status", ""); // spaces strip to the empty string
             eq(r, h20, "Storage Adapter:vmhba5|PCI", "p");
             eq(r, h20, "Licensing:L|License Key", "");
             eq(r, h20, "Licensing:L|Edition Key", "");
             eq(r, "res-vm-20", "Guest|Customization Status", "");
             eq(r, "res-vm-20", "Guest|Detailed Data|Build Number", "");
-            eq(r, "res-vm-20", "Guest|Detailed Data|Distro Name", "null"); // an empty value is "null"
+            none(r, "res-vm-20", "Guest|Detailed Data|Distro Name"); // unset: nothing is sent (DV-112)
             eq(r, "res-vm-20", "Network|Network Adapters:|Type", "");
-            eq(r, "res-vm-21", "Guest|Customization Status", "null"); // empty: falsy, "null"
+            eq(r, "res-vm-21", "Guest|Customization Status", ""); // returned empty: sent as it is (DV-112)
             eq(r, "res-domain-c20", "Cluster Configuration|EVC|Enabled", "True"); // a non-empty string is true
             eq(r, "res-domain-c20", "Cluster Configuration|EVC|Mode", "  ");
             eq(r, VC, "Configuration|Patch Level", "");

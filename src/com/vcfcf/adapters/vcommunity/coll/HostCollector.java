@@ -16,9 +16,8 @@ import java.util.Map;
 
 /**
  * The host keys (design 4.4, rows R1-R46, R255). A host that is not connected
- * gets none (parity, issue 86). A value the read found unset is published as the
- * original prints it (Q9: {@code None}, {@code null}, {@code N/A}, {@code []}, a
- * count of 0); one whose read failed is withheld, and a failed per-host call is
+ * gets none (parity, issue 86). A value the read found unset is not sent, with
+ * no placeholder of any kind (DV-112); one whose read failed is withheld, and a failed per-host call is
  * reported by the caller, not turned into a value.
  */
 public final class HostCollector {
@@ -133,25 +132,23 @@ public final class HostCollector {
     public static ObjectOut collectRow(BulkRow row) {
         if (!isConnected(row)) return null;
         ObjectOut o = new ObjectOut(KIND, row.obj.value);
-        o.propY(CONF + "Config Status", Vals.scalarOrNone(row, "configStatus"));
-        // no maximum EVC mode: the original's default, the text of an empty list (Q9)
-        String maxEvc = Vals.scalar(row, "summary.maxEVCModeKey");
-        o.propY(CONF + "Max EVC", maxEvc != null ? Quirks.text(maxEvc)
-                : row.isUnset("summary.maxEVCModeKey") ? Quirks.orText(null, "[]", Quirks.UNSET_AS_UPSTREAM) : null);
+        // a value vCenter answered without is not sent (DV-112); a path that could not be read is withheld and counted
+        Vals.prop(o, row, CONF + "Config Status", "configStatus");
+        Vals.prop(o, row, CONF + "Max EVC", "summary.maxEVCModeKey");
         XmlNode dns = row.val("config.network.dnsConfig");
         boolean dnsRead = dns != null || row.isUnset("config.network.dnsConfig");
-        // no DNS configuration: the original's "null"; no search domain: "null" too
-        // no DNS configuration at all: the original's "null"; one without the flag: str(None)
-        o.propY(NET + "DHCP", dns == null ? (dnsRead ? Quirks.orNull(null) : null)
-                : Quirks.orNone(Vals.bool(dns, "dhcp")));
-        o.propY(NET + "Search Domain", dnsRead ? Quirks.orNull(searchDomain(dns)) : null);
-        o.propY(CONF + "Time Zone|Name", Vals.scalarOrNone(row, "config.dateTimeInfo.timeZone.name"));
-        o.propY(CONF + "Time Zone|Description", Vals.scalarOrNone(row, "config.dateTimeInfo.timeZone.description"));
-        o.propY(CONF + "Time Zone|GMT Offset", Vals.scalarOrNone(row, "config.dateTimeInfo.timeZone.gmtOffset"));
-        o.propY(Vals.P + "Runtime|Boot Time", Vals.scalarOrNone(row, "runtime.bootTime"));
-        o.propY(Vals.P + "Hardware|BIOS Vendor", Vals.scalarOrNone(row, "hardware.biosInfo.vendor"));
-        o.propY(Vals.P + "Capability|Storage vMotion Supported",
-                Vals.scalarOrNone(row, "capability.storageVMotionSupported"));
+        if (dnsRead) {
+            if (dns != null) o.prop(NET + "DHCP", Vals.bool(dns, "dhcp"));
+            o.prop(NET + "Search Domain", searchDomain(dns));
+        } else {
+            o.withhold(2);
+        }
+        Vals.prop(o, row, CONF + "Time Zone|Name", "config.dateTimeInfo.timeZone.name");
+        Vals.prop(o, row, CONF + "Time Zone|Description", "config.dateTimeInfo.timeZone.description");
+        Vals.prop(o, row, CONF + "Time Zone|GMT Offset", "config.dateTimeInfo.timeZone.gmtOffset");
+        Vals.prop(o, row, Vals.P + "Runtime|Boot Time", "runtime.bootTime");
+        Vals.prop(o, row, Vals.P + "Hardware|BIOS Vendor", "hardware.biosInfo.vendor");
+        Vals.prop(o, row, Vals.P + "Capability|Storage vMotion Supported", "capability.storageVMotionSupported");
         adapters(o, row, row.val("config.storageDevice.hostBusAdapter"));
         uplinks(o, row, row.val("config.network.pnic"), row.val("hardware.pciDevice"));
         return o;
@@ -163,19 +160,24 @@ public final class HostCollector {
      * @param advSettings the ESXi Advanced System Settings list in force (empty: no block)
      */
     public static void addExtras(ObjectOut o, Extras x, List<String> advSettings) {
-        // a host with no image manager, or one that answered no date, is the original's "null" (Q9); a
-        // call that failed is not an answer and sends nothing
-        o.propY(CONF + "Install Date|UTC", x.installDate != null ? x.installDate
-                : x.installDateRead ? Quirks.orNull(null) : null);
+        // a host with no image manager, or one that answered no date, sends nothing; a call that failed is withheld
+        if (x.installDate != null) {
+            o.prop(CONF + "Install Date|UTC", x.installDate);
+        } else if (!x.installDateRead) {
+            o.withhold(1);
+        }
         options(o, x.options, advSettings);
         packages(o, x.packages);
     }
 
     private static void options(ObjectOut o, Map<String, String> options, List<String> adv) {
-        // an option the host does not list is the original's "null" (Q9); no answer at all sends nothing
-        o.propY(CONF + "VAAI|ATS Heartbeat", options == null ? null : Quirks.orNull(options.get(ATS_HEARTBEAT)));
-        o.propY(CONF + "VAAI|ATS Locking", options == null ? null : Quirks.orNull(options.get(ATS_LOCKING)));
-        if (options == null) return;
+        // an option the host does not list sends nothing; no answer at all is withheld and counted
+        if (options == null) {
+            o.withhold(2);
+            return;
+        }
+        o.prop(CONF + "VAAI|ATS Heartbeat", options.get(ATS_HEARTBEAT));
+        o.prop(CONF + "VAAI|ATS Locking", options.get(ATS_LOCKING));
         for (String item : adv) {
             String v = options.get(item);
             if (v != null) o.prop(CONF + "Advanced System Settings|" + item, v);
@@ -198,9 +200,9 @@ public final class HostCollector {
 
     private static void adapters(ObjectOut o, BulkRow row, XmlNode list) {
         if (list == null) {
-            // the list was not returned (unset, or not read): no count is known, and a 0 would stand for it (DV-111).
-            // A list that came back empty is a real count of 0 and is published below.
-            o.propY(Vals.P + "Storage Adapter|Number of HBA", null);
+            // the list was not returned: no count is known (DV-111). Unset sends nothing; a list that could not be
+            // read is withheld and counted. A list that came back empty is a real count of 0 and is published below.
+            if (!row.isUnset("config.storageDevice.hostBusAdapter")) o.withhold(1);
             return;
         }
         List<XmlNode> hbas = Vals.items(list);
@@ -217,18 +219,13 @@ public final class HostCollector {
             }
             String p = Vals.P + "Storage Adapter:" + dev + "|";
             o.prop(p + "Device", dev);
-            // a field the adapter does not have is the original's "null" (Q9)
-            o.propY(p + "Bus", Quirks.orNull(Vals.integer(h, "bus")));
-            o.propY(p + "Model", Quirks.orNull(Quirks.strippedIfTruthy(Vals.str(h, "model"))));
-            o.propY(p + "PCI", Quirks.orNull(Quirks.strippedIfTruthy(Vals.str(h, "pci"))));
-            o.propY(p + "Status", Quirks.orNull(Quirks.strippedIfTruthy(Vals.str(h, "status"))));
-            o.propY(p + "Type", Quirks.orNull(Quirks.strippedIfTruthy(Vals.str(h, "storageProtocol"))));
+            // a field the adapter does not have sends nothing; one it returned (an empty text too) is sent
+            o.prop(p + "Bus", Vals.integer(h, "bus"));
+            o.prop(p + "Model", Quirks.stripped(Vals.str(h, "model")));
+            o.prop(p + "PCI", Quirks.stripped(Vals.str(h, "pci")));
+            o.prop(p + "Status", Quirks.stripped(Vals.str(h, "status")));
+            o.prop(p + "Type", Quirks.stripped(Vals.str(h, "storageProtocol")));
         }
-    }
-
-    /** {@code N/A}: the original's text for a NIC's PCI field when the NIC has no PCI device, or the device lacks it (Q9). */
-    private static String na(String v) {
-        return Quirks.orText(v, "N/A", Quirks.UNSET_AS_UPSTREAM);
     }
 
     private static void uplinks(ObjectOut o, BulkRow row, XmlNode pnics, XmlNode pciList) {
@@ -253,24 +250,19 @@ public final class HostCollector {
             o.prop(p + "Driver Version", Quirks.text(Vals.str(n, "driverVersion")));
             o.prop(p + "Firmware Version", Quirks.text(Vals.str(n, "firmwareVersion")));
             o.prop(p + "Status", up ? "Connected" : "Disconnected");
-            // no PCI device for the NIC: the original's "N/A" (Q9), unless the device list itself did not read
+            // no PCI device for the NIC sends no PCI field; the device list that could not be read is withheld and counted
             if (pd == null) {
-                String none = pciRead ? na(null) : null;
-                o.propY(p + "PCI Vendor Name", none);
-                o.propY(p + "PCI Device Name", none);
-                o.propY(p + "PCI Vendor ID (VID)", none);
-                o.propY(p + "PCI Device ID (DID)", none);
-                o.propY(p + "PCI SubVendor ID (SVID)", none);
+                if (!pciRead) o.withhold(5);
             } else {
-                o.propY(p + "PCI Vendor Name", Quirks.text(Vals.str(pd, "vendorName")));
-                o.propY(p + "PCI Device Name", Quirks.text(Vals.str(pd, "deviceName")));
-                o.propY(p + "PCI Vendor ID (VID)", na(Quirks.pciId(Vals.str(pd, "vendorId"))));
-                o.propY(p + "PCI Device ID (DID)", na(Quirks.pciId(Vals.str(pd, "deviceId"))));
-                o.propY(p + "PCI SubVendor ID (SVID)", na(Quirks.pciId(Vals.str(pd, "subVendorId"))));
+                o.prop(p + "PCI Vendor Name", Quirks.text(Vals.str(pd, "vendorName")));
+                o.prop(p + "PCI Device Name", Quirks.text(Vals.str(pd, "deviceName")));
+                o.prop(p + "PCI Vendor ID (VID)", Quirks.pciId(Vals.str(pd, "vendorId")));
+                o.prop(p + "PCI Device ID (DID)", Quirks.pciId(Vals.str(pd, "deviceId")));
+                o.prop(p + "PCI SubVendor ID (SVID)", Quirks.pciId(Vals.str(pd, "subVendorId")));
             }
-            o.propY(p + "MAC", Quirks.orNone(Quirks.text(Vals.str(n, "mac"))));
-            o.propY(p + "Wake On Lan Supported", Quirks.orNone(Vals.bool(n, "wakeOnLanSupported")));
-            o.propY(p + "PCI", Quirks.orNone(Quirks.text(pciId)));
+            o.prop(p + "MAC", Quirks.text(Vals.str(n, "mac")));
+            o.prop(p + "Wake On Lan Supported", Vals.bool(n, "wakeOnLanSupported"));
+            o.prop(p + "PCI", Quirks.text(pciId));
             // full duplex only when the link has a speed and says so; a link that is down is half-duplex
             // to the original (the text for both, and for a link with no duplex flag)
             String duplex = up ? Vals.bool(n.child("linkSpeed"), "duplex") : null;
@@ -311,8 +303,8 @@ public final class HostCollector {
             }
             String p = Vals.P + "Licensing:" + a.name + "|";
             o.prop(p + "Name", a.name);
-            o.propY(p + "License Key", LicenseKeyMask.mask(a.licenseKey));
-            o.propY(p + "Edition Key", Quirks.text(a.editionKey));
+            o.prop(p + "License Key", LicenseKeyMask.mask(a.licenseKey));
+            o.prop(p + "Edition Key", Quirks.text(a.editionKey));
             if (a.expiration == null) continue; // perpetual or evaluation: nothing to publish
             o.prop(p + "License Expiration Date", PyText.dateTime(a.expiration));
             Instant exp = PyText.instant(a.expiration);

@@ -231,7 +231,9 @@ public final class GuestPhase {
         List<Item> collected = new ArrayList<>();
         try {
             CompletionService<Item> cs = new ExecutorCompletionService<>(pool);
-            for (Item item : items) cs.submit(task(item, in, runner));
+            Turnstile turns = new Turnstile();
+            int order = 0;
+            for (Item item : items) cs.submit(task(item, order++, turns, in, runner));
             int got = 0;
             while (got < submitted) {
                 long left = realStop - System.nanoTime();
@@ -267,15 +269,43 @@ public final class GuestPhase {
         return batch;
     }
 
-    private Callable<Item> task(Item item, Input in, GuestRunner runner) {
+    /**
+     * Lets the VMs of one batch go to the logon gate one at a time, in the order they were listed. Without it the
+     * workers reach the gate in whatever order the threads happen to run, so which VM is the probe (the one asked
+     * alone until a logon is accepted) was luck: a VM that refuses could be the probe on one run and a VM that accepts
+     * on the next, and the collection would end after one logon or go on to all the VMs. The order is the cursor's.
+     */
+    private static final class Turnstile {
+        private int next;
+
+        /** Waits for the turn of {@code order}; false when the time is up or the thread is interrupted first. */
+        synchronized boolean await(int order, Input in) throws InterruptedException {
+            while (next < order) {
+                if (in.clock.getAsLong() >= in.deadlineMs) return false;
+                wait(20);
+            }
+            return true;
+        }
+
+        /** The turn of {@code order} is over, whether or not the VM was admitted. */
+        synchronized void done(int order) {
+            if (next <= order) next = order + 1;
+            notifyAll();
+        }
+    }
+
+    private Callable<Item> task(Item item, int order, Turnstile turns, Input in, GuestRunner runner) {
         return () -> {
-            if (in.clock.getAsLong() >= in.deadlineMs || Thread.currentThread().isInterrupted()) return item;
-            LogonGate.Slot slot;
+            LogonGate.Slot slot = null;
             try {
+                if (in.clock.getAsLong() >= in.deadlineMs || Thread.currentThread().isInterrupted()) return item;
+                if (!turns.await(order, in)) return item;
                 slot = gate.admit(item.vm.moref, in.clock, in.deadlineMs);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return item;
+            } finally {
+                turns.done(order);
             }
             if (slot == null) return item;
             try {

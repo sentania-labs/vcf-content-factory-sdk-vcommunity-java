@@ -3,7 +3,14 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
-## 1.0.0.24 (Unreleased)
+## 1.0.0.25 (Unreleased)
+
+- fix(adapter): a value vCenter answered without is not published at all, with no placeholder: no `None`, `null`, `[]`, `N/A`, `Unknown`, empty text or 0 (DV-112; 133 keys on 8 object kinds, listed in the coverage TSVs). The Q8 and Q9 seams and their helpers are deleted. A failed read is still withheld and counted; an unset value is not counted and raises no warning; a returned 0, `False`, empty list or empty text is still sent. Content Library counts of items not stored locally and not compliant count only the items that carry the flag, and Total Size adds only the items that carry a size. Placeholders sent earlier stay on existing objects until overwritten (installing guide, upgrade notes).
+- fix(adapter): Worst ESXi Memory Tiering Latency is converted from nanoseconds to microseconds before it is scored and published; it was pinned at the worst score on every tiered host (DV-113). The published figure steps down by a factor of 1,000.
+- docs: DV-109 records the live reconciliation of the memory divisor against the stock usage figure (within 0.006 points on tiered and non-tiered hosts); the missing input of Cluster Memory Tiering Consumption is listed as a known gap.
+- fix(test): the guest phase hands the VMs of a batch to the logon gate in the cursor's order, so the VM that is asked alone first (the probe) is the first on the list and not whichever thread ran first; two guest tests that assumed vm-1 went first failed at random (`isolation`, and the 16 VM refusal count). Build 25.
+
+## 1.0.0.24
 
 - fix(adapter): whether the version has the quarantine property is decided from every host whose properties were read, not only the hosts whose statistics were read too (external review of PR 4): a statistics failure on the hosts that carry it no longer turns the others to the three-condition score. Statistics failures still withhold the affected hosts' own availability.
 - review of builds 23 (DV-109 to DV-111): every memory row of a tiered host divides by DRAM plus the NVMe tier, not only consumed memory (ballooned, zip and swap, reservation, over-commit, monster VM; non-tiered hosts unchanged); whether the quarantine property exists is decided once per cycle from the whole answer, so a 9.x host with no value for it scores 75, not 100; the three keys that no longer send a 0 keep their last value in Operations after an upgrade (DV-111, installing guide); "vSphere Clusters not Green" is listed in `bundled_content` (3 super metrics, counts and enablement text corrected); docs corrected for the license alert, the unset-value text and the package views, which need `nenic`, `nfnic` and `nsx-host` named in the packages list (`nsx-host` added as a commented example); the super metric header and carried-text report corrected; recorded 8.18.7 and 9.0.2 host properties as fixtures; build 24.

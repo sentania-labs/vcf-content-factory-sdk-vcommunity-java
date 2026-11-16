@@ -69,6 +69,7 @@ public final class StatKeys {
     public static final String MEM_BALLOONED = "mem|vmmemctl_average";
     public static final String MEM_COMPRESSED = "mem|compressed_average";
     public static final String MEM_SWAPPED = "mem|swapout_average";
+    /** In nanoseconds (Operations unit ns; vCenter counter mem.latency.read). */
     public static final String MEM_TIERING_LATENCY = "mem:NVMe|latency.read_latest";
     public static final String CPU_RESERVED = "cpu|reservedCapacity_average";
     public static final String CPU_CAPACITY = "cpu|totalCapacity_average";

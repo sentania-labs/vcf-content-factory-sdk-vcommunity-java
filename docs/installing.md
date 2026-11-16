@@ -303,11 +303,19 @@ expiration date (a perpetual license publishes no Remaining Days and never raise
 licenses, the alert's severity is the band of the license nearest to expiring. This departs from the original pack,
 whose symptoms named one fixed license (design 5.8, Q17).
 
-**Upgrading from an earlier build: some values keep their last stored value.** A key that this build no longer sends
-is not deleted in VCF Operations (a pushed key cannot be deleted), so it keeps what it had. After upgrading to the build
-that carries DV-111, every cluster that has DRS off keeps the DRS Score of 0 it had, every host whose adapter list is
-not returned keeps its "Number of HBA" of 0, and a cluster that turns DRS off later keeps its last real score. They
-stop being updated; the old value stays until it ages out of a widget's time window or you clear it.
+**Upgrading from an earlier build or from the Python pack: some values keep their last stored value.** A key that this
+build no longer sends is not deleted in VCF Operations (a pushed key cannot be deleted), so it keeps what it had.
+- From build 25 on a value vCenter answered without is not sent at all (DV-112). Placeholders that the Python pack or
+  an earlier build sent (the texts `None`, `null`, `[]`, `N/A`, `Unknown`, an empty text, and a 0 for an unset count,
+  size or timeout) therefore stay on existing objects until a real value overwrites them; they are not cleared by the
+  upgrade. A new object simply has no such key. A chart or a filter over those keys can still show the old
+  placeholder text on objects that were collected before.
+- Every cluster that has DRS off keeps the DRS Score of 0 it had, every host whose adapter list was not returned keeps its
+  "Number of HBA" of 0, and a cluster that turns DRS off later keeps its last real score (DV-111).
+- Worst ESXi Memory Tiering Latency changes unit at the upgrade: it was the raw statistic (nanoseconds, so about 283,000
+  for a healthy host) and is now in microseconds (about 283), so its history shows a step down by a factor of 1,000
+  (DV-113).
+They stop being updated; the old value stays until it ages out of a widget's time window or is overwritten.
 
 **Two dashboards without Section rows.** "Overall Daily Check" (6 Section rows)
 and "vSphere Cluster Capacity 2.0" (2) use the Section widget, which VCF

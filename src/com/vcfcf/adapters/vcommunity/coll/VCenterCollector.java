@@ -14,8 +14,8 @@ import java.util.Set;
 /**
  * The vCenter's own configuration keys (design 4.7, rows R60-R69 and R226).
  * The ten settings come from one {@code QueryOptions} for every setting; a
- * setting that is not there, or is blank, is the original's {@code null} (Q9), and a
- * failed call sends none (DV-37).
+ * setting that is not there is not sent (a blank one that vCenter did return is sent as it is), and a
+ * failed call is withheld and counted (DV-37, DV-112).
  */
 public final class VCenterCollector {
 
@@ -46,25 +46,28 @@ public final class VCenterCollector {
         return Collections.unmodifiableSet(new HashSet<>(SETTINGS.keySet()));
     }
 
-    /** What to keep of one {@code OptionValue} answer: the setting's text, or null when it carries none. */
+    /** What to keep of one {@code OptionValue} answer: the setting's text as returned (an empty text is a value), or null when it carries none. */
     public static String optionText(XmlNode option) {
-        String t = PyText.scalar(option.child("value"));
-        return t == null || PyText.strip(t).isEmpty() ? null : t;
+        return PyText.scalar(option.child("value"));
     }
 
     /**
-     * @param settings the ten settings the vCenter has, by name (a setting it lacks or leaves blank
-     *                 is absent); null when the read failed
+     * @param settings the ten settings the vCenter has, by name (a setting it lacks is absent); null when the read failed
      * @param about    the session's {@code about}
      */
     public static ObjectOut collect(Map<String, String> settings, About about) {
         ObjectOut o = new ObjectOut(KIND, null);
-        for (Map.Entry<String, String> e : SETTINGS.entrySet()) {
-            // a setting the vCenter lacks or leaves blank is the original's "null" (Q9); a read that failed sends none
-            o.propY(e.getValue(), settings == null ? null : Quirks.orNull(settings.get(e.getKey())));
+        // a setting the vCenter lacks sends nothing (DV-112); a read that failed is withheld and counted
+        if (settings == null) {
+            o.withhold(SETTINGS.size());
+        } else {
+            for (Map.Entry<String, String> e : SETTINGS.entrySet()) o.prop(e.getValue(), settings.get(e.getKey()));
         }
-        // no patch level on a session that was read: str(None) (Q9)
-        o.propY(Vals.P + "Configuration|Patch Level", about == null ? null : Quirks.orNone(Quirks.text(about.patchLevel)));
+        if (about == null) {
+            o.withhold(1);
+        } else {
+            o.prop(Vals.P + "Configuration|Patch Level", Quirks.text(about.patchLevel));
+        }
         return o;
     }
 }

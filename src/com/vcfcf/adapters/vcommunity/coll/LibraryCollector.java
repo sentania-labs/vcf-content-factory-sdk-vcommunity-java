@@ -6,7 +6,6 @@ import com.vcfcf.adapters.vcommunity.health.Failures;
 import com.vcfcf.adapters.vcommunity.rest.LibraryData;
 import com.vcfcf.adapters.vcommunity.text.PyRound;
 import com.vcfcf.adapters.vcommunity.text.PyText;
-import com.vcfcf.adapters.vcommunity.text.Quirks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,11 +18,11 @@ import java.util.Map;
  *
  * <p>Honest by construction. A library that could not be read gets no object; an item that could
  * not be read gets none and withholds the aggregates of its library, which would otherwise count
- * the items that happened to answer. A text the answer does not have is the empty text, as the
- * original sends it (Q8, {@link Quirks#ABSENT_OWN_TEXT_IS_EMPTY}); a figure it does not have is 0
- * and an item that lacks a flag counts as the original counts it (Q9, {@link Quirks#UNSET_AS_UPSTREAM}),
- * because the items were read. A returned empty text is sent as it is (Q4), and a library with no
- * items has zero of everything, which is what was read.
+ * the items that happened to answer. A text or figure the answer does not have is not sent (DV-112), and
+ * an item that lacks a flag or a size is left out of the count or the sum that needs it (counted as neither
+ * stored nor not stored, compliant nor not compliant, and adding no size), because nothing is known of it; when no
+ * item says anything of a field its count or sum is not sent at all. A returned
+ * empty text is sent as it is (Q4), and a library with no items has zero of everything, which is what was read.
  */
 public final class LibraryCollector {
 
@@ -40,11 +39,6 @@ public final class LibraryCollector {
     }
 
     public static Out collect(LibraryData d, Failures failures) {
-        return collect(d, failures, Quirks.ABSENT_OWN_TEXT_IS_EMPTY);
-    }
-
-    /** {@link #collect(LibraryData, Failures)} with the absent-text switch given, so a test can show both settings. */
-    public static Out collect(LibraryData d, Failures failures, boolean absentTextIsEmpty) {
         Out out = new Out();
         for (LibraryData.ReadFailure f : d.failures) {
             failures.add(COLLECTOR, f.cause, f.object, f.keysWithheld, f.message);
@@ -79,7 +73,7 @@ public final class LibraryCollector {
                 itemsRead = false;
                 continue;
             }
-            boolean whole = library(out, lib, name, failures, absentTextIsEmpty);
+            boolean whole = library(out, lib, name, failures);
             if (!whole) itemsRead = false;
         }
         if (librariesRead) out.own.read(OwnObjects.LIBRARY);
@@ -89,15 +83,14 @@ public final class LibraryCollector {
     }
 
     /** One library and its items; true when every one of its items was read and given an object. */
-    private static boolean library(Out out, LibraryData.Library lib, String name, Failures failures,
-            boolean empty) {
+    private static boolean library(Out out, LibraryData.Library lib, String name, Failures failures) {
         OwnObject o = new OwnObject(OwnObjects.LIBRARY, name).id("Library ID", lib.id);
         Object sub = lib.detail.get("subscription_info");
         Object state = lib.detail.get("state_info");
-        o.propY(LIB + "Type", Quirks.ownText(PyText.json(lib.detail.get("type")), empty));
-        o.propY(LIB + "Subscription URL", Quirks.ownText(PyText.json(get(sub, "subscription_url")), empty));
-        o.propY(LIB + "Automatic Sync", Quirks.ownText(PyText.json(get(sub, "automatic_sync_enabled")), empty));
-        o.propY(LIB + "State", Quirks.ownText(PyText.json(get(state, "state")), empty));
+        o.prop(LIB + "Type", PyText.json(lib.detail.get("type")));
+        o.prop(LIB + "Subscription URL", PyText.json(get(sub, "subscription_url")));
+        o.prop(LIB + "Automatic Sync", PyText.json(get(sub, "automatic_sync_enabled")));
+        o.prop(LIB + "State", PyText.json(get(state, "state")));
 
         // the items that were read and can be given an object
         List<OwnObject> items = new ArrayList<>();
@@ -111,7 +104,7 @@ public final class LibraryCollector {
                         "the item has no name, so it cannot be given an object");
                 continue;
             }
-            items.add(item(e.getKey(), itemName, e.getValue(), empty));
+            items.add(item(e.getKey(), itemName, e.getValue()));
             links.add(e.getKey(), itemName);
         }
         boolean whole = lib.complete() && nameless == 0;
@@ -138,30 +131,34 @@ public final class LibraryCollector {
         for (String id : lib.itemIds) listed.add(lib.items.get(id));
         int n = listed.size();
         o.stat(LIB + "Items", (double) n);
-        boolean allCached = true;
-        boolean allCompliant = true;
-        boolean allSized = true;
         int notStored = 0;
         int notCompliant = 0;
+        int knownCached = 0;
+        int knownCompliant = 0;
+        int sized = 0;
         double bytes = 0;
         for (Map<String, Object> item : listed) {
+            // an item that lacks a flag or a size says nothing about it: it is left out of that count or sum (DV-112)
             Object cached = item.get("cached");
-            if (cached == null && !Quirks.UNSET_AS_UPSTREAM) allCached = false;
-            else if (!truthy(cached)) notStored++;
+            if (cached != null) {
+                knownCached++;
+                if (!truthy(cached)) notStored++;
+            }
             Object compliant = item.get("security_compliance");
-            if (compliant == null && !Quirks.UNSET_AS_UPSTREAM) allCompliant = false;
-            else if (!truthy(compliant)) notCompliant++;
+            if (compliant != null) {
+                knownCompliant++;
+                if (!truthy(compliant)) notCompliant++;
+            }
             Object size = item.get("size");
-            if (size instanceof Double) bytes += (Double) size;
-            else if (!Quirks.UNSET_AS_UPSTREAM) allSized = false;
+            if (size instanceof Double) {
+                sized++;
+                bytes += (Double) size;
+            }
         }
-        // Q9: an item that was read and lacks the field counts as the original counts it: "not stored" and
-        // "not compliant" (a falsy field), and a missing size as 0. With the switch off (DV-18) a count with
-        // such an item in it is not sent. An item that could not be read is not here at all, and the whole
-        // block is withheld (the caller)
-        o.statY(LIB + "Items Not Stored Locally", allCached ? (Double) (double) notStored : null);
-        o.statY(LIB + "Items Not Security Compliant", allCompliant ? (Double) (double) notCompliant : null);
-        o.statY(LIB + "Total Size (GB)", allSized ? (Double) PyRound.gib(bytes) : null);
+        // a library with no item has a real 0 of each; a library whose items say nothing of a field has no figure for it
+        if (n == 0 || knownCached > 0) o.stat(LIB + "Items Not Stored Locally", (double) notStored);
+        if (n == 0 || knownCompliant > 0) o.stat(LIB + "Items Not Security Compliant", (double) notCompliant);
+        if (n == 0 || sized > 0) o.stat(LIB + "Total Size (GB)", PyRound.gib(bytes));
     }
 
     /** Python truthiness of a JSON value. */
@@ -175,27 +172,25 @@ public final class LibraryCollector {
         return true;
     }
 
-    private static OwnObject item(String id, String name, Map<String, Object> m, boolean empty) {
+    private static OwnObject item(String id, String name, Map<String, Object> m) {
         OwnObject o = new OwnObject(OwnObjects.ITEM, name).id("Item ID", id);
-        o.propY(ITEM + "Type", text(m, "type", empty));
-        o.propY(ITEM + "Description", text(m, "description", empty));
-        o.propY(ITEM + "Version", text(m, "version", empty));
-        o.propY(ITEM + "Content Version", text(m, "content_version", empty));
-        o.propY(ITEM + "Stored Locally", text(m, "cached", empty));
-        o.propY(ITEM + "Security Compliant", text(m, "security_compliance", empty));
-        o.propY(ITEM + "Certificate Verification",
-                Quirks.ownText(PyText.json(get(m.get("certificate_verification_info"), "status")), empty));
-        o.propY(ITEM + "Last Modified", text(m, "last_modified_time", empty));
-        o.propY(ITEM + "Last Sync", text(m, "last_sync_time", empty));
-        o.propY(ITEM + "Source Item ID", text(m, "source_id", empty));
+        o.prop(ITEM + "Type", text(m, "type"));
+        o.prop(ITEM + "Description", text(m, "description"));
+        o.prop(ITEM + "Version", text(m, "version"));
+        o.prop(ITEM + "Content Version", text(m, "content_version"));
+        o.prop(ITEM + "Stored Locally", text(m, "cached"));
+        o.prop(ITEM + "Security Compliant", text(m, "security_compliance"));
+        o.prop(ITEM + "Certificate Verification", PyText.json(get(m.get("certificate_verification_info"), "status")));
+        o.prop(ITEM + "Last Modified", text(m, "last_modified_time"));
+        o.prop(ITEM + "Last Sync", text(m, "last_sync_time"));
+        o.prop(ITEM + "Source Item ID", text(m, "source_id"));
         Object size = m.get("size");
-        // a size the item lacks is the original's 0 (Q9), else nothing
-        o.statY(ITEM + "Size (GB)", size instanceof Double ? (Double) PyRound.gib((Double) size)
-                : Quirks.UNSET_AS_UPSTREAM ? Double.valueOf(0) : null);
+        // a size the item lacks sends nothing
+        if (size instanceof Double) o.stat(ITEM + "Size (GB)", PyRound.gib((Double) size));
         return o;
     }
 
-    private static String text(Map<String, Object> m, String key, boolean empty) {
-        return Quirks.ownText(PyText.json(m.get(key)), empty);
+    private static String text(Map<String, Object> m, String key) {
+        return PyText.json(m.get(key));
     }
 }

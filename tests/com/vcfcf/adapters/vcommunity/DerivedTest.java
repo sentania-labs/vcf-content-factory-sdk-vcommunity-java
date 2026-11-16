@@ -449,8 +449,8 @@ public final class DerivedTest {
 
     static void tiering(FakeVc fake) throws Exception {
         try (Lab l = new Lab(fake)) {
-            // host-2 has an NVMe memory tier of 256 GB with 20 GB in use and a read latency of 300 microseconds
-            l.d.stat(H2, StatKeys.MEM_TIERING_LATENCY, 300).stat(H2, StatKeys.NVME_TIER_SIZE, 256 * GB)
+            // host-2 has an NVMe memory tier of 256 GB with 20 GB in use and a read latency of 300,000 nanoseconds (300 microseconds)
+            l.d.stat(H2, StatKeys.MEM_TIERING_LATENCY, 300000 /* ns */).stat(H2, StatKeys.NVME_TIER_SIZE, 256 * GB)
                     .stat(H2, StatKeys.NVME_TIER_USAGE, 20 * 1024);
             l.r.run();
             chk(l, CL, C1, V + "Cluster Risk|Worst ESXi Memory Tiering Latency", 300.0);

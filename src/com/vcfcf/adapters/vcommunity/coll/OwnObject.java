@@ -36,29 +36,9 @@ public final class OwnObject {
         return this;
     }
 
-    /** A string property whose absence is counted as a withheld value. */
-    public OwnObject propY(String key, String value) {
-        if (value != null) {
-            props.put(key, value);
-        } else {
-            withheld++;
-        }
-        return this;
-    }
-
     /** A metric; null is left out and not counted. */
     public OwnObject stat(String key, Double value) {
         if (value != null) stats.put(key, value);
-        return this;
-    }
-
-    /** A metric whose absence is counted as a withheld value. */
-    public OwnObject statY(String key, Double value) {
-        if (value != null) {
-            stats.put(key, value);
-        } else {
-            withheld++;
-        }
         return this;
     }
 

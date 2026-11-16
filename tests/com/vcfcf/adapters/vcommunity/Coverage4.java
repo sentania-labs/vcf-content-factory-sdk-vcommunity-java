@@ -38,6 +38,8 @@ final class Coverage4 {
         if (row == 70 || row == 71) return "read back from the VM's properties, else its statistics; round(shares / size, 2); no value without both";
         if (row >= 153 && row <= 158) return "KPI: round(weighted mean of the rows, 2); withheld unless every row's inputs were read";
         if (row >= 159 && row <= 167) return "max / 90th percentile over the powered-on VMs of the cluster's hosts (by MoRef); bad packets: the worst host";
+        if (row == 173) return "worst host of the cluster; the statistic is in nanoseconds and is published in microseconds (DV-113)";
+        if (row == 182) return "never published: its input mem:NVMe|tier.usage does not exist in Operations (known gap, DV-109)";
         if (row == 170 || row == 171 || row == 172 || row == 175 || row == 177 || row == 179) return "worst host of the cluster; memory rows divide by DRAM plus the NVMe tier on a host with memory tiering, DRAM alone otherwise (DV-109); unreadable inputs withhold the family";
         if (row >= 168 && row <= 179) return "worst host of the cluster; unreadable inputs withhold the family";
         if (row == 181 || row == 183 || row == 184) return "of the cluster's usable capacity, the running hosts only; memory capacity is DRAM plus the NVMe tier on a host with memory tiering (DV-109)";

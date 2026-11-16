@@ -29,17 +29,14 @@ public final class PyTextTest {
         unsetText();
     }
 
-    /** Q9: the original's text for an unset value, and nothing when the switch is off. */
+    /** DV-112: a value that was returned is a value, an empty text too; only "not returned" is no value. */
     static void unsetText() {
-        T.eq("None", Quirks.orText(null, "None", true), "unset, switch on");
-        T.eq(null, Quirks.orText(null, "None", false), "unset, switch off");
-        T.eq("x", Quirks.orText("x", "None", true), "a value is a value");
-        T.eq("x", Quirks.orText("x", "None", false), "a value is a value");
-        T.eq("", Quirks.orText("", "None", true), "an empty text is a value");
-        T.check(Quirks.UNSET_AS_UPSTREAM && Quirks.DUPLEX_HALF_WHEN_DOWN && Quirks.REPEATED_ITEM_COUNTED_TWICE, "shipped as the match");
-        T.eq("None", Quirks.orNone(null), "str(None)");
-        T.eq("null", Quirks.orNull(null), "NULL_STATUS");
-        T.done("unset text (Q9)");
+        T.eq(null, Quirks.stripped(null), "not returned");
+        T.eq("", Quirks.stripped(""), "returned and empty: a value");
+        T.eq("", Quirks.stripped("   "), "returned and blank: the stripped text");
+        T.eq("x", Quirks.stripped(" x "), "a value is stripped");
+        T.check(Quirks.DUPLEX_HALF_WHEN_DOWN && Quirks.REPEATED_ITEM_COUNTED_TWICE, "the other quirks ship as the match");
+        T.done("unset text (DV-112)");
     }
 
     /** Python's round(x, 2) of a float, and how a library's byte count becomes GiB. */

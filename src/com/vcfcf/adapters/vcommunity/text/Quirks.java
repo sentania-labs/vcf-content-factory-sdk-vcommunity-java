@@ -10,8 +10,8 @@ package com.vcfcf.adapters.vcommunity.text;
  * <p>Q1 and Q2 are read where they apply ({@code VmCollector.QUIRK_*} points here); Q6, the
  * detailed-data cut, lives in {@link DetailedDataParser#CUT_AT_FIRST_QUOTE}.
  *
- * <p>{@link #ABSENT_OWN_TEXT_IS_EMPTY} (Q8) is the one quirk that stands against an owner answer
- * (DV-17, "report honestly"): it is on for the match, and one edit turns it off.
+ * <p>A value vCenter answered without is not sent at all, with no placeholder (DV-112; this removed the
+ * Q8 and Q9 switches for good).
  */
 public final class Quirks {
 
@@ -31,35 +31,6 @@ public final class Quirks {
 
     /** Q5, R96: a negative VM operation notification timeout (-1, none) is published as 0. */
     public static final boolean NEGATIVE_OP_TIMEOUT_IS_ZERO = true;
-
-    /**
-     * Q8, R227-R232, R234-R243 and R245-R248, the text keys of the three own kinds: upstream sends
-     * {@code ""} when a library, an item or a template does not have the field (a local library has
-     * no subscription URL, none of its items has a last sync time or a source item; a template
-     * with no parent folder has an empty folder name), where a returned empty string is the same
-     * text. {@code true}: the empty text, as upstream (the live Python baseline shows it on every
-     * object: 2 of the 4 library properties and 2 of the 10 item properties). {@code false}:
-     * nothing is sent for a field that was not returned (DV-17, the owner's "a missing read sends
-     * nothing" answer). Only the text keys: a figure that was not returned follows
-     * {@link #UNSET_AS_UPSTREAM} (the zero upstream sends), and a value that a failed read left
-     * unknown is never sent as anything, with either setting.
-     */
-    public static final boolean ABSENT_OWN_TEXT_IS_EMPTY = true;
-
-    /**
-     * Q9 (P2 live differential, 2026-11-13): a value that was <em>read</em> and is <em>unset</em> is
-     * published the way upstream prints it, not left out. {@code str(None)} is the text {@code None};
-     * the original's own placeholders are {@code null} (an unset EVC mode, a HA key while HA is off, a
-     * missing vCenter setting, no install date, no HBA model), {@code []} (no maximum EVC mode),
-     * {@code N/A} (a NIC with no PCI device), {@code Unknown} (a disk with no backing or shares), and
-     * {@code 0} for a count, a timeout, a size. Which key prints which is decided where the key is built, from the
-     * original's code. {@code false}: nothing is sent for an unset value (DV-08 to DV-16, DV-11, DV-18).
-     * Three keys no longer follow this switch (DV-111): DRS Score (nothing while DRS is off or the score is
-     * negative), and the HBA and SCSI Controllers counts (nothing when the list was not returned), because their
-     * 0 stood for "does not apply" or "unknown". A value that vCenter did not return because the
-     * <em>read failed</em> is never one of these: it is withheld and counted, with either setting.
-     */
-    public static final boolean UNSET_AS_UPSTREAM = true;
 
     /**
      * Q10, R39 Duplex: upstream publishes {@code half-duplex} for a NIC whose link is down (no link speed),
@@ -116,37 +87,6 @@ public final class Quirks {
      */
     public static final boolean STALE_HOST_VALUE_COUNTS_AS_ZERO = true;
 
-    /** The original's {@code str(None)}. */
-    public static final String NONE = "None";
-    /** The original's {@code NULL_STATUS}. */
-    public static final String NULL = "null";
-
-    /** Q9: {@code str(value)} of a property that may be unset on a read that worked. */
-    public static String orNone(String v) {
-        return orText(v, NONE, UNSET_AS_UPSTREAM);
-    }
-
-    /** Q9: the original's {@code "null"} placeholder. */
-    public static String orNull(String v) {
-        return orText(v, NULL, UNSET_AS_UPSTREAM);
-    }
-
-    /** Q9: a placeholder of the original's for an unset value, when the switch is on; else nothing. */
-    public static String orText(String v, String placeholder, boolean on) {
-        return v != null ? v : on ? placeholder : null;
-    }
-
-    /** The text of an own-kind property: the value as returned, or per {@link #ABSENT_OWN_TEXT_IS_EMPTY} when it was not. */
-    public static String ownText(String raw) {
-        return ownText(raw, ABSENT_OWN_TEXT_IS_EMPTY);
-    }
-
-    /** {@link #ownText(String)} with the switch given, so a test can show both settings. */
-    public static String ownText(String raw, boolean absentIsEmpty) {
-        if (raw == null) return absentIsEmpty ? "" : null;
-        return text(raw);
-    }
-
     /** Q4: {@code str(x)} of a string that was returned; null only for "not returned". */
     public static String text(String raw) {
         if (raw == null) return null;
@@ -155,8 +95,16 @@ public final class Quirks {
     }
 
     /**
-     * Q4: {@code str(x).strip() if x else "null"}: an empty value is no value, a value of spaces is
-     * pushed as the empty string.
+     * {@code str(x).strip()} of a string that was returned: null only for "not returned". An empty or blank
+     * string that vCenter did return is a value and comes back as the empty string.
+     */
+    public static String stripped(String raw) {
+        return raw == null ? null : PyText.strip(raw);
+    }
+
+    /**
+     * The detailed-data parser's rule: {@code str(x).strip() if x else None}: an empty value is no field (a value of
+     * spaces is the empty string, see {@link #BLANK_STRINGS_PUSHED}).
      */
     public static String strippedIfTruthy(String raw) {
         if (raw == null || raw.isEmpty()) return null;

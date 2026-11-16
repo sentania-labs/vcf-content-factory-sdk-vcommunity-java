@@ -10,11 +10,10 @@ import java.util.Map;
  * below; nothing here knows a resource id, so a collector is a plain function
  * of the object's row (design 4.2, "collectors are pure functions").
  *
- * <p>A key whose value is {@code null} is not queued. When the key's row of
- * the key map is flagged as a failure-becomes-value row (the original sent a
- * placeholder there), {@link #propY} counts the missing value in
- * {@link #withheld()} so the figure reaches Collection Health (design 5.1
- * rule 2); an unflagged absent value is simply not counted.
+ * <p>A key whose value is {@code null} is not queued and not counted: a value
+ * vCenter answered without is simply absent (DV-112). A value that could not be
+ * read is counted by the caller with {@link #withhold}, so it reaches Collection
+ * Health (design 5.1 rule 2).
  */
 public final class ObjectOut {
     /** The Ops resource kind this object maps to ({@code HostSystem}, ...). */
@@ -36,16 +35,6 @@ public final class ObjectOut {
         return this;
     }
 
-    /** A string property whose absence is counted as a withheld value. */
-    public ObjectOut propY(String key, String value) {
-        if (value != null) {
-            props.put(key, value);
-        } else {
-            withheld++;
-        }
-        return this;
-    }
-
     /** A numeric property (sent as a number, not text). */
     public ObjectOut numProp(String key, double value) {
         props.put(key, value);
@@ -55,16 +44,6 @@ public final class ObjectOut {
     /** A metric. */
     public ObjectOut stat(String key, double value) {
         stats.put(key, value);
-        return this;
-    }
-
-    /** A metric whose absence is counted as a withheld value. */
-    public ObjectOut statY(String key, Double value) {
-        if (value != null) {
-            stats.put(key, value);
-        } else {
-            withheld++;
-        }
         return this;
     }
 

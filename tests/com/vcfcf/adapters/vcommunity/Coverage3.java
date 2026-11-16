@@ -43,21 +43,21 @@ final class Coverage3 {
 
     /** What differs from the plain read, by row. */
     static String note(int row) {
-        String text = "a text the read did not return is the empty text, as upstream (Q8); a returned empty text is sent as it is (Q4)";
+        String text = "a text the read did not return is not sent (DV-112); a returned empty text is sent as it is (Q4)";
         switch (row) {
             case 227: case 228: case 231: case 232:
                 return text;
-            case 229: return "text of the count; not returned: 0, as upstream (Q9)";
-            case 230: return "text of round(MB / 1024, 2); not returned: 0.0, as upstream (Q9)";
-            case 233: return "round(bytes / 1024^3, 2); not returned: 0.0, as upstream (Q9)";
+            case 229: return "text of the count; not returned: nothing is sent (DV-112)";
+            case 230: return "text of round(MB / 1024, 2); not returned: nothing is sent (DV-112)";
+            case 233: return "round(bytes / 1024^3, 2); not returned: nothing is sent (DV-112)";
             case 234: case 235: case 236: case 237: case 238: case 239: case 240: case 241: case 242: case 243:
                 return text;
-            case 244: return "round(bytes / 1024^3, 2); not returned: 0.0, as upstream (Q9)";
+            case 244: return "round(bytes / 1024^3, 2); not returned: nothing is sent (DV-112)";
             case 245: case 246: case 247: case 248:
                 return text;
             case 249: return "the number of items listed; withheld when any item could not be read (DV-46)";
-            case 250: case 251: return "an item that lacks the field counts as not stored / not compliant, as upstream (Q9); withheld when an item could not be read (DV-46)";
-            case 252: return "round(sum / 1024^3, 2); a missing size is 0, as upstream (Q9); withheld when an item could not be read (DV-46)";
+            case 250: case 251: return "an item that lacks the field is left out of the count (none if no item has it) (DV-112); withheld when an item could not be read (DV-46)";
+            case 252: return "round(sum / 1024^3, 2); a missing size adds nothing (no sum if no item has one) (DV-112); withheld when an item could not be read (DV-46)";
             default: return "";
         }
     }

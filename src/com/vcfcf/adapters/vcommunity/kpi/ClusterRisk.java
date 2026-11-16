@@ -17,6 +17,8 @@ public final class ClusterRisk {
     private ClusterRisk() {}
 
     public static final String GROUP = "Cluster Risk";
+    /** Nanoseconds in a microsecond: the tier latency statistic is read in ns and scored in µs. */
+    static final double NS_PER_US = 1000.0;
     public static final String KPI_KEY = "Cluster Risk Score";
     public static final boolean HIGHER_IS_WORSE = true;
 
@@ -59,7 +61,10 @@ public final class ClusterRisk {
         put(v, KpiTable.R_BALLOONED, ballooned == null ? null : percentOfMemory(s, ballooned));
         put(v, KpiTable.R_ZIPSWAP, Stat.hasAll(s, StatKeys.MEM_COMPRESSED, StatKeys.MEM_SWAPPED)
                 ? percentOfMemory(s, s.get(StatKeys.MEM_COMPRESSED) + s.get(StatKeys.MEM_SWAPPED)) : null);
-        put(v, KpiTable.R_TIERING, s.get(StatKeys.MEM_TIERING_LATENCY));
+        // the statistic is in nanoseconds (Operations declares the unit; vCenter counter mem.latency.read); the row
+        // is in microseconds, which is what its limits and its label say (DV-113). A 0 is a reading.
+        Double latencyNs = s.get(StatKeys.MEM_TIERING_LATENCY);
+        put(v, KpiTable.R_TIERING, latencyNs == null ? null : latencyNs / NS_PER_US);
         put(v, KpiTable.R_CPU_RESERVATION, Stat.hasAll(s, StatKeys.CPU_RESERVED, StatKeys.CPU_CAPACITY)
                 ? Stat.percent(s.get(StatKeys.CPU_RESERVED), s.get(StatKeys.CPU_CAPACITY)) : null);
         Double reserved = s.get(StatKeys.MEM_RESERVED);
