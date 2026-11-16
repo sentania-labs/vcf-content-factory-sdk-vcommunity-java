@@ -14,20 +14,29 @@ public final class Availability {
     public static final double POINTS_PER_CONDITION = 25.0;
 
     /**
-     * A host's figure: 25 for each of four conditions that holds (the powered-on statistic is 1, the host is
-     * connected, not in maintenance, not in quarantine). A condition nothing was stored for does not hold, so the
-     * result is 0, 25, 50, 75 or 100.
+     * A host's figure: the share of its conditions that hold, as a percentage. The conditions are that the
+     * powered-on statistic is 1, the host is connected, it is not in maintenance and it is not in quarantine.
+     * A condition nothing was stored for does not hold, except the quarantine one: not every VCF Operations
+     * version has the quarantine property at all (the 8.18 vSphere adapter does not), and a property that does
+     * not exist is neither met nor failed, so it is left out and the other three decide (3 of 3 is 100). The
+     * result is 0, 25, 50, 75 or 100 with the property, and 0, 33.33, 66.67 or 100 without it. The caller has
+     * already established that the properties were read: a read that failed is withheld before this is called.
      *
      * @param poweredOn the latest {@code sys|poweredOn} sample, or null
-     * @param props     the three runtime properties of the host
+     * @param props     the runtime properties of the host, as read (a property that does not exist is absent)
      */
     public static double ofHost(Double poweredOn, Map<String, String> props) {
         int met = 0;
+        int counted = 3;
         if (poweredOn != null && poweredOn == 1.0) met++;
         if ("connected".equals(props.get(StatKeys.HOST_CONNECTION))) met++;
         if ("notInMaintenance".equals(props.get(StatKeys.HOST_MAINTENANCE))) met++;
-        if ("notInQuarantine".equals(props.get(StatKeys.HOST_QUARANTINE))) met++;
-        return POINTS_PER_CONDITION * met;
+        String quarantine = props.get(StatKeys.HOST_QUARANTINE);
+        if (quarantine != null) {
+            counted++;
+            if ("notInQuarantine".equals(quarantine)) met++;
+        }
+        return 100.0 * met / counted;
     }
 
     /**

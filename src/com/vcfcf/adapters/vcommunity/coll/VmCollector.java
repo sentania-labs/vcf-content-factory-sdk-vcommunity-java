@@ -245,9 +245,9 @@ public final class VmCollector {
 
     private static void devices(ObjectOut o, BulkRow row, XmlNode list) {
         if (list == null) {
-            // no devices on a read that worked: the original counts none (Q9), and has no adapter or disk to list
-            o.statY(V + "Configuration|SCSI Controllers|Count",
-                    row.isUnset(DEVICES) && Quirks.UNSET_AS_UPSTREAM ? Double.valueOf(0) : null);
+            // the device list was not returned (unset, or not read): the count is unknown, and a 0 would stand for
+            // it (DV-111). A list that came back with no controller in it is a real 0 and is published below.
+            o.statY(V + "Configuration|SCSI Controllers|Count", null);
             return;
         }
         int scsi = 0;

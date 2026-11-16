@@ -27,6 +27,20 @@ public final class ClusterRisk {
         return Stat.truthy(b) ? b : null;
     }
 
+    /**
+     * The memory consumed memory is drawn from. On a host with memory tiering the consumed figure covers both
+     * tiers, so the capacity is the DRAM tier plus the NVMe tier; on any other host it is the DRAM, as always.
+     * Only the DRAM tier statistic is added to: when the DRAM falls back to the provisioned memory, that
+     * figure already holds both tiers and nothing is added.
+     */
+    public static Double consumedCapacityKb(Map<String, Double> s) {
+        Double dram = dramKb(s);
+        if (dram == null) return null;
+        Double tier = s.get(StatKeys.NVME_TIER_SIZE);
+        if (Stat.truthy(s.get(StatKeys.MEM_DRAM_CAPACITY)) && Stat.truthy(tier) && tier > 0) return dram + tier;
+        return dram;
+    }
+
     private static Double percentOfDram(Map<String, Double> s, double memoryKb) {
         Double dram = dramKb(s);
         return dram == null ? null : Stat.percent(memoryKb, dram);
@@ -38,7 +52,8 @@ public final class ClusterRisk {
         put(v, KpiTable.R_THREADS, s.get(StatKeys.CPU_THREAD_UTIL));
         put(v, KpiTable.R_IMBALANCE, imbalance(host, s));
         Double consumed = s.get(StatKeys.MEM_CONSUMED);
-        put(v, KpiTable.R_MEM_CONSUMED, consumed == null ? null : percentOfDram(s, consumed));
+        Double consumedCap = consumedCapacityKb(s);
+        put(v, KpiTable.R_MEM_CONSUMED, consumed == null || consumedCap == null ? null : Stat.percent(consumed, consumedCap));
         Double ballooned = s.get(StatKeys.MEM_BALLOONED);
         put(v, KpiTable.R_BALLOONED, ballooned == null ? null : percentOfDram(s, ballooned));
         put(v, KpiTable.R_ZIPSWAP, Stat.hasAll(s, StatKeys.MEM_COMPRESSED, StatKeys.MEM_SWAPPED)

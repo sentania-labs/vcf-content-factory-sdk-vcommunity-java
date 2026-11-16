@@ -271,6 +271,7 @@ public final class DerivedTest {
             run("business applications", () -> business(fake));
             run("a failed read withholds, never a zero", () -> failedReads(fake));
             run("review fixes: stale network counts, placement, shares per key, warnings, stale lists", () -> reviewFixes(fake));
+            run("upstream fixes: availability without quarantine, memory tiering", () -> upstreamFixes(fake));
             run("failed membership reads", () -> failedMembership(fake));
             run("a stale sample is no data, an empty answer is a reading", () -> staleAndEmpty(fake));
             run("the deadline", () -> deadline(fake));
@@ -798,6 +799,45 @@ public final class DerivedTest {
         }
         // a failed relationship read is not "no pools", and an unreadable pool list is not 0
         // (see failedMembership)
+    }
+
+    /** DV-109 and DV-110 end to end. */
+    static void upstreamFixes(FakeVc fake) throws Exception {
+        // DV-110: a version with no quarantine property (8.18): every condition that exists holds, 100 not 75
+        try (Lab l = new Lab(fake)) {
+            for (String h : new String[] {H1, H2, H3, H4}) l.d.props.get(h).remove(StatKeys.HOST_QUARANTINE);
+            l.r.run();
+            chk(l, HOST, H1, V + "Availability|ESXi Host Operational Availability", 100.0);
+            chk(l, HOST, H2, V + "Availability|ESXi Host Operational Availability", 100.0);
+            chk(l, HOST, H3, V + "Availability|ESXi Host Operational Availability", 66.67); // in maintenance: 2 of 3
+            T.eq(100.0, l.st(0, C2, V + "Availability|Cluster Operational Availability"), "the cluster follows");
+        }
+        // with the property, a host in quarantine loses its quarter, as before
+        try (Lab l = new Lab(fake)) {
+            l.d.props.get(H1).put(StatKeys.HOST_QUARANTINE, "inQuarantine");
+            l.r.run();
+            chk(l, HOST, H1, V + "Availability|ESXi Host Operational Availability", 75.0);
+            chk(l, HOST, H2, V + "Availability|ESXi Host Operational Availability", 100.0);
+        }
+        // a failed read of the host properties still withholds: absence is not read as "does not exist"
+        try (Lab l = new Lab(fake)) {
+            l.d.failOnKey.add(StatKeys.HOST_QUARANTINE);
+            l.r.run();
+            T.check(l.st(0, H1, V + "Availability|ESXi Host Operational Availability") == null, "a failed read is withheld");
+        }
+        // DV-109: a tiered host's consumed memory is over DRAM plus the tier
+        double dramKb = 128.0 * GB, tierKb = 128.0 * GB;
+        try (Lab l = new Lab(fake)) {
+            l.d.stat(H1, StatKeys.MEM_DRAM_CAPACITY, dramKb).stat(H1, StatKeys.MEM_CONSUMED, 192.0 * GB);
+            l.r.run();
+            T.eq(150.0, l.st(0, C1, V + "Cluster Risk|Highest ESXi Memory Consumed"), "no tier statistic: DRAM alone, as before");
+        }
+        try (Lab l = new Lab(fake)) {
+            l.d.stat(H1, StatKeys.MEM_DRAM_CAPACITY, dramKb).stat(H1, StatKeys.MEM_CONSUMED, 192.0 * GB)
+                    .stat(H1, StatKeys.NVME_TIER_SIZE, tierKb);
+            l.r.run();
+            T.eq(75.0, l.st(0, C1, V + "Cluster Risk|Highest ESXi Memory Consumed"), "192 of 128 + 128");
+        }
     }
 
     static SoapFx.Obj hostObj(Lab l, String moid) {

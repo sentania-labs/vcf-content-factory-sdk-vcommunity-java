@@ -3,7 +3,11 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
-## 1.0.0.22 (Unreleased)
+## 1.0.0.23 (Unreleased)
+
+- fix(adapter): three upstream defects the port carried (docs/reviews/upstream-bug-audit-2026-11-16.md): memory consumed on a memory-tiering host is divided by DRAM plus the NVMe tier, not DRAM alone, so it no longer passes 100 % (DV-109, Q18); host availability leaves out the quarantine condition when the host has no such property (8.18), so a healthy host is 100, not 75 (DV-110, Q19); no DRS Score while DRS is off or the score is negative, and no HBA or SCSI Controllers count when the list was not returned, instead of a 0 (DV-111, Q9); build 23.
+
+## 1.0.0.22
 
 - fix(adapter): review of the NIC speed change (DV-108): a Datacenter is never published as 0 when no host was measured and a NIC read failed (B1); the opt-in `net|configuredSpeed` property being off is no longer PARTIAL, a cause or a warning, only an INFO line on the first cycle and on change (`F-POLICY-NIC-CONFIGURED-SPEED`); only connected hosts count in the Datacenter and World counts; the unused instance-statistics reader is removed; tests for an unreadable NIC list (alone and with the stock policy), the 200-host heap run with NIC names, and recorded Suite API answers (`tests/fixtures/nic-properties/`); build 22.
 

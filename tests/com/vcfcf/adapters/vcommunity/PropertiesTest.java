@@ -345,7 +345,7 @@ public final class PropertiesTest {
             eq(r, "res-host-2", "Configuration|Max EVC", "[]");
             eq(r, "res-host-2", "Network|DHCP", "null");
             eq(r, "res-host-2", "Network|Search Domain", "null");
-            eq(r, "res-host-2", "Storage Adapter|Number of HBA", "0");
+            none(r, "res-host-2", "Storage Adapter|Number of HBA"); // the list was not returned: no count is known (DV-111)
             eq(r, "res-host-4", "Storage Adapter|Number of HBA", "0"); // a returned empty list is a count of 0
             eq(r, "res-host-4", "Network|DHCP", "True");
             eq(r, "res-host-4", "Network|Search Domain", "null"); // no search domain: "null"
@@ -523,7 +523,7 @@ public final class PropertiesTest {
                 "Virtual Machine Automation Enabled"}) {
                 eq(r, c2, drs + k, "null");
             }
-            eq(r, c2, drs + "DRS Score", 0.0); // DRS off: 0 (the live differential: Python 0.0)
+            none(r, c2, drs + "DRS Score"); // DRS off: nothing to score, not the worst score (DV-111)
             eq(r, c2, "Cluster Configuration|EVC|Enabled", "False"); // the summary was read and names no mode
             eq(r, c2, "Cluster Configuration|EVC|Mode", "null");
             none(r, c2, "Cluster Configuration|DPM|Host Power Action Rate"); // no dpmConfigInfo: nothing, as the original
@@ -540,7 +540,7 @@ public final class PropertiesTest {
             // DRS on without the over-commitment option: that one is "null"
             eq(r, c3, drs + "Proactive DRS", "True");
             eq(r, c3, drs + "CPU Over-Commitment", "null");
-            eq(r, c3, drs + "DRS Score", 0.0); // a negative score is published as 0
+            none(r, c3, drs + "DRS Score"); // a negative score is vCenter's "no score": nothing (DV-111)
             eq(r, c3, "Cluster Configuration|Number of Effective Hosts", 0.0); // a returned 0 is a count
             eq(r, c3, "Cluster Configuration|DPM|Host Power Action Rate", "None"); // dpmConfigInfo has no rate: str(None)
             // nothing returned at all: what the original prints for each unset value, and nothing it would not send
@@ -554,6 +554,7 @@ public final class PropertiesTest {
                 "Virtual Machine Automation Enabled"}) {
                 none(r, "res-domain-c5", drs + k);
             }
+            eq(r, "res-domain-c5", drs + "DRS Score", 0.0); // DRS on and vCenter gave 0: a real score, sent
         }
     }
 
@@ -812,11 +813,14 @@ public final class PropertiesTest {
     static void sparse(FakeVc fake) throws Exception {
         FakeVcenter vc = new FakeVcenter();
         vc.add(P2Fixtures.hostSparse("host-2", "esx2")).add(P2Fixtures.vmSparse("vm-2", "off01"))
-                .add(P2Fixtures.clusterBare("domain-c4", "bare")).add(P2Fixtures.dsBare("datastore-3", "ds"));
+                .add(P2Fixtures.clusterBare("domain-c4", "bare")).add(P2Fixtures.dsBare("datastore-3", "ds"))
+                .add(new SoapFx.Obj("VirtualMachine", "vm-3").name("nodevices")); // no device list at all
         try (Rig r = standard(fake, vc)) {
             mapAll(r.ops, vc);
             CycleEngine.Result res = r.run();
             T.check(res.failure == null, "the cycle did not fail");
+            none(r, "res-vm-3", "Configuration|SCSI Controllers|Count"); // not returned: no count, not a 0 (DV-111)
+            eq(r, "res-vm-2", "Configuration|SCSI Controllers|Count", 0.0); // returned with none in it: a real 0
             // objects that returned nothing, on reads that worked, get what the original prints for unset values (Q9)
             eq(r, "res-host-2", "Hardware|BIOS Vendor", "None");
             eq(r, "res-domain-c4", "Cluster Configuration|Overall Status", "None");
