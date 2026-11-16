@@ -351,7 +351,7 @@ public final class PropertiesTest {
             none(r, H, l2 + "Remaining Days");
             // hosts that are not connected, or that returned nothing
             T.check(r.ops.pushedProps.get(0).get("res-host-3") == null, "a disconnected host gets no keys");
-            // a connected host that returned nothing: each property it lacks is the text the original prints (Q9)
+            // a connected host that returned nothing: each property it lacks is simply not sent (DV-112)
             none(r, "res-host-2", "Configuration|Config Status"); // unset: nothing is sent (DV-112)
             none(r, "res-host-2", "Hardware|BIOS Vendor"); // unset: nothing is sent (DV-112)
             none(r, "res-host-2", "Configuration|Max EVC"); // unset: nothing is sent (DV-112)
@@ -467,7 +467,7 @@ public final class PropertiesTest {
             eq(r, "res-vm-2", "Configuration|Config Status", "gray");
             eq(r, "res-vm-2", "Configuration|Op Notification Timeout", "0"); // a negative value read is 0, as the original
             eq(r, "res-vm-2", "Configuration|SCSI Controllers|Count", 0.0); // a returned empty device list
-            // what it did not return is the text upstream prints for an unset value (Q9)
+            // what it did not return is not sent (DV-112)
             none(r, "res-vm-2", "Configuration|Firmware"); // unset: nothing is sent (DV-112)
             none(r, "res-vm-2", "Configuration|NUMA|Hot Add Exposed"); // unset: nothing is sent (DV-112)
             none(r, "res-vm-2", "Configuration|Boot Options|Delay"); // unset: nothing is sent (DV-112)
@@ -556,7 +556,7 @@ public final class PropertiesTest {
             none(r, c3, drs + "DRS Score"); // a negative score is vCenter's "no score": nothing (DV-111)
             eq(r, c3, "Cluster Configuration|Number of Effective Hosts", 0.0); // a returned 0 is a count
             none(r, c3, "Cluster Configuration|DPM|Host Power Action Rate"); // unset: nothing is sent (DV-112)
-            // nothing returned at all: what the original prints for each unset value, and nothing it would not send
+            // nothing returned at all: nothing is sent for an unset value
             none(r, "res-domain-c4", "Cluster Configuration|Configuration Status"); // unset: nothing is sent (DV-112)
             none(r, "res-domain-c4", "Cluster Configuration|EVC|Mode"); // unset: nothing is sent (DV-112)
             none(r, "res-domain-c4", ha + "Host Monitoring"); // unset: nothing is sent (DV-112)
@@ -754,9 +754,9 @@ public final class PropertiesTest {
     }
 
     /**
-     * B1 to B4 and the sweep behind them (Q8, Q9, Q10): for every family of key that has a placeholder for an
+     * B1 to B4 and the sweep behind them (DV-112): for every family of key that has a placeholder for an
      * unset value, a read that FAILED (a missing-set fault) sends nothing for it and is counted, while the
-     * same key on an object whose read worked and is unset gets the original's text.
+     * same key on an object whose read worked and is unset is simply not sent and not counted.
      */
     static void failedReadFamilies(FakeVc fake) throws Exception {
         String ha = "Cluster Configuration|vSphere HA|";
@@ -926,7 +926,7 @@ public final class PropertiesTest {
             T.check(res.failure == null, "the cycle did not fail");
             none(r, "res-vm-3", "Configuration|SCSI Controllers|Count"); // not returned: no count, not a 0 (DV-111)
             eq(r, "res-vm-2", "Configuration|SCSI Controllers|Count", 0.0); // returned with none in it: a real 0
-            // objects that returned nothing, on reads that worked, get what the original prints for unset values (Q9)
+            // objects that returned nothing, on reads that worked, send nothing for unset values (DV-112)
             none(r, "res-host-2", "Hardware|BIOS Vendor"); // unset: nothing is sent (DV-112)
             none(r, "res-domain-c4", "Cluster Configuration|Overall Status"); // unset: nothing is sent (DV-112)
             none(r, "res-vm-2", "Configuration|Firmware"); // unset: nothing is sent (DV-112)
