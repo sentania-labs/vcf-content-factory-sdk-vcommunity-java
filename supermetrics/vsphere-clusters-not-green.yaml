@@ -1,0 +1,22 @@
+# Converted offline by vcfcf_extractor import-local from the upstream vmbro vCommunity pack ("Management Pack/content/supermetrics/vSphere Clusters not Green.json").
+# DEPARTS FROM UPSTREAM: the formula reads this pak's own published cluster score, vCommunity|Cluster Performance|Cluster Performance Score,
+# because the upstream super metric it read (sm_a1b7d29a-c6b8-4137-a4dc-d983e882eb60, "vSphere Cluster Performance") and the chain under it are not shipped here.
+# Name, resource kind, unit and the "<75" threshold are upstream's; the id is minted in vcfcf_vcommunity.
+id: 9008afb4-2021-5b47-9bae-35f38d2d65f1
+name: vSphere Clusters not Green
+formula: 'count(${adaptertype=VMWARE, objecttype=ClusterComputeResource, attribute=vCommunity|Cluster Performance|Cluster Performance Score,
+  depth=4,
+
+  where="<75" })'
+description: 'Count of vSphere Clusters whose Cluster Performance Score (%) is no longer in the green zone (75
+  - 100). The values should match your operational expectation.
+
+
+  Departs from the upstream pack: upstream counted clusters by the super metric "vSphere Cluster
+  Performance", which this pak does not ship. This formula counts on the score the adapter publishes
+  (vCommunity|Cluster Performance|Cluster Performance Score) instead.
+  '
+unit_id: ''
+resource_kinds:
+- resource_kind_key: vSphere World
+  adapter_kind_key: VMWARE

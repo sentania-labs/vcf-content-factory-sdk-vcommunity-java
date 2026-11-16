@@ -10,10 +10,10 @@ disable_in_base_policy: true
 symptom_def_type: condition_self
 condition:
   type: metric_static
-  key: vCommunity|Licensing:vSphere 8 Enterprise Plus for VCF|Remaining Days
+  key: vCommunity|Licensing|Remaining Days
   operator: GT_EQ
   value: 30.0
+  instanced: true
 omit:
 - wait_cycles
 - cancel_cycles
-- instanced

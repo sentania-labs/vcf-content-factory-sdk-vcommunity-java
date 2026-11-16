@@ -40,7 +40,7 @@ columns:
   transformation: CURRENT
   omit:
   - roll_up_type
-- attribute: memory|limit
+- attribute: mem|limit
   display_name: Memory Limit
   unit: auto
   is_property: true

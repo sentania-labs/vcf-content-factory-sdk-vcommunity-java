@@ -13,7 +13,7 @@ time_window:
   unit: DAYS
   count: 7
 columns:
-- attribute: config|Software Packages|nfnic|Vendor
+- attribute: vCommunity|Configuration|Packages:nfnic|Package Vendor
   display_name: nfnic VIB Vendor
   is_property: true
   is_string_attribute: true

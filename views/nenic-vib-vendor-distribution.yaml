@@ -13,7 +13,7 @@ time_window:
   unit: DAYS
   count: 7
 columns:
-- attribute: config|Software Packages|nenic|Vendor
+- attribute: vCommunity|Configuration|Packages:nenic|Package Vendor
   display_name: nenic VIB Vendor
   is_property: true
   is_string_attribute: true

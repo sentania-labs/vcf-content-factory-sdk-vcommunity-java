@@ -11,7 +11,7 @@ time_window:
   unit: DAYS
   count: 7
 columns:
-- attribute: config|Software Packages|nfnic|Version
+- attribute: vCommunity|Configuration|Packages:nfnic|Package Version
   display_name: nfnic Version
   is_property: true
   is_string_attribute: true
@@ -19,7 +19,7 @@ columns:
   transformation: CURRENT
   omit:
   - roll_up_type
-- attribute: config|Software Packages|nenic|Version
+- attribute: vCommunity|Configuration|Packages:nenic|Package Version
   display_name: nenic version
   is_property: true
   is_string_attribute: true
@@ -27,7 +27,7 @@ columns:
   transformation: CURRENT
   omit:
   - roll_up_type
-- attribute: config|Software Packages|nsx-host|Version
+- attribute: vCommunity|Configuration|Packages:nsx-host|Package Version
   display_name: NSX Host VIB Version
   is_property: true
   is_string_attribute: true

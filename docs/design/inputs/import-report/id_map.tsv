@@ -2,6 +2,7 @@
 type	old_id	new_id	name	source_name	file
 supermetric	99152539-e2c3-473d-a4bf-26fc56988f50	f7f64488-6a08-51b5-8f1b-c0229fe299d5	CPU Usable Capacity Utilization		supermetrics/cpu-usable-capacity-utilization.yaml
 supermetric	3ec095da-c812-4baf-b0fa-3c2413392518	865fc00c-6d54-56bb-affb-7404e85c155b	Number of VM		supermetrics/number-of-vm.yaml
+supermetric	dda97f70-65e0-4c5a-b6f0-7acec936a0bd	9008afb4-2021-5b47-9bae-35f38d2d65f1	vSphere Clusters not Green		supermetrics/vsphere-clusters-not-green.yaml
 view	d0002f17-5acb-46dd-b69f-4a89f31f0c3b	289ab273-7f13-58ad-b314-47604e3fd026	ESXi Host Details vCommunity		views/esxi-host-details-vcommunity.yaml
 view	8342e94a-ffdd-4630-9384-0d876026b520	db909e6f-9acd-5fa9-b82f-1bf20214d93c	ESXi Host Hardware vCommunity		views/esxi-host-hardware-vcommunity.yaml
 view	810958f4-e511-4e44-afaa-c04956768daf	1476dcd5-8720-55f4-ad99-0996089d90ef	ESXi Host License Information vCommunity		views/esxi-host-license-information-vcommunity.yaml
