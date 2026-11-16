@@ -974,9 +974,8 @@ public final class KpiTest {
     }
 
     static void sentinel() {
-        // Q13: -1 is scored as read while the switch holds (upstream); a test of both settings is in DerivedTest
-        eq(100.0, KpiScorer.combine(new KpiMetric[] {CPU_READY}, vals("CPU Ready", -1.0)), "-1 scores as perfect, as upstream");
-        check(Quirks.NEGATIVE_ONE_STAT_IS_A_VALUE, "the quirk is on for the match");
-        done("a -1 reading is what upstream scores (Q13)");
+        // the scorer scores what it is given; -1 never reaches it, because the read drops it as "no sample" (OpsReadsTest, DerivedTest)
+        eq(100.0, KpiScorer.combine(new KpiMetric[] {CPU_READY}, vals("CPU Ready", -1.0)), "a -1 handed to the scorer is below every limit");
+        done("the scorer on a -1 (the read drops it before)");
     }
 }

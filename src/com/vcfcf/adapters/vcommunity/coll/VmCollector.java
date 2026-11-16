@@ -44,10 +44,7 @@ public final class VmCollector {
             "VirtualEthernetCard", "VirtualE1000", "VirtualE1000e", "VirtualPCNet32", "VirtualVmxnet",
             "VirtualVmxnet2", "VirtualVmxnet3", "VirtualVmxnet3Vrdma", "VirtualSriovEthernetCard"));
 
-    /**
-     * Q1 (R105, R106): see {@link Quirks#TOOLS_ALWAYS_NONE}. While it holds, the two paths are neither read
-     * nor sent; when it is switched off they are read from these paths and sent as read.
-     */
+    /** R105 and R106: the two Tools settings are read from these paths on every VM and sent as read (DV-112). */
     static final String[] TOOLS_PATHS = {"config.tools.syncTimeWithHost", "config.tools.toolsUpgradePolicy"};
 
     /** The paths every VM read asks for, with their keys' rows in the key map. */
@@ -92,9 +89,7 @@ public final class VmCollector {
         for (String p : TemplateScan.PATHS) r.path(p);
         // the host the VM runs on, for the cluster and host figures (P4); not a key of its own
         r.path("runtime.host", PathSpec.shallow());
-        if (!Quirks.TOOLS_ALWAYS_NONE) {
-            for (String p : TOOLS_PATHS) r.path(p);
-        }
+        for (String p : TOOLS_PATHS) r.path(p);
         r.path(DEVICES, PathSpec.keepingInElements("key", "deviceInfo.label", "controllerKey", "busNumber",
                 "scsiCtlrUnitNumber", "addressType", "macAddress", "connectable.startConnected",
                 "backing.eagerlyScrub", "backing.split", "backing.writeThrough", "shares.level"));
@@ -148,7 +143,7 @@ public final class VmCollector {
         yv(o, row, V + "Guest|Operation Ready", "guest.guestOperationsReady");
         yv(o, row, V + "Guest|State Change Support", "guest.guestStateChangeSupported");
         yv(o, row, V + "Guest|Interactive Guest", "guest.interactiveGuestOperationsReady");
-        tools(o, row, optionPaths);
+        tools(o, row);
         yv(o, row, V + "Runtime|Consolidation Needed", "runtime.consolidationNeeded");
         yv(o, row, V + "Runtime|DAS protection", "runtime.dasVmProtection.dasProtected");
         yv(o, row, V + "Runtime|Min Required EVC Mode Key", "runtime.minRequiredEVCModeKey");
@@ -163,31 +158,13 @@ public final class VmCollector {
     }
 
     /**
-     * Q1: upstream looks the Tools settings up under a path it never asked for, so it sends the text
-     * {@code None} for both on every VM. That is a placeholder where a value exists; it is reproduced
-     * here only, and the correct read is the else branch.
+     * Tools Sync Time and Tools Upgrade Policy: the real value of the VM's tools configuration; nothing when it is
+     * unset; withheld and counted when the read failed. (Upstream looked them up under a path it never asked for and
+     * sent the text {@code None} for every VM; that was Q1 and is gone, DV-112.)
      */
-    private static void tools(ObjectOut o, BulkRow row, List<String> optionPaths) {
-        if (Quirks.TOOLS_ALWAYS_NONE && optionPaths.contains("config.tools")) {
-            // the edge of Q1: with config.tools in the VM Options list the original's read does hold it, and the two
-            // keys carry the real values (None only for a VM that has no tools configuration)
-            XmlNode t = row.val("config.tools");
-            if (t == null && !row.isUnset("config.tools")) {
-                o.withhold(2); // the read of it failed
-                return;
-            }
-            XmlNode sync = t == null ? null : t.child("syncTimeWithHost");
-            XmlNode policy = t == null ? null : t.child("toolsUpgradePolicy");
-            // a setting the VM has none of is not sent (DV-112)
-            o.prop(V + "Guest|Tools Sync Time", sync == null ? null : PyText.bool(sync.text()));
-            o.prop(V + "Guest|Tools Upgrade Policy", policy == null ? null : policy.rawText());
-        } else if (Quirks.TOOLS_ALWAYS_NONE) {
-            o.prop(V + "Guest|Tools Sync Time", "None");
-            o.prop(V + "Guest|Tools Upgrade Policy", "None");
-        } else {
-            yv(o, row, V + "Guest|Tools Sync Time", TOOLS_PATHS[0]);
-            yv(o, row, V + "Guest|Tools Upgrade Policy", TOOLS_PATHS[1]);
-        }
+    private static void tools(ObjectOut o, BulkRow row) {
+        yv(o, row, V + "Guest|Tools Sync Time", TOOLS_PATHS[0]);
+        yv(o, row, V + "Guest|Tools Upgrade Policy", TOOLS_PATHS[1]);
     }
 
     /** A scalar key: its value; nothing, and not counted, when it is unset on a read that worked; counted when the read did not work. */
@@ -215,11 +192,6 @@ public final class VmCollector {
             return;
         }
         o.prop(key, Quirks.stripped(v).replace("TOOLSDEPLOYPKG_", ""));
-    }
-
-    static String customization(String v) {
-        String t = Quirks.strippedIfTruthy(v);
-        return t == null ? null : t.replace("TOOLSDEPLOYPKG_", "");
     }
 
     /**

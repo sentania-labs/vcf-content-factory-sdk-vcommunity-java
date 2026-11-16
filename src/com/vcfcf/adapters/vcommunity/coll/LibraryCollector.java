@@ -18,11 +18,11 @@ import java.util.Map;
  *
  * <p>Honest by construction. A library that could not be read gets no object; an item that could
  * not be read gets none and withholds the aggregates of its library, which would otherwise count
- * the items that happened to answer. A text or figure the answer does not have is not sent (DV-112), and
- * an item that lacks a flag or a size is left out of the count or the sum that needs it (counted as neither
- * stored nor not stored, compliant nor not compliant, and adding no size), because nothing is known of it; when no
- * item says anything of a field its count or sum is not sent at all. A returned
- * empty text is sent as it is (Q4), and a library with no items has zero of everything, which is what was read.
+ * the items that happened to answer. A text or figure the answer does not have is not sent (DV-112). Items Not
+ * Stored Locally and Total Size are sent only when every item carries the field (a partial figure would read as the
+ * whole); Items Not Security Compliant counts the items that have a compliance verdict and is not sent when none has
+ * one. A returned empty text is sent as it is (Q4), and a library with no items has zero of everything, which is
+ * what was read.
  */
 public final class LibraryCollector {
 
@@ -156,9 +156,12 @@ public final class LibraryCollector {
             }
         }
         // a library with no item has a real 0 of each; a library whose items say nothing of a field has no figure for it
-        if (n == 0 || knownCached > 0) o.stat(LIB + "Items Not Stored Locally", (double) notStored);
+        // Not Stored Locally and Total Size are sent only when every item carries the field (a partial figure would
+        // read as the whole); a library with no item has a real 0. Not Security Compliant counts the items that have
+        // a compliance verdict: an item with no verdict cannot be non-compliant, so it is "of the items with a verdict"
+        if (n == 0 || knownCached == n) o.stat(LIB + "Items Not Stored Locally", (double) notStored);
         if (n == 0 || knownCompliant > 0) o.stat(LIB + "Items Not Security Compliant", (double) notCompliant);
-        if (n == 0 || sized > 0) o.stat(LIB + "Total Size (GB)", PyRound.gib(bytes));
+        if (n == 0 || sized == n) o.stat(LIB + "Total Size (GB)", PyRound.gib(bytes));
     }
 
     /** Python truthiness of a JSON value. */

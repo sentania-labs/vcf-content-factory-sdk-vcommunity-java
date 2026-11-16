@@ -186,6 +186,17 @@ public final class PropertiesTest {
                 rid + " must not carry " + key + " but has " + r.p(0, rid, V + key));
     }
 
+    /** The key is absent because its source was unset on a read that worked: recorded for the coverage table. */
+    static void unset(Rig r, String rid, String key) throws java.io.IOException {
+        none(r, rid, key);
+        String kind = Coverage.kindOf(rid);
+        for (Coverage.Row row : Coverage.keyMap()) {
+            if (row.kind.equals(kind) && Coverage.pattern(row.key).matcher(V + key).matches()) {
+                Coverage.unsetObserved(kind, row.key);
+            }
+        }
+    }
+
     static Rig standard(FakeVc fake, FakeVcenter vc) {
         Rig r = new Rig(fake, vc);
         mapAll(r.ops, vc);
@@ -203,8 +214,9 @@ public final class PropertiesTest {
             run("clusters", () -> clusters(fake));
             run("datastores and vCenter", () -> datastoresAndVcenter(fake));
             run("no sentinel, no null, no secret", () -> noSentinels(fake));
-            run("sparse objects print the original's text for unset values, and are counted", () -> sparse(fake));
-            run("an unset value is the original's text; a failed read sends nothing", () -> unsetVersusFailed(fake));
+            run("sparse objects send nothing for unset values, and are not counted", () -> sparse(fake));
+            run("the operation notification timeout: unset, odd and -1", () -> opNotificationTimeouts(fake));
+            run("an unset value is not sent; a failed read is withheld and counted", () -> unsetVersusFailed(fake));
             run("a refused privilege is one failed read naming it", () -> privilegeRefused(fake));
             run("failed reads of every family send no placeholder and are counted", () -> failedReadFamilies(fake));
             run("failed reads withhold and count", () -> failedReads(fake));
@@ -300,7 +312,7 @@ public final class PropertiesTest {
             eq(r, H, n0 + "Duplex", "full-duplex");
             String n1 = "Network|Device:vmnic1|"; // link down
             eq(r, H, n1 + "Status", "Disconnected");
-            eq(r, H, n1 + "Duplex", "half-duplex"); // a link that is down is half-duplex to the original (Q10)
+            none(r, H, n1 + "Duplex"); // a link that is down returns no linkSpeed, so nothing is said about duplex (DV-112)
             none(r, H, n1 + "Driver Version"); // unset on the NIC: the original passes None to the SDK, which refuses it
             none(r, H, n1 + "Wake On Lan Supported"); // unset: nothing is sent (DV-112)
             eq(r, H, n1 + "PCI Vendor ID (VID)", "15b3");
@@ -383,8 +395,8 @@ public final class PropertiesTest {
             eq(r, VM, "Guest|Operation Ready", "True");
             eq(r, VM, "Guest|State Change Support", "True");
             eq(r, VM, "Guest|Interactive Guest", "False");
-            eq(r, VM, "Guest|Tools Sync Time", "None"); // Q1: upstream always sends the text None
-            eq(r, VM, "Guest|Tools Upgrade Policy", "None");
+            eq(r, VM, "Guest|Tools Sync Time", "False"); // the VM's real tools configuration (Q1 is gone, DV-112)
+            eq(r, VM, "Guest|Tools Upgrade Policy", "manual");
             eq(r, VM, "Runtime|Consolidation Needed", "False");
             eq(r, VM, "Runtime|DAS protection", "True");
             eq(r, VM, "Runtime|Min Required EVC Mode Key", "intel-skylake");
@@ -398,7 +410,7 @@ public final class PropertiesTest {
             eq(r, VM, "Guest|Detailed Data|Distro Version", "10.0.22000");
             eq(r, VM, "Guest|Detailed Data|Kernel Version", "22000");
             eq(r, VM, "Guest|Detailed Data|Pretty Name", "Windows");
-            none(r, VM, "Guest|Detailed Data|Distro Additional Version"); // unset: nothing is sent (DV-112)
+            eq(r, VM, "Guest|Detailed Data|Distro Additional Version", ""); // returned empty: the empty text, sent as it is (DV-112)
             // advanced parameters: exact keys, a present empty value is a value
             eq(r, VM, c + "Advanced Parameters|disk.EnableUUID", "TRUE");
             eq(r, VM, c + "Advanced Parameters|tools.guest.desktop.autolock", "");
@@ -464,7 +476,8 @@ public final class PropertiesTest {
             none(r, "res-vm-2", "Guest|Detailed Data|CPE String"); // unset: nothing is sent (DV-112)
             none(r, "res-vm-2", "Runtime|DAS protection"); // unset: nothing is sent (DV-112)
             none(r, "res-vm-2", "Summary|VM Path Name"); // unset: nothing is sent (DV-112)
-            eq(r, "res-vm-2", "Guest|Tools Sync Time", "None");
+            none(r, "res-vm-2", "Guest|Tools Sync Time"); // no tools configuration: nothing is sent
+            none(r, "res-vm-2", "Guest|Tools Upgrade Policy");
         }
     }
 
@@ -594,7 +607,7 @@ public final class PropertiesTest {
             eq(r, VC, c + "Runtime|vCenter managed address", "10.1.1.1");
             eq(r, VC, c + "Database|Maximum Connections", "50");
             eq(r, VC, c + "Runtime|vCenter Unique ID", "  "); // a blank setting vCenter returned is sent as it is (DV-112)
-            none(r, VC, c + "Log Level"); // unset: nothing is sent (DV-112)
+            unset(r, VC, c + "Log Level"); // unset: nothing is sent (DV-112)
             eq(r, VC, c + "Patch Level", "8.0.3.00200");
             T.eq(1, r.count("QueryOptions"), "one call for every setting (DV-37)");
         }
@@ -606,9 +619,9 @@ public final class PropertiesTest {
                 SoapFx.str("distroAddlVersion='SP1' prettyName='Plain'")));
         try (Rig r = standard(fake, old)) {
             r.run();
-            none(r, VC, "Configuration|Patch Level"); // unset: nothing is sent (DV-112)
+            unset(r, VC, "Configuration|Patch Level"); // unset: nothing is sent (DV-112)
             eq(r, VC, "Configuration|Runtime|vCenter Unique ID", "7");
-            none(r, VC, "Configuration|Runtime|vCenter managed address"); // unset: nothing is sent (DV-112)
+            unset(r, VC, "Configuration|Runtime|vCenter managed address"); // unset: nothing is sent (DV-112)
             eq(r, VC, "Configuration|Log Level", "info");
             eq(r, "res-vm-7", "Guest|Detailed Data|Distro Additional Version", "SP1");
             eq(r, "res-vm-7", "Guest|Detailed Data|Pretty Name", "Plain");
@@ -623,9 +636,8 @@ public final class PropertiesTest {
 
     /**
      * No key is under another namespace, none is null or untyped, no number is NaN, no instance is named
-     * with a sentinel, and no secret is pushed. (A placeholder as a <em>value</em> is the original's own text
-     * for an unset property, Q9, and is tested where it is built; what must not happen is one for a read that
-     * failed: {@link #unsetVersusFailed}.)
+     * with a sentinel, and no secret is pushed. No pushed value is a placeholder text, and every key of the
+     * candidate rows that a full object pushes is absent from the bare object of its kind ({@link #unsetSweep}).
      */
     static void noSentinels(FakeVc fake) throws Exception {
         FakeVcenter vc = dataset();
@@ -657,6 +669,7 @@ public final class PropertiesTest {
                 }
             }
             T.check(n > 100, "the run did push properties");
+            unsetSweep(r);
             // no license key and no credential in any log line, any push
             String all = r.log.all();
             T.notContains(all, "AB12C-DE34F-GH56I-JK78L-MN90P", "the license key is never logged");
@@ -670,6 +683,57 @@ public final class PropertiesTest {
                 }
             }
         }
+    }
+
+    /** The keys (props and stats, every push) one resource got. */
+    static java.util.Set<String> pushedKeys(Rig r, String rid) {
+        java.util.Set<String> keys = new java.util.LinkedHashSet<>();
+        for (Map<String, Map<String, Object>> push : r.ops.pushedProps) {
+            Map<String, Object> m = push.get(rid);
+            if (m != null) keys.addAll(m.keySet());
+        }
+        for (Map<String, Map<String, Double>> push : r.ops.pushedStats) {
+            Map<String, Double> m = push.get(rid);
+            if (m != null) keys.addAll(m.keySet());
+        }
+        return keys;
+    }
+
+    /**
+     * The sweep behind the unset rule (DV-112), over the sparse and full objects of one run: no pushed property value
+     * is a placeholder text, and for every candidate row of the key map a key that a full object of its kind pushes
+     * is not pushed for the bare object of that kind. What it sees is recorded for the coverage table, so a row
+     * is marked "unset: nothing is sent" only when this saw it.
+     */
+    static void unsetSweep(Rig r) throws Exception {
+        for (Map<String, Map<String, Object>> push : r.ops.pushedProps) {
+            for (Map.Entry<String, Map<String, Object>> e : push.entrySet()) {
+                for (Map.Entry<String, Object> p : e.getValue().entrySet()) {
+                    T.check(!(p.getValue() instanceof String) || !SENTINELS.contains(p.getValue()),
+                            e.getKey() + " " + p.getKey() + " is the placeholder text " + p.getValue());
+                }
+            }
+        }
+        String[][] pairs = {{"HostSystem", "res-host-1", "res-host-2"}, {"VirtualMachine", "res-vm-1", "res-vm-2"},
+            {"ClusterComputeResource", "res-domain-1", "res-domain-4"}, {"Datastore", "res-datastore-1", "res-datastore-3"}};
+        int seen = 0;
+        for (String[] pair : pairs) {
+            java.util.Set<String> full = pushedKeys(r, pair[1]);
+            java.util.Set<String> bare = pushedKeys(r, pair[2]);
+            for (Coverage.Row row : Coverage.keyMap()) {
+                if (!row.kind.equals(pair[0]) || !Coverage.unsetCandidate(row.n)) continue;
+                java.util.regex.Pattern pat = Coverage.pattern(row.key);
+                boolean fullHas = false;
+                boolean bareHas = false;
+                for (String k : full) if (pat.matcher(k.startsWith(V) ? "vCommunity|" + k.substring(V.length()) : k).matches()) fullHas = true;
+                for (String k : bare) if (pat.matcher(k.startsWith(V) ? "vCommunity|" + k.substring(V.length()) : k).matches()) bareHas = true;
+                if (fullHas && !bareHas) {
+                    Coverage.unsetObserved(pair[0], row.key);
+                    seen++;
+                }
+            }
+        }
+        T.check(seen > 40, "the sweep saw the unset rule on " + seen + " rows");
     }
 
     /** The object loses the value of these paths and vCenter says it could not read them (a missing-set fault). */
@@ -786,7 +850,10 @@ public final class PropertiesTest {
         SoapFx.Obj denied = P2Fixtures.vmFull("vm-9", "denied");
         denied.vals.remove("config.firmware"); // vCenter returns no value for what it could not read
         denied.vals.remove("guest.guestState");
-        vc.add(denied.missing("config.firmware").missing("guest.guestState"));
+        denied.vals.remove("config.tools.syncTimeWithHost");
+        denied.vals.remove("config.tools.toolsUpgradePolicy");
+        vc.add(denied.missing("config.firmware").missing("guest.guestState").missing("config.tools.syncTimeWithHost")
+                .missing("config.tools.toolsUpgradePolicy"));
         // a host whose DNS configuration came back without the dhcp flag: str(None); with none at all: "null" (N1)
         vc.add(new SoapFx.Obj("HostSystem", "host-12").name("flagless")
                 .put("runtime.connectionState", SoapFx.en("HostSystemConnectionState", "connected"))
@@ -800,12 +867,50 @@ public final class PropertiesTest {
             T.check(r.p(0, vm9, V + "Guest|Application Status") == null, "a refused path: not \"None\" on any VM");
             T.check(r.p(0, vm9, V + "Configuration|Firmware") == null, "a path vCenter could not read for this VM: not \"None\"");
             T.check(r.p(0, vm9, V + "Guest|State") == null, "likewise");
+            T.check(r.p(0, vm9, V + "Guest|Tools Sync Time") == null && r.p(0, vm9, V + "Guest|Tools Upgrade Policy") == null,
+                    "the Tools settings whose read failed are not sent, and not a placeholder");
+            T.check(r.p(0, VM, V + "Guest|Tools Sync Time") != null, "and another VM's are");
             none(r, "res-vm-2", "Configuration|Firmware"); // unset: nothing is sent (DV-112)
             none(r, "res-host-12", "Network|DHCP"); // unset: nothing is sent (DV-112)
             eq(r, "res-host-4", "Network|DHCP", "True");
             T.check(r.p(0, vm9, V + "Configuration|Boot Options|Delay") != null, "what read is sent");
             T.contains(firstFailure(r, 0), "F-SOAP", "the failed reads are counted");
             T.check((Double) r.health(0, "Values Withheld in Last Cycle") >= 1, "the values left out are counted");
+        }
+    }
+
+    /**
+     * R96, Op Notification Timeout: unset sends nothing and is not counted; a value that came back but is not a whole
+     * number is withheld and counted; a -1 read is the original's 0 (Q5).
+     */
+    static void opNotificationTimeouts(FakeVc fake) throws Exception {
+        FakeVcenter vc = new FakeVcenter();
+        vc.add(new SoapFx.Obj("VirtualMachine", "vm-3").name("unset-timeout")
+                .put("config.hardware.device", SoapFx.arr("ArrayOfVirtualDevice", "")));
+        vc.add(new SoapFx.Obj("VirtualMachine", "vm-4").name("odd-timeout")
+                .put("config.hardware.device", SoapFx.arr("ArrayOfVirtualDevice", ""))
+                .put("config.vmOpNotificationTimeout", SoapFx.str("soon")));
+        vc.add(new SoapFx.Obj("VirtualMachine", "vm-5").name("minus-one")
+                .put("config.hardware.device", SoapFx.arr("ArrayOfVirtualDevice", ""))
+                .put("config.vmOpNotificationTimeout", SoapFx.longv(-1)));
+        try (Rig r = standard(fake, vc)) {
+            mapAll(r.ops, vc);
+            r.run();
+            Coverage.asserted("res-vm-3", V + "Configuration|Op Notification Timeout");
+            none(r, "res-vm-3", "Configuration|Op Notification Timeout"); // unset: nothing
+            none(r, "res-vm-4", "Configuration|Op Notification Timeout"); // not a whole number: nothing, and counted
+            eq(r, "res-vm-5", "Configuration|Op Notification Timeout", "0"); // -1 is "none": the original's 0 (Q5)
+            T.check((Double) r.health(0, "Values Withheld in Last Cycle") >= 1, "the unreadable value is counted");
+        }
+        // the unset one alone is not counted
+        FakeVcenter vc2 = new FakeVcenter();
+        vc2.add(new SoapFx.Obj("VirtualMachine", "vm-3").name("unset-timeout")
+                .put("config.hardware.device", SoapFx.arr("ArrayOfVirtualDevice", "")));
+        try (Rig r = standard(fake, vc2)) {
+            mapAll(r.ops, vc2);
+            r.run();
+            none(r, "res-vm-3", "Configuration|Op Notification Timeout");
+            T.eq(0.0, r.health(0, "Values Withheld in Last Cycle"), "an unset timeout is not a failure");
         }
     }
 
@@ -1005,7 +1110,7 @@ public final class PropertiesTest {
                     + "syncTimeWithHostAllowed = true, syncTimeWithHost = false, lastInstallInfo = "
                     + "(vim.vm.ToolsConfigInfo.ToolsLastInstallInfo) { dynamicType = , dynamicProperty = "
                     + "(vmodl.DynamicProperty) [], counter = 0, fault =  } }");
-            // the edge of Q1: with config.tools in the list the original's read holds it, so the two keys are real
+            // the two keys are the real values whether or not config.tools is also a VM Options entry
             eq(r, VM, "Guest|Tools Sync Time", "False");
             eq(r, VM, "Guest|Tools Upgrade Policy", "manual");
             // a VM with no tools configuration: nothing is sent (DV-112)
@@ -1580,7 +1685,7 @@ public final class PropertiesTest {
             eq(r, h20, "Licensing:L|Edition Key", "");
             eq(r, "res-vm-20", "Guest|Customization Status", "");
             eq(r, "res-vm-20", "Guest|Detailed Data|Build Number", "");
-            none(r, "res-vm-20", "Guest|Detailed Data|Distro Name"); // unset: nothing is sent (DV-112)
+            eq(r, "res-vm-20", "Guest|Detailed Data|Distro Name", ""); // returned empty: the empty text (DV-112)
             eq(r, "res-vm-20", "Network|Network Adapters:|Type", "");
             eq(r, "res-vm-21", "Guest|Customization Status", ""); // returned empty: sent as it is (DV-112)
             eq(r, "res-domain-c20", "Cluster Configuration|EVC|Enabled", "True"); // a non-empty string is true

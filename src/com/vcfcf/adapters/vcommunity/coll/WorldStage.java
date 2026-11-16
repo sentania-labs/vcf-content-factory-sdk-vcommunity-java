@@ -194,9 +194,9 @@ final class WorldStage {
     // ------------------------------------------------------------------ network
 
     /**
-     * R211: the hosts whose stored speed is below 100 %. As upstream does it, any host the answer names counts
-     * the figure as measured, even when its stored value is too old to use (it is then not below 100, so the count
-     * is 0); only an answer that names no host at all publishes nothing (Q16, {@link Quirks#STALE_HOST_VALUE_COUNTS_AS_ZERO}).
+     * R211: the hosts whose stored speed is below 100 %. A count is sent only while some host has a fresh stored
+     * value; a host whose stored value is too old to use is not a measurement, so with none fresh nothing is sent
+     * (not a 0 that would read as "no host is degraded", DV-112).
      */
     private void networkCount(String world, List<String> hosts) throws InterruptedException {
         if (hosts == null) {
@@ -217,9 +217,8 @@ final class WorldStage {
             x.withheld(1);
             return;
         }
-        int measured = Quirks.STALE_HOST_VALUE_COUNTS_AS_ZERO ? named[0] : usable[0];
-        // no host has anything stored yet: no figure at all, not a zero
-        if (measured == 0) return;
+        // no host has a fresh value: no figure at all, not a zero
+        if (usable[0] == 0) return;
         x.stat(world, StatKeys.DC_NETWORK_SPEED, below[0]);
     }
 

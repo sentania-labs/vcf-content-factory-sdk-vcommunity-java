@@ -3,12 +3,19 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
-## 1.0.0.25 (Unreleased)
+## 1.0.0.26 (Unreleased)
+
+- fix(adapter): review of build 25 (DV-112 follow-up). Tools Sync Time and Tools Upgrade Policy are the VM's real values on every VM, nothing when unset, counted when the read failed (Q1 removed). Duplex only from a returned flag (Q10 removed). Three more seams that invented a value for an input that is unset or does not apply are removed: a Datacenter count of 0 when no member host was measured (Q12), the platform's -1 "no sample" marker scored as a reading (Q13; a -1 memory tier latency is no reading), and a World count of 0 when no stored host value is fresh (Q16). EVC keys are not sent when the cluster has no summary; a Detailed Data field that came back empty is the empty text; Items Not Stored Locally and Total Size are sent only when every item carries the field, Items Not Security Compliant is "of the items with a compliance verdict"; a failed NIC-list or DPM-config read is counted as withheld. Unused code removed. Build 26.
+- fix(test): the wrong-pin tests built a "wrong" pin by putting `00` in front of the real thumbprint, which equals it when the certificate of that run starts with `00` (1 run in 256); they now pick a prefix that differs.
+- test: the unset rule is swept over the full and bare objects (no placeholder value pushed; the coverage notes come from what was observed), the turnstile has its own test, and the operation notification timeout, the Tools read failure and a mixed library are covered.
+- docs: the design register, `overview.md` and the installing guide agree with DV-112 (upgrade notes for the Tools and Duplex keys and for the Periodic Cluster Check after DV-113).
+
+## 1.0.0.25
 
 - fix(adapter): a value vCenter answered without is not published at all, with no placeholder: no `None`, `null`, `[]`, `N/A`, `Unknown`, empty text or 0 (DV-112; 133 keys on 8 object kinds, listed in the coverage TSVs). The Q8 and Q9 seams and their helpers are deleted. A failed read is still withheld and counted; an unset value is not counted and raises no warning; a returned 0, `False`, empty list or empty text is still sent. Content Library counts of items not stored locally and not compliant count only the items that carry the flag, and Total Size adds only the items that carry a size. Placeholders sent earlier stay on existing objects until overwritten (installing guide, upgrade notes).
 - fix(adapter): Worst ESXi Memory Tiering Latency is converted from nanoseconds to microseconds before it is scored and published; it was pinned at the worst score on every tiered host (DV-113). The published figure steps down by a factor of 1,000.
 - docs: DV-109 records the live reconciliation of the memory divisor against the stock usage figure (within 0.006 points on tiered and non-tiered hosts); the missing input of Cluster Memory Tiering Consumption is listed as a known gap.
-- fix(test): the guest phase hands the VMs of a batch to the logon gate in the cursor's order, so the VM that is asked alone first (the probe) is the first on the list and not whichever thread ran first; two guest tests that assumed vm-1 went first failed at random (`isolation`, and the 16 VM refusal count). Build 25.
+- fix(adapter): the guest phase hands the VMs of a batch to the logon gate in the cursor's order, so the VM that is asked alone first (the probe) is the first on the list and not whichever thread ran first; two guest tests that assumed vm-1 went first failed at random (`isolation`, and the 16 VM refusal count). Build 25.
 
 ## 1.0.0.24
 

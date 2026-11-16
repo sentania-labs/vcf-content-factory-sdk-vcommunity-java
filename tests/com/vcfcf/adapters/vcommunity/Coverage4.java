@@ -48,13 +48,13 @@ final class Coverage4 {
         if (row == 194) return "(compressed + swapped) / guest used memory x 100";
         if (row == 195) return "share of the conditions met, over four, or over three where the host has no quarantine property (DV-110); a host with no data counts 0; withheld when its reads failed";
         if (row == 196) return "published for connected hosts that have a NIC with both speed properties (DV-108: read as properties; needs net|configuredSpeed enabled in the policy)";
-        if (row == 197) return "member hosts below 100; a Datacenter whose hosts have no value is 0 as upstream (Q12); needs the host NIC configured speed property (DV-108)";
+        if (row == 197) return "member hosts below 100; a Datacenter none of whose hosts has a value gets no count (DV-112); needs the host NIC configured speed property (DV-108)";
         if (row == 198) return "sum of the vCenters' stored counts within 15 minutes";
         if (row == 199 || row == 200) return "once per window, when every cluster has been checked";
         if (row >= 201 && row <= 202) return "from every VM's stored properties, all vCenters";
         if (row >= 203 && row <= 208) return "from the stored cluster scores, all vCenters (previous cycle)";
         if (row == 209 || row == 210) return "from the stored availability, all vCenters (previous cycle)";
-        if (row == 211) return "hosts below 100 % of every vCenter, from the stored values (DV-108: the host figure needs the NIC configured speed property)";
+        if (row == 211) return "hosts below 100 % of every vCenter, from the stored values; none when no host has a fresh value (DV-112) (DV-108: the host figure needs the NIC configured speed property)";
         if (row == 212) return "lowest of this cycle's cluster values; withheld when any is unknown";
         if (row == 213) return "distinct names per Datacenter, summed; withheld when any part could not be read";
         if (row == 214) return "mean of VM Performance and Guest OS Performance; VM Performance alone without Tools";

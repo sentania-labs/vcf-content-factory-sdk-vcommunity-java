@@ -269,37 +269,12 @@ public final class GuestPhase {
         return batch;
     }
 
-    /**
-     * Lets the VMs of one batch go to the logon gate one at a time, in the order they were listed. Without it the
-     * workers reach the gate in whatever order the threads happen to run, so which VM is the probe (the one asked
-     * alone until a logon is accepted) was luck: a VM that refuses could be the probe on one run and a VM that accepts
-     * on the next, and the collection would end after one logon or go on to all the VMs. The order is the cursor's.
-     */
-    private static final class Turnstile {
-        private int next;
-
-        /** Waits for the turn of {@code order}; false when the time is up or the thread is interrupted first. */
-        synchronized boolean await(int order, Input in) throws InterruptedException {
-            while (next < order) {
-                if (in.clock.getAsLong() >= in.deadlineMs) return false;
-                wait(20);
-            }
-            return true;
-        }
-
-        /** The turn of {@code order} is over, whether or not the VM was admitted. */
-        synchronized void done(int order) {
-            if (next <= order) next = order + 1;
-            notifyAll();
-        }
-    }
-
     private Callable<Item> task(Item item, int order, Turnstile turns, Input in, GuestRunner runner) {
         return () -> {
             LogonGate.Slot slot = null;
             try {
                 if (in.clock.getAsLong() >= in.deadlineMs || Thread.currentThread().isInterrupted()) return item;
-                if (!turns.await(order, in)) return item;
+                if (!turns.await(order, in.clock, in.deadlineMs)) return item;
                 slot = gate.admit(item.vm.moref, in.clock, in.deadlineMs);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

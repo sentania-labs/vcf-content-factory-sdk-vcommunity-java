@@ -724,7 +724,8 @@ final class ObjectKpis {
                 x.withheld(1);
                 continue;
             }
-            if (!anyValue && !Quirks.EMPTY_DATACENTER_COUNT_IS_ZERO) continue;
+            // no member host has a value: nothing was measured, so no count (a 0 would read as "none degraded", DV-112)
+            if (!anyValue) continue;
             x.stat(rid, StatKeys.DC_NETWORK_SPEED, degraded);
         }
     }

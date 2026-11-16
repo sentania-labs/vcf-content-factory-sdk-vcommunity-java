@@ -36,6 +36,13 @@ final class Coverage3 {
         checked.computeIfAbsent(kind, k -> new LinkedHashMap<>()).putIfAbsent(key, scenario);
     }
 
+    /** Kind to the keys a scenario saw absent on an object whose source was unset. */
+    static final Map<String, java.util.Set<String>> unsetSeen = new LinkedHashMap<>();
+
+    static synchronized void unset(String kind, String key) {
+        unsetSeen.computeIfAbsent(kind, k -> new java.util.LinkedHashSet<>()).add(key);
+    }
+
     private static boolean own(String kind) {
         for (String k : KINDS) if (k.equals(kind)) return true;
         return false;
@@ -43,21 +50,21 @@ final class Coverage3 {
 
     /** What differs from the plain read, by row. */
     static String note(int row) {
-        String text = "a text the read did not return is not sent (DV-112); a returned empty text is sent as it is (Q4)";
+        String text = "a returned empty text is sent as it is (Q4)";
         switch (row) {
             case 227: case 228: case 231: case 232:
                 return text;
-            case 229: return "text of the count; not returned: nothing is sent (DV-112)";
-            case 230: return "text of round(MB / 1024, 2); not returned: nothing is sent (DV-112)";
-            case 233: return "round(bytes / 1024^3, 2); not returned: nothing is sent (DV-112)";
+            case 229: return "text of the count";
+            case 230: return "text of round(MB / 1024, 2)";
+            case 233: return "round(bytes / 1024^3, 2)";
             case 234: case 235: case 236: case 237: case 238: case 239: case 240: case 241: case 242: case 243:
                 return text;
-            case 244: return "round(bytes / 1024^3, 2); not returned: nothing is sent (DV-112)";
+            case 244: return "round(bytes / 1024^3, 2)";
             case 245: case 246: case 247: case 248:
                 return text;
             case 249: return "the number of items listed; withheld when any item could not be read (DV-46)";
-            case 250: case 251: return "an item that lacks the field is left out of the count (none if no item has it) (DV-112); withheld when an item could not be read (DV-46)";
-            case 252: return "round(sum / 1024^3, 2); a missing size adds nothing (no sum if no item has one) (DV-112); withheld when an item could not be read (DV-46)";
+            case 250: case 251: return "not stored locally: sent only when every item carries the flag (or the library is empty); not security compliant: of the items with a compliance verdict; withheld when an item could not be read (DV-46)";
+            case 252: return "round(sum / 1024^3, 2); sent only when every item carries a size (or the library is empty); withheld when an item could not be read (DV-46)";
             default: return "";
         }
     }
@@ -80,6 +87,8 @@ final class Coverage3 {
                 continue;
             }
             String n = note(i);
+            java.util.Set<String> u = unsetSeen.get(kind);
+            if (u != null && u.contains(key)) n = n.isEmpty() ? "unset: nothing is sent (DV-112)" : n + "; unset: nothing is sent (DV-112)";
             b.append("R").append(i).append('\t').append(key).append('\t').append(kind).append("\tyes\t")
                     .append(test).append('\t').append(c[3]).append(n.isEmpty() ? "" : "; " + n)
                     .append("\tP3\n");

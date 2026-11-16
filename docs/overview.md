@@ -80,10 +80,13 @@ pushes nothing onto the vCenter's objects.
   an empty list (a count of 0) or an empty text. The same goes for a setting that does not apply (HA, DRS or
   EVC switched off, DRS Score while DRS is off). A key that is not sent keeps its last value in VCF Operations
   (a pushed key cannot be deleted), so a placeholder sent earlier by the Python pack or an earlier build stays
-  on an existing object until a real value overwrites it. A NIC whose link is down is `half-duplex` (Q10). The
-  Content Library counts of items not stored locally and not security compliant count only the items that
-  carry the flag, and Total Size adds only the items that carry a size; a count no item of the library
-  supports is not sent.
+  on an existing object until a real value overwrites it. A NIC whose link is down, or whose link has no duplex flag, has no Duplex key (DV-112). The
+  Content Library figures follow the same rule: Items Not Stored Locally and Total Size are sent only when every
+  item of the library carries the field (an empty library has a real 0), and Items Not Security Compliant counts
+  "of the items with a compliance verdict" and is not sent when none has one.
+- **Worst ESXi Memory Tiering Latency is in microseconds.** The statistic it reads is in nanoseconds; the row is
+  divided by 1,000 before it is scored and published (DV-113). A -1 ("no sample") is no reading and is left out; a 0.0
+  is a real reading.
 - **Derived metrics are read back from VCF Operations.** The scores, availability,
   network speed and shares are computed from the statistics and properties the
   VMware adapter already stores, read once per cycle in batches of 500, with the
@@ -124,8 +127,7 @@ pushes nothing onto the vCenter's objects.
   keys within a cycle or two of Ops knowing it.
 - **Matches the original, quirks included.** For now the pak reproduces what the
   original 0.8.1 publishes even where it looks wrong, so the first comparison
-  against it is exact: the two VM Tools keys are the text `None` (the real values when `config.tools` is
-  in the VM Options list), a VM with no
+  against it is exact: a VM with no
   network adapter has no Virtual Disk keys, PCI ids above 0x7FFF are signed
   (`-7f7a`), blank strings are pushed as they are, and so on. Each is a
   one-edit switch in `text/Quirks.java` and is listed in the design (section 5.8)
@@ -207,7 +209,6 @@ The pak carries the content of the original pack as VCF Operations content, inst
 - The Datacenter count of Network Speed Degradation matches the Datacenter object by MoRef plus vCenter UUID; whether Operations gives a Datacenter those identifiers is unproven (experiment E1). Until it is, a Datacenter without them gets no count and the objects-not-matched figure is unaffected.
 - Not yet proven on a live instance: the P4 differential over 24 hours (the design's phase table).
 - Cluster Memory Tiering Consumption (`vCommunity|Cluster Consumption|Cluster Memory Tiering Consumption`) is never published: its input statistic `mem:NVMe|tier.usage` does not exist in VCF Operations. The real source is the vCenter counter `mem.tier.consumed` (MB, instances DRAM and NVMe), which needs a performance query this adapter does not make. This is a known gap (design, DV-109).
-- The two VM Tools keys (Tools Sync Time, Tools Upgrade Policy) are still the text `None` on every VM unless `config.tools` is in the VM Options list (quirk Q1). That is a placeholder for a value the adapter does not read; it is not changed by DV-112.
 - A new library, item or template is created at once and gets its values on the next collection (five minutes later). One that vCenter no longer has is marked not existing after 12 complete collections, and only when everything that could contain it was read.
 - Trust on First Use sends the credentials before any certificate check, as the
   original pack did. The certificate it presents is compared after the login with

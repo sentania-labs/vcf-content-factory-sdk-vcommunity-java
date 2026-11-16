@@ -69,7 +69,7 @@ public final class ClusterCollector {
         boolean drsOn = drs(o, row, drsCfg, row.val("configurationEx"), drsRead);
         evc(o, summary, summaryRead);
         drsScore(o, summary, summaryRead, drsOn, drsRead);
-        dpm(o, row.val("configurationEx"));
+        dpm(o, row, row.val("configurationEx"));
         return o;
     }
 
@@ -100,7 +100,7 @@ public final class ClusterCollector {
             Vals.integer(das, vmts + "maxFailures"),
             Vals.integer(das, vmts + "minUpTime")};
         String enabled = Vals.bool(das, "enabled");
-        // High availability switched off: none of the settings means anything, the original says "null".
+        // High availability switched off: none of the settings applies, and none is sent.
         boolean off = "False".equals(enabled);
         // Host monitoring disabled: the five response settings are not in force.
         boolean noResponses = "True".equals(enabled) && "disabled".equals(vals[0]);
@@ -146,8 +146,9 @@ public final class ClusterCollector {
             o.withhold(2); // the summary could not be read
             return;
         }
+        if (summary == null) return; // no summary at all: EVC was not answered, so neither key is sent
         String mode = Vals.str(summary, "currentEVCModeKey");
-        // A summary that was read and names no mode means EVC is off: a reading, kept (Q2), and there is no mode to
+        // A summary that came back and names no mode means EVC is off: a reading, and there is no mode to
         // send. A mode that is spaces is a mode (a non-empty string is true there).
         boolean on = mode != null && !mode.isEmpty();
         o.prop(EVC + "Enabled", on ? "True" : "False");
@@ -156,7 +157,7 @@ public final class ClusterCollector {
 
     /**
      * The DRS score, 0 to 100, where 0 is the worst. It is published only when DRS is on and vCenter gave a
-     * score (Q9, DV-111): with DRS off there is nothing to score, and a score below zero is outside the scale (we
+     * score (DV-111, DV-112): with DRS off there is nothing to score, and a score below zero is outside the scale (we
      * take it to mean "no score yet"; that is an assumption, not a documented value), so neither is sent as a 0 that
      * would read as the worst balance. A score of 0 vCenter really gave stays.
      * A summary or DRS setting that could not be read is withheld and counted, as before.
@@ -182,7 +183,11 @@ public final class ClusterCollector {
         }
     }
 
-    private static void dpm(ObjectOut o, XmlNode ex) {
+    private static void dpm(ObjectOut o, BulkRow row, XmlNode ex) {
+        if (ex == null && !row.isUnset("configurationEx")) {
+            o.withhold(1); // the DPM configuration could not be read
+            return;
+        }
         XmlNode dpm = Vals.at(ex, "dpmConfigInfo");
         if (dpm == null) return;
         o.prop(CFG + "DPM|Host Power Action Rate", Vals.integer(dpm, "hostPowerActionRate"));

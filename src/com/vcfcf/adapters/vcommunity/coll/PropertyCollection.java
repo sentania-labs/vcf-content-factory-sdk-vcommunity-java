@@ -467,7 +467,7 @@ public final class PropertyCollection {
     private HostResult hosts(Input in, List<String> advSettings, List<String> pkgList, Membership members) {
         Map<String, ObjectOut> byMoref = new LinkedHashMap<>();
         Map<String, MoRef> imageMgr = new HashMap<>();
-        // hosts whose image manager was read and is unset (upstream: install date "null"); a host whose
+        // hosts whose image manager was read and is unset (its install date is not sent); a host whose
         // read of it failed is in neither set, and gets no install date at all
         Set<String> noImageMgr = new HashSet<>();
         List<MoRef> refs = new ArrayList<>();
@@ -496,7 +496,7 @@ public final class PropertyCollection {
         for (Map.Entry<String, ObjectOut> e : byMoref.entrySet()) {
             HostCollector.Extras x = new HostCollector.Extras();
             x.installDate = installDate.get(e.getKey());
-            // a host whose image manager is unset is the original's "null"; so is one whose call answered; a
+            // a host whose image manager is unset, or whose call answered, counts as read (with no date nothing is sent); a
             // host whose manager could not be read, or whose call failed, has no answer at all
             x.installDateRead = noImageMgr.contains(e.getKey()) || installAnswered.contains(e.getKey());
             x.options = options == null ? null : options.get(e.getKey());

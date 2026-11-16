@@ -8,7 +8,8 @@ import java.util.Map;
  * An object of one of the pak's own kinds ({@code Content Library}, {@code Library Item},
  * {@code VM Template}): its name, its identifiers and the keys to put on it. A collector builds
  * it as a pure function of what was read; nothing here knows the SDK. A key whose value is
- * {@code null} is not queued, and the flagged ones are counted as withheld (design 5.1).
+ * {@code null} is not queued and not counted: a value vCenter answered without is absent (DV-112). A value that could
+ * not be read is counted by the caller with {@link #withhold} (design 5.1).
  */
 public final class OwnObject {
 

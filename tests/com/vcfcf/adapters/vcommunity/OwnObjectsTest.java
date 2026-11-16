@@ -214,6 +214,12 @@ public final class OwnObjectsTest {
         Coverage3.asserted(o.kind, key);
     }
 
+    /** The key is absent because its source was unset on a read that worked (not because a read failed): recorded for the coverage table. */
+    static void unsetNone(OwnObject o, String key) {
+        none(o, key);
+        Coverage3.unset(o.kind, key);
+    }
+
     static void none(OwnObject o, String key) {
         T.check(!o.props().containsKey(key) && !o.stats().containsKey(key),
                 o.kind + " '" + o.name + "' must not carry " + key + " but has "
@@ -258,7 +264,8 @@ public final class OwnObjectsTest {
             run("identity: kind, name and identifiers, never the Ops id", () -> identity(fake));
             run("links: one full child set per library that was read whole", () -> linkSets(fake));
             run("an absent text is the empty text, an absent figure is not a zero", () -> bare(fake));
-            run("a field that was not returned is not sent", () -> absentTextOff(fake));
+            run("a field that was not returned is not sent", () -> absentFieldsNotSent(fake));
+            run("a library whose items carry the flags for some only", OwnObjectsTest::mixedLibrary);
             run("template paths that could not be read send nothing", () -> templatePathsFailed(fake));
             run("a failed cycle fails every object of the account", () -> failedCycle(fake));
             run("a repeated identifier counts twice; a deleted item or library is gone, not failed", () -> repeatsAndRaces(fake));
@@ -292,8 +299,8 @@ public final class OwnObjectsTest {
             T.eq("cl-local", a.name, "library name");
             eq(a, LIB + "Type", "LOCAL");
             eq(a, LIB + "State", "ACTIVE");
-            none(a, LIB + "Subscription URL");
-            none(a, LIB + "Automatic Sync");
+            unsetNone(a, LIB + "Subscription URL");
+            unsetNone(a, LIB + "Automatic Sync");
             eq(a, LIB + "Items", 3.0);
             eq(a, LIB + "Items Not Stored Locally", 0.0);
             eq(a, LIB + "Items Not Security Compliant", 0.0);
@@ -331,21 +338,21 @@ public final class OwnObjectsTest {
             eq(a1, ITM + "Security Compliant", "True");
             eq(a1, ITM + "Certificate Verification", "INTERNAL");
             eq(a1, ITM + "Last Modified", "2026-11-01T09:01:58.636Z");
-            none(a1, ITM + "Last Sync"); // a local item was never synced: nothing is sent (DV-112)
-            none(a1, ITM + "Source Item ID");
+            unsetNone(a1, ITM + "Last Sync"); // a local item was never synced: nothing is sent (DV-112)
+            unsetNone(a1, ITM + "Source Item ID");
             eq(a1, ITM + "Size (GB)", 2.0);
 
             // an item with no files and an empty description: size 0 is a reading, "" is sent as it is
             OwnObject a2 = item(own, "item-a2");
             eq(a2, ITM + "Type", "iso");
             eq(a2, ITM + "Description", "");
-            none(a2, ITM + "Content Version");
+            unsetNone(a2, ITM + "Content Version");
             eq(a2, ITM + "Certificate Verification", "NOT_AVAILABLE");
             eq(a2, ITM + "Size (GB)", 0.0);
 
             // 0.125 GiB is a tie
             eq(item(own, "item-a3"), ITM + "Size (GB)", 0.12);
-            none(item(own, "item-a3"), ITM + "Certificate Verification");
+            unsetNone(item(own, "item-a3"), ITM + "Certificate Verification");
 
             // a subscribed library's items: not stored, not compliant, synced from a source
             OwnObject b1 = item(own, "item-b1");
@@ -501,16 +508,24 @@ public final class OwnObjectsTest {
             OwnObject d = lib(own, "lib-d");
             T.eq(0, d.props().size(), "no text is invented");
             eq(d, LIB + "Items", 1.0);
-            T.check(!d.stats().containsKey(LIB + "Items Not Stored Locally"), "no flag read, no count");
-            T.check(!d.stats().containsKey(LIB + "Items Not Security Compliant"), "no flag read, no count");
-            T.check(!d.stats().containsKey(LIB + "Total Size (GB)"), "no size read, no sum");
+            for (String k : new String[] {"Type", "Subscription URL", "Automatic Sync", "State"}) unsetNone(d, LIB + k);
+            unsetNone(d, LIB + "Items Not Stored Locally"); // no flag read, no count
+            unsetNone(d, LIB + "Items Not Security Compliant");
+            unsetNone(d, LIB + "Total Size (GB)"); // no size read, no sum
             T.eq(0, d.withheld(), "an unset value is not a failure");
             OwnObject di = item(own, "item-d1");
             T.eq(0, di.props().size(), "no text is invented");
-            T.check(di.stats().isEmpty(), "no size, no figure");
+            unsetNone(di, ITM + "Size (GB)"); // no size, no figure
+            for (String k : new String[] {"Type", "Description", "Version", "Content Version", "Stored Locally",
+                "Security Compliant", "Certificate Verification", "Last Modified", "Last Sync", "Source Item ID"}) {
+                unsetNone(di, ITM + k);
+            }
             OwnObject t = tpl(own, "vm-10");
             T.eq(0, t.props().size(), "a bare template sends nothing it was not given");
-            T.check(t.stats().isEmpty(), "and no figure");
+            unsetNone(t, TPL + "Disk Used (GB)"); // and no figure
+            for (String k : new String[] {"Guest OS", "Hardware Version", "vCPUs", "Memory (GB)", "Datastore", "VM Folder"}) {
+                unsetNone(t, TPL + k);
+            }
             T.eq(0, t.withheld(), "none of it counted as withheld");
             for (OwnObject o : own.objects()) {
                 for (String v : o.props().values()) T.check(v != null, "no null value");
@@ -518,8 +533,49 @@ public final class OwnObjectsTest {
         }
     }
 
+    /**
+     * A library whose items carry the flags and the size for some and not for others (W3): Items Not Stored Locally
+     * and Total Size need every item to carry the field, so they are not sent; Items Not Security Compliant counts
+     * the items that have a verdict. An empty library keeps its real 0.
+     */
+    static void mixedLibrary() {
+        com.vcfcf.adapters.vcommunity.rest.LibraryData d = new com.vcfcf.adapters.vcommunity.rest.LibraryData();
+        com.vcfcf.adapters.vcommunity.rest.LibraryData.Library lib = new com.vcfcf.adapters.vcommunity.rest.LibraryData.Library("lib-m");
+        lib.detail = new java.util.LinkedHashMap<>();
+        lib.detail.put("name", "mixed");
+        lib.detail.put("type", "LOCAL");
+        lib.itemIds = new java.util.ArrayList<>(List.of("i1", "i2", "i3"));
+        String[] names = {"i1", "i2", "i3"};
+        Object[][] data = {{Boolean.FALSE, Boolean.FALSE, 1073741824.0}, {Boolean.TRUE, null, null}, {null, Boolean.TRUE, 2147483648.0}};
+        for (int i = 0; i < 3; i++) {
+            java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("name", names[i]);
+            if (data[i][0] != null) m.put("cached", data[i][0]);
+            if (data[i][1] != null) m.put("security_compliance", data[i][1]);
+            if (data[i][2] != null) m.put("size", data[i][2]);
+            lib.items.put(names[i], m);
+        }
+        d.libraries.add(lib);
+        OwnObject o = com.vcfcf.adapters.vcommunity.coll.LibraryCollector.collect(d,
+                new com.vcfcf.adapters.vcommunity.health.Failures()).own.objects().get(0);
+        eq(o, LIB + "Items", 3.0);
+        unsetNone(o, LIB + "Items Not Stored Locally"); // item i3 lacks the flag: a partial count would read as the whole
+        unsetNone(o, LIB + "Total Size (GB)"); // item i2 lacks a size
+        eq(o, LIB + "Items Not Security Compliant", 1.0); // of the two items with a verdict, i1 is not compliant
+        T.eq(0, o.withheld(), "an unset field is not a failure");
+        // every item carries the flag and the size: both are sent
+        for (String id : new String[] {"i2", "i3"}) {
+            lib.items.get(id).put("cached", Boolean.TRUE);
+            lib.items.get(id).put("size", 1073741824.0);
+        }
+        OwnObject all = com.vcfcf.adapters.vcommunity.coll.LibraryCollector.collect(d,
+                new com.vcfcf.adapters.vcommunity.health.Failures()).own.objects().get(0);
+        eq(all, LIB + "Items Not Stored Locally", 1.0);
+        eq(all, LIB + "Total Size (GB)", 3.0);
+    }
+
     /** A field that was not returned is not sent (DV-112); one returned empty is sent as it is. */
-    static void absentTextOff(FakeVc fake) throws Exception {
+    static void absentFieldsNotSent(FakeVc fake) throws Exception {
         FakeLibraries l = libraries();
         fake.setRestHandler(l);
         LibraryData d = new LibraryReader("localhost:" + fake.port(), FakeLibraries.USER, FakeLibraries.PASSWORD,

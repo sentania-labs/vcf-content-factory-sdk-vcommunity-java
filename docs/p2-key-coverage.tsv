@@ -4,7 +4,7 @@ R2	vCommunity|Licensing:{license_name}|Name	HostSystem	yes	PropertiesTest: hosts
 R3	vCommunity|Licensing:{license_name}|License Key	HostSystem	yes	PropertiesTest: hosts	property; masked to the last group (DV-25)	P2
 R4	vCommunity|Licensing:{license_name}|Edition Key	HostSystem	yes	PropertiesTest: hosts	property	P2
 R5	vCommunity|Licensing:{license_name}|License Expiration Date	HostSystem	yes	PropertiesTest: hosts	property	P2
-R6	vCommunity|Licensing:{license_name}|Remaining Days	HostSystem	yes	PropertiesTest: hosts	metric; metric, floor of days	P2
+R6	vCommunity|Licensing:{license_name}|Remaining Days	HostSystem	yes	PropertiesTest: hosts	metric; floor of days	P2
 R7	vCommunity|Storage Adapter|Number of HBA	HostSystem	yes	PropertiesTest: hosts	property; count of the adapters read; a list that came back empty is a real 0; a list not returned sends nothing (DV-111, DV-112)	P2
 R8	vCommunity|Configuration|VAAI|ATS Heartbeat	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
 R9	vCommunity|Configuration|VAAI|ATS Locking	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
@@ -18,12 +18,12 @@ R16	vCommunity|Configuration|Time Zone|GMT Offset	HostSystem	yes	PropertiesTest:
 R17	vCommunity|Runtime|Boot Time	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
 R18	vCommunity|Hardware|BIOS Vendor	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
 R19	vCommunity|Capability|Storage vMotion Supported	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
-R20	vCommunity|Storage Adapter:{hba_device}|Device	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
-R21	vCommunity|Storage Adapter:{hba_device}|Bus	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
-R22	vCommunity|Storage Adapter:{hba_device}|Model	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
-R23	vCommunity|Storage Adapter:{hba_device}|PCI	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
-R24	vCommunity|Storage Adapter:{hba_device}|Status	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
-R25	vCommunity|Storage Adapter:{hba_device}|Type	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
+R20	vCommunity|Storage Adapter:{hba_device}|Device	HostSystem	yes	PropertiesTest: hosts	property; the device name, else the adapter key; an adapter that cannot be named is withheld and counted	P2
+R21	vCommunity|Storage Adapter:{hba_device}|Bus	HostSystem	yes	PropertiesTest: hosts	property	P2
+R22	vCommunity|Storage Adapter:{hba_device}|Model	HostSystem	yes	PropertiesTest: hosts	property	P2
+R23	vCommunity|Storage Adapter:{hba_device}|PCI	HostSystem	yes	PropertiesTest: hosts	property	P2
+R24	vCommunity|Storage Adapter:{hba_device}|Status	HostSystem	yes	PropertiesTest: hosts	property	P2
+R25	vCommunity|Storage Adapter:{hba_device}|Type	HostSystem	yes	PropertiesTest: hosts	property	P2
 R26	vCommunity|Configuration|Advanced System Settings|{key}	HostSystem	yes	PropertiesTest: hosts	property	P2
 R27	vCommunity|Network|Device:{device}|Device Name	HostSystem	yes	PropertiesTest: hosts	property	P2
 R28	vCommunity|Network|Device:{device}|Driver Version	HostSystem	yes	PropertiesTest: hosts	property	P2
@@ -34,10 +34,10 @@ R32	vCommunity|Network|Device:{device}|PCI Device Name	HostSystem	yes	Properties
 R33	vCommunity|Network|Device:{device}|PCI Vendor ID (VID)	HostSystem	yes	PropertiesTest: hosts	property; signed 16-bit text, as upstream (Q3); nothing with no device (DV-112)	P2
 R34	vCommunity|Network|Device:{device}|PCI Device ID (DID)	HostSystem	yes	PropertiesTest: hosts	property; signed 16-bit text, as upstream (Q3); nothing with no device (DV-112)	P2
 R35	vCommunity|Network|Device:{device}|PCI SubVendor ID (SVID)	HostSystem	yes	PropertiesTest: hosts	property; signed 16-bit text, as upstream (Q3); nothing with no device (DV-112)	P2
-R36	vCommunity|Network|Device:{device}|MAC	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
-R37	vCommunity|Network|Device:{device}|Wake On Lan Supported	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
-R38	vCommunity|Network|Device:{device}|PCI	HostSystem	yes	PropertiesTest: hosts	property; unset: nothing is sent (DV-112)	P2
-R39	vCommunity|Network|Device:{device}|Duplex	HostSystem	yes	PropertiesTest: hosts	property; half-duplex while the link is down, as upstream (Q10)	P2
+R36	vCommunity|Network|Device:{device}|MAC	HostSystem	yes	PropertiesTest: hosts	property	P2
+R37	vCommunity|Network|Device:{device}|Wake On Lan Supported	HostSystem	yes	PropertiesTest: hosts	property	P2
+R38	vCommunity|Network|Device:{device}|PCI	HostSystem	yes	PropertiesTest: hosts	property	P2
+R39	vCommunity|Network|Device:{device}|Duplex	HostSystem	yes	PropertiesTest: hosts	property; only from a returned duplex flag; nothing for a link that is down or a flag that is absent (DV-112)	P2
 R40	vCommunity|Configuration|Packages:{package.name}|Package Name	HostSystem	yes	PropertiesTest: hosts	property	P2
 R41	vCommunity|Configuration|Packages:{package.name}|Package Version	HostSystem	yes	PropertiesTest: hosts	property	P2
 R42	vCommunity|Configuration|Packages:{package.name}|Acceptance Level	HostSystem	yes	PropertiesTest: hosts	property	P2
@@ -94,17 +94,17 @@ R92	vCommunity|Configuration|Reboot PowerOff	VirtualMachine	yes	PropertiesTest: 
 R93	vCommunity|Configuration|Hardware Upgrade|Status	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R94	vCommunity|Configuration|Hardware Upgrade|Policy	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R95	vCommunity|Configuration|Hardware Upgrade|Target Version	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
-R96	vCommunity|Configuration|Op Notification Timeout	VirtualMachine	yes	PropertiesTest: vms	property; negative value read becomes 0, as the original (Q5); unset: nothing is sent (DV-112)	P2
+R96	vCommunity|Configuration|Op Notification Timeout	VirtualMachine	yes	PropertiesTest: vms	property; negative value read becomes 0, as the original (Q5); a value that is not a whole number is withheld and counted	P2
 R97	vCommunity|Configuration|Memory Allocation Share Level	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
-R98	vCommunity|Configuration|Config Status	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
+R98	vCommunity|Configuration|Config Status	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R99	vCommunity|Guest|State	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R100	vCommunity|Guest|Application Status	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R101	vCommunity|Guest|Kernel Crash State	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R102	vCommunity|Guest|Operation Ready	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R103	vCommunity|Guest|State Change Support	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R104	vCommunity|Guest|Interactive Guest	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
-R105	vCommunity|Guest|Tools Sync Time	VirtualMachine	yes	PropertiesTest: vms	property	P2
-R106	vCommunity|Guest|Tools Upgrade Policy	VirtualMachine	yes	PropertiesTest: vms	property	P2
+R105	vCommunity|Guest|Tools Sync Time	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
+R106	vCommunity|Guest|Tools Upgrade Policy	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R107	vCommunity|Runtime|Consolidation Needed	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R108	vCommunity|Runtime|DAS protection	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R109	vCommunity|Runtime|Min Required EVC Mode Key	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
@@ -112,23 +112,23 @@ R110	vCommunity|Guest|Customization Status	VirtualMachine	yes	PropertiesTest: vm
 R111	vCommunity|Guest|Heartbeat Status	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R112	vCommunity|Guest|Detailed Data|Build Number	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R113	vCommunity|Guest|Detailed Data|CPE String	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
-R114	vCommunity|Guest|Detailed Data|Distro Additional Version	VirtualMachine	yes	PropertiesTest: datastores and vCenter	property; unset: nothing is sent (DV-112)	P2
+R114	vCommunity|Guest|Detailed Data|Distro Additional Version	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R115	vCommunity|Guest|Detailed Data|Distro Name	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R116	vCommunity|Guest|Detailed Data|Distro Version	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R117	vCommunity|Guest|Detailed Data|Kernel Version	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R118	vCommunity|Guest|Detailed Data|Pretty Name	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
 R119	vCommunity|Summary|VM Path Name	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
-R120	vCommunity|Configuration|SCSI Controllers|Count	VirtualMachine	yes	PropertiesTest: vms	metric; metric; a device list that came back with no controller is a real 0; a list not returned sends nothing (DV-111, DV-112)	P2
+R120	vCommunity|Configuration|SCSI Controllers|Count	VirtualMachine	yes	PropertiesTest: vms	metric; a device list that came back with no controller is a real 0; a list not returned sends nothing (DV-111, DV-112)	P2
 R121	vCommunity|Configuration|SCSI Controllers:{bus_str}|Type	VirtualMachine	yes	PropertiesTest: vms	property; type text of an unmapped controller is its vim25 type name (DV-34)	P2
-R122	vCommunity|Network|Network Adapters:{vnicLabel}|Type	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
-R123	vCommunity|Network|Network Adapters:{vnicLabel}|Starts Connected	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
+R122	vCommunity|Network|Network Adapters:{vnicLabel}|Type	VirtualMachine	yes	PropertiesTest: vms	property	P2
+R123	vCommunity|Network|Network Adapters:{vnicLabel}|Starts Connected	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R124	vCommunity|Virtual Disk:{vdiskLabel}|Label	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R125	vCommunity|Virtual Disk:{vdiskLabel}|Key	VirtualMachine	yes	PropertiesTest: vms	property	P2
-R126	vCommunity|Virtual Disk:{vdiskLabel}|Controller Key	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
-R127	vCommunity|Virtual Disk:{vdiskLabel}|Eagerly Scrub	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
-R128	vCommunity|Virtual Disk:{vdiskLabel}|Split	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
-R129	vCommunity|Virtual Disk:{vdiskLabel}|Write Through	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
-R130	vCommunity|Virtual Disk:{vdiskLabel}|Storage Allocation Share Level	VirtualMachine	yes	PropertiesTest: vms	property; unset: nothing is sent (DV-112)	P2
+R126	vCommunity|Virtual Disk:{vdiskLabel}|Controller Key	VirtualMachine	yes	PropertiesTest: vms	property	P2
+R127	vCommunity|Virtual Disk:{vdiskLabel}|Eagerly Scrub	VirtualMachine	yes	PropertiesTest: vms	property	P2
+R128	vCommunity|Virtual Disk:{vdiskLabel}|Split	VirtualMachine	yes	PropertiesTest: vms	property	P2
+R129	vCommunity|Virtual Disk:{vdiskLabel}|Write Through	VirtualMachine	yes	PropertiesTest: vms	property	P2
+R130	vCommunity|Virtual Disk:{vdiskLabel}|Storage Allocation Share Level	VirtualMachine	yes	PropertiesTest: vms	property	P2
 R131	vCommunity|Options|{configPath}	VirtualMachine	yes	PropertiesTest: vms	property; invalid entry dropped and reported (DV-26)	P2
 R132	vCommunity|Cluster Configuration|vSphere HA|Host Monitoring	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled, or unset: nothing is sent (DV-112)	P2
 R133	vCommunity|Cluster Configuration|vSphere HA|Response \ Host Isolation	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled, or unset: nothing is sent (DV-112)	P2
@@ -141,15 +141,15 @@ R139	vCommunity|Cluster Configuration|vSphere HA|Failure Interval	ClusterCompute
 R140	vCommunity|Cluster Configuration|vSphere HA|Max Failure Window	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled, or unset: nothing is sent (DV-112)	P2
 R141	vCommunity|Cluster Configuration|vSphere HA|Max Failures	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled, or unset: nothing is sent (DV-112)	P2
 R142	vCommunity|Cluster Configuration|vSphere HA|Minimum Up Time	ClusterComputeResource	yes	PropertiesTest: clusters	property; HA off or host monitoring disabled, or unset: nothing is sent (DV-112)	P2
-R143	vCommunity|Cluster Configuration|DPM|Host Power Action Rate	ClusterComputeResource	yes	PropertiesTest: clusters	property; unset: nothing is sent (DV-112)	P2
-R144	vCommunity|Cluster Configuration|EVC|Enabled	ClusterComputeResource	yes	PropertiesTest: clusters	property; False when the cluster summary was read and names no mode (kept, Q2); unset: nothing is sent (DV-112)	P2
+R143	vCommunity|Cluster Configuration|DPM|Host Power Action Rate	ClusterComputeResource	yes	PropertiesTest: clusters	property	P2
+R144	vCommunity|Cluster Configuration|EVC|Enabled	ClusterComputeResource	yes	PropertiesTest: clusters	property; False when a returned summary names no mode; nothing when the summary is unset (DV-112)	P2
 R145	vCommunity|Cluster Configuration|EVC|Mode	ClusterComputeResource	yes	PropertiesTest: clusters	property; nothing when EVC is off (DV-112)	P2
 R146	vCommunity|Cluster Configuration|Distributed Resource Scheduler|Proactive DRS	ClusterComputeResource	yes	PropertiesTest: clusters	property; DRS off, or the value missing: nothing is sent (DV-112)	P2
 R147	vCommunity|Cluster Configuration|Distributed Resource Scheduler|Scale Descendants Shares	ClusterComputeResource	yes	PropertiesTest: clusters	property; DRS off, or the value missing: nothing is sent (DV-112)	P2
 R148	vCommunity|Cluster Configuration|Distributed Resource Scheduler|CPU Over-Commitment	ClusterComputeResource	yes	PropertiesTest: clusters	property; DRS off, or the value missing: nothing is sent (DV-112)	P2
 R149	vCommunity|Cluster Configuration|Distributed Resource Scheduler|Virtual Machine Automation Enabled	ClusterComputeResource	yes	PropertiesTest: clusters	property; DRS off, or the value missing: nothing is sent (DV-112)	P2
-R150	vCommunity|Cluster Configuration|Configuration Status	ClusterComputeResource	yes	PropertiesTest: clusters	property; unset: nothing is sent (DV-112)	P2
-R151	vCommunity|Cluster Configuration|Number of Effective Hosts	ClusterComputeResource	yes	PropertiesTest: clusters	metric; metric; not returned: nothing is sent (DV-112)	P2
+R150	vCommunity|Cluster Configuration|Configuration Status	ClusterComputeResource	yes	PropertiesTest: clusters	property	P2
+R151	vCommunity|Cluster Configuration|Number of Effective Hosts	ClusterComputeResource	yes	PropertiesTest: clusters	metric	P2
 R152	vCommunity|Cluster Configuration|Overall Status	ClusterComputeResource	yes	PropertiesTest: clusters	property	P2
 R153	vCommunity|Cluster Performance|Cluster Performance Score	ClusterComputeResource	no		P4: derived metrics, World, Business Applications, resource pools	P4
 R154	vCommunity|Cluster Risk|Cluster Risk Score	ClusterComputeResource	no		P4: derived metrics, World, Business Applications, resource pools	P4
@@ -218,7 +218,7 @@ R216	vCommunity|Business Application|Business Application Performance	BusinessSe
 R217	vCommunity|Business Application|Business Applications Performance	Enterprise	no		P4: derived metrics, World, Business Applications, resource pools	P4
 R218	vCommunity|Resource Pools|Number of Resource Pools	ClusterComputeResource	no		P4: derived metrics, World, Business Applications, resource pools	P4
 R219	vCommunity|Resource Pools|Cascading Resource Pools	ClusterComputeResource	no		P4: derived metrics, World, Business Applications, resource pools	P4
-R220	vCommunity|Cluster Configuration|Distributed Resource Scheduler|DRS Score	ClusterComputeResource	yes	PropertiesTest: clusters	metric; metric; nothing while DRS is off or vCenter gives a negative score (DV-111, DV-112); a score of 0 vCenter gave is sent	P2
+R220	vCommunity|Cluster Configuration|Distributed Resource Scheduler|DRS Score	ClusterComputeResource	yes	PropertiesTest: clusters	metric; nothing while DRS is off or vCenter gives a negative score (DV-111, DV-112); a score of 0 vCenter gave is sent	P2
 R221	vCommunity|Availability|Cluster Operational Availability	ClusterComputeResource	no		P4: availability and the periodic cluster check	P4
 R222	vCommunity|Periodic Cluster Check|Worst Cluster Performance	ClusterComputeResource	no		P4: availability and the periodic cluster check	P4
 R223	vCommunity|Periodic Cluster Check|Worst Cluster Risk	ClusterComputeResource	no		P4: availability and the periodic cluster check	P4

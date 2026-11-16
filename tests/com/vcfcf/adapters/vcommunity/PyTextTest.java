@@ -35,7 +35,7 @@ public final class PyTextTest {
         T.eq("", Quirks.stripped(""), "returned and empty: a value");
         T.eq("", Quirks.stripped("   "), "returned and blank: the stripped text");
         T.eq("x", Quirks.stripped(" x "), "a value is stripped");
-        T.check(Quirks.DUPLEX_HALF_WHEN_DOWN && Quirks.REPEATED_ITEM_COUNTED_TWICE, "the other quirks ship as the match");
+        T.check(Quirks.REPEATED_ITEM_COUNTED_TWICE, "the quirks that stay change how a real value is counted");
         T.done("unset text (DV-112)");
     }
 
@@ -194,12 +194,13 @@ public final class PyTextTest {
         Map<String, String> m = DetailedDataParser.parse("a='1' bb=\"two words\" c='' d='x\"y' e='it''s'");
         T.eq("1", m.get("a"), "single quotes");
         T.eq("two words", m.get("bb"), "double quotes");
-        T.check(!m.containsKey("c"), "an empty value is left out");
+        T.eq("", m.get("c"), "a field that came back empty is the empty text (DV-112)");
         T.eq("x", m.get("d"), "a value is cut at the first quote");
         T.eq("it", m.get("e"), "cut at the first quote");
         T.eq("", DetailedDataParser.parse("k='  '").get("k"), "a value of spaces is stripped to the empty string, as upstream (Q4)");
         T.check(DetailedDataParser.parse(null).isEmpty(), "none");
         T.eq("b", DetailedDataParser.parse("k='a' k='b'").get("k"), "the last of a repeated name");
+        T.eq("", DetailedDataParser.parse("k='a' k=''").get("k"), "the last of a repeated name, empty or not");
         T.eq("v", DetailedDataParser.parse("été='v'").get("été"), "a Unicode name, as Python's \\w");
         T.check(DetailedDataParser.parse("k='a\nb'").isEmpty(), "a value does not span a line feed");
         T.done("detailed data pattern");

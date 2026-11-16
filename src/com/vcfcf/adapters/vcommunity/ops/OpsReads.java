@@ -99,17 +99,10 @@ public final class OpsReads {
 
     private final OpsApi ops;
     private final BooleanSupplier stop;
-    private final boolean sentinelIsValue;
 
     public OpsReads(OpsApi ops, BooleanSupplier stop) {
-        this(ops, stop, Quirks.NEGATIVE_ONE_STAT_IS_A_VALUE);
-    }
-
-    /** @param sentinelIsValue see {@link Quirks#NEGATIVE_ONE_STAT_IS_A_VALUE} */
-    public OpsReads(OpsApi ops, BooleanSupplier stop, boolean sentinelIsValue) {
         this.ops = ops;
         this.stop = stop == null ? () -> false : stop;
-        this.sentinelIsValue = sentinelIsValue;
     }
 
     // ------------------------------------------------------------------ batching
@@ -360,8 +353,10 @@ public final class OpsReads {
                     List<Double> s = samples(st, oldest, maxAgeMs >= 0);
                     if (s.isEmpty()) continue;
                     double v = s.get(s.size() - 1);
-                    if (!sentinelIsValue && v == -1.0 && !StatKeys.SIGNED.contains(st.key)) {
-                        continue; // a "no sample" marker, not a reading
+                    // -1 is the platform's "no sample" marker, not a reading (DV-112), except for the two usable
+                    // capacities, which can really be negative
+                    if (v == -1.0 && !StatKeys.SIGNED.contains(st.key)) {
+                        continue;
                     }
                     m.put(st.key, v);
                 }

@@ -437,7 +437,7 @@ public final class DerivedTest {
 
             // ---- Datacenters and the vCenter
             chk(l, "Datacenter", DC1, V + "Network|Total Network Speed Degradation", 1.0);
-            T.eq(0.0, l.st(0, DC2, V + "Network|Total Network Speed Degradation"), "no comparable NIC: 0, as upstream (Q12)");
+            T.check(l.st(0, DC2, V + "Network|Total Network Speed Degradation") == null, "no comparable NIC: nothing was measured, so no count (DV-112)");
             chk(l, "VMwareAdapter Instance", VC, V + "Availability|Worst Cluster Operational Availability", 275.0 / 3);
             chk(l, "VMwareAdapter Instance", VC, V + "Number of Port Groups", 7.0);
             // the empty cluster gets no score and no availability
@@ -454,6 +454,13 @@ public final class DerivedTest {
                     .stat(H2, StatKeys.NVME_TIER_USAGE, 20 * 1024);
             l.r.run();
             chk(l, CL, C1, V + "Cluster Risk|Worst ESXi Memory Tiering Latency", 300.0);
+            // N5: a latency of -1 is "no sample", so the host has no reading and is left out of the cluster maximum;
+            // it must not publish as 0.0 (-1 ns / 1000 rounded)
+            try (Lab m = new Lab(fake)) {
+                m.d.stat(H2, StatKeys.MEM_TIERING_LATENCY, -1 /* no sample */).stat(H2, StatKeys.NVME_TIER_SIZE, 256 * GB);
+                m.r.run();
+                T.check(m.st(0, C1, V + "Cluster Risk|Worst ESXi Memory Tiering Latency") == null, "-1 is no reading, not 0.0");
+            }
             // 20 GB of 256 GB x the 80 % that is usable
             chk(l, CL, C1, V + "Cluster Consumption|Cluster Memory Tiering Consumption", 20.0 / 204.8 * 100);
             T.eq(60.0, l.st(0, C1, V + "Cluster Risk|Highest ESXi CPU Thread Utilization"), "the other rows do not move");
@@ -853,11 +860,11 @@ public final class DerivedTest {
     }
 
     static void reviewFixes(FakeVc fake) throws Exception {
-        // W1: hosts that once had a speed and have nothing fresh: the World count is 0 while the answer names them (Q16)
+        // W1: hosts that once had a speed and have nothing fresh: nothing was measured, so no World count (DV-112)
         try (Lab l = new Lab(fake)) {
             l.d.stat(H1, StatKeys.HOST_NETWORK_SPEED, 55, 20 * 60_000L);
             l.r.run();
-            T.eq(0.0, l.st(0, WORLD, StatKeys.DC_NETWORK_SPEED), "a stored speed too old to use still means 'measured': 0");
+            T.check(l.st(0, WORLD, StatKeys.DC_NETWORK_SPEED) == null, "a stored speed too old to use is no measurement: nothing, not a 0");
         }
         try (Lab l = new Lab(fake)) {
             l.r.run();
@@ -986,7 +993,7 @@ public final class DerivedTest {
         try (Lab l = new Lab(fake)) {
             hostObj(l, "host-5").missing("config.network.pnic");
             l.r.run();
-            T.eq(0.0, l.st(0, DC2, V + "Network|Total Network Speed Degradation"), "DC2 is counted without the disconnected host");
+            T.check(l.st(0, DC2, V + "Network|Total Network Speed Degradation") == null, "DC2: host-4 has no NIC speeds and the disconnected host is not counted: nothing measured");
             T.eq(1.0, l.st(0, DC1, V + "Network|Total Network Speed Degradation"), "DC1 unchanged");
         }
         // a connected host's frozen property values count; a host vCenter says is not connected does not
@@ -995,7 +1002,7 @@ public final class DerivedTest {
             l.r.run();
             T.check(l.st(0, "res-host-5", V + "Network|Network Speed Degradation") == null, "a disconnected host has no figure");
             T.eq(1.0, l.st(0, DC1, V + "Network|Total Network Speed Degradation"), "and is not in a Datacenter count");
-            T.eq(0.0, l.st(0, DC2, V + "Network|Total Network Speed Degradation"), "DC2: host-4 has no NICs, host-5 is not counted");
+            T.check(l.st(0, DC2, V + "Network|Total Network Speed Degradation") == null, "DC2: host-4 has no NICs, host-5 is not counted: nothing measured");
         }
         // text that is not a number, a zero and an absent value are no value for that NIC
         try (Lab l = new Lab(fake)) {
@@ -1105,10 +1112,11 @@ public final class DerivedTest {
             T.eq(2.0, l.st(0, H1, V + "ESXi Performance|Worst VM CPU Ready"), "the stale sample is not the worst: vm-2's 2");
         }
         try (Lab l = new Lab(fake)) {
-            // upstream uses a latest statistic as it reads it, so a -1 (no sample) is a reading and the worst VM is -1 (Q13)
+            // -1 is the platform's "no sample" marker, not a reading (DV-112): vm-3 is the only VM of host-2, so the host
+            // has no worst-VM row at all, and not a -1 that would score as perfect
             l.d.stat("res-vm-3", StatKeys.VM_READY, -1);
             l.r.run();
-            T.eq(-1.0, l.st(0, H2, V + "ESXi Performance|Worst VM CPU Ready"), "-1 is scored as read while Q13 is on");
+            T.check(l.st(0, H2, V + "ESXi Performance|Worst VM CPU Ready") == null, "-1 is no sample, so no row");
         }
         try (Lab l = new Lab(fake)) {
             // an answer that names resources with nothing to report is an answer: no row, and no failure

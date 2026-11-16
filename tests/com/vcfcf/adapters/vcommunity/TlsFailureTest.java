@@ -248,7 +248,9 @@ public final class TlsFailureTest {
                 T.check(Reachability.isUnreachable(r.cause()), "still unreachable");
             }
             // the real thing, on this JDK: a wrong pin against a real handshake gives the same text
-            String wrong = "00" + Thumbprints.of(vc.cert, 256).substring(2);
+            String real = Thumbprints.of(vc.cert, 256);
+        // a pin that differs from the real one, whatever the certificate of this run starts with (a fixed "00" equalled it 1 run in 256)
+        String wrong = (real.startsWith("00") ? "ff" : "00") + real.substring(2);
             try (VimSoapClient c = TlsAndSessionTest.client(vc, TlsAndSessionTest.pinned(wrong), "svc", "pw", new T.RecLog())) {
                 VimResult<About> r = c.ensureSession();
                 T.check(r.message().startsWith("vCenter presented a certificate other than the pinned one"), "real handshake: " + r.message());

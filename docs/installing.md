@@ -314,7 +314,11 @@ build no longer sends is not deleted in VCF Operations (a pushed key cannot be d
   "Number of HBA" of 0, and a cluster that turns DRS off later keeps its last real score (DV-111).
 - Worst ESXi Memory Tiering Latency changes unit at the upgrade: it was the raw statistic (nanoseconds, so about 283,000
   for a healthy host) and is now in microseconds (about 283), so its history shows a step down by a factor of 1,000
-  (DV-113).
+  (DV-113). The Periodic Cluster Check builds its worst-5 % risk and its closed-for-business flag on Cluster Risk
+  Score samples, so the scores that were pinned before the upgrade colour one check window afterwards.
+- NIC Duplex, Tools Sync Time and Tools Upgrade Policy had placeholder values before (`half-duplex` for a link that
+  is down, `None`); the Tools keys are overwritten by the real value, a Duplex key that is no longer sent keeps its last
+  value.
 They stop being updated; the old value stays until it ages out of a widget's time window or is overwritten.
 
 **Two dashboards without Section rows.** "Overall Daily Check" (6 Section rows)
@@ -422,12 +426,11 @@ If the Python pack was installed on the instance before, its six files
 (the same names) may already be in the store, and installing this pak replaces them
 the same way; uninstalling the Python pack removes its copies (inferred, see "Moving from the Python pack").
 
-**With the shipped check lists, two keys read `None`.** Every entry is commented out
-as shipped, so `Guest|Tools Sync Time` and `Guest|Tools Upgrade Policy` read the text
-`None` on every VM (design quirk Q1: the original pack looks them up under
-`config.tools`, a path its read never has unless `config.tools` is listed in the VM
-options file). List `config.tools` in your copy of the VM options file to get the
-real values.
+**The two Tools keys need no list.** `Guest|Tools Sync Time` and `Guest|Tools Upgrade Policy` carry the VM's real
+values on every VM whatever the check lists hold (from build 26; the original pack, and builds before 26, sent the
+text `None` unless `config.tools` was listed in the VM options file). A VM with no tools configuration has neither
+key. The old `None` is overwritten by the real value on the next collection, not left behind. A VM whose tools
+settings could not be read is counted as a withheld value.
 
 ## Step-by-Step Installation
 

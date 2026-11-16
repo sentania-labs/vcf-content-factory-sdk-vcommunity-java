@@ -229,7 +229,10 @@ public final class HostCollector {
     }
 
     private static void uplinks(ObjectOut o, BulkRow row, XmlNode pnics, XmlNode pciList) {
-        if (pnics == null) return;
+        if (pnics == null) {
+            if (!row.isUnset("config.network.pnic")) o.withhold(1); // the NIC list could not be read
+            return;
+        }
         boolean pciRead = pciList != null || row.isUnset("hardware.pciDevice");
         Map<String, XmlNode> pci = new HashMap<>();
         for (XmlNode d : Vals.items(pciList)) {
@@ -263,12 +266,10 @@ public final class HostCollector {
             o.prop(p + "MAC", Quirks.text(Vals.str(n, "mac")));
             o.prop(p + "Wake On Lan Supported", Vals.bool(n, "wakeOnLanSupported"));
             o.prop(p + "PCI", Quirks.text(pciId));
-            // full duplex only when the link has a speed and says so; a link that is down is half-duplex
-            // to the original (the text for both, and for a link with no duplex flag)
+            // duplex only from a flag the link returned: a link that is down answers without linkSpeed, and a link
+            // without the flag says nothing about duplex, so neither is given a value (DV-112)
             String duplex = up ? Vals.bool(n.child("linkSpeed"), "duplex") : null;
-            o.prop(p + "Duplex", Quirks.DUPLEX_HALF_WHEN_DOWN || up
-                    ? ("True".equals(duplex) ? "full-duplex" : "half-duplex")
-                    : duplex == null ? null : duplex.equals("True") ? "full-duplex" : "half-duplex");
+            if (duplex != null) o.prop(p + "Duplex", "True".equals(duplex) ? "full-duplex" : "half-duplex");
         }
     }
 

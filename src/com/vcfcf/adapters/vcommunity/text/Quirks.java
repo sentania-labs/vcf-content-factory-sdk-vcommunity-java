@@ -7,18 +7,16 @@ package com.vcfcf.adapters.vcommunity.text;
  * constant changes the behaviour everywhere. The list, with the key rows, what upstream does
  * and what would be correct, is the design's "Upstream quirks reproduced for the match".
  *
- * <p>Q1 and Q2 are read where they apply ({@code VmCollector.QUIRK_*} points here); Q6, the
- * detailed-data cut, lives in {@link DetailedDataParser#CUT_AT_FIRST_QUOTE}.
+ * <p>Q2 is read where it applies; Q6, the detailed-data cut, lives in
+ * {@link DetailedDataParser#CUT_AT_FIRST_QUOTE}.
  *
- * <p>A value vCenter answered without is not sent at all, with no placeholder (DV-112; this removed the
- * Q8 and Q9 switches for good).
+ * <p>A value vCenter answered without, or that does not apply, is never replaced by a placeholder or a made-up
+ * number (DV-112). That removed the switches of Q1, Q8, Q9, Q10, Q12, Q13 and Q16 for good; what stays here
+ * changes how a real value is read or counted, never what stands in for a missing one.
  */
 public final class Quirks {
 
     private Quirks() {}
-
-    /** Q1, R105 and R106: upstream always publishes {@code None} for Tools Sync Time and Tools Upgrade Policy. */
-    public static final boolean TOOLS_ALWAYS_NONE = true;
 
     /** Q2, R124-R130: upstream publishes no Virtual Disk key on a VM that has no network adapter. */
     public static final boolean DISKS_NEED_A_VNIC = true;
@@ -33,35 +31,11 @@ public final class Quirks {
     public static final boolean NEGATIVE_OP_TIMEOUT_IS_ZERO = true;
 
     /**
-     * Q10, R39 Duplex: upstream publishes {@code half-duplex} for a NIC whose link is down (no link speed),
-     * and for one whose speed has no duplex flag; only {@code full-duplex} says the flag is true.
-     * {@code false}: nothing for a link that is down (DV-15).
-     */
-    public static final boolean DUPLEX_HALF_WHEN_DOWN = true;
-
-    /**
      * Q11, R249 Items: upstream counts the items by the length of the list of identifiers the REST API
      * answers, so an identifier listed twice is counted twice (and its size, and its not-stored and
      * not-compliant flags, with it), though it is one item and one object. {@code false}: each item once.
      */
     public static final boolean REPEATED_ITEM_COUNTED_TWICE = true;
-
-    /**
-     * Q12, R197 Total Network Speed Degradation on a Datacenter: upstream counts the member hosts below 100 %
-     * and a host with no comparable NIC counts as none, so a Datacenter whose hosts all lack a value is
-     * published as {@code 0} (provided some host somewhere has NIC data). {@code true}: that 0, as upstream,
-     * when every read worked. {@code false}: nothing for a Datacenter with no member host that has a value
-     * (DV-22). A Datacenter with a member host whose read failed is never published, with either setting.
-     */
-    public static final boolean EMPTY_DATACENTER_COUNT_IS_ZERO = true;
-
-    /**
-     * Q13, every KPI input: upstream uses a latest statistic as it reads it, so the value {@code -1}
-     * (the platform's "no sample" marker for a counter) is scored as a reading, and scores a lower-is-better
-     * row as perfect. {@code true}: used as read. {@code false}: a latest statistic of exactly -1 is no
-     * sample, except the two usable-capacity statistics, which can legitimately be negative.
-     */
-    public static final boolean NEGATIVE_ONE_STAT_IS_A_VALUE = true;
 
     /**
      * Q14, R215-R217 Business Applications: the Business Application value is the HIGHER of its namespaces'
@@ -79,14 +53,6 @@ public final class Quirks {
      */
     public static final boolean NOTHING_WHEN_NO_HOST_HAS_DATA = true;
 
-    /**
-     * Q16, R211 Total Network Speed Degradation on the vSphere World: upstream publishes the count (0) whenever the
-     * answer names any host, even when the only stored values are older than ten minutes (a host's stored speed
-     * stays until the platform is told otherwise), so after the host values stop it goes on publishing 0.
-     * {@code true}: as upstream. {@code false}: a count only while some host has a fresh stored value.
-     */
-    public static final boolean STALE_HOST_VALUE_COUNTS_AS_ZERO = true;
-
     /** Q4: {@code str(x)} of a string that was returned; null only for "not returned". */
     public static String text(String raw) {
         if (raw == null) return null;
@@ -100,16 +66,6 @@ public final class Quirks {
      */
     public static String stripped(String raw) {
         return raw == null ? null : PyText.strip(raw);
-    }
-
-    /**
-     * The detailed-data parser's rule: {@code str(x).strip() if x else None}: an empty value is no field (a value of
-     * spaces is the empty string, see {@link #BLANK_STRINGS_PUSHED}).
-     */
-    public static String strippedIfTruthy(String raw) {
-        if (raw == null || raw.isEmpty()) return null;
-        String s = PyText.strip(raw);
-        return BLANK_STRINGS_PUSHED || !s.isEmpty() ? s : null;
     }
 
     /** Q3: {@code f"{v:04x}"} of a signed short; null when the text is not an integer. */

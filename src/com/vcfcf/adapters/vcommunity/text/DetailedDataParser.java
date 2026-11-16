@@ -24,8 +24,7 @@ public final class DetailedDataParser {
     private DetailedDataParser() {}
 
     /**
-     * @return field name to stripped value; a field whose value is empty is left out
-     *         (a value of spaces is the empty string, see {@link Quirks#BLANK_STRINGS_PUSHED}),
+     * @return field name to stripped value; a field that came back empty or blank is the empty text,
      *         the last of a repeated name wins, as in the original
      */
     public static Map<String, String> parse(String text) {
@@ -33,12 +32,8 @@ public final class DetailedDataParser {
         if (text == null) return out;
         Matcher m = CUT_AT_FIRST_QUOTE.matcher(PyText.strip(text));
         while (m.find()) {
-            String v = Quirks.strippedIfTruthy(m.group(2));
-            if (v == null) {
-                out.remove(m.group(1));
-            } else {
-                out.put(m.group(1), v);
-            }
+            // a field the text returned with an empty value is a value, the empty text (DV-112); the last one wins
+            out.put(m.group(1), Quirks.stripped(m.group(2)));
         }
         return out;
     }

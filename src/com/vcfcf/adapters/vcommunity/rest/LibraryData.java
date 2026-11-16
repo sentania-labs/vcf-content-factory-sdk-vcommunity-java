@@ -48,7 +48,7 @@ public final class LibraryData {
         /** The detail and the list were not reached before the deadline. */
         public boolean notRun;
 
-        Library(String id) {
+        public Library(String id) {
             this.id = id;
         }
 
