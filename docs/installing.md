@@ -88,7 +88,7 @@ The vSphere adapter's stock policy does **not** collect the configured speed: in
 `HostSystem` describe the property `net|configuredSpeed` has `default_monitored: false` (`net|speed` is
 collected). Until it is enabled, no host reports a configured NIC speed, so the figure is not sent for any
 host, Datacenter or the World. That is not a collection failure: `kpi` status, causes, warnings and the withheld
-count are unchanged, and the adapter log says so once at INFO (`F-POLICY-NIC-CONFIGURED-SPEED`) on the first
+count are unchanged, and the adapter log notes it a single time at INFO (`F-POLICY-NIC-CONFIGURED-SPEED`) on the first
 cycle and again when it changes. A NIC with no value, a zero, a value that is not a number, or no link (a
 disconnected NIC reports a speed of 0) does not count; a host none of whose NICs has both values gets no figure,
 and only connected hosts count in the Datacenter and World numbers.
