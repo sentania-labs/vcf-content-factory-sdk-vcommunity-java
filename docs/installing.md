@@ -29,9 +29,8 @@ uninstalling one does not delete the other's.
 What carries over (owner decision, 2026-11-14: names stay, ids are our own):
 
 - **Metrics and properties.** The keys are the same names on the same vSphere objects, so the
-  history of those keys continues across the move. (The keys are the same by construction and
-  by the key comparison in `docs/design/`; the continuation of history across an uninstall and
-  install was not measured on an instance.)
+  history of those keys continues across the move. Measured on 8.18.7 (2026-11-16): after the
+  Python pack was uninstalled and this pak installed, each key kept one continuous series.
 - **Dashboards, views, reports, super metrics, symptoms, alerts and the recommendation** are
   replaced by this pak's copies, under new ids and with the same names. Anything you cloned
   or customized from the Python pack's content is yours to keep or to re-point at this pak's
@@ -52,10 +51,23 @@ own built-in view ids: Onur's 0.1.5 (41 views) and 0.1.6 to 0.3.1 (117), and Ewa
 deletes them** (measured on 8.18.7, 9.0.2 and 9.1.1; factory note
 `2026-11-12-vcommunity-upstream-builtin-view-ids`). Built-in dashboards that use them then show
 "The view does not exist". Before you uninstall one of those versions, have a clean export of the built-in
-views of the same VCF Operations version at hand (taken from an instance that never had the
-Python pack: an export from the affected instance holds the pack's copies). After the uninstall,
-import the views from that export (Content > Import, views); this was measured to restore
-them. This pak never uses a built-in view id for its own content, so it neither overwrites nor
+views of the same VCF Operations version at hand, taken from an instance that never had the
+Python pack: an export from the affected instance holds the pack's copies. The export has to
+include out-of-the-box content; the default export scope leaves built-in views out. After the
+uninstall, import that export:
+
+1. Sign in as an administrator and open **Administration > Control Panel > Content Management**
+   (the tile under "Content and Support"), then the **Import** tab. The path is the same on
+   8.18.7, 9.0.2 and 9.1.1.
+2. Browse to the export zip. The "File Content" table lists the views it holds.
+3. Leave "In case of conflict" on **Overwrite existing content** (the default) and import.
+4. The results table should show every view imported, none skipped or failed.
+
+Measured on 9.1.1 with Ewan's 0.8.1 (2026-11-16): the uninstall deleted all 120 built-in views,
+the import brought all 120 back (identical to before apart from whitespace in 12 descriptions),
+and the built-in dashboards rendered again. The same import was run on 9.0.2 and 8.18.7 (117
+views each) and is safe to repeat. Not verified: whether a restored view is protected from
+editing and deletion the way a never-deleted built-in view is. This pak never uses a built-in view id for its own content, so it neither overwrites nor
 deletes a built-in view; the 19 built-in views its dashboards and reports use in place must
 exist on your instance, which is why the restore matters.
 
@@ -68,7 +80,9 @@ between releases that keep their ids are in-place as usual.
 (2) have the clean built-in views export ready if your version is one of those named above;
 (3) uninstall the Python pack with remove-content; (4) restore the built-in views if it
 shipped any; (5) install this pak; (6) re-apply your check lists.
-The order is a recommendation. It was not run as a whole on an instance with this pak.
+Steps 3 to 5 were run in this order on 9.1.1 (uninstall of Ewan's 0.8.1, restore of the
+built-in views, fresh install of this pak, which then collected normally and left the built-in
+views untouched). Steps 1 and 6, the check lists, were not part of that run.
 
 **Same adapter kind as the retired earlier port.** `vcfcf_vcommunity` was also the
 adapter kind of the retired 2026 Java port of this pack. On an instance that still has
