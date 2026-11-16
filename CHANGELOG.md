@@ -5,6 +5,7 @@ One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 
 ## 1.0.0.24 (Unreleased)
 
+- fix(adapter): whether the version has the quarantine property is decided from every host whose properties were read, not only the hosts whose statistics were read too (external review of PR 4): a statistics failure on the hosts that carry it no longer turns the others to the three-condition score. Statistics failures still withhold the affected hosts' own availability.
 - review of builds 23 (DV-109 to DV-111): every memory row of a tiered host divides by DRAM plus the NVMe tier, not only consumed memory (ballooned, zip and swap, reservation, over-commit, monster VM; non-tiered hosts unchanged); whether the quarantine property exists is decided once per cycle from the whole answer, so a 9.x host with no value for it scores 75, not 100; the three keys that no longer send a 0 keep their last value in Operations after an upgrade (DV-111, installing guide); "vSphere Clusters not Green" is listed in `bundled_content` (3 super metrics, counts and enablement text corrected); docs corrected for the license alert, the unset-value text and the package views, which need `nenic`, `nfnic` and `nsx-host` named in the packages list (`nsx-host` added as a commented example); the super metric header and carried-text report corrected; recorded 8.18.7 and 9.0.2 host properties as fixtures; build 24.
 
 ## 1.0.0.23

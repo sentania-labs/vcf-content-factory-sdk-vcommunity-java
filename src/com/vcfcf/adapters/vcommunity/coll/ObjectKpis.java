@@ -80,7 +80,14 @@ final class ObjectKpis {
         }
     }
 
-    private static final class HostF {
+    /** True when any host whose property read worked carries the quarantine property (a statistics failure does not matter). */
+    static boolean quarantineExists(java.util.Collection<HostF> hosts) {
+        List<Map<String, String>> readProps = new ArrayList<>();
+        for (HostF f : hosts) if (!f.propsFailed) readProps.add(f.props);
+        return Availability.quarantineExists(readProps);
+    }
+
+    static final class HostF {
         final String moref;
         final String rid;
         final Membership.Host h;
@@ -360,10 +367,9 @@ final class ObjectKpis {
             for (String id : nr.failedIds) byRid.get(id).nicFailed = true;
         }
 
-        // whether this version has the quarantine property is decided once, from every host that was read
-        List<Map<String, String>> readProps = new ArrayList<>();
-        for (HostF f : hostsByMoref.values()) if (f.ok()) readProps.add(f.props);
-        boolean quarantineExists = Availability.quarantineExists(readProps);
+        // whether this version has the quarantine property is decided once, from every host whose properties were
+        // read, whether or not its statistics were
+        boolean quarantineExists = quarantineExists(hostsByMoref.values());
         for (HostF f : hostsByMoref.values()) {
             Double cores = num(f.props.get(StatKeys.HOST_CORES));
             f.inv = new HostInv(f.rid, cores, HostInv.threads(cores, f.props.get(StatKeys.HOST_HT_AVAILABLE),
