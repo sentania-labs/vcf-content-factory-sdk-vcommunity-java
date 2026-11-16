@@ -94,13 +94,13 @@ disconnected NIC reports a speed of 0) does not count; a host none of whose NICs
 and only connected hosts count in the Datacenter and World numbers.
 
 To get the figure, enable the property `net|configuredSpeed` (Network | Configured Speed) as a HostSystem
-attribute in the policy that applies to your hosts. The steps in the policy editor are not yet verified live on
-8.18.7, 9.0.2 or 9.1.1, so this guide gives no menu paths. The first value arrives with the next collection after
-the property is collected.
+attribute in the policy that applies to your hosts. The steps in the policy editor are not verified, so this guide
+gives no menu paths. Measured live on 9.0.2 (build 22): after the property was enabled in policy, hosts whose NICs have
+a fixed speed in vCenter had `net:<nic>|configuredSpeed` by the second collection and published 100.0.
 
-A NIC whose link speed is left on auto-negotiate in vCenter (30 of the 36 NICs in the lab) may report no
-configured speed even with the property enabled; this is not verified, because no lab host has collected the
-property yet. Such a NIC does not count.
+A NIC whose link speed is left on auto-negotiate in vCenter gets **no** configured-speed property at all (not a 0),
+even with the property enabled. Such a NIC does not count, so a host whose NICs are all on auto-negotiate publishes no
+figure. (In the lab, 30 of 36 NICs are on auto-negotiate.) Only 9.0.2 was measured; 8.18.7 and 9.1.1 are not.
 
 ## Permissions Required
 

@@ -695,6 +695,13 @@ final class ObjectKpis {
                 HostF f = hostsByMoref.get(hm);
                 if (f == null) continue;
                 anyHost = true;
+                // the host figure is for connected hosts only: a host vCenter says is not connected is not part of
+                // the count (whatever its NIC read did), and one whose connection state is unknown makes it unknown
+                if (f.h.connected == null) {
+                    unknown = true;
+                    break;
+                }
+                if (!f.h.connected) continue;
                 if (f.nicFailed) {
                     unknown = true;
                     break;

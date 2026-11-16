@@ -926,6 +926,22 @@ public final class DerivedTest {
             T.eq("OK", l.r.health(0, "Collector:kpi|Status"), "the opt-in property is still no status");
             T.check(l.r.log.infos.stream().anyMatch(m -> m.contains("F-POLICY-NIC-CONFIGURED-SPEED")), "and still said");
         }
+        // the Datacenter count follows the host figure's eligibility: an unknown connection state makes the count unknown
+        try (Lab l = new Lab(fake)) {
+            hostObj(l, "host-1").missing("runtime.connectionState");
+            l.r.run();
+            T.check(l.st(0, DC1, V + "Network|Total Network Speed Degradation") == null,
+                    "a member whose connection state is unknown: no count, not a misleading 0");
+            T.check(l.st(0, H1, V + "Network|Network Speed Degradation") == null, "and no host figure");
+            T.eq(100.0, l.st(0, H2, V + "Network|Network Speed Degradation"), "the other host is unaffected");
+        }
+        // a host that is known to be disconnected is not part of the count, even when its NIC list cannot be read
+        try (Lab l = new Lab(fake)) {
+            hostObj(l, "host-5").missing("config.network.pnic");
+            l.r.run();
+            T.eq(0.0, l.st(0, DC2, V + "Network|Total Network Speed Degradation"), "DC2 is counted without the disconnected host");
+            T.eq(1.0, l.st(0, DC1, V + "Network|Total Network Speed Degradation"), "DC1 unchanged");
+        }
         // a connected host's frozen property values count; a host vCenter says is not connected does not
         try (Lab l = new Lab(fake)) {
             l.nicProps("5", "vmnic0", "1000", "10000");
