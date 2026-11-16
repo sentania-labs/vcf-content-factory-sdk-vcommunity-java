@@ -86,7 +86,8 @@ final class ObjectKpis {
         final Membership.Host h;
         Map<String, Double> stats = Collections.emptyMap();
         Map<String, String> props = Collections.emptyMap();
-        Map<String, Map<String, Double>> nic;
+        Set<String> nics; // device names; null when the host's NIC list was not read
+        NetworkSpeed.Speeds nic;
         boolean answered; // an answer named it (as upstream tests it, whether or not a sample survived the age limit)
         boolean statsFailed;
         boolean propsFailed;
@@ -334,12 +335,30 @@ final class ObjectKpis {
         });
         x.account(pr, c, FailureCause.opsProps("host"), "the properties of the hosts");
         for (String id : pr.failedIds) byRid.get(id).propsFailed = true;
-        OpsReads.Report nr = x.reads.latestInstanceStats(rids, StatKeys.NIC_STATS, x.now(), (id, by) -> {
-            HostF f = byRid.get(id);
-            if (f != null) f.nic = by;
-        });
-        x.account(nr, c, FailureCause.opsStats("host-nic"), "the NIC speeds of the hosts");
-        for (String id : nr.failedIds) byRid.get(id).nicFailed = true;
+        // NIC speeds are properties of the host (one pair per NIC), asked for by the NIC names vCenter gave
+        Set<String> nicKeys = new java.util.LinkedHashSet<>();
+        List<String> nicRids = new ArrayList<>();
+        for (HostF f : hostsByMoref.values()) {
+            f.nics = f.h == null ? null : f.h.nics;
+            if (f.nics == null) {
+                f.nicFailed = true;
+                continue;
+            }
+            if (f.nics.isEmpty()) continue;
+            nicRids.add(f.rid);
+            for (String dev : f.nics) {
+                nicKeys.add(NetworkSpeed.speedKey(dev));
+                nicKeys.add(NetworkSpeed.configuredKey(dev));
+            }
+        }
+        if (!nicRids.isEmpty()) {
+            OpsReads.Report nr = x.reads.latestProperties(nicRids, new ArrayList<>(nicKeys), (id, p) -> {
+                HostF f = byRid.get(id);
+                if (f != null) f.nic = NetworkSpeed.read(f.nics, p);
+            });
+            x.account(nr, c, FailureCause.opsProps("host-nic"), "the NIC speeds of the hosts");
+            for (String id : nr.failedIds) byRid.get(id).nicFailed = true;
+        }
 
         for (HostF f : hostsByMoref.values()) {
             Double cores = num(f.props.get(StatKeys.HOST_CORES));
@@ -363,23 +382,37 @@ final class ObjectKpis {
             availabilityNoData = true;
             x.log.warn("No Operational Availability data for any host, so none is published this cycle");
         }
-        // network speed: nothing for any host when no host has any NIC speed (Q15)
-        boolean anyNic = false;
+        // network speed: nothing at all when not one NIC anywhere has both speeds (Q15, DV-108)
+        boolean anyActual = false;
+        boolean anyConfigured = false;
+        boolean anyPair = false;
         boolean nicFailed = false;
         for (HostF f : hostsByMoref.values()) {
-            anyNic |= f.nic != null;
             nicFailed |= f.nicFailed;
+            if (f.nic == null) continue;
+            anyActual |= !f.nic.actual.isEmpty();
+            anyConfigured |= !f.nic.configured.isEmpty();
+            for (String dev : f.nic.actual.keySet()) anyPair |= f.nic.configured.containsKey(dev);
         }
-        networkNoData = Quirks.NOTHING_WHEN_NO_HOST_HAS_DATA && !hostsByMoref.isEmpty() && !anyNic && !nicFailed;
+        networkNoData = Quirks.NOTHING_WHEN_NO_HOST_HAS_DATA && !hostsByMoref.isEmpty() && !anyPair && !nicFailed;
         if (networkNoData) {
-            x.log.warn("No NIC speeds for any host, so no Network Speed Degradation this cycle");
+            if (!anyActual) {
+                x.log.warn("No NIC speeds for any host, so no Network Speed Degradation this cycle");
+            } else if (!anyConfigured) {
+                // one line a cycle, and Collection Health shows PARTIAL: the property is off in the policy
+                x.gaps.merge(c, 1, Integer::sum);
+                x.withheld(1);
+                x.log.warn("No host reports the NIC property " + StatKeys.NIC_CONFIGURED_SPEED + " (Network|Configured"
+                        + " Speed), so no Network Speed Degradation is sent this cycle; enable that property in the"
+                        + " active policy");
+            } else {
+                x.log.warn("No host has a NIC with both a speed and a configured speed, so no Network Speed"
+                        + " Degradation this cycle");
+            }
         } else {
             for (HostF f : hostsByMoref.values()) {
                 if (f.nicFailed) continue;
-                Map<String, Double> sp = f.nic == null ? null : f.nic.get(StatKeys.NIC_SPEED);
-                Map<String, Double> cf = f.nic == null ? null : f.nic.get(StatKeys.NIC_CONFIGURED_SPEED);
-                f.speed = NetworkSpeed.degradation(sp == null ? Collections.<String, Double>emptyMap() : sp,
-                        cf == null ? Collections.<String, Double>emptyMap() : cf);
+                f.speed = f.nic == null ? null : NetworkSpeed.degradation(f.nic.actual, f.nic.configured);
             }
         }
     }

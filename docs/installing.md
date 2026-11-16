@@ -77,6 +77,26 @@ a second pack. On 9.x an upgrade deletes the content the new version no longer s
 including those 63 built-in views and everything shipped under ids this pak no longer uses.
 Inferred, not measured. Remove the earlier port first, and restore the built-in views, as above.
 
+## Network Speed Degradation
+
+Network Speed Degradation (host), Total Network Speed Degradation (Datacenter and vSphere World)
+compare each host NIC's actual link speed with its configured speed. Both are properties of the host's
+NICs in VCF Operations, one pair per NIC: `net:<nic>|speed` (Network | Actual Speed) and
+`net:<nic>|configuredSpeed` (Network | Configured Speed, for example `net:vmnic0|configuredSpeed`).
+
+The vSphere adapter's stock policy does **not** collect the configured speed: in the VMWARE
+`HostSystem` describe the property `net|configuredSpeed` is not monitored by default (`net|speed` is).
+Until it is enabled, no host has the value, so the figure is not sent for any host, Datacenter or the
+World; each cycle the log carries one warning that names `net|configuredSpeed`, and the `kpi` collector
+shows PARTIAL in Collection Health. A NIC with no value, a zero, a value that is not a number, or no
+link (a disconnected NIC) does not count; a host none of whose NICs has both values gets no figure.
+
+To get the figure, enable the property `net|configuredSpeed` (Network | Configured Speed) for the host
+system object type in the policy that applies to your hosts. The exact steps in the policy editor are not
+yet verified live on 8.18.7, 9.0.2 or 9.1.1, so this guide does not give menu paths; look for the
+property by that name in the policy's host system attributes. The first value arrives with the next
+collection after the property is collected.
+
 ## Permissions Required
 
 Read-only access to the vCenter inventory. The license assignments and the

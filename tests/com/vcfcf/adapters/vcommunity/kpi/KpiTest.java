@@ -733,6 +733,22 @@ public final class KpiTest {
         check(NetworkSpeed.degradation(new LinkedHashMap<>(), new LinkedHashMap<>()) == null, "no NIC");
         eq(100.0, NetworkSpeed.degradation(nic("vmnic0", 25000), nic("vmnic0", 10000)), "capped at 100");
         check(NetworkSpeed.degraded(55.0) && !NetworkSpeed.degraded(100.0) && !NetworkSpeed.degraded(null), "degraded");
+        eq(10000.0, NetworkSpeed.parseSpeed(" 10000 "), "text with spaces");
+        eq(1000.0, NetworkSpeed.parseSpeed("1000.0"), "a decimal");
+        for (String bad : new String[] {null, "", "abc", "0", "-1", "NaN", "Infinity", "10 Gbps"}) {
+            check(NetworkSpeed.parseSpeed(bad) == null, "no value for " + bad);
+        }
+        eq("net:vmnic3|speed", NetworkSpeed.speedKey("vmnic3"), "actual speed key");
+        eq("net:vmnic3|configuredSpeed", NetworkSpeed.configuredKey("vmnic3"), "configured speed key");
+        Map<String, String> props = new LinkedHashMap<>();
+        props.put("net:vmnic0|speed", "1000");
+        props.put("net:vmnic0|configuredSpeed", "10000");
+        props.put("net:vmnic1|speed", "x");
+        props.put("net:vmnic1|configuredSpeed", "10000");
+        NetworkSpeed.Speeds sp = NetworkSpeed.read(new java.util.TreeSet<>(Arrays.asList("vmnic0", "vmnic1", "vmnic2")), props);
+        eq(1, sp.actual.size(), "only the NIC with a usable speed");
+        eq(2, sp.configured.size(), "a configured speed alone is kept, the pair is what counts");
+        eq(10.0, NetworkSpeed.degradation(sp.actual, sp.configured), "one NIC at a tenth");
         done("Network Speed Degradation");
     }
 

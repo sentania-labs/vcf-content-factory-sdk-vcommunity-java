@@ -131,7 +131,7 @@ public final class OpsReadsTest {
                 res("h2", stat("net|speed", 1000, "99")),
                 res("h3")), new ArrayList<>()), null);
         Map<String, Map<String, Map<String, Double>>> got = new LinkedHashMap<>();
-        OpsReads.Report rep = r.latestInstanceStats(Arrays.asList("h1", "h2", "h3"), StatKeys.NIC_STATS, NOW, got::put);
+        OpsReads.Report rep = r.latestInstanceStats(Arrays.asList("h1", "h2", "h3"), Arrays.asList("net|speed", "net|configuredSpeed"), NOW, got::put);
         T.check(rep.ok(), "read");
         T.eq(1, got.size(), "only a host that has an instance statistic is handed over");
         T.eq(1000.0, got.get("h1").get("net|speed").get("vmnic0"), "by instance");

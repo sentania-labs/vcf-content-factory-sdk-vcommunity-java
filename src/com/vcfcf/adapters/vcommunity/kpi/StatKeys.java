@@ -98,7 +98,6 @@ public final class StatKeys {
 
     public static final String NIC_SPEED = "net|speed";
     public static final String NIC_CONFIGURED_SPEED = "net|configuredSpeed";
-    public static final List<String> NIC_STATS = unique(NIC_SPEED, NIC_CONFIGURED_SPEED);
 
     // ---- clusters
     public static final String CPU_USABLE = "cpu|demand|usableCapacity";
