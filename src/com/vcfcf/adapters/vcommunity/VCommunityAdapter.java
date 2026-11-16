@@ -179,10 +179,11 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
             this.runtime = new Runtime(cfg, vim, sas, engine);
             // Never the password, the Windows password, a token or a session. // REDACT-SECRET
             logInfo("VCommunityAdapter configured: " + cfg + " suiteApi=" + (sas != null));
-            if (cfg.tlsMode == VCommunityConfig.TlsMode.TRUST_ON_FIRST_USE) {
-                logInfo("vCenter TLS Validation is Trust on First Use: this account sends its "
-                        + "credentials to whatever answers, before any certificate check. On a "
-                        + "network that is not fully trusted, set Pinned or Enabled.");
+            if (cfg.allowInsecure) {
+                logWarn("Allow Insecure SSL is true for " + cfg.hostPort() + ": the vCenter certificate is not "
+                        + "verified, so the vCenter credentials go to whatever answers at that address, and "
+                        + "guest monitoring stays off. Set Allow Insecure SSL to false unless this is a lab "
+                        + "vCenter you accept that for.");
             }
         } catch (IllegalArgumentException e) {
             this.configError = e.getMessage();
@@ -204,13 +205,10 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
                 getCredentialField(rc, VCommunityConfig.C_WIN_PASSWORD)); // REDACT-SECRET
     }
 
-    /** The TLS posture of the account's mode (design 2.5). */
+    /** The TLS posture of the account (design 2.5): platform trust with the name check, unless Allow Insecure SSL. */
     private VcenterTls buildTls(VCommunityConfig cfg) {
-        SSLContext platform = null;
-        if (cfg.tlsMode == VCommunityConfig.TlsMode.ENABLED) {
-            platform = getPlatformSslContext(cfg.dialledHost());
-        }
-        return VcenterTls.create(cfg.tlsMode, cfg.thumbprint, platform, CertificateNames::secure);
+        SSLContext platform = cfg.allowInsecure ? null : getPlatformSslContext(cfg.dialledHost());
+        return VcenterTls.create(cfg.allowInsecure, platform, CertificateNames::secure);
     }
 
     /** The Suite API client, or null (logged at WARN: nothing can be pushed) when this instance cannot have one. */
@@ -244,7 +242,7 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
     // Validate Connection: the certificate review
     // ------------------------------------------------------------------
 
-    /** Offered only in the Enabled mode; the other two modes do not use the platform's trust. */
+    /** Offered unless Allow Insecure SSL is on: the connection uses the platform's trust, so there is a certificate to accept. */
     @Override
     protected List<String> certificateCheckUrls(ResourceConfig rc) {
         String url = VCommunityConfig.certificateCheckUrl(k -> getIdentifier(rc, k));
@@ -254,10 +252,17 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
     @Override
     protected String certificateFailureMessage(Throwable failure, ResourceConfig rc,
             String defaultMessage) {
-        return defaultMessage + " The vCenter TLS Validation setting (Advanced Settings) chooses "
-                + "how the vCenter certificate is treated: Trust on First Use accepts any "
-                + "certificate, Enabled needs a certificate this collector trusts (accept it "
-                + "here), Pinned compares the certificate with the vCenter Thumbprint.";
+        if (CertificateNames.isNameMismatch(failure)) {
+            String h = CertificateNames.mismatchedHost(failure);
+            return defaultMessage + " The certificate does not carry the name " + (h == null ? "you entered"
+                    : "'" + h + "'") + ": enter the vCenter by a name that is on its certificate (an IP address "
+                    + "works only if the certificate lists it), or reissue the certificate. Accepting a "
+                    + "certificate does not change a name mismatch. Allow Insecure SSL (Advanced Settings) "
+                    + "switches the certificate checks off; it is not for production.";
+        }
+        return defaultMessage + " Review the vCenter certificate here and accept it, and it is checked from "
+                + "then on. Allow Insecure SSL (Advanced Settings) switches the check off; it is not for "
+                + "production.";
     }
 
     // ------------------------------------------------------------------

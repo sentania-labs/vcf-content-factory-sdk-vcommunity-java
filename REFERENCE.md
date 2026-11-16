@@ -32,8 +32,7 @@ Main form = part of the account identity; Advanced = under Advanced Settings (`i
 | VM Advanced Parameters Config File | `vm_adv_settings_config_file` | string | No | vm_advanced_parameters | - | Main |
 | VM Options Config File | `vm_configuration_config_file` | string | No | vm_options | - | Main |
 | Port | `port` | integer | Yes | 443 | - | Advanced |
-| vCenter TLS Validation | `vcenter_tls_validation` | string | No | Trust on First Use | Trust on First Use, Enabled, Pinned | Advanced |
-| vCenter Thumbprint (SHA-256) | `vcenter_thumbprint` | string | No | - | - | Advanced |
+| Allow Insecure SSL | `allowInsecure` | string | No | false | - | Advanced |
 | Cluster Check Period (hours) | `cluster_check_period_hours` | string | No | 24 | 01, 02, 04, 06, 08, 12, 24 | Advanced |
 | Cluster Check Time (UTC) | `periodic_cluster_check_time` | string | No | 00:00 | - | Advanced |
 | Cluster Check Worst Percent | `cluster_check_worst_percent` | integer | No | 5 | - | Advanced |

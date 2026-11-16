@@ -359,7 +359,7 @@ public final class GuestPhase {
                 log.warn(plan.message);
                 return Status.FAILED;
             case VCENTER_TLS:
-                in.failures.add(COLLECTOR, FailureCause.guest("TLS-MODE"), "vCenter TLS Validation", 0, plan.message);
+                in.failures.add(COLLECTOR, FailureCause.guest("TLS-INSECURE"), "Allow Insecure SSL", 0, plan.message);
                 log.warn(plan.message);
                 return Status.FAILED;
             case NO_CREDENTIAL:

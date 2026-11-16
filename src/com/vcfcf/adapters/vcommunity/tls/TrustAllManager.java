@@ -6,7 +6,7 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.X509ExtendedTrustManager;
 
 /**
- * Accepts any server certificate. Used for the Trust on First Use mode and
+ * Accepts any server certificate. Used for Allow Insecure SSL and
  * for the certificate probe, which sends nothing after the handshake. An
  * extended manager, so the JDK does not add its own name check on top.
  */

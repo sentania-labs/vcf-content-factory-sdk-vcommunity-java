@@ -237,21 +237,22 @@ public final class GuestUnitTest {
     }
 
     static void plan() throws Exception {
-        VCommunityConfig on = cfg("serviceMonitoring", "Enabled", "winEventMonitoring", "Disabled", "vcenter_tls_validation", "Enabled");
+        VCommunityConfig on = cfg("serviceMonitoring", "Enabled", "winEventMonitoring", "Disabled");
         T.eq(GuestPlan.Off.SWITCHED_OFF, GuestPlan.of(cfg(), new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off,
                 "both switches off: no guest operation");
         T.eq(GuestPlan.Off.NO_CREDENTIAL, GuestPlan.of(on, new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off,
                 "enabled with no account");
         // W5: the Windows account is not sent to a vCenter whose certificate is not checked
-        T.eq(GuestPlan.Off.VCENTER_TLS, GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled", "vcenter_tls_validation",
-                "Trust on First Use"), new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off,
-                "Trust on First Use: guest monitoring does not run");
-        T.eq(GuestPlan.Off.VCENTER_TLS, GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled"),
-                new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off, "the default mode is that one");
-        T.eq(null, GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled", "vcenter_tls_validation", "Enabled"),
-                new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off, "Enabled runs");
-        T.eq(GuestPlan.Off.BAD_TLS_MODE, GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled", "guest_tls_validation", "Sometimes",
-                "vcenter_tls_validation", "Enabled"),
+        GuestPlan insecure = GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled", "allowInsecure", "true"),
+                new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class));
+        T.eq(GuestPlan.Off.VCENTER_TLS, insecure.off, "Allow Insecure SSL: guest monitoring does not run");
+        T.contains(insecure.message, "Allow Insecure SSL is on", "and says why");
+        T.contains(insecure.message, "Validate Connection", "and what to do");
+        T.eq(null, GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled"),
+                new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off, "the default (verified) runs, with no extra TLS setup");
+        T.eq(null, GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled", "allowInsecure", "false"),
+                new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off, "false runs");
+        T.eq(GuestPlan.Off.BAD_TLS_MODE, GuestPlan.of(cfgWithAccount("serviceMonitoring", "Enabled", "guest_tls_validation", "Sometimes"),
                 new java.util.EnumMap<>(com.vcfcf.adapters.vcommunity.list.ListKind.class)).off, "a mode that is not one of the three");
         GuestPlan ok = GuestPlan.create(true, Arrays.asList("BITS", "bad'name", "a$(x)", "W32Time"), true,
                 "<Events><Log Name=\"System\"><EventID>1</EventID><EventID>2</EventID></Log><Log Name=\"A&#9;B\"><EventID>3</EventID></Log></Events>");

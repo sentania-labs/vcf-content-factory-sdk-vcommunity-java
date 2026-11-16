@@ -13,7 +13,7 @@ needs rights in the guest, and every run below leaves nothing in the guest that 
 
 | Item | Detail |
 |---|---|
-| Pak | build 13 or later (`0.0.0.13`), installed on 9.0.2 devel; the account described in `docs/installing.md` already collecting properties (P2 to P4), with **vCenter TLS Validation set to Enabled or Pinned** (guest monitoring does not run in Trust on First Use) |
+| Pak | build 13 or later (`0.0.0.13`), installed on 9.0.2 devel; the account described in `docs/installing.md` already collecting properties (P2 to P4), with **Allow Insecure SSL off (the default) and the vCenter certificate accepted in Validate Connection** (guest monitoring does not run with Allow Insecure SSL on) |
 | Windows VM A | Windows Server 2019 or 2022 or Windows 11, VMware Tools running, guest family shown as Windows by vCenter, on a vCenter host the collector can reach on port 443 |
 | Windows VM B | a hardened guest: a domain controller (or a member server) with a GPO setting PowerShell execution policy to AllSigned or Restricted at the MachinePolicy scope |
 | Windows VM C | a guest under AppLocker or WDAC in Constrained Language Mode (`$ExecutionContext.SessionState.LanguageMode` shows `ConstrainedLanguage`) |
@@ -217,7 +217,7 @@ further warning.
     measured. Compare `[Timestamp=...]` with `"$($e.TimeCreated)"` run in Windows PowerShell 5.1 on a localised guest.
 13. **FIPS.** On a 9.1.1 FIPS collector run sections 1 and 3: a missing SHA-1 shows as `F-GUEST-TLS` naming SHA-1, once, not as a
     failed upload per VM.
-14. **vCenter TLS mode.** With vCenter TLS Validation on Trust on First Use and a guest switch on: `F-GUEST-TLS-MODE`, no
+14. **Allow Insecure SSL.** With Allow Insecure SSL set to `true` and a guest switch on: `F-GUEST-TLS-INSECURE`, no
     guest operation, no request with the Windows account (vCenter's task list shows none), and Test Connection warns.
 15. **Properties.** After a collection, read `vCommunity|Options|config.tools` of a VM that has it in its VM Options list and
     compare its text with the Python pack's on the same VM: the last field ends `fault =  } }` (two spaces) in Python.

@@ -155,7 +155,6 @@ public final class CycleEngine {
     private GuestRunner.Sleeper guestSleeper = Thread::sleep;
     private GuestRunner.Limits guestLimits = new GuestRunner.Limits();
 
-    private boolean warnedGuestTls;
     private final com.vcfcf.adapters.vcommunity.guest.EventMemory configEventMemory =
             new com.vcfcf.adapters.vcommunity.guest.EventMemory();
     private long cycleNo;
@@ -571,12 +570,6 @@ public final class CycleEngine {
                     "the property reads did not run, so there is no list of Windows VMs");
             refreshHealth(s, failures, t0, vcId, new PushSet(log));
             return;
-        }
-        if (!GuestPlan.REQUIRE_CHECKED_VCENTER_TLS && cfg.tlsMode == VCommunityConfig.TlsMode.TRUST_ON_FIRST_USE
-                && !warnedGuestTls) {
-            warnedGuestTls = true;
-            log.warn("Guest monitoring sends the Windows account to vCenter over a connection whose certificate is not "
-                    + "checked (vCenter TLS Validation: Trust on First Use); Pinned or Enabled protects it");
         }
         PushSet gps = new PushSet(log);
         GuestPhase.Input in = new GuestPhase.Input();

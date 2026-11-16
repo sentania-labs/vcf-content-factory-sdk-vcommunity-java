@@ -29,7 +29,7 @@ public final class ReaderTest {
     static VimSoapClient client(FakeVc fake, FakeVcenter vc) {
         fake.setHandler(vc);
         VimSoapClient c = new VimSoapClient("localhost:" + fake.port(), "u", "p",
-                VcenterTls.create(VCommunityConfig.TlsMode.TRUST_ON_FIRST_USE, "", null, null), new T.RecLog(),
+                VcenterTls.create(true, null, null), new T.RecLog(),
                 5000, 20000, 20000);
         T.check(c.ensureSession().isOk(), "login");
         return c;

@@ -11,7 +11,7 @@ creates three object kinds of its own.
 
 This is **3.0.0.1, a preview release** (minimum VCF Operations 8.18; tested on 8.18.7, 9.0.2 and 9.1.1; send feedback as
 GitHub issues on this repository). It provides the account, the vCenter
-TLS modes, the session, Test Connection, the collection cycle with its health
+TLS (verified by default), the session, Test Connection, the collection cycle with its health
 keys, the property keys of clusters, hosts, virtual machines, datastores and the
 vCenter, the three own kinds with their keys and relationship, and the derived
 metrics (scores, availability, network speed, shares, port groups, resource
@@ -151,13 +151,13 @@ pushes nothing onto the vCenter's objects.
   cannot be read this cycle leaves the last good list in force; a file that does
   not exist empties its list. The Windows service and event files are read only
   when their monitoring switch is on.
-- **vCenter TLS.** Three modes, set on the account: Trust on First Use (the
-  default; connects whatever the certificate), Enabled (the collector's trust,
-  with the certificate name checked), Pinned (the vCenter thumbprint). See
-  `installing.md`.
+- **vCenter TLS.** The vCenter certificate is verified by default, as the built-in adapters do it: the collector's own
+  trust (the certificate you review and accept in Validate Connection) and a check that the certificate carries the name
+  entered. One advanced setting, Allow Insecure SSL (default false, the same as the other VCF Content Factory paks),
+  turns both checks off; guest monitoring does not run while it is on. The Python pack's three modes (Trust on First
+  Use, Enabled, Pinned) and its thumbprint field are gone (DV-114). See `installing.md`.
 - **Guest monitoring (off by default).** With Guest OS Service Monitoring or Windows
-  Event Log Monitoring set to Enabled, a Windows account in the credential and vCenter TLS Validation set to
-  Enabled or Pinned, the collector asks each Windows VM that has its tools running, as far as the cycle's time allows,
+  Event Log Monitoring set to Enabled, a Windows account in the credential and Allow Insecure SSL off (the default), the collector asks each Windows VM that has its tools running, as far as the cycle's time allows,
   through the vSphere guest operations: a directory the guest names, a small PowerShell program sent as command text (no
   script file, no secret in its arguments), the output read back and the directory removed. Services (only the
   ones listed) and the operating system become properties of the VM; event log records become diagnostic events on it,
@@ -165,7 +165,7 @@ pushes nothing onto the vCenter's objects.
   failure of one VM is counted with its cause (`F-GUEST-*`, in the `Collector:guest` health keys) and never shown as a stopped
   service or as no events. The Windows account is protected from locking: one VM alone until a logon has worked, two refused
   logons pause the phase for 24 hours. The ESXi host's certificate is checked against the thumbprint vCenter has
-  recorded for it (Pinned and Strict). Nothing here has run on a real Windows guest yet:
+  recorded for it (Guest File Transfer TLS Validation: Pinned and Strict). Nothing here has run on a real Windows guest yet:
   `docs/p5-live-proof.md` is the run that proves it.
 - **Secrets stay out of logs and messages.** The vCenter and Windows passwords,
   session ids and tokens are never written to a log line or an error message.
@@ -211,11 +211,10 @@ The pak carries the content of the original pack as VCF Operations content, inst
 - The derived metrics were compared with the Python pack on the lab instances; the differences are the deliberate ones in `CHANGELOG.md` (DV-108 to DV-113). A 24 hour comparison of the whole set on the build that is released is not part of this preview.
 - Cluster Memory Tiering Consumption (`vCommunity|Cluster Consumption|Cluster Memory Tiering Consumption`) is never published: its input statistic `mem:NVMe|tier.usage` does not exist in VCF Operations. The real source is the vCenter counter `mem.tier.consumed` (MB, instances DRAM and NVMe), which needs a performance query this adapter does not make. This is a known gap (design, DV-109).
 - A new library, item or template is created at once and gets its values on the next collection (five minutes later). One that vCenter no longer has is marked not existing after 12 complete collections, and only when everything that could contain it was read.
-- Trust on First Use sends the credentials before any certificate check, as the
-  original pack did. The certificate it presents is compared after the login with
-  the one recorded on the vCenter object, and `vCommunity|Certificate|Status`
-  says `Recorded`, `Unchanged` or `Changed` (for 24 hours); it is a report, not a
-  refusal. Use Pinned or Enabled on a network that is not fully trusted.
+- The vCenter certificate presented each cycle is compared with the one recorded on the vCenter object, and
+  `vCommunity|Certificate|Status` says `Recorded`, `Unchanged` or `Changed` (for 24 hours); it is a report, not a
+  refusal, and it is published whether or not Allow Insecure SSL is on. With Allow Insecure SSL on the credentials go to
+  whatever answers at the address: use it for a lab only.
 - Test Connection: the pak logs in to the vCenter and reads its certificate.
   The Suite API and the check-list files are checked only where the test can
   build the Suite API client, which is normally not the case (no configured

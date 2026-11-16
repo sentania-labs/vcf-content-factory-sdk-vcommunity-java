@@ -64,12 +64,10 @@
 			<ResourceIdentifier key="vm_adv_settings_config_file" nameKey="11" type="string" required="false" dispOrder="4" default="vm_advanced_parameters"/>
 			<ResourceIdentifier key="vm_configuration_config_file" nameKey="12" type="string" required="false" dispOrder="5" default="vm_options"/>
 			<ResourceIdentifier key="port" nameKey="13" type="integer" required="true" dispOrder="6" default="443" identType="2"/>
-			<ResourceIdentifier key="vcenter_tls_validation" nameKey="14" type="string" required="false" dispOrder="7" default="Trust on First Use" identType="2" enum="true">
-				<enum value="Trust on First Use"/>
-				<enum value="Enabled"/>
-				<enum value="Pinned"/>
-			</ResourceIdentifier>
-			<ResourceIdentifier key="vcenter_thumbprint" nameKey="15" type="string" required="false" dispOrder="8" identType="2"/>
+			<!-- Allow Insecure SSL, the same identifier as the other paks (unifi, synology): default false, so a
+			     new account verifies the vCenter certificate (the platform's trust, with the name check; accept the
+			     certificate in Validate Connection). Only "true" (any case) turns verification off. Advanced. -->
+			<ResourceIdentifier key="allowInsecure" nameKey="14" type="string" required="false" dispOrder="7" default="false" identType="2"/>
 			<ResourceIdentifier key="cluster_check_period_hours" nameKey="16" type="string" required="false" dispOrder="9" default="24" identType="2" enum="true">
 				<enum value="01" nameKey="17"/>
 				<enum value="02" nameKey="18"/>

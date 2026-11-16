@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -19,9 +18,8 @@ import java.util.function.Function;
  *
  * <p>What fails and what falls back:
  * <ul>
- *   <li>A host that is blank, a port that is not a whole number, an unknown
- *       vCenter TLS mode, Pinned with no usable thumbprint, or a missing
- *       user name or password throws {@link IllegalArgumentException} with a
+ *   <li>A host that is blank, a port that is not a whole number, or a
+ *       missing user name or password throws {@link IllegalArgumentException} with a
  *       message that names the field and quotes no secret. The cycle then
  *       fails with that message.</li>
  *   <li>The period, time, worst percent and the three monster sizes fall
@@ -43,8 +41,8 @@ public final class VCommunityConfig {
     public static final String F_VM_PARAMS_FILE = "vm_adv_settings_config_file";
     public static final String F_VM_OPTIONS_FILE = "vm_configuration_config_file";
     public static final String F_PORT = "port";
-    public static final String F_TLS_MODE = "vcenter_tls_validation";
-    public static final String F_THUMBPRINT = "vcenter_thumbprint";
+    /** Allow Insecure SSL: the same key as the other paks; only the text "true" (any case) turns verification off. */
+    public static final String F_ALLOW_INSECURE = "allowInsecure";
     public static final String F_PERIOD = "cluster_check_period_hours";
     public static final String F_CHECK_TIME = "periodic_cluster_check_time";
     public static final String F_WORST_PERCENT = "cluster_check_worst_percent";
@@ -81,29 +79,13 @@ public final class VCommunityConfig {
     /** The period choices, as stored in the account (zero padded so the UI sorts them). */
     public static final String[] PERIOD_CHOICES = {"01", "02", "04", "06", "08", "12", "24"};
 
-    /** How the vCenter certificate is treated (design 2.5). */
-    public enum TlsMode {
-        TRUST_ON_FIRST_USE("Trust on First Use"),
-        ENABLED("Enabled"),
-        PINNED("Pinned");
-
-        public final String label;
-
-        TlsMode(String label) {
-            this.label = label;
-        }
-
-        public static final TlsMode DEFAULT = TRUST_ON_FIRST_USE;
-
-        /** Case-insensitive; blank is the default; unknown is null. */
-        public static TlsMode parse(String text) {
-            String t = text == null ? "" : text.trim();
-            if (t.isEmpty()) return DEFAULT;
-            for (TlsMode m : values()) {
-                if (m.label.equalsIgnoreCase(t)) return m;
-            }
-            return null;
-        }
+    /**
+     * Whether the account turned certificate verification off. Only the text {@code true} (any case, not trimmed:
+     * a stored " true" connects verified, as in the other paks) does; blank, absent, {@code false} and anything
+     * else verify. There is no other value to read, and the old three-value setting is not read at all.
+     */
+    public static boolean parseAllowInsecure(String text) {
+        return "true".equalsIgnoreCase(text);
     }
 
     /** How the guest file transfer certificate is treated (guest phase, later). */
@@ -132,9 +114,8 @@ public final class VCommunityConfig {
 
     public final String host;
     public final int port;
-    public final TlsMode tlsMode;
-    /** Lowercase hex, 64 or 128 characters; empty unless the mode is Pinned. */
-    public final String thumbprint;
+    /** True when verification of the vCenter certificate is off (Allow Insecure SSL). */
+    public final boolean allowInsecure;
 
     public final String esxiSettingsFile;
     public final String esxiPackagesFile;
@@ -169,8 +150,7 @@ public final class VCommunityConfig {
     private VCommunityConfig(Builder b) {
         this.host = b.host;
         this.port = b.port;
-        this.tlsMode = b.tlsMode;
-        this.thumbprint = b.thumbprint;
+        this.allowInsecure = b.allowInsecure;
         this.esxiSettingsFile = b.esxiSettingsFile;
         this.esxiPackagesFile = b.esxiPackagesFile;
         this.vmParamsFile = b.vmParamsFile;
@@ -198,8 +178,7 @@ public final class VCommunityConfig {
     private static final class Builder {
         String host;
         int port;
-        TlsMode tlsMode;
-        String thumbprint = "";
+        boolean allowInsecure;
         String esxiSettingsFile, esxiPackagesFile, vmParamsFile, vmOptionsFile;
         String winServiceFile, winEventFile;
         int periodHours, checkHour, checkMinute, worstPercent;
@@ -228,16 +207,7 @@ public final class VCommunityConfig {
             throw new IllegalArgumentException("vCenter Server is not set on the account");
         }
         b.port = parsePort(field.apply(F_PORT));
-        b.tlsMode = TlsMode.parse(field.apply(F_TLS_MODE));
-        if (b.tlsMode == null) {
-            throw new IllegalArgumentException("vCenter TLS Validation '"
-                    + shown(field.apply(F_TLS_MODE)) + "' is not one of: "
-                    + TlsMode.TRUST_ON_FIRST_USE.label + ", " + TlsMode.ENABLED.label + ", "
-                    + TlsMode.PINNED.label);
-        }
-        if (b.tlsMode == TlsMode.PINNED) {
-            b.thumbprint = normalizeThumbprint(field.apply(F_THUMBPRINT));
-        }
+        b.allowInsecure = parseAllowInsecure(field.apply(F_ALLOW_INSECURE));
 
         b.esxiSettingsFile = fileName(field.apply(F_ESXI_SETTINGS_FILE), DEFAULT_ESXI_SETTINGS_FILE);
         b.esxiPackagesFile = fileName(field.apply(F_ESXI_PACKAGES_FILE), DEFAULT_ESXI_PACKAGES_FILE);
@@ -349,16 +319,15 @@ public final class VCommunityConfig {
     }
 
     /**
-     * The URL Validate Connection offers for certificate review: only in the
-     * Enabled mode (the other two do not use the platform's trust, so there
-     * is nothing to accept), and only when the host and port are usable.
+     * The URL Validate Connection offers for certificate review: not when Allow
+     * Insecure SSL is on (nothing is verified, so there is nothing to accept), and
+     * only when the host and port are usable.
      * Never throws; null means no URL.
      */
     public static String certificateCheckUrl(Function<String, String> field) {
         try {
-            TlsMode mode = TlsMode.parse(field.apply(F_TLS_MODE));
             String host = trimToNull(field.apply(F_HOST));
-            if (mode != TlsMode.ENABLED || host == null) return null;
+            if (parseAllowInsecure(field.apply(F_ALLOW_INSECURE)) || host == null) return null;
             String ascii = host;
             if (host.indexOf(':') < 0 && !host.chars().allMatch(c -> c < 128)) {
                 ascii = java.net.IDN.toASCII(host);
@@ -390,24 +359,6 @@ public final class VCommunityConfig {
             throw new IllegalArgumentException("Port " + p + " is not a whole number from 1 to 65535");
         }
         return p;
-    }
-
-    /** Lowercase hex without separators; throws when empty, not hex, or not 64 or 128 long. */
-    public static String normalizeThumbprint(String value) {
-        String c = value == null ? "" : value.replaceAll("[\\s:\\-]", "").toLowerCase(Locale.ROOT);
-        if (c.isEmpty()) {
-            throw new IllegalArgumentException("vCenter TLS Validation is Pinned, but the vCenter "
-                    + "Thumbprint (SHA-256) field is empty");
-        }
-        if (!c.matches("[0-9a-f]+")) {
-            throw new IllegalArgumentException("The vCenter Thumbprint (SHA-256) must be "
-                    + "hexadecimal, with or without ':' between the bytes");
-        }
-        if (c.length() != 64 && c.length() != 128) {
-            throw new IllegalArgumentException("The vCenter Thumbprint (SHA-256) must be 64 hex "
-                    + "characters (SHA-256) or 128 (SHA-512), not " + c.length());
-        }
-        return c;
     }
 
     private static int parsePeriod(String text, List<String> warnings) {
@@ -482,7 +433,7 @@ public final class VCommunityConfig {
 
     @Override
     public String toString() {
-        return "host=" + host + " port=" + port + " tls=" + tlsMode.label
+        return "host=" + host + " port=" + port + " verifyCertificate=" + !allowInsecure
                 + " period=" + periodHours + "h at " + String.format("%02d:%02d", checkHour, checkMinute)
                 + " services=" + serviceMonitoring + " events=" + eventMonitoring
                 + " windowsCredential=" + hasWindowsCredential();

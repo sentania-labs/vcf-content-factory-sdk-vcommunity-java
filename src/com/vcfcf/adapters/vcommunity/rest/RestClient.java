@@ -3,7 +3,6 @@ package com.vcfcf.adapters.vcommunity.rest;
 import com.vcfcf.adapters.vcommunity.Log;
 import com.vcfcf.adapters.vcommunity.health.Failures;
 import com.vcfcf.adapters.vcommunity.json.Json;
-import com.vcfcf.adapters.vcommunity.tls.PinMismatchException;
 import com.vcfcf.adapters.vcommunity.tls.TlsFailure;
 import com.vcfcf.adapters.vcommunity.tls.VcenterTls;
 
@@ -18,8 +17,8 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * The vSphere Automation REST API of the vCenter (content libraries), over the same
  * {@link VcenterTls} posture as the SOAP session and the certificate probe: the account's TLS
- * mode decides the trust and the name check, the pin is compared during the handshake before the
- * credentials are sent, and no connection is made any other way. One REST session per use: log
+ * setting (verified by default, or Allow Insecure SSL) decides the trust and the name check, both are
+ * decided during the handshake before the credentials are sent, and no connection is made any other way. One REST session per use: log
  * in, read, log out in a {@code finally}. SDK-free and plain JDK.
  *
  * <p>The class holds the password to send it once in a Basic header, and nowhere else. It is
@@ -134,7 +133,6 @@ public final class RestClient implements AutoCloseable {
 
     private RestResult send(String method, String path, String authorization, String session,
             int connectTimeoutMs, int readTimeoutMs) {
-        tls.clearPinMismatch();
         HttpURLConnection conn = null;
         try {
             conn = (HttpURLConnection) java.net.URI.create(base + path).toURL().openConnection();
@@ -165,11 +163,7 @@ public final class RestClient implements AutoCloseable {
                     + code + ")" + scrub(errorText(err), session), null);
         } catch (IOException | RuntimeException e) {
             if (conn != null) conn.disconnect(); // never reuse a connection that failed
-            PinMismatchException recorded = tls.takePinMismatch();
-            PinMismatchException pm = TlsFailure.findPin(e);
-            if (pm == null) pm = recorded;
-            if (pm != null) return RestResult.failed(0, pm.getMessage(), e);
-            String tlsText = e instanceof IOException ? TlsFailure.explain(e, tls.mode()) : null;
+            String tlsText = e instanceof IOException ? TlsFailure.explain(e, tls.insecure(), base) : null;
             return RestResult.failed(0, tlsText != null ? tlsText : describe(method, path, e), e);
         }
     }

@@ -2,7 +2,6 @@ package com.vcfcf.adapters.vcommunity;
 
 import static com.vcfcf.adapters.vcommunity.SoapFx.arr;
 
-import com.vcfcf.adapters.vcommunity.VCommunityConfig.TlsMode;
 import com.vcfcf.adapters.vcommunity.coll.LibraryLinks;
 import com.vcfcf.adapters.vcommunity.coll.OwnObject;
 import com.vcfcf.adapters.vcommunity.coll.OwnObjects;
@@ -14,7 +13,6 @@ import com.vcfcf.adapters.vcommunity.rest.LibraryReader;
 import com.vcfcf.adapters.vcommunity.rest.RestClient;
 import com.vcfcf.adapters.vcommunity.rest.RestResult;
 import com.vcfcf.adapters.vcommunity.text.Quirks;
-import com.vcfcf.adapters.vcommunity.tls.Thumbprints;
 import com.vcfcf.adapters.vcommunity.tls.ThumbprintProbe;
 import com.vcfcf.adapters.vcommunity.tls.VcenterTls;
 import com.vcfcf.adapters.vcommunity.vim.VimSoapClient;
@@ -57,7 +55,7 @@ public final class OwnObjectsTest {
         final AtomicLong clock = new AtomicLong(NOW);
 
         Rig(FakeVc fake, FakeVcenter vc, FakeLibraries libs) {
-            this(fake, vc, libs, TlsAndSessionTest.tofu());
+            this(fake, vc, libs, TlsAndSessionTest.insecure());
         }
 
         Rig(FakeVc fake, FakeVcenter vc, FakeLibraries libs, VcenterTls tls) {
@@ -277,7 +275,7 @@ public final class OwnObjectsTest {
             run("template reads that fail withhold one property, not the object", () -> templateReadFailures(fake));
             run("paging and large counts", () -> largeCounts(fake));
             run("the cycle deadline stops the read and proves nothing", () -> deadline(fake));
-            run("TLS modes: the REST session goes through the account's posture", () -> tlsModes());
+            run("TLS postures: the REST session goes through the account's posture", () -> tlsPostures());
             run("session: one login, the session on every read, one logout, no secret in a line", () -> session(fake));
         }
         Coverage3.scenario = "coverage";
@@ -579,7 +577,7 @@ public final class OwnObjectsTest {
         FakeLibraries l = libraries();
         fake.setRestHandler(l);
         LibraryData d = new LibraryReader("localhost:" + fake.port(), FakeLibraries.USER, FakeLibraries.PASSWORD,
-                TlsAndSessionTest.tofu(), new T.RecLog()).read(Long.MAX_VALUE, () -> NOW);
+                TlsAndSessionTest.insecure(), new T.RecLog()).read(Long.MAX_VALUE, () -> NOW);
         com.vcfcf.adapters.vcommunity.health.Failures f = new com.vcfcf.adapters.vcommunity.health.Failures();
         OwnObjects own = com.vcfcf.adapters.vcommunity.coll.LibraryCollector.collect(d, f).own;
         OwnObject a = lib(own, "lib-a");
@@ -672,7 +670,7 @@ public final class OwnObjectsTest {
             dead = ss.getLocalPort();
         }
         com.vcfcf.adapters.vcommunity.health.WarnCounter warns = new com.vcfcf.adapters.vcommunity.health.WarnCounter(new T.RecLog());
-        try (VimSoapClient vim = new VimSoapClient("localhost:" + dead, "u", "p", TlsAndSessionTest.tofu(), warns, 2000, 5000, 5000)) {
+        try (VimSoapClient vim = new VimSoapClient("localhost:" + dead, "u", "p", TlsAndSessionTest.insecure(), warns, 2000, 5000, 5000)) {
             CycleEngine engine = new CycleEngine(EngineTest.cfg(), vim,
                     (h, p, t) -> ThumbprintProbe.Result.found("ab".repeat(32)), new P2Ops(),
                     new CheckListStore(warns), warns, () -> NOW, null);
@@ -1037,54 +1035,39 @@ public final class OwnObjectsTest {
 
     // ------------------------------------------------------------------ TLS and the session
 
-    static void tlsModes() throws Exception {
+    static void tlsPostures() throws Exception {
         try (FakeVc fake = new FakeVc(FakeVc.happy())) {
             FakeLibraries l = libraries();
             fake.setRestHandler(l);
-            // Trust on First Use reads a self-signed certificate
+            // Allow Insecure SSL reads a self-signed certificate
             LibraryData d = new LibraryReader("localhost:" + fake.port(), FakeLibraries.USER,
-                    FakeLibraries.PASSWORD, TlsAndSessionTest.tofu(), new T.RecLog()).read(Long.MAX_VALUE, () -> NOW);
-            T.check(d.listFailure == null && d.libraries.size() == 4, "TOFU reads: " + d.listFailure);
-            // Pinned: the right pins (SHA-256 and SHA-512) read, a wrong one reads nothing and sends nothing
-            for (String pin : new String[] {Thumbprints.of(fake.cert, 256), Thumbprints.of(fake.cert, 512)}) {
-                LibraryData p = new LibraryReader("localhost:" + fake.port(), FakeLibraries.USER,
-                        FakeLibraries.PASSWORD, TlsAndSessionTest.pinned(pin), new T.RecLog()).read(Long.MAX_VALUE, () -> NOW);
-                T.check(p.listFailure == null, "Pinned with the right " + pin.length() * 4 + " bit pin: " + p.listFailure);
-            }
-            int before = fake.requests.size();
+                    FakeLibraries.PASSWORD, TlsAndSessionTest.insecure(), new T.RecLog()).read(Long.MAX_VALUE, () -> NOW);
+            T.check(d.listFailure == null && d.libraries.size() == 4, "insecure reads: " + d.listFailure);
             int callsBefore = l.calls.size();
-            T.RecLog log = new T.RecLog();
-            LibraryData bad = new LibraryReader("localhost:" + fake.port(), FakeLibraries.USER,
-                    FakeLibraries.PASSWORD, TlsAndSessionTest.pinned("a".repeat(64)), log).read(Long.MAX_VALUE, () -> NOW);
-            T.check(bad.listFailure != null, "a wrong pin fails");
-            T.contains(bad.listFailure, "differs from the vCenter Thumbprint", "the pin text, as the SOAP session gives it");
-            T.eq(callsBefore, l.calls.size(), "no request reached the REST API: the password was never sent");
-            T.eq(before, fake.requests.size(), "nothing at all");
-            T.notContains(bad.listFailure + log.all(), FakeLibraries.PASSWORD, "failure");
-            T.eq(0, bad.libraries.size(), "no library");
-            T.eq(1, bad.failures.size(), "one counted failure");
-            // Enabled: the platform trust refuses a certificate it does not know, and nothing is sent
-            VcenterTls enabled = VcenterTls.create(TlsMode.ENABLED, "", javax.net.ssl.SSLContext.getDefault(),
+            // verified: the platform trust refuses a certificate it does not know, and nothing is sent
+            VcenterTls enabled = VcenterTls.create(false, javax.net.ssl.SSLContext.getDefault(),
                     (conn, factory) -> conn.setSSLSocketFactory(factory));
             int calls2 = l.calls.size();
             LibraryData refused = new LibraryReader("localhost:" + fake.port(), FakeLibraries.USER,
                     FakeLibraries.PASSWORD, enabled, new T.RecLog()).read(Long.MAX_VALUE, () -> NOW);
-            T.check(refused.listFailure != null, "Enabled refuses an untrusted certificate");
+            T.check(refused.listFailure != null, "a verified connection refuses an untrusted certificate");
+            T.contains(refused.listFailure, "Validate Connection", "and says what to do");
             T.contains(refused.listFailure, "not trusted", "says so");
             T.eq(calls2, l.calls.size(), "and sends nothing");
         }
-        // Enabled with a trusted certificate that names the host reads; one that does not name it does not
+        // verified with a trusted certificate that names the host reads; one that does not name it does not
         try (FakeVc fake = new FakeVc(FakeVc.happy(), "dns:localhost")) {
             FakeLibraries l = libraries();
             fake.setRestHandler(l);
-            VcenterTls tls = VcenterTls.create(TlsMode.ENABLED, "", fake.trustingContext(), TlsAndSessionTest.nameChecking());
+            VcenterTls tls = VcenterTls.create(false, fake.trustingContext(), TlsAndSessionTest.nameChecking());
             LibraryData ok = new LibraryReader("localhost:" + fake.port(), FakeLibraries.USER,
                     FakeLibraries.PASSWORD, tls, new T.RecLog()).read(Long.MAX_VALUE, () -> NOW);
-            T.check(ok.listFailure == null && ok.libraries.size() == 4, "Enabled reads through a trusted certificate: " + ok.listFailure);
+            T.check(ok.listFailure == null && ok.libraries.size() == 4, "a verified connection reads through a trusted certificate: " + ok.listFailure);
             int before = l.calls.size();
             LibraryData bad = new LibraryReader("127.0.0.1:" + fake.port(), FakeLibraries.USER,
                     FakeLibraries.PASSWORD, tls, new T.RecLog()).read(Long.MAX_VALUE, () -> NOW);
             T.check(bad.listFailure != null, "the name is checked");
+            T.contains(bad.listFailure, "does not carry the name", "and the sentence says so");
             T.eq(before, l.calls.size(), "and nothing was sent");
         }
     }
@@ -1111,7 +1094,7 @@ public final class OwnObjectsTest {
             T.eq(2, l.logouts.get(), "closed each cycle");
         }
         // a client that is closed without a session does nothing
-        RestClient c = new RestClient("localhost:" + fake.port(), "u", "p", TlsAndSessionTest.tofu(), null);
+        RestClient c = new RestClient("localhost:" + fake.port(), "u", "p", TlsAndSessionTest.insecure(), null);
         int before = l.calls.size();
         c.close();
         T.eq(before, l.calls.size(), "closing without a session sends nothing");

@@ -49,6 +49,13 @@ section 5.7)
   view reads the namespace memory limit.
 - **Guest logon lockout protection**: the guest checks (off by default) ask for at most two refused logons per
   credential in 24 hours and pause after that, so a wrong password cannot lock a domain account (DV-97).
+- **The vCenter certificate is verified by default** (the Python pack's default sent the credentials before any check).
+  A new account uses the collector's own trust with a name check: click Validate Connection, review and accept the
+  certificate in the standard dialog, and it is checked from then on. One advanced setting, **Allow Insecure SSL** (default
+  false, the same as the other VCF Content Factory paks), turns the checks off. The Python pack's Trust on First Use and
+  Pinned modes and its thumbprint field are removed (DV-114). Guest monitoring does not run while Allow Insecure SSL is on.
+  The `vCommunity|Certificate|...` keys are still published in both settings. Enter the vCenter by a name on its
+  certificate: an IP address fails the name check unless the certificate lists it.
 - **Collection Health keys**: the adapter reports its own health (`vCommunity|Collection Health|...`: per-collector
   status, causes, values withheld, warnings), and a failed read is withheld and counted, never turned into a value.
 

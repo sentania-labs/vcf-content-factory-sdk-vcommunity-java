@@ -1,8 +1,6 @@
 package com.vcfcf.adapters.vcommunity;
 
-import com.vcfcf.adapters.vcommunity.VCommunityConfig.TlsMode;
 import com.vcfcf.adapters.vcommunity.health.Reachability;
-import com.vcfcf.adapters.vcommunity.tls.PinMismatchException;
 import com.vcfcf.adapters.vcommunity.tls.ThumbprintProbe;
 import com.vcfcf.adapters.vcommunity.tls.Thumbprints;
 import com.vcfcf.adapters.vcommunity.tls.VcenterTls;
@@ -14,7 +12,7 @@ import java.net.ServerSocket;
 import javax.net.ssl.SSLContext;
 
 /**
- * The three vCenter TLS modes and the session, against a local TLS server
+ * The two vCenter TLS postures (verified, and Allow Insecure SSL) and the session, against a local TLS server
  * with a certificate made at test time.
  */
 public final class TlsAndSessionTest {
@@ -23,24 +21,19 @@ public final class TlsAndSessionTest {
         return new VimSoapClient("localhost:" + vc.port(), user, pw, tls, log, 5000, 10000, 10000);
     }
 
-    static VcenterTls tofu() {
-        return VcenterTls.create(TlsMode.TRUST_ON_FIRST_USE, "", null, null);
-    }
-
-    static VcenterTls pinned(String pin) {
-        return VcenterTls.create(TlsMode.PINNED, pin, null, null);
+    /** Allow Insecure SSL: any certificate, any name. */
+    static VcenterTls insecure() {
+        return VcenterTls.create(true, null, null);
     }
 
     public static void main(String[] args) throws Exception {
         try (FakeVc vc = new FakeVc(FakeVc.happy())) {
             probe(vc);
-            trustOnFirstUse(vc);
-            pinnedRight(vc);
-            pinnedWrong(vc);
-            enabledRefusesUntrusted(vc);
+            insecureAccepts(vc);
+            verifiedRefusesUntrusted(vc);
             lowercaseCookieHeader(vc);
         }
-        enabledNameCheck();
+        verifiedNameCheck();
         oversizedAndRedirect();
         deepXml();
         sessionLifecycle();
@@ -65,64 +58,31 @@ public final class TlsAndSessionTest {
         T.done("probe reads the presented thumbprint and sends nothing");
     }
 
-    static void trustOnFirstUse(FakeVc vc) throws Exception {
+    static void insecureAccepts(FakeVc vc) throws Exception {
         T.RecLog log = new T.RecLog();
-        try (VimSoapClient c = client(vc, tofu(), "svc", "pw-1", log)) {
+        try (VimSoapClient c = client(vc, insecure(), "svc", "pw-1", log)) {
             VimResult<About> r = c.ensureSession();
-            T.check(r.isOk(), "TOFU logs in against a self-signed certificate: " + r.message());
+            T.check(r.isOk(), "Allow Insecure SSL logs in against a self-signed certificate: " + r.message());
             T.eq(FakeVc.INSTANCE_UUID, r.value().instanceUuid, "VCID");
             T.eq("8.0.3", r.value().version, "version");
             T.eq("8.0.3.0", r.value().apiVersion, "api version");
             T.contains(r.value().describe(), "VMware vCenter Server 8.0.3", "describe");
             T.check(c.hasSession(), "session held");
         }
-        T.done("Trust on First Use connects to a self-signed certificate");
+        T.check(insecure().insecure(), "the posture says it is insecure");
+        T.check(!insecure().checksName(), "and checks no name");
+        T.done("Allow Insecure SSL connects to a self-signed certificate");
     }
 
-    static void pinnedRight(FakeVc vc) throws Exception {
-        String pin256 = Thumbprints.of(vc.cert, 256);
-        String pin512 = Thumbprints.of(vc.cert, 512);
-        for (String pin : new String[] {pin256, pin512}) {
-            try (VimSoapClient c = client(vc, pinned(pin), "svc", "pw-1", new T.RecLog())) {
-                VimResult<About> r = c.ensureSession();
-                T.check(r.isOk(), "Pinned with the right " + pin.length() * 4 + " bit pin: " + r.message());
-            }
-        }
-        T.done("Pinned accepts the right SHA-256 and SHA-512 pin");
-    }
-
-    static void pinnedWrong(FakeVc vc) throws Exception {
-        String real = Thumbprints.of(vc.cert, 256);
-        // a pin that differs from the real one, whatever the certificate of this run starts with (a fixed "00" equalled it 1 run in 256)
-        String wrong = (real.startsWith("00") ? "ff" : "00") + real.substring(2);
-        int before = vc.requests.size();
-        T.RecLog log = new T.RecLog();
-        try (VimSoapClient c = client(vc, pinned(wrong), "svc", "very-secret-pw", log)) {
-            VimResult<About> r = c.ensureSession();
-            T.check(!r.isOk(), "a wrong pin fails");
-            T.contains(r.message(), "differs from the vCenter Thumbprint", "text names the field");
-            T.contains(r.message(), Thumbprints.of(vc.cert, 256), "text carries the presented thumbprint");
-            T.contains(r.message(), "Pinned", "text names the mode");
-            T.check(r.message().startsWith("vCenter presented a certificate other than the pinned one"), "text is the pin message as is");
-            T.notContains(r.message(), "very-secret-pw", "message");
-            T.check(r.cause() instanceof PinMismatchException || r.cause() != null, "cause kept");
-            T.check(!Reachability.isUnreachable(r.cause()), "a wrong pin is not 'unreachable'");
-        }
-        // nothing at all reached the application layer: the credentials were never sent
-        T.eq(before, vc.requests.size(), "no request (so no Login) after a pin mismatch");
-        T.notContains(log.all(), "very-secret-pw", "log");
-        T.done("Pinned refuses a wrong pin before any credential is sent");
-    }
-
-    static void enabledRefusesUntrusted(FakeVc vc) throws Exception {
-        // Enabled uses the platform's trust; here the JDK default trust, which does not know the test CA.
+    static void verifiedRefusesUntrusted(FakeVc vc) throws Exception {
+        // Verified uses the platform's trust; here the JDK default trust, which does not know the test CA.
         SSLContext platform = SSLContext.getDefault();
         VcenterTls.Securer securer = (conn, factory) -> conn.setSSLSocketFactory(factory);
-        VcenterTls tls = VcenterTls.create(TlsMode.ENABLED, "", platform, securer);
+        VcenterTls tls = VcenterTls.create(false, platform, securer);
         int before = vc.requests.size();
         try (VimSoapClient c = client(vc, tls, "svc", "pw", new T.RecLog())) {
             VimResult<About> r = c.ensureSession();
-            T.check(!r.isOk(), "Enabled refuses a certificate the platform does not trust");
+            T.check(!r.isOk(), "a verified connection refuses a certificate the platform does not trust");
             boolean chain = false;
             for (Throwable t = r.cause(); t != null; t = t.getCause()) {
                 if (t instanceof java.security.cert.CertPathBuilderException
@@ -130,19 +90,24 @@ public final class TlsAndSessionTest {
                         || (t.getMessage() != null && t.getMessage().contains("PKIX"))) chain = true;
             }
             T.check(chain, "the PKIX failure stays in the cause chain, so the platform's advice can apply");
+            // what the operator reads (Test Connection and the cycle show this text)
+            T.contains(r.message(), "not trusted by this collector", "says what is wrong");
+            T.contains(r.message(), "Validate Connection", "says what to do");
+            T.contains(r.message(), "Allow Insecure SSL", "names the opt-out");
+            T.contains(r.message(), "No credential was sent", "and that nothing was sent");
+            T.notContains(r.message(), "Pinned", "no old mode is named");
+            T.notContains(r.message(), "Trust on First Use", "no old mode is named");
         }
         T.eq(before, vc.requests.size(), "no credential sent");
-        T.throwsIae(() -> VcenterTls.create(TlsMode.ENABLED, "", null, null), "platform", "Enabled needs the platform context");
-        T.check(VcenterTls.create(TlsMode.ENABLED, "", platform, securer).checksName(), "Enabled checks the name");
-        T.check(!tofu().checksName(), "TOFU does not");
-        T.check(!pinned("a".repeat(64)).checksName(), "Pinned does not");
-        T.done("Enabled refuses an untrusted certificate");
+        T.throwsIae(() -> VcenterTls.create(false, null, null), "platform", "verified needs the platform context");
+        T.check(VcenterTls.create(false, platform, securer).checksName(), "verified checks the name");
+        T.done("a verified connection refuses an untrusted certificate");
     }
 
     /** A proxy in front of the vCenter may send "set-cookie"; the session must still be kept. */
     static void lowercaseCookieHeader(FakeVc vc) throws Exception {
         vc.lowercaseHeaders = true;
-        try (VimSoapClient c = client(vc, tofu(), "svc", "pw", new T.RecLog())) {
+        try (VimSoapClient c = client(vc, insecure(), "svc", "pw", new T.RecLog())) {
             T.check(c.ensureSession().isOk(), "login with lower case headers");
             T.check(c.hasSession(), "the cookie was found");
             int before = vc.seen("CurrentTime").size();
@@ -162,10 +127,10 @@ public final class TlsAndSessionTest {
     }
 
     /** The real certificate name check (JDK endpoint identification), not a stub. */
-    static void enabledNameCheck() throws Exception {
+    static void verifiedNameCheck() throws Exception {
         // the certificate names "localhost" only: dialling it by that name passes, the IP does not
         try (FakeVc vc = new FakeVc(FakeVc.happy(), "dns:localhost")) {
-            VcenterTls tls = VcenterTls.create(TlsMode.ENABLED, "", vc.trustingContext(), nameChecking());
+            VcenterTls tls = VcenterTls.create(false, vc.trustingContext(), nameChecking());
             try (VimSoapClient ok = new VimSoapClient("localhost:" + vc.port(), "u", "p", tls, new T.RecLog(), 5000, 10000, 10000)) {
                 VimResult<About> r = ok.ensureSession();
                 T.check(r.isOk(), "a trusted certificate that names the host is accepted: " + r.message());
@@ -179,10 +144,16 @@ public final class TlsAndSessionTest {
                     if (t instanceof java.security.cert.CertificateException) name = true;
                 }
                 T.check(name, "the failure is a certificate failure");
+                // what the operator reads: the name is named, and so is what to do about it
+                T.contains(r.message(), "does not carry the name '127.0.0.1'", "names the address that was dialled");
+                T.contains(r.message(), "Enter the vCenter by a name that is on its certificate", "says what to do");
+                T.contains(r.message(), "does not change a name mismatch", "accepting does not help");
+                T.contains(r.message(), "Allow Insecure SSL", "names the opt-out");
+                T.contains(r.message(), "No credential was sent", "and that nothing was sent");
             }
             T.eq(before, vc.requests.size(), "nothing sent to a server whose name does not match");
         }
-        T.done("Enabled checks the certificate name for real");
+        T.done("a verified connection checks the certificate name for real");
     }
 
     /** A name check through JSSE endpoint identification: the real thing, what the framework adds on the platform. */
@@ -211,7 +182,7 @@ public final class TlsAndSessionTest {
     static void oversizedAndRedirect() throws Exception {
         // an answer over the tree cap is refused, never read whole
         try (FakeVc vc = new FakeVc(r -> new FakeVc.Resp(200, null, FakeVc.envelope("<x>" + "a".repeat(1_200_000) + "</x>")))) {
-            try (VimSoapClient c = client(vc, tofu(), "svc", "pw", new T.RecLog())) {
+            try (VimSoapClient c = client(vc, insecure(), "svc", "pw", new T.RecLog())) {
                 VimResult<About> r = c.ensureSession();
                 T.check(!r.isOk(), "an oversized answer fails");
                 T.contains(r.message(), "more than " + VimSoapClient.MAX_RESPONSE_BYTES + " bytes", "says why");
@@ -220,7 +191,7 @@ public final class TlsAndSessionTest {
         T.check(VimSoapClient.MAX_RESPONSE_BYTES <= 2 * 1024 * 1024, "tree answers are capped near 1 MiB");
         // a redirect is not followed (the cookie never leaves for another URL)
         try (FakeVc vc = new FakeVc(r -> new FakeVc.Resp(302, null, ""))) {
-            try (VimSoapClient c = client(vc, tofu(), "svc", "pw", new T.RecLog())) {
+            try (VimSoapClient c = client(vc, insecure(), "svc", "pw", new T.RecLog())) {
                 VimResult<About> r = c.ensureSession();
                 T.check(!r.isOk(), "a redirect is a failure");
                 T.eq(1, vc.requests.size(), "followed nowhere");
@@ -259,7 +230,7 @@ public final class TlsAndSessionTest {
             return FakeVc.happy().handle(r);
         })) {
             T.RecLog slog = new T.RecLog();
-            try (VimSoapClient c = client(vc, tofu(), "svc", "pw-sess", slog)) {
+            try (VimSoapClient c = client(vc, insecure(), "svc", "pw-sess", slog)) {
                 T.check(c.ensureSession().isOk(), "first login");
                 T.eq(1, slog.infos.size(), "one line for the login: " + slog.infos);
                 T.contains(slog.infos.get(0), "vCenter login succeeded (new session): VMware vCenter Server 8.0.3", "login line: version and 'new'");
@@ -295,7 +266,7 @@ public final class TlsAndSessionTest {
             T.eq(1, vc.seen("Logout").size(), "close() logs the session out");
             T.check(vc.seen("Logout").get(0).cookie != null, "the logout carries the cookie");
             // a closed client never logs in again
-            VimSoapClient c2 = client(vc, tofu(), "svc", "pw", new T.RecLog());
+            VimSoapClient c2 = client(vc, insecure(), "svc", "pw", new T.RecLog());
             c2.close();
             VimResult<About> closed = c2.ensureSession();
             T.check(!closed.isOk() && "Closed".equals(closed.faultClass()), "closed client refuses");
@@ -312,7 +283,7 @@ public final class TlsAndSessionTest {
         for (String[] c : cases) {
             try (FakeVc vc = new FakeVc(r -> r.action.equals("Logout") ? FakeVc.fault(c[0], c[1]) : FakeVc.happy().handle(r))) {
                 T.RecLog log = new T.RecLog();
-                VimSoapClient v = client(vc, tofu(), "svc", "pw", log);
+                VimSoapClient v = client(vc, insecure(), "svc", "pw", log);
                 T.check(v.ensureSession().isOk(), "login");
                 int before = log.infos.size();
                 v.close("reconfigure");
@@ -338,7 +309,7 @@ public final class TlsAndSessionTest {
             return FakeVc.happy().handle(r);
         })) {
             T.RecLog log = new T.RecLog();
-            try (VimSoapClient c = client(vc, tofu(), "svc", "bad-pw-<&>", log)) {
+            try (VimSoapClient c = client(vc, insecure(), "svc", "bad-pw-<&>", log)) {
                 VimResult<About> r = c.ensureSession();
                 T.check(!r.isOk(), "wrong password fails");
                 T.eq("InvalidLogin", r.faultClass(), "fault class");
@@ -360,7 +331,7 @@ public final class TlsAndSessionTest {
         }
         // a password XML cannot carry is refused, never altered
         try (FakeVc vc = new FakeVc(FakeVc.happy())) {
-            try (VimSoapClient c = client(vc, tofu(), "svc", "pw\u0001x", new T.RecLog())) {
+            try (VimSoapClient c = client(vc, insecure(), "svc", "pw\u0001x", new T.RecLog())) {
                 VimResult<About> r = c.ensureSession();
                 T.check(!r.isOk(), "unsendable password fails");
                 T.contains(r.message(), "cannot carry", "says why");
@@ -371,7 +342,7 @@ public final class TlsAndSessionTest {
     }
 
     static void unreachable() throws Exception {
-        VimSoapClient c = new VimSoapClient("127.0.0.1:" + freePort(), "u", "p", tofu(), new T.RecLog(),
+        VimSoapClient c = new VimSoapClient("127.0.0.1:" + freePort(), "u", "p", insecure(), new T.RecLog(),
                 1000, 1000, 1000);
         VimResult<About> r = c.ensureSession();
         T.check(!r.isOk(), "refused");

@@ -25,7 +25,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * describe.xml against the original pack's account (field for field), the
+ * describe.xml against the original pack's account (field for field, except that the vCenter TLS pair is
+ * replaced by Allow Insecure SSL as in the other paks), the
  * config class's defaults, the self metrics the cycle pushes, and the own
  * kinds against the key map. Run from the repository root.
  */
@@ -55,9 +56,7 @@ public final class DescribeTest {
         new F("vm_adv_settings_config_file", "VM Advanced Parameters Config File", "string", false, "vm_advanced_parameters", null, false),
         new F("vm_configuration_config_file", "VM Options Config File", "string", false, "vm_options", null, false),
         new F("port", "Port", "integer", true, "443", null, true),
-        new F("vcenter_tls_validation", "vCenter TLS Validation", "string", false, "Trust on First Use",
-                new String[] {"Trust on First Use", "Enabled", "Pinned"}, true),
-        new F("vcenter_thumbprint", "vCenter Thumbprint (SHA-256)", "string", false, null, null, true),
+        new F("allowInsecure", "Allow Insecure SSL", "string", false, "false", null, true),
         new F("cluster_check_period_hours", "Cluster Check Period (hours)", "string", false, "24",
                 new String[] {"01", "02", "04", "06", "08", "12", "24"}, true),
         new F("periodic_cluster_check_time", "Cluster Check Time (UTC)", "string", false, "00:00", null, true),
@@ -144,8 +143,8 @@ public final class DescribeTest {
         T.eq("vsphere_user", inst.getAttribute("credentialKind"), "credential kind");
         T.eq("5", inst.getAttribute("monitoringInterval"), "five minute default");
         List<Element> ids = kids(inst, "ResourceIdentifier");
-        T.eq(19, ids.size(), "19 account fields");
-        T.eq(19, FIELDS.length, "19 expected");
+        T.eq(18, ids.size(), "18 account fields");
+        T.eq(18, FIELDS.length, "18 expected");
         int lastOrder = 0;
         for (int i = 0; i < FIELDS.length; i++) {
             F want = FIELDS[i];
@@ -188,14 +187,15 @@ public final class DescribeTest {
             // every field has a description in our own words; the TLS one warns about credentials
             String desc = descriptions.get(Integer.valueOf(got.getAttribute("nameKey")));
             T.check(desc != null && desc.length() > 30, at + " has a description");
-            if (want.key.equals("vcenter_tls_validation")) {
-                T.contains(desc, "before any certificate check", "TLS description warns that credentials go first");
+            if (want.key.equals("allowInsecure")) {
+                T.contains(desc, "without any certificate check", "the opt-out warns that credentials go unchecked");
                 T.contains(desc, "WARNING", "plain warning");
+                T.contains(desc, "default", "says false is the default");
             }
             // an advanced field must have a default or be optional, or it stays in the main form
             if (want.advanced) T.check(!want.required || want.dflt != null, at + " lands under Advanced Settings");
         }
-        T.done("describe: 19 fields, field for field with the original pack");
+        T.done("describe: 18 fields: the original pack's, with the vCenter TLS pair replaced by Allow Insecure SSL");
     }
 
     static void credential(Element root) {
@@ -356,7 +356,8 @@ public final class DescribeTest {
             if (i.hasAttribute("default")) byKey.put(i.getAttribute("key"), i.getAttribute("default"));
         }
         T.eq(String.valueOf(VCommunityConfig.DEFAULT_PORT), byKey.get(VCommunityConfig.F_PORT), "port default");
-        T.eq(VCommunityConfig.TlsMode.DEFAULT.label, byKey.get(VCommunityConfig.F_TLS_MODE), "tls default");
+        T.eq("false", byKey.get(VCommunityConfig.F_ALLOW_INSECURE), "Allow Insecure SSL defaults to false, as in the other paks");
+        T.check(!byKey.containsKey("vcenter_tls_validation") && !byKey.containsKey("vcenter_thumbprint"), "the removed fields are not described");
         T.eq(VCommunityConfig.DEFAULT_ESXI_SETTINGS_FILE, byKey.get(VCommunityConfig.F_ESXI_SETTINGS_FILE), "esxi settings default");
         T.eq(VCommunityConfig.DEFAULT_ESXI_PACKAGES_FILE, byKey.get(VCommunityConfig.F_ESXI_PACKAGES_FILE), "esxi packages default");
         T.eq(VCommunityConfig.DEFAULT_VM_PARAMS_FILE, byKey.get(VCommunityConfig.F_VM_PARAMS_FILE), "vm params default");
@@ -373,9 +374,8 @@ public final class DescribeTest {
         T.eq("Disabled", byKey.get(VCommunityConfig.F_SERVICE_MONITORING), "service monitoring default");
         T.eq("Disabled", byKey.get(VCommunityConfig.F_EVENT_MONITORING), "event monitoring default");
         // the choices in the account are exactly the ones the config class accepts
-        T.eq(Arrays.asList(VCommunityConfig.PERIOD_CHOICES), Arrays.asList(FIELDS[8].enums), "period choices");
-        for (String m : FIELDS[6].enums) T.check(VCommunityConfig.TlsMode.parse(m) != null, "config accepts " + m);
-        for (String m : FIELDS[17].enums) T.check(VCommunityConfig.GuestTlsMode.parse(m) != null, "config accepts " + m);
+        T.eq(Arrays.asList(VCommunityConfig.PERIOD_CHOICES), Arrays.asList(FIELDS[7].enums), "period choices");
+        for (String m : FIELDS[16].enums) T.check(VCommunityConfig.GuestTlsMode.parse(m) != null, "config accepts " + m);
         T.done("describe: defaults and choices equal the config class");
     }
 }

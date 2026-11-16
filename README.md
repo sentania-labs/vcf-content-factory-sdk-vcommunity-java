@@ -19,7 +19,7 @@ are in `CHANGELOG.md` ("3.0.0.1 (preview)"), including where it deliberately dif
 
 **Send feedback as GitHub issues on this repository.**
 
-What is in it: the account (the 19 fields and credential of the original pack), the three vCenter TLS modes, the vim25
+What is in it: the account (the original pack's fields and credential, with the vCenter TLS setting replaced by Allow Insecure SSL: the vCenter certificate is verified by default), the vim25
 session, Test Connection and the collection cycle with its Collection Health keys and self metrics; the property keys of
 clusters, hosts, virtual machines, datastores and the vCenter; three object kinds of its own (content libraries, library
 items and VM templates); the derived metrics (the cluster, host and VM scores, availability, network speed, shares, port
@@ -98,7 +98,7 @@ The full guide is in `docs/installing.md`, "Moving from the Python pack".
 ## Documentation
 
 `docs/README.md` indexes the docset: `overview.md`, `installing.md` (the account
-fields, TLS modes, Test Connection) and the generated inventory tree.
+fields, TLS, Test Connection) and the generated inventory tree.
 `REFERENCE.md` lists the account, the self metrics and the own kinds' keys.
 `NOTICE` credits the original authors (see Credits below).
 
@@ -118,7 +118,7 @@ src/com/vcfcf/adapters/vcommunity/   # adapter source
   vim/                               #   raw SOAP session, paged streamed reads, no JAX-WS and no vim25.jar
   coll/                              #   what each object kind's keys read; the property phase
   text/                              #   Python text rules, license key mask
-  tls/                               #   trust on first use, platform trust, pin; probe
+  tls/                               #   platform trust with the name check, Allow Insecure SSL; probe; the ESXi pin check
   ops/                               #   resource identity, push set, push on change
   list/                              #   check-list files: parse, validate, store
   health/                            #   failure accounting, warning count, health keys

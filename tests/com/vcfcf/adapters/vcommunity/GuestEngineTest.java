@@ -1,6 +1,5 @@
 package com.vcfcf.adapters.vcommunity;
 
-import com.vcfcf.adapters.vcommunity.VCommunityConfig.TlsMode;
 import com.vcfcf.adapters.vcommunity.guest.GuestRunner;
 import com.vcfcf.adapters.vcommunity.guest.HttpsGuestHttp;
 import com.vcfcf.adapters.vcommunity.health.CollectionHealth;
@@ -73,12 +72,11 @@ public final class GuestEngineTest {
             vc.setHandler(fx);
             Map<String, String> m = new HashMap<>();
             m.put("host", "vc.example.test");
-            m.put("vcenter_tls_validation", "Enabled"); // guest monitoring does not run over an unchecked vCenter connection (W5)
             for (int i = 0; i < kv.length; i += 2) m.put(kv[i], kv[i + 1]);
             cfg = account ? VCommunityConfig.parse(m::get, "u", "p", GuestOpsTest.USER, GuestOpsTest.SECRET)
                     : VCommunityConfig.parse(m::get, "u", "p", null, null);
             vim = new VimSoapClient("localhost:" + vc.port(), "u", "p",
-                    VcenterTls.create(TlsMode.TRUST_ON_FIRST_USE, "", null, null), warns, 5000, 20000, 20000);
+                    VcenterTls.create(true, null, null), warns, 5000, 20000, 20000);
             newEngine();
         }
 
@@ -619,14 +617,14 @@ public final class GuestEngineTest {
             T.contains(String.valueOf(r.health("Causes")), "F-TLS-CONFIG", "named");
             T.check(r.prop("res-host-1", "vCommunity|Configuration|Config Status") != null, "the rest of the cycle collects");
         }
-        // W5: vCenter TLS Validation is Trust on First Use: the Windows account is not sent to it
-        try (Rig r = new Rig(1, "serviceMonitoring", "Enabled", "vcenter_tls_validation", "Trust on First Use")) {
+        // W5: Allow Insecure SSL is on: the Windows account is not sent to a vCenter whose certificate is not checked
+        try (Rig r = new Rig(1, "serviceMonitoring", "Enabled", "allowInsecure", "true")) {
             CycleEngine.Result res = r.run();
             T.eq(0, r.fx.log.size(), "an unchecked vCenter connection: no guest operation");
             T.eq(0, r.fx.bodies.size(), "and the account is not sent");
             T.eq("FAILED", r.health("Status"), "said");
-            T.contains(String.valueOf(r.health("Causes")), "F-GUEST-TLS-MODE", "with its own cause");
-            T.contains(res.failureCausesProperty(), "F-GUEST-TLS-MODE", "also on the account");
+            T.contains(String.valueOf(r.health("Causes")), "F-GUEST-TLS-INSECURE", "with its own cause");
+            T.contains(res.failureCausesProperty(), "F-GUEST-TLS-INSECURE", "also on the account");
             T.check(r.prop("res-host-1", "vCommunity|Configuration|Config Status") != null, "the rest of the cycle collects");
         }
         // the VM read failed: there is no list of Windows VMs
