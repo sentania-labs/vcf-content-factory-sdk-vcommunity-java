@@ -26,7 +26,8 @@ it is.
 |---|---:|---:|
 | Importer report, 253 objects | 670 | 43222 |
 | The two Section dashboards (from their YAML) | 81 | 5274 |
-| **All carried free text** | **751** | **48496** |
+| Objects written by hand after the conversion (name only, from their YAML) | 1 | 26 |
+| **All carried free text** | **752** | **48522** |
 
 ## By type
 
@@ -35,7 +36,7 @@ it is.
 | alert | 8 | 204 |
 | dashboard | 478 | 25357 |
 | report | 32 | 8314 |
-| supermetric | 4 | 489 |
+| supermetric | 5 | 515 |
 | symptom | 10 | 405 |
 | view | 219 | 13727 |
 
@@ -55,7 +56,7 @@ Widget fields are grouped by what they are, not by widget number. The Section da
 | report | description | 16 | 7846 |
 | report | name | 16 | 468 |
 | supermetric | description | 2 | 446 |
-| supermetric | name | 2 | 43 |
+| supermetric | name | 3 | 69 |
 | symptom | name | 10 | 405 |
 | view | description | 58 | 9293 |
 | view | name | 161 | 4434 |

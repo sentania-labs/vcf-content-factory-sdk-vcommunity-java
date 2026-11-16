@@ -803,7 +803,7 @@ public final class DerivedTest {
 
     /** DV-109 and DV-110 end to end. */
     static void upstreamFixes(FakeVc fake) throws Exception {
-        // DV-110: a version with no quarantine property (8.18): every condition that exists holds, 100 not 75
+        // DV-110: a version with no quarantine property (8.18): no host carries it, so the condition is left out
         try (Lab l = new Lab(fake)) {
             for (String h : new String[] {H1, H2, H3, H4}) l.d.props.get(h).remove(StatKeys.HOST_QUARANTINE);
             l.r.run();
@@ -811,6 +811,13 @@ public final class DerivedTest {
             chk(l, HOST, H2, V + "Availability|ESXi Host Operational Availability", 100.0);
             chk(l, HOST, H3, V + "Availability|ESXi Host Operational Availability", 66.67); // in maintenance: 2 of 3
             T.eq(100.0, l.st(0, C2, V + "Availability|Cluster Operational Availability"), "the cluster follows");
+        }
+        // B1: the version has the property (other hosts carry it) but one host has no value: that is not a pass
+        try (Lab l = new Lab(fake)) {
+            l.d.props.get(H1).remove(StatKeys.HOST_QUARANTINE);
+            l.r.run();
+            chk(l, HOST, H1, V + "Availability|ESXi Host Operational Availability", 75.0);
+            chk(l, HOST, H2, V + "Availability|ESXi Host Operational Availability", 100.0);
         }
         // with the property, a host in quarantine loses its quarter, as before
         try (Lab l = new Lab(fake)) {

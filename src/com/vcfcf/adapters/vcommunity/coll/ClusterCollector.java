@@ -152,8 +152,9 @@ public final class ClusterCollector {
 
     /**
      * The DRS score, 0 to 100, where 0 is the worst. It is published only when DRS is on and vCenter gave a
-     * score (Q9, DV-111): with DRS off there is nothing to score, and a score below zero is vCenter's "no score",
-     * so neither is sent as a 0 that would read as the worst balance. A score of 0 vCenter really gave stays.
+     * score (Q9, DV-111): with DRS off there is nothing to score, and a score below zero is outside the scale (we
+     * take it to mean "no score yet"; that is an assumption, not a documented value), so neither is sent as a 0 that
+     * would read as the worst balance. A score of 0 vCenter really gave stays.
      * A summary or DRS setting that could not be read is withheld and counted, as before.
      */
     private static void drsScore(ObjectOut o, XmlNode summary, boolean drsOn, boolean drsRead) {
@@ -173,7 +174,7 @@ public final class ClusterCollector {
         } else if (score == null) {
             o.statY(DRS + "DRS Score", null);
         } else if (score < 0) {
-            return; // vCenter's "no score yet"
+            return; // below zero is outside the scale: no score (assumed to mean "not yet scored")
         } else {
             o.stat(DRS + "DRS Score", score);
         }

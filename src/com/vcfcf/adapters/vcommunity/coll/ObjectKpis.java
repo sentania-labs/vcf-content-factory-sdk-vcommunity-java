@@ -360,6 +360,10 @@ final class ObjectKpis {
             for (String id : nr.failedIds) byRid.get(id).nicFailed = true;
         }
 
+        // whether this version has the quarantine property is decided once, from every host that was read
+        List<Map<String, String>> readProps = new ArrayList<>();
+        for (HostF f : hostsByMoref.values()) if (f.ok()) readProps.add(f.props);
+        boolean quarantineExists = Availability.quarantineExists(readProps);
         for (HostF f : hostsByMoref.values()) {
             Double cores = num(f.props.get(StatKeys.HOST_CORES));
             f.inv = new HostInv(f.rid, cores, HostInv.threads(cores, f.props.get(StatKeys.HOST_HT_AVAILABLE),
@@ -368,7 +372,7 @@ final class ObjectKpis {
             for (VmF v : poweredOnByHost.getOrDefault(f.moref, Collections.<VmF>emptyList())) {
                 f.inv.vms.add(new HostInv.Vm(v.vcpus, v.memoryMb));
             }
-            if (f.ok()) f.availability = Availability.ofHost(f.stats.get(StatKeys.HOST_POWERED_ON), f.props);
+            if (f.ok()) f.availability = Availability.ofHost(f.stats.get(StatKeys.HOST_POWERED_ON), f.props, quarantineExists);
         }
         // upstream publishes no availability at all when no host answered either read (Q15)
         boolean anyAnswer = false;

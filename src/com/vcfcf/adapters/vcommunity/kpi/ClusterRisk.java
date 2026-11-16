@@ -9,7 +9,8 @@ import java.util.function.Function;
  * Cluster Risk (map D2): twelve rows, each computed for every host of the cluster and then the highest
  * host taken. Higher is worse; the KPI is published as 100 minus its score. Written to give the
  * original's value for every input, including its use of "no value" for a zero (a host whose DRAM
- * capacity statistic is 0 falls back to the provisioned memory).
+ * capacity statistic is 0 falls back to the provisioned memory), except on a host with memory tiering:
+ * every row that divides by the host's memory uses DRAM plus the NVMe tier there (DV-109).
  */
 public final class ClusterRisk {
 
@@ -28,12 +29,13 @@ public final class ClusterRisk {
     }
 
     /**
-     * The memory consumed memory is drawn from. On a host with memory tiering the consumed figure covers both
-     * tiers, so the capacity is the DRAM tier plus the NVMe tier; on any other host it is the DRAM, as always.
-     * Only the DRAM tier statistic is added to: when the DRAM falls back to the provisioned memory, that
-     * figure already holds both tiers and nothing is added.
+     * The host's memory capacity, which every memory row divides by. On a host with memory tiering it is the DRAM
+     * tier plus the NVMe tier: the host's memory is both, the consumed figure counts both, and the same host reads
+     * that total through a version that has no DRAM tier statistic (it falls back to the provisioned memory). On any
+     * other host it is the DRAM, as always. The tier is added only to the DRAM tier statistic: when the DRAM fell
+     * back to the provisioned memory, that figure already holds both tiers and nothing is added.
      */
-    public static Double consumedCapacityKb(Map<String, Double> s) {
+    public static Double memoryCapacityKb(Map<String, Double> s) {
         Double dram = dramKb(s);
         if (dram == null) return null;
         Double tier = s.get(StatKeys.NVME_TIER_SIZE);
@@ -41,9 +43,9 @@ public final class ClusterRisk {
         return dram;
     }
 
-    private static Double percentOfDram(Map<String, Double> s, double memoryKb) {
-        Double dram = dramKb(s);
-        return dram == null ? null : Stat.percent(memoryKb, dram);
+    private static Double percentOfMemory(Map<String, Double> s, double memoryKb) {
+        Double capacity = memoryCapacityKb(s);
+        return capacity == null ? null : Stat.percent(memoryKb, capacity);
     }
 
     /** One host's value for each row; a row it has no value for is missing from the map. */
@@ -52,22 +54,21 @@ public final class ClusterRisk {
         put(v, KpiTable.R_THREADS, s.get(StatKeys.CPU_THREAD_UTIL));
         put(v, KpiTable.R_IMBALANCE, imbalance(host, s));
         Double consumed = s.get(StatKeys.MEM_CONSUMED);
-        Double consumedCap = consumedCapacityKb(s);
-        put(v, KpiTable.R_MEM_CONSUMED, consumed == null || consumedCap == null ? null : Stat.percent(consumed, consumedCap));
+        put(v, KpiTable.R_MEM_CONSUMED, consumed == null ? null : percentOfMemory(s, consumed));
         Double ballooned = s.get(StatKeys.MEM_BALLOONED);
-        put(v, KpiTable.R_BALLOONED, ballooned == null ? null : percentOfDram(s, ballooned));
+        put(v, KpiTable.R_BALLOONED, ballooned == null ? null : percentOfMemory(s, ballooned));
         put(v, KpiTable.R_ZIPSWAP, Stat.hasAll(s, StatKeys.MEM_COMPRESSED, StatKeys.MEM_SWAPPED)
-                ? percentOfDram(s, s.get(StatKeys.MEM_COMPRESSED) + s.get(StatKeys.MEM_SWAPPED)) : null);
+                ? percentOfMemory(s, s.get(StatKeys.MEM_COMPRESSED) + s.get(StatKeys.MEM_SWAPPED)) : null);
         put(v, KpiTable.R_TIERING, s.get(StatKeys.MEM_TIERING_LATENCY));
         put(v, KpiTable.R_CPU_RESERVATION, Stat.hasAll(s, StatKeys.CPU_RESERVED, StatKeys.CPU_CAPACITY)
                 ? Stat.percent(s.get(StatKeys.CPU_RESERVED), s.get(StatKeys.CPU_CAPACITY)) : null);
         Double reserved = s.get(StatKeys.MEM_RESERVED);
-        put(v, KpiTable.R_MEM_RESERVATION, reserved == null ? null : percentOfDram(s, reserved));
+        put(v, KpiTable.R_MEM_RESERVATION, reserved == null ? null : percentOfMemory(s, reserved));
         Double vcpus = s.get(StatKeys.VCPUS_ALLOCATED);
         put(v, KpiTable.R_CPU_OVERCOMMIT, !Stat.truthy(host.cores) || vcpus == null ? null : vcpus / host.cores);
-        Double dram = dramKb(s);
+        Double capacity = memoryCapacityKb(s);
         Double allocated = s.get(StatKeys.MEM_ALLOCATED);
-        put(v, KpiTable.R_MEM_OVERCOMMIT, allocated == null || dram == null ? null : allocated / dram);
+        put(v, KpiTable.R_MEM_OVERCOMMIT, allocated == null || capacity == null ? null : allocated / capacity);
         put(v, KpiTable.R_CPU_MONSTER, cpuMonster(host, monster));
         put(v, KpiTable.R_MEM_MONSTER, memoryMonster(host, s, monster));
         return v;
@@ -103,9 +104,9 @@ public final class ClusterRisk {
         for (HostInv.Vm vm : host.vms) {
             if (Stat.truthy(vm.memoryMb) && (max == null || vm.memoryMb > max)) max = vm.memoryMb;
         }
-        Double dram = dramKb(s);
-        if (dram == null || max == null) return null;
-        double monsterMb = Math.min(monster.ratioOfDram * dram / 1024.0, monster.memoryMinMb);
+        Double capacity = memoryCapacityKb(s);
+        if (capacity == null || max == null) return null;
+        double monsterMb = Math.min(monster.ratioOfDram * capacity / 1024.0, monster.memoryMinMb);
         if (monsterMb == 0) return null; // the original would raise here; no row is left
         return max / monsterMb;
     }

@@ -534,28 +534,39 @@ public final class KpiTest {
         t.put(StatKeys.MEM_DRAM_CAPACITY, 131784480.0);
         t.put(StatKeys.NVME_TIER_SIZE, 131784480.0);
         t.put(StatKeys.MEM_DRAM_FALLBACK, 263570560.0);
-        eq(263568960.0, ClusterRisk.consumedCapacityKb(t), "DRAM plus the NVMe tier");
+        eq(263568960.0, ClusterRisk.memoryCapacityKb(t), "DRAM plus the NVMe tier");
         t.put(StatKeys.MEM_CONSUMED, 151967904.0);
         HostInv th = host("t", 32, 64, 0, 0, 0);
         near(57.66, PyRound.round2(ClusterRisk.hostValues(th, t, MonsterVm.DEFAULT).get("Highest ESXi Memory Consumed")),
                 1e-9, "a tiered host cannot pass 100 % on consumed memory");
-        // the other memory rows stay on the DRAM alone
+        // every memory row divides by the same total (DV-109)
         t.put(StatKeys.MEM_BALLOONED, 13178448.0);
-        eq(10.0, ClusterRisk.hostValues(th, t, MonsterVm.DEFAULT).get("Worst ESXi Memory Ballooned"), "ballooned: DRAM");
+        eq(5.0, ClusterRisk.hostValues(th, t, MonsterVm.DEFAULT).get("Worst ESXi Memory Ballooned"), "ballooned: DRAM plus the tier");
+        t.put(StatKeys.MEM_RESERVED, 26356896.0);
+        eq(10.0, ClusterRisk.hostValues(th, t, MonsterVm.DEFAULT).get("Highest ESXi Memory Reservation"), "reservation, same total");
+        t.put(StatKeys.MEM_ALLOCATED, 263568960.0);
+        eq(1.0, ClusterRisk.hostValues(th, t, MonsterVm.DEFAULT).get("Highest ESXi Memory Overcommit Ratio"), "overcommit, same total");
+        // a 4:1 tier (the wld hosts: 66,904,440 KB of DRAM, 267,617,760 KB of tier), so a 2 x DRAM error would show
+        Map<String, Double> f4 = new HashMap<>();
+        f4.put(StatKeys.MEM_DRAM_CAPACITY, 66904440.0);
+        f4.put(StatKeys.NVME_TIER_SIZE, 267617760.0);
+        eq(334522200.0, ClusterRisk.memoryCapacityKb(f4), "DRAM plus a 4:1 tier");
+        f4.put(StatKeys.MEM_CONSUMED, 66904440.0);
+        eq(20.0, ClusterRisk.hostValues(th, f4, MonsterVm.DEFAULT).get("Highest ESXi Memory Consumed"), "20 %, not 50 or 100");
         // no tier size, or a 0, or the tiering switched off: DRAM, as before
         Map<String, Double> flat = new HashMap<>(t);
         flat.remove(StatKeys.NVME_TIER_SIZE);
-        eq(131784480.0, ClusterRisk.consumedCapacityKb(flat), "no tier statistic");
+        eq(131784480.0, ClusterRisk.memoryCapacityKb(flat), "no tier statistic");
         flat.put(StatKeys.NVME_TIER_SIZE, 0.0);
-        eq(131784480.0, ClusterRisk.consumedCapacityKb(flat), "a tier of 0");
+        eq(131784480.0, ClusterRisk.memoryCapacityKb(flat), "a tier of 0");
         near(115.32, PyRound.round2(ClusterRisk.hostValues(th, flat, MonsterVm.DEFAULT).get("Highest ESXi Memory Consumed")),
                 1e-9, "a host without tiering gives exactly the DRAM-only value");
         // the DRAM fell back to the provisioned memory, which already holds both tiers: nothing is added
         Map<String, Double> fb = new HashMap<>();
         fb.put(StatKeys.MEM_DRAM_FALLBACK, 263570560.0);
         fb.put(StatKeys.NVME_TIER_SIZE, 131784480.0);
-        eq(263570560.0, ClusterRisk.consumedCapacityKb(fb), "the fallback is not added to");
-        check(ClusterRisk.consumedCapacityKb(new HashMap<>()) == null, "no capacity, no value");
+        eq(263570560.0, ClusterRisk.memoryCapacityKb(fb), "the fallback is not added to");
+        check(ClusterRisk.memoryCapacityKb(new HashMap<>()) == null, "no capacity, no value");
 
         // zip and swap add per host, then the highest host
         Map<String, Double> h1 = new HashMap<>();
@@ -623,7 +634,7 @@ public final class KpiTest {
         }
         Map<String, Double> tierV = ClusterConsumption.values(hosts, h -> tiered.get(h.id), cluster(1.0));
         eq(31.67, PyRound.round2(tierV.get("Cluster-wide ESXi Memory Consumed")), "memory against DRAM plus the tier");
-        eq(0.67, PyRound.round2(tierV.get("Cluster-wide ESXi Memory Ballooned")), "ballooned stays on DRAM");
+        eq(0.33, PyRound.round2(tierV.get("Cluster-wide ESXi Memory Ballooned")), "ballooned: the same total");
 
         v = ClusterConsumption.values(hosts, h -> st.get(h.id), cluster(0.8));
         eq(62.5, PyRound.round2(v.get("Cluster-wide ESXi CPU Thread Utilization")), "against usable capacity");
@@ -657,7 +668,7 @@ public final class KpiTest {
         Map<String, Double> tv = ClusterConsumption.values(hosts, h -> ts.get(h.id), cluster(0.8));
         eq(9.77, PyRound.round2(tv.get("Cluster Memory Tiering Consumption")), "20 GB of 204.8 GB");
         eq(59.37, PyRound.round2(tv.get("Cluster-wide ESXi Memory Consumed")), "consumed is over DRAM plus the tier (DV-109): 486.4 of 819.2 GB");
-        eq(0.83, PyRound.round2(tv.get("Cluster-wide ESXi Memory Ballooned")), "the other DRAM rows do not change with a tier");
+        eq(0.62, PyRound.round2(tv.get("Cluster-wide ESXi Memory Ballooned")), "the other memory rows use the same total (DV-109)");
 
         // no usable capacity: no value, a 0 is full, a missing one is no data
         for (Map<String, Double> bad : Arrays.asList(new HashMap<String, Double>(), cluster(0.0))) {
@@ -733,28 +744,34 @@ public final class KpiTest {
         up.put(StatKeys.HOST_CONNECTION, "connected");
         up.put(StatKeys.HOST_MAINTENANCE, "notInMaintenance");
         up.put(StatKeys.HOST_QUARANTINE, "notInQuarantine");
-        eq(100.0, Availability.ofHost(1.0, up), "fully available");
+        eq(100.0, Availability.ofHost(1.0, up, true), "fully available");
         Map<String, String> dis = new HashMap<>(up);
         dis.put(StatKeys.HOST_CONNECTION, "disconnected");
-        eq(75.0, Availability.ofHost(1.0, dis), "disconnected is not connected");
+        eq(75.0, Availability.ofHost(1.0, dis, true), "disconnected is not connected");
         Map<String, String> mnt = new HashMap<>(up);
         mnt.put(StatKeys.HOST_MAINTENANCE, "inMaintenance");
-        eq(75.0, Availability.ofHost(1.0, mnt), "in maintenance");
+        eq(75.0, Availability.ofHost(1.0, mnt, true), "in maintenance");
         Map<String, String> nr = new HashMap<>(up);
         nr.put(StatKeys.HOST_CONNECTION, "notResponding");
-        eq(50.0, Availability.ofHost(0.0, nr), "each condition is 25");
-        eq(0.0, Availability.ofHost(null, new HashMap<>()), "no data is 0");
+        eq(50.0, Availability.ofHost(0.0, nr, true), "each condition is 25");
+        eq(0.0, Availability.ofHost(null, new HashMap<>(), true), "no data is 0");
         // DV-110: a host that reports the quarantine property behaves as before
         Map<String, String> inq = new HashMap<>(up);
         inq.put(StatKeys.HOST_QUARANTINE, "inQuarantine");
-        eq(75.0, Availability.ofHost(1.0, inq), "in quarantine still fails one of four");
+        eq(75.0, Availability.ofHost(1.0, inq, true), "in quarantine still fails one of four");
         // without the property (8.18): left out, three of three is 100, and it is neither met nor failed
         Map<String, String> old = new HashMap<>(up);
         old.remove(StatKeys.HOST_QUARANTINE);
-        eq(100.0, Availability.ofHost(1.0, old), "no quarantine property: 3 of 3");
-        eq(66.67, PyRound.round2(Availability.ofHost(1.0, withoutQuarantine(mnt))), "no property and in maintenance: 2 of 3");
-        eq(66.67, PyRound.round2(Availability.ofHost(0.0, old)), "no property and powered off: 2 of 3");
-        eq(0.0, Availability.ofHost(null, new HashMap<>()), "nothing read at all is still 0");
+        eq(100.0, Availability.ofHost(1.0, old, false), "no quarantine property: 3 of 3");
+        eq(66.67, PyRound.round2(Availability.ofHost(1.0, withoutQuarantine(mnt), false)), "no property and in maintenance: 2 of 3");
+        eq(66.67, PyRound.round2(Availability.ofHost(0.0, old, false)), "no property and powered off: 2 of 3");
+        eq(0.0, Availability.ofHost(null, new HashMap<>(), false), "nothing read at all is still 0");
+
+        // DV-110: the property exists on this version (some host carries it) but this host has no value: not met
+        eq(75.0, Availability.ofHost(1.0, old, true), "a host with no value where the version has the property: 3 of 4");
+        check(Availability.quarantineExists(Arrays.asList(old, up)), "one host carrying it settles it for the cycle");
+        check(!Availability.quarantineExists(Arrays.asList(old, new HashMap<String, String>())), "no host carries it");
+        check(!Availability.quarantineExists(new ArrayList<Map<String, String>>()), "no host answered");
 
         eq(100.0, Availability.ofCluster(Arrays.asList(100.0, 100.0, 100.0, 100.0), 4.0, 0.0), "N+0 healthy");
         eq(93.75, Availability.ofCluster(Arrays.asList(100.0, 100.0, 100.0, 75.0), 4.0, 0.0), "N+0 counts every host");

@@ -1,0 +1,33 @@
+{
+ "request": "GET /suite-api/api/resources/13d5bc5a-bc1a-4fd7-a148-c52c3cff084d/properties",
+ "note": "trimmed to the runtime|* properties; GET /api/resources/{id}/properties, 2026-11-16",
+ "status": 200,
+ "response": {
+  "property": [
+   {
+    "name": "runtime|powerState",
+    "value": "Powered On"
+   },
+   {
+    "name": "runtime|isUnavailable",
+    "value": "0.0"
+   },
+   {
+    "name": "runtime|cryptoState",
+    "value": "incapable"
+   },
+   {
+    "name": "runtime|maintenanceState",
+    "value": "notInMaintenance"
+   },
+   {
+    "name": "runtime|connectionState",
+    "value": "connected"
+   },
+   {
+    "name": "runtime|quarantineState",
+    "value": "notInQuarantine"
+   }
+  ]
+ }
+}

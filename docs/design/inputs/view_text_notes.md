@@ -12,7 +12,7 @@ Source for built-in titles
 Thin or odd definitions
 - ESXi Switch property (`f62618d5-...`): columns are bound to one specific host instance (`host:10.156.17.100`), so the description says the host columns are bound to a single host instance.
 - Guest OS Partition List, VM Network Card Configuration, VM Snapshots List, VM Virtual Disks: columns are bound to one instance (root partition, first adapter, `snapshot-1`, `scsi0:0`). Descriptions say so.
-- VM Memory Limit (`223a2177-...`): filter is on memory limit but the charted column is the CPU limit. The description states this rather than guessing intent.
+- VM Memory Limit (`223a2177-...`): the source charted the CPU limit under a memory-limit filter; the shipped view charts the memory limit (`config|memoryAllocation|limit`, in GB) and its description says so.
 - VCF Management Services Components View and vSphere Data Centers Inventory: no subject in the definition. Described from the columns.
 - VM Distribution by Disk Size: filter is "disk space greater than 500" with no unit in the definition; described without a unit.
 - VM Network Top Talkers: filter "average network throughput greater than 12", unit not stated in the definition.

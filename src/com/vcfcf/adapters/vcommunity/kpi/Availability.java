@@ -11,32 +11,37 @@ public final class Availability {
     private Availability() {}
 
     public static final String GROUP = "Availability";
-    public static final double POINTS_PER_CONDITION = 25.0;
 
     /**
      * A host's figure: the share of its conditions that hold, as a percentage. The conditions are that the
      * powered-on statistic is 1, the host is connected, it is not in maintenance and it is not in quarantine.
-     * A condition nothing was stored for does not hold, except the quarantine one: not every VCF Operations
-     * version has the quarantine property at all (the 8.18 vSphere adapter does not), and a property that does
-     * not exist is neither met nor failed, so it is left out and the other three decide (3 of 3 is 100). The
-     * result is 0, 25, 50, 75 or 100 with the property, and 0, 33.33, 66.67 or 100 without it. The caller has
-     * already established that the properties were read: a read that failed is withheld before this is called.
+     * A condition nothing was stored for does not hold. The exception is the quarantine condition on a version that
+     * has no quarantine property at all (the 8.18 vSphere adapter does not): there it is neither met nor failed, so
+     * it is left out and the other three decide (3 of 3 is 100). Whether the property exists is decided once per
+     * cycle from the whole answer (see {@link #quarantineExists}), never from one host: on a version that has it, a
+     * host with no value for it does not meet the condition. The caller has already established that the
+     * properties were read: a read that failed is withheld before this is called.
      *
-     * @param poweredOn the latest {@code sys|poweredOn} sample, or null
-     * @param props     the runtime properties of the host, as read (a property that does not exist is absent)
+     * @param poweredOn        the latest {@code sys|poweredOn} sample, or null
+     * @param props            the runtime properties of the host, as read
+     * @param quarantineExists whether any host of the cycle's answer carries the quarantine property
      */
-    public static double ofHost(Double poweredOn, Map<String, String> props) {
+    public static double ofHost(Double poweredOn, Map<String, String> props, boolean quarantineExists) {
         int met = 0;
-        int counted = 3;
+        int counted = quarantineExists ? 4 : 3;
         if (poweredOn != null && poweredOn == 1.0) met++;
         if ("connected".equals(props.get(StatKeys.HOST_CONNECTION))) met++;
         if ("notInMaintenance".equals(props.get(StatKeys.HOST_MAINTENANCE))) met++;
-        String quarantine = props.get(StatKeys.HOST_QUARANTINE);
-        if (quarantine != null) {
-            counted++;
-            if ("notInQuarantine".equals(quarantine)) met++;
-        }
+        if (quarantineExists && "notInQuarantine".equals(props.get(StatKeys.HOST_QUARANTINE))) met++;
         return 100.0 * met / counted;
+    }
+
+    /** True when any of the hosts' property answers carries the quarantine property: then the version has it. */
+    public static boolean quarantineExists(Iterable<Map<String, String>> hostProps) {
+        for (Map<String, String> p : hostProps) {
+            if (p.get(StatKeys.HOST_QUARANTINE) != null) return true;
+        }
+        return false;
     }
 
     /**

@@ -22,7 +22,7 @@ metrics: the cluster, host and VM scores, availability, network speed, shares,
 port groups, resource pools, the periodic cluster check, the vSphere World
 roll-ups and the Business Application figures, phase 5 the guest checks (off by default)
 and Windows events. Phase 6 ships the content: 170 views, 52 dashboards, 16 reports,
-2 super metrics, 10 symptoms, 4 alerts with 1 recommendation, and the six check-list files
+3 super metrics, 10 symptoms, 4 alerts with 1 recommendation, and the six check-list files
 (`docs/installing.md`, "Content"). `docs/p2-key-coverage.tsv`,
 `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv` and `docs/p5-key-coverage.tsv` list every key of the key
 map with whether this build collects it and the test that proves it.

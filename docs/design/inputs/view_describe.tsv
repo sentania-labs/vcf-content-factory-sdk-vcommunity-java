@@ -52,7 +52,7 @@ view	ec868fe4-b7b4-4620-8e20-38f23667b21f	Bar chart showing how many virtual mac
 view	76e2cd25-11ac-4923-a4a2-0deb5ed794a7	Bar chart placing virtual machines in six buckets by 99th percentile peak memory contention over one week, from 0 to 10 percent and above, colored green to red.
 view	093a55c0-332c-486a-a346-4b549fc63a21	Bar chart placing virtual machines in four buckets by 99th percentile peak memory contention over the last day: under 2, 2 to 4, 4 to 8 and above 8 percent.
 view	62f0a9c3-bef0-4c27-8f3c-da3f08b169b8	Donut chart showing how many virtual machines are configured with each memory size in GB, one slice per size.
-view	223a2177-e1a6-4e2b-a207-b28db8339245	Pie chart of virtual machines that have a memory limit above zero. Its charted column reads the CPU limit value rather than a memory value, so the slices need checking before use.
+view	223a2177-e1a6-4e2b-a207-b28db8339245	Pie chart of virtual machines that have a memory limit above zero, grouped by the limit value (config|memoryAllocation|limit, shown in GB).
 view	4f798a43-fc5b-4760-b744-1b159644f9a9	Bar chart counting virtual machines by configured memory in GB, in doubling buckets from under 16 GB to above 512 GB.
 view	65ad9e7b-a972-48f4-9d0f-f59e03f27d99	Bar chart of idle virtual machines grouped by consumed memory in GB, in buckets of up to 32, 64, 128 and larger.
 view	1304ea60-5615-4a71-9454-68140418006f	Per-VM table of network adapter details: IP address, MAC address, port group and adapter type for the first adapter instance.

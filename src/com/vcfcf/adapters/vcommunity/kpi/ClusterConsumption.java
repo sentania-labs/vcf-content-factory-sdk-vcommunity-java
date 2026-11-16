@@ -9,7 +9,8 @@ import java.util.function.Function;
  * Cluster Consumption (map D3): the share of the cluster's usable capacity that is consumed, in five rows.
  * The cluster's usable capacity, as a percentage of its total, is applied to the threads, DRAM and
  * memory tier of the hosts that are running. Higher is worse; the KPI is published as 100 minus its score.
- * Written to give the original's value for every input.
+ * Written to give the original's value for every input, except that on a host with memory tiering the memory rows
+ * divide by DRAM plus the NVMe tier (DV-109).
  */
 public final class ClusterConsumption {
 
@@ -59,7 +60,7 @@ public final class ClusterConsumption {
         Double cpuThreads;
         List<HostInv> cpuHosts;
         Double dramKb;
-        /** The capacity consumed memory is drawn from: DRAM, plus the NVMe tier on a host that has one. */
+        /** The memory capacity of the hosts: DRAM, plus the NVMe tier on a host that has one (DV-109). */
         Double consumedKb;
         List<HostInv> dramHosts;
         Double nvmeKb;
@@ -89,7 +90,7 @@ public final class ClusterConsumption {
         double consumedCap = 0;
         for (HostInv h : u.dramHosts) {
             dram += ClusterRisk.dramKb(statsOf.apply(h));
-            consumedCap += ClusterRisk.consumedCapacityKb(statsOf.apply(h));
+            consumedCap += ClusterRisk.memoryCapacityKb(statsOf.apply(h));
         }
         u.nvmeHosts = new java.util.ArrayList<>();
         for (HostInv h : hosts) {
@@ -139,9 +140,9 @@ public final class ClusterConsumption {
         put(v, KpiTable.C_MEMORY, shareOfUsable(total(u.dramHosts, statsOf, StatKeys.MEM_CONSUMED), u.consumedKb));
         Double usedMb = total(u.nvmeHosts, statsOf, StatKeys.NVME_TIER_USAGE);
         put(v, KpiTable.C_TIERING, shareOfUsable(usedMb == null ? null : usedMb * 1024.0, u.nvmeKb));
-        put(v, KpiTable.C_BALLOONED, shareOfUsable(total(u.dramHosts, statsOf, StatKeys.MEM_BALLOONED), u.dramKb));
+        put(v, KpiTable.C_BALLOONED, shareOfUsable(total(u.dramHosts, statsOf, StatKeys.MEM_BALLOONED), u.consumedKb));
         put(v, KpiTable.C_ZIPSWAP, shareOfUsable(total(u.dramHosts, statsOf, StatKeys.MEM_COMPRESSED,
-                StatKeys.MEM_SWAPPED), u.dramKb));
+                StatKeys.MEM_SWAPPED), u.consumedKb));
         return v;
     }
 

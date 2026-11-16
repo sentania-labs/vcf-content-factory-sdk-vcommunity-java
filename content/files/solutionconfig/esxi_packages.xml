@@ -25,6 +25,7 @@
     esx-base,
     nenic,
     nfnic,
+    nsx-host,
     lsi-mr3,
     vmw-ahci,
 -->

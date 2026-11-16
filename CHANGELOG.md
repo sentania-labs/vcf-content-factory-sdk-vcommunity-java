@@ -3,9 +3,14 @@
 One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
 `v*` tag built by this repository's CI.
 
-## 1.0.0.23 (Unreleased)
+## 1.0.0.24 (Unreleased)
 
-- fix(adapter): three upstream defects the port carried (docs/reviews/upstream-bug-audit-2026-11-16.md): memory consumed on a memory-tiering host is divided by DRAM plus the NVMe tier, not DRAM alone, so it no longer passes 100 % (DV-109, Q18); host availability leaves out the quarantine condition when the host has no such property (8.18), so a healthy host is 100, not 75 (DV-110, Q19); no DRS Score while DRS is off or the score is negative, and no HBA or SCSI Controllers count when the list was not returned, instead of a 0 (DV-111, Q9); build 23.
+- review of builds 23 (DV-109 to DV-111): every memory row of a tiered host divides by DRAM plus the NVMe tier, not only consumed memory (ballooned, zip and swap, reservation, over-commit, monster VM; non-tiered hosts unchanged); whether the quarantine property exists is decided once per cycle from the whole answer, so a 9.x host with no value for it scores 75, not 100; the three keys that no longer send a 0 keep their last value in Operations after an upgrade (DV-111, installing guide); "vSphere Clusters not Green" is listed in `bundled_content` (3 super metrics, counts and enablement text corrected); docs corrected for the license alert, the unset-value text and the package views, which need `nenic`, `nfnic` and `nsx-host` named in the packages list (`nsx-host` added as a commented example); the super metric header and carried-text report corrected; recorded 8.18.7 and 9.0.2 host properties as fixtures; build 24.
+
+## 1.0.0.23
+
+- fix(adapter): three upstream defects the port carried (docs/reviews/upstream-bug-audit-2026-11-16.md): memory consumed on a memory-tiering host is divided by DRAM plus the NVMe tier, not DRAM alone, so it no longer passes 100 % (DV-109, Q18); host availability leaves out the quarantine condition when the host has no such property (8.18), so a healthy host is 100, not 75 (DV-110, Q19); no DRS Score while DRS is off or negative, and no HBA or SCSI Controllers count when the list was not returned, instead of a 0 (DV-111, Q9); build 23.
+- content: the five package views (nenic and nfnic vendor and version distributions, VIB Info) read the keys the adapter publishes; VM Memory Limit charts the memory limit (it charted the CPU limit); the namespace limit column of the namespace CSV view reads `mem|limit`; the seven license symptoms of "ESXi Host License Expiring" read the generic instanced key, so the alert covers every license with an expiration date (Q17 fixed); the super metric "vSphere Clusters not Green" is shipped and charted by the dashboards "Report: Executive Summary (page 3)" and "Report: vSphere Compute Performance" (it counts clusters whose Cluster Performance Score is below 75; it computes only when enabled in the policy on the vSphere World).
 
 ## 1.0.0.22
 
