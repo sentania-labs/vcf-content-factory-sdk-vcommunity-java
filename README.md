@@ -42,7 +42,7 @@ the same names. This pak's content is under ids of its own (namespace `vcfcf_vco
 it does not overwrite the Python pack's content, and uninstalling one does not delete the other's.
 
 - Carries over: the metric and property keys are the same names on the same objects, so their
-  history continues (not measured across an uninstall and install on an instance).
+  history continues (measured on 8.18.7: one continuous series per key across the move).
 - Replaced: dashboards, views, reports, super metrics, symptoms, alerts and the recommendation
   are this pak's copies under new ids and the same names. Anything you cloned or customized from
   the old content is yours to keep or re-point; the alert history of the old definitions stays with them.
@@ -51,7 +51,12 @@ it does not overwrite the Python pack's content, and uninstalling one does not d
   code, not measured). Save your edited check lists first and re-apply them in copies under other names.
 - Built-in views: some Python pack versions ship views under built-in view ids, and uninstalling
   them deletes those built-in views (measured). Have a clean export of the built-in views of the same
-  product version at hand and import it after the uninstall.
+  product version at hand, from an instance that never had the Python pack, and import it after the
+  uninstall through Administration > Control Panel > Content Management > Import (measured on 9.1.1:
+  all 120 views restored).
+
+In short: (1) save your edited check lists, (2) uninstall the Python pack, (3) if it was one of the
+affected versions, import the built-in views export, (4) install this pak, (5) re-apply your check lists.
 
 **Supported path: uninstall, then install fresh.** This is the only supported way onto this pak
 from the Python pack, and from any earlier dev build of this pak that used different content ids

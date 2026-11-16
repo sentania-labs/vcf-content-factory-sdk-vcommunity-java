@@ -110,35 +110,64 @@ final class Coverage {
         return null;
     }
 
+    /**
+     * The rows that might send nothing when their value is unset: a candidate list only. A row gets its note only when
+     * {@code PropertiesTest.noSentinels} saw the key pushed for a full object and not pushed for the bare one.
+     */
+    static boolean unsetCandidate(int row) {
+        // not the per-adapter, per-NIC, per-adapter-card and per-disk fields (R20-R25, R31-R38, R122, R123, R126-R130): the
+        // bare objects have no such list, so the sweep would only show the list is unset, not each field
+        return row == 1 || (row >= 7 && row <= 19) || row == 47
+                || (row >= 50 && row <= 52) || (row >= 60 && row <= 69) || row == 96
+                || (row >= 82 && row <= 120) || (row >= 132 && row <= 151) || row == 220 || row == 226;
+    }
+
+    /** Kind to the key-map keys the sweep saw absent on a bare object and present on a full one. */
+    static final Map<String, java.util.Set<String>> unsetObserved = new LinkedHashMap<>();
+
+    static synchronized void unsetObserved(String kind, String keyMapKey) {
+        unsetObserved.computeIfAbsent(kind, k -> new java.util.LinkedHashSet<>()).add(keyMapKey);
+    }
+
     /** Notes of implemented rows, where something differs from the plain read. */
     static String note(int row) {
+        return baseNote(row);
+    }
+
+    static String unsetNote(Row r) {
+        java.util.Set<String> seen = unsetObserved.get(r.kind);
+        return seen != null && seen.contains(r.key) ? "unset: nothing is sent (DV-112)" : "";
+    }
+
+    private static String baseNote(int row) {
         switch (row) {
-            case 1: return "ISO UTC text; no image manager or no date is \"null\" (Q9); a failed call is counted (F-HOST-INSTALLDATE), not sent as null (DV-10)";
+            case 1: return "ISO UTC text; no image manager or no date: nothing is sent (DV-112); a failed call is counted (F-HOST-INSTALLDATE), not sent as null (DV-10)";
             case 3: return "masked to the last group (DV-25)";
-            case 6: return "metric, floor of days";
-            case 7: return "count of the adapters read; a list that came back empty is a real 0; a list not returned sends nothing (Q9, DV-111)";
-            case 31: case 32: return "no PCI device for the NIC: \"N/A\" (Q9)";
-            case 33: case 34: case 35: return "signed 16-bit text, as upstream (Q3); \"N/A\" with no device (Q9)";
-            case 39: return "half-duplex while the link is down, as upstream (Q10)";
+            case 20: return "the device name, else the adapter key; an adapter that cannot be named is withheld and counted";
+            case 6: return "floor of days";
+            case 7: return "count of the adapters read; a list that came back empty is a real 0; a list not returned sends nothing (DV-111, DV-112)";
+            case 31: case 32: return "no PCI device for the NIC: nothing is sent (DV-112)";
+            case 33: case 34: case 35: return "signed 16-bit text, as upstream (Q3); nothing with no device (DV-112)";
+            case 39: return "only from a returned duplex flag; nothing for a link that is down or a flag that is absent (DV-112)";
             case 43: return "numeric property (framework typed push)";
-            case 47: return "\"0\" for a datastore with no VMFS extents, as upstream (Q9)";
+            case 47: return "a datastore with no VMFS information has no count: nothing is sent (DV-112)";
             case 56: return "withheld on a failed read-back or probe (DV-23)";
-            case 96: return "negative value read becomes 0, as the original; unset is 0 (Q9)";
-            case 120: return "metric; a device list that came back with no controller is a real 0; a list not returned sends nothing (Q9, DV-111)";
+            case 96: return "negative value read becomes 0, as the original (Q5); a value that is not a whole number is withheld and counted";
+            case 120: return "a device list that came back with no controller is a real 0; a list not returned sends nothing (DV-111, DV-112)";
             case 121: return "type text of an unmapped controller is its vim25 type name (DV-34)";
             case 131: case 257: return "invalid entry dropped and reported (DV-26)";
             case 132: case 133: case 134: case 135: case 136: case 137: case 138: case 139: case 140:
             case 141: case 142:
-                return "HA off or host monitoring disabled: \"null\"; unset: \"None\" (Q9)";
-            case 144: return "False when the cluster summary was read and names no mode (kept, Q2)";
-            case 145: return "\"null\" when EVC is off (Q9)";
-            case 146: case 147: case 148: case 149: return "DRS off, or the value missing: \"null\"; no proactive configuration: none, as upstream (Q9)";
-            case 151: return "metric; not returned: 0, as upstream's default (Q9)";
-            case 220: return "metric; nothing while DRS is off or vCenter gives a negative score (Q9, DV-111); a score of 0 vCenter gave is sent";
+                return "HA off or host monitoring disabled, or unset: nothing is sent (DV-112)";
+            case 144: return "False when a returned summary names no mode; nothing when the summary is unset (DV-112)";
+            case 145: return "nothing when EVC is off (DV-112)";
+            case 146: case 147: case 148: case 149: return "DRS off, or the value missing: nothing is sent (DV-112)";
+            case 151: return "";
+            case 220: return "nothing while DRS is off or vCenter gives a negative score (DV-111, DV-112); a score of 0 vCenter gave is sent";
             case 253: case 254: return "built in P1; counted here because the cycle pushes them with the property keys";
-            case 226: return "unset: \"None\" (Q9)";
+            case 226: return "unset: nothing is sent (DV-112)";
             default:
-                if (row >= 60 && row <= 69) return "a setting vCenter lacks or leaves blank: \"null\" (Q9)";
+                if (row >= 60 && row <= 69) return "a setting vCenter lacks: nothing is sent; one it returns blank is sent as it is (DV-112)";
                 return "";
         }
     }
@@ -199,6 +228,8 @@ final class Coverage {
             } else {
                 yes++;
                 String n = note(r.n);
+                String u = unsetNote(r);
+                if (!u.isEmpty() && !n.contains("DV-112")) n = n.isEmpty() ? u : n + "; " + u;
                 b.append("R").append(r.n).append('\t').append(r.key).append('\t').append(r.kind)
                         .append("\tyes\t").append(test).append('\t').append(r.type)
                         .append(n.isEmpty() ? "" : "; " + n).append('\t').append(phase(r.n)).append('\n');

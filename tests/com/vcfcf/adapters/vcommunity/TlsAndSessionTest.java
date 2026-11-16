@@ -92,7 +92,9 @@ public final class TlsAndSessionTest {
     }
 
     static void pinnedWrong(FakeVc vc) throws Exception {
-        String wrong = "00" + Thumbprints.of(vc.cert, 256).substring(2);
+        String real = Thumbprints.of(vc.cert, 256);
+        // a pin that differs from the real one, whatever the certificate of this run starts with (a fixed "00" equalled it 1 run in 256)
+        String wrong = (real.startsWith("00") ? "ff" : "00") + real.substring(2);
         int before = vc.requests.size();
         T.RecLog log = new T.RecLog();
         try (VimSoapClient c = client(vc, pinned(wrong), "svc", "very-secret-pw", log)) {

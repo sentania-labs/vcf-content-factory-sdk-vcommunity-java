@@ -231,7 +231,9 @@ public final class GuestPhase {
         List<Item> collected = new ArrayList<>();
         try {
             CompletionService<Item> cs = new ExecutorCompletionService<>(pool);
-            for (Item item : items) cs.submit(task(item, in, runner));
+            Turnstile turns = new Turnstile();
+            int order = 0;
+            for (Item item : items) cs.submit(task(item, order++, turns, in, runner));
             int got = 0;
             while (got < submitted) {
                 long left = realStop - System.nanoTime();
@@ -267,15 +269,18 @@ public final class GuestPhase {
         return batch;
     }
 
-    private Callable<Item> task(Item item, Input in, GuestRunner runner) {
+    private Callable<Item> task(Item item, int order, Turnstile turns, Input in, GuestRunner runner) {
         return () -> {
-            if (in.clock.getAsLong() >= in.deadlineMs || Thread.currentThread().isInterrupted()) return item;
-            LogonGate.Slot slot;
+            LogonGate.Slot slot = null;
             try {
+                if (in.clock.getAsLong() >= in.deadlineMs || Thread.currentThread().isInterrupted()) return item;
+                if (!turns.await(order, in.clock, in.deadlineMs)) return item;
                 slot = gate.admit(item.vm.moref, in.clock, in.deadlineMs);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return item;
+            } finally {
+                turns.done(order);
             }
             if (slot == null) return item;
             try {

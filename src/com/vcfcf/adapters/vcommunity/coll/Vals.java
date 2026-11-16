@@ -24,13 +24,17 @@ final class Vals {
     }
 
     /**
-     * {@code str(prop_dict.get(path))}: the scalar's text; the text {@code None} when the path is unset
-     * on a read that worked (Q9); null (withheld) when the read of the path did not work or its value
-     * is not a single value.
+     * The scalar at a requested path, as a property. A value that is not there is not sent, with no placeholder: when
+     * the read worked and the path is unset that is simply an absent value (not counted); when the path could not
+     * be read, or holds more than one value, it is a value withheld and counted.
      */
-    static String scalarOrNone(BulkRow row, String path) {
+    static void prop(ObjectOut o, BulkRow row, String key, String path) {
         String v = scalar(row, path);
-        return v != null ? v : row.isUnset(path) ? Quirks.orNone(null) : null;
+        if (v != null) {
+            o.prop(key, v);
+        } else if (!row.isUnset(path)) {
+            o.withhold(1);
+        }
     }
 
     /** The element at a dotted path below {@code root} (first child of each name), or null. */

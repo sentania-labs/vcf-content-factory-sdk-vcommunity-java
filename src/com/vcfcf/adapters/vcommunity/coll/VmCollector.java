@@ -44,10 +44,7 @@ public final class VmCollector {
             "VirtualEthernetCard", "VirtualE1000", "VirtualE1000e", "VirtualPCNet32", "VirtualVmxnet",
             "VirtualVmxnet2", "VirtualVmxnet3", "VirtualVmxnet3Vrdma", "VirtualSriovEthernetCard"));
 
-    /**
-     * Q1 (R105, R106): see {@link Quirks#TOOLS_ALWAYS_NONE}. While it holds, the two paths are neither read
-     * nor sent; when it is switched off they are read from these paths and sent as read.
-     */
+    /** R105 and R106: the two Tools settings are read from these paths on every VM and sent as read (DV-112). */
     static final String[] TOOLS_PATHS = {"config.tools.syncTimeWithHost", "config.tools.toolsUpgradePolicy"};
 
     /** The paths every VM read asks for, with their keys' rows in the key map. */
@@ -92,9 +89,7 @@ public final class VmCollector {
         for (String p : TemplateScan.PATHS) r.path(p);
         // the host the VM runs on, for the cluster and host figures (P4); not a key of its own
         r.path("runtime.host", PathSpec.shallow());
-        if (!Quirks.TOOLS_ALWAYS_NONE) {
-            for (String p : TOOLS_PATHS) r.path(p);
-        }
+        for (String p : TOOLS_PATHS) r.path(p);
         r.path(DEVICES, PathSpec.keepingInElements("key", "deviceInfo.label", "controllerKey", "busNumber",
                 "scsiCtlrUnitNumber", "addressType", "macAddress", "connectable.startConnected",
                 "backing.eagerlyScrub", "backing.split", "backing.writeThrough", "shares.level"));
@@ -133,10 +128,13 @@ public final class VmCollector {
                 "config.scheduledHardwareUpgradeInfo.scheduledHardwareUpgradeStatus");
         yv(o, row, c + "Hardware Upgrade|Policy", "config.scheduledHardwareUpgradeInfo.upgradePolicy");
         yv(o, row, c + "Hardware Upgrade|Target Version", "config.scheduledHardwareUpgradeInfo.versionKey");
-        String timeout = opNotificationTimeout(Vals.scalar(row, "config.vmOpNotificationTimeout"));
-        // unset on a read that worked: the original's 0 (Q9)
-        if (timeout == null && row.isUnset("config.vmOpNotificationTimeout")) timeout = Quirks.orText(null, "0", Quirks.UNSET_AS_UPSTREAM);
-        o.propY(c + "Op Notification Timeout", timeout);
+        String rawTimeout = Vals.scalar(row, "config.vmOpNotificationTimeout");
+        String timeout = opNotificationTimeout(rawTimeout);
+        if (timeout != null) {
+            o.prop(c + "Op Notification Timeout", timeout);
+        } else if (rawTimeout != null || !row.isUnset("config.vmOpNotificationTimeout")) {
+            o.withhold(1); // returned but not a whole number, or not readable
+        }
         yv(o, row, c + "Memory Allocation Share Level", "config.memoryAllocation.shares.level");
         yv(o, row, c + "Config Status", "configStatus");
         yv(o, row, V + "Guest|State", "guest.guestState");
@@ -145,11 +143,11 @@ public final class VmCollector {
         yv(o, row, V + "Guest|Operation Ready", "guest.guestOperationsReady");
         yv(o, row, V + "Guest|State Change Support", "guest.guestStateChangeSupported");
         yv(o, row, V + "Guest|Interactive Guest", "guest.interactiveGuestOperationsReady");
-        tools(o, row, optionPaths);
+        tools(o, row);
         yv(o, row, V + "Runtime|Consolidation Needed", "runtime.consolidationNeeded");
         yv(o, row, V + "Runtime|DAS protection", "runtime.dasVmProtection.dasProtected");
         yv(o, row, V + "Runtime|Min Required EVC Mode Key", "runtime.minRequiredEVCModeKey");
-        o.propY(V + "Guest|Customization Status", customization(row, "guest.customizationInfo.customizationStatus"));
+        customization(o, row, V + "Guest|Customization Status", "guest.customizationInfo.customizationStatus");
         yv(o, row, V + "Guest|Heartbeat Status", "summary.quickStats.guestHeartbeatStatus");
         detailed(o, row, "guest.guestDetailedData");
         yv(o, row, V + "Summary|VM Path Name", "summary.config.vmPathName");
@@ -160,38 +158,18 @@ public final class VmCollector {
     }
 
     /**
-     * Q1: upstream looks the Tools settings up under a path it never asked for, so it sends the text
-     * {@code None} for both on every VM. That is a placeholder where a value exists; it is reproduced
-     * here only, and the correct read is the else branch.
+     * Tools Sync Time and Tools Upgrade Policy: the real value of the VM's tools configuration; nothing when it is
+     * unset; withheld and counted when the read failed. (Upstream looked them up under a path it never asked for and
+     * sent the text {@code None} for every VM; that was Q1 and is gone, DV-112.)
      */
-    private static void tools(ObjectOut o, BulkRow row, List<String> optionPaths) {
-        if (Quirks.TOOLS_ALWAYS_NONE && optionPaths.contains("config.tools")) {
-            // the edge of Q1: with config.tools in the VM Options list the original's read does hold it, and the two
-            // keys carry the real values (None only for a VM that has no tools configuration)
-            XmlNode t = row.val("config.tools");
-            if (t == null && !row.isUnset("config.tools")) {
-                o.withhold(2); // the read of it failed
-                return;
-            }
-            XmlNode sync = t == null ? null : t.child("syncTimeWithHost");
-            XmlNode policy = t == null ? null : t.child("toolsUpgradePolicy");
-            o.prop(V + "Guest|Tools Sync Time", sync == null ? "None" : PyText.bool(sync.text()));
-            o.prop(V + "Guest|Tools Upgrade Policy", policy == null ? "None" : policy.rawText());
-        } else if (Quirks.TOOLS_ALWAYS_NONE) {
-            o.prop(V + "Guest|Tools Sync Time", "None");
-            o.prop(V + "Guest|Tools Upgrade Policy", "None");
-        } else {
-            yv(o, row, V + "Guest|Tools Sync Time", TOOLS_PATHS[0]);
-            yv(o, row, V + "Guest|Tools Upgrade Policy", TOOLS_PATHS[1]);
-        }
+    private static void tools(ObjectOut o, BulkRow row) {
+        yv(o, row, V + "Guest|Tools Sync Time", TOOLS_PATHS[0]);
+        yv(o, row, V + "Guest|Tools Upgrade Policy", TOOLS_PATHS[1]);
     }
 
-    /**
-     * A flagged scalar key, {@code str(prop_dict.get(path))}: its value; the text {@code None} when it
-     * is unset on a read that worked (Q9); nothing (and counted) when the read of it did not work.
-     */
+    /** A scalar key: its value; nothing, and not counted, when it is unset on a read that worked; counted when the read did not work. */
     private static void yv(ObjectOut o, BulkRow row, String key, String path) {
-        o.propY(key, Vals.scalarOrNone(row, path));
+        Vals.prop(o, row, key, path);
     }
 
     /** {@code max(0, int(v))}; null when absent or not an integer. */
@@ -204,24 +182,21 @@ public final class VmCollector {
     }
 
     /**
-     * The customization status: stripped, and without {@code TOOLSDEPLOYPKG_}; the original's placeholder
-     * {@code null} when it is unset or empty (Q9); nothing when it could not be read.
+     * The customization status: stripped, and without {@code TOOLSDEPLOYPKG_}. Unset sends nothing; a returned empty
+     * status is the empty text; a path that could not be read is withheld and counted.
      */
-    static String customization(BulkRow row, String path) {
+    static void customization(ObjectOut o, BulkRow row, String key, String path) {
         String v = Vals.scalar(row, path);
-        if (v == null && !row.isUnset(path)) return null;
-        String t = Quirks.strippedIfTruthy(v);
-        return t == null ? Quirks.orNull(null) : t.replace("TOOLSDEPLOYPKG_", "");
-    }
-
-    static String customization(String v) {
-        String t = Quirks.strippedIfTruthy(v);
-        return t == null ? null : t.replace("TOOLSDEPLOYPKG_", "");
+        if (v == null) {
+            if (!row.isUnset(path)) o.withhold(1);
+            return;
+        }
+        o.prop(key, Quirks.stripped(v).replace("TOOLSDEPLOYPKG_", ""));
     }
 
     /**
-     * The seven guest detail fields: each starts as the original's {@code null} and is replaced by the
-     * stripped value when the pattern found a non-empty one (Q9); nothing when the string could not be read.
+     * The seven guest detail fields: each is sent when the pattern found a non-empty value, and not otherwise;
+     * nothing, counted, when the string could not be read.
      */
     private static void detailed(ObjectOut o, BulkRow row, String path) {
         String text = Vals.scalar(row, path);
@@ -239,15 +214,15 @@ public final class VmCollector {
             {"prettyName", "Pretty Name"}};
         Map<String, String> m = DetailedDataParser.parse(text);
         for (String[] f : fields) {
-            o.propY(V + "Guest|Detailed Data|" + f[1], Quirks.orNull(Quirks.text(m.get(f[0]))));
+            o.prop(V + "Guest|Detailed Data|" + f[1], Quirks.text(m.get(f[0])));
         }
     }
 
     private static void devices(ObjectOut o, BulkRow row, XmlNode list) {
         if (list == null) {
-            // the device list was not returned (unset, or not read): the count is unknown, and a 0 would stand for
-            // it (DV-111). A list that came back with no controller in it is a real 0 and is published below.
-            o.statY(V + "Configuration|SCSI Controllers|Count", null);
+            // the device list was not returned: the count is unknown (DV-111). Unset sends nothing; a list that could
+            // not be read is withheld and counted. A list that came back with no controller in it is a real 0, below.
+            if (!row.isUnset(DEVICES)) o.withhold(1);
             return;
         }
         int scsi = 0;
@@ -313,11 +288,10 @@ public final class VmCollector {
             return;
         }
         String p = V + "Network|Network Adapters:" + label + "|";
-        o.propY(p + "Type", Quirks.orNone(Quirks.text(Vals.str(d, "addressType"))));
-        // no connectable at all: the original's "null"; one without the flag: str(None)
+        o.prop(p + "Type", Quirks.text(Vals.str(d, "addressType")));
+        // no connectable, or one without the flag, sends nothing
         XmlNode connectable = d.child("connectable");
-        o.propY(p + "Starts Connected", connectable == null ? Quirks.orNull(null)
-                : Quirks.orNone(Vals.bool(connectable, "startConnected")));
+        if (connectable != null) o.prop(p + "Starts Connected", Vals.bool(connectable, "startConnected"));
     }
 
     private static void disk(ObjectOut o, XmlNode d) {
@@ -329,19 +303,16 @@ public final class VmCollector {
         String p = V + "Virtual Disk:" + label + "|";
         o.prop(p + "Label", label);
         o.prop(p + "Key", Vals.integer(d, "key"));
-        o.propY(p + "Controller Key", Quirks.orNone(Vals.integer(d, "controllerKey")));
-        // a disk with no backing is "Unknown" to the original; a backing without the flag is str(None)
+        o.prop(p + "Controller Key", Vals.integer(d, "controllerKey"));
+        // a disk with no backing, or a backing without the flag, sends nothing
         XmlNode backing = d.child("backing");
-        o.propY(p + "Eagerly Scrub", backing == null ? unknown() : Quirks.orNone(Vals.bool(backing, "eagerlyScrub")));
-        o.propY(p + "Split", backing == null ? unknown() : Quirks.orNone(Vals.bool(backing, "split")));
-        o.propY(p + "Write Through", backing == null ? unknown() : Quirks.orNone(Vals.bool(backing, "writeThrough")));
+        if (backing != null) {
+            o.prop(p + "Eagerly Scrub", Vals.bool(backing, "eagerlyScrub"));
+            o.prop(p + "Split", Vals.bool(backing, "split"));
+            o.prop(p + "Write Through", Vals.bool(backing, "writeThrough"));
+        }
         XmlNode shares = d.child("shares");
-        o.propY(p + "Storage Allocation Share Level", shares == null ? unknown()
-                : Quirks.orNone(Quirks.text(Vals.str(shares, "level"))));
-    }
-
-    private static String unknown() {
-        return Quirks.orText(null, "Unknown", Quirks.UNSET_AS_UPSTREAM);
+        if (shares != null) o.prop(p + "Storage Allocation Share Level", Quirks.text(Vals.str(shares, "level")));
     }
 
     private static void extra(ObjectOut o, XmlNode extra, List<String> keys) {

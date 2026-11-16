@@ -8,7 +8,8 @@ import java.util.Map;
  * An object of one of the pak's own kinds ({@code Content Library}, {@code Library Item},
  * {@code VM Template}): its name, its identifiers and the keys to put on it. A collector builds
  * it as a pure function of what was read; nothing here knows the SDK. A key whose value is
- * {@code null} is not queued, and the flagged ones are counted as withheld (design 5.1).
+ * {@code null} is not queued and not counted: a value vCenter answered without is absent (DV-112). A value that could
+ * not be read is counted by the caller with {@link #withhold} (design 5.1).
  */
 public final class OwnObject {
 
@@ -36,29 +37,9 @@ public final class OwnObject {
         return this;
     }
 
-    /** A string property whose absence is counted as a withheld value. */
-    public OwnObject propY(String key, String value) {
-        if (value != null) {
-            props.put(key, value);
-        } else {
-            withheld++;
-        }
-        return this;
-    }
-
     /** A metric; null is left out and not counted. */
     public OwnObject stat(String key, Double value) {
         if (value != null) stats.put(key, value);
-        return this;
-    }
-
-    /** A metric whose absence is counted as a withheld value. */
-    public OwnObject statY(String key, Double value) {
-        if (value != null) {
-            stats.put(key, value);
-        } else {
-            withheld++;
-        }
         return this;
     }
 

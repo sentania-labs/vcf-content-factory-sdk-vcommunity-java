@@ -12,8 +12,8 @@ import java.util.List;
 /**
  * The datastore keys (design 4.6, rows R47-R55). VMFS-only keys are sent for
  * a datastore that has VMFS information and for no other; the extent count is
- * a count of the extents read, and a datastore with none (NFS, vSAN, vVol) is
- * 0, as the original says (Q9).
+ * a count of the extents read; a datastore with no VMFS information (NFS, vSAN, vVol) has no count and sends
+ * none (DV-112).
  */
 public final class DatastoreCollector {
 
@@ -38,15 +38,16 @@ public final class DatastoreCollector {
     public static ObjectOut collect(BulkRow row) {
         ObjectOut o = new ObjectOut(KIND, row.obj.value);
         o.prop(SUM + "MOID", row.obj.value);
-        o.propY(SUM + "Status", Vals.scalarOrNone(row, "overallStatus"));
-        o.propY(SUM + "SIOC Enabled", Vals.scalarOrNone(row, "iormConfiguration.enabled"));
-        o.propY(SUM + "SIOC Threshold", Vals.scalarOrNone(row, "iormConfiguration.congestionThreshold"));
+        Vals.prop(o, row, SUM + "Status", "overallStatus");
+        Vals.prop(o, row, SUM + "SIOC Enabled", "iormConfiguration.enabled");
+        Vals.prop(o, row, SUM + "SIOC Threshold", "iormConfiguration.congestionThreshold");
         XmlNode vmfs = Vals.at(row.val("info"), "vmfs");
         if (vmfs == null) {
-            // Not VMFS (NFS, vSAN, vVol), or no information on a read that worked: the original counts no
-            // extents and says 0 (Q9); the VMFS keys have no source and are not sent.
+            // Not VMFS (NFS, vSAN, vVol), or no information on a read that worked: there is no extent list to
+            // count, so nothing is sent (DV-112); the VMFS keys have no source either. An info that could not be
+            // read is withheld and counted.
             boolean read = row.val("info") != null || row.isUnset("info");
-            o.propY(ID + "Number of Extents", read ? Quirks.orText(null, "0", Quirks.UNSET_AS_UPSTREAM) : null);
+            if (!read) o.withhold(1);
             return o;
         }
         o.prop(SUM + "Block Size", Vals.integer(vmfs, "blockSizeMb"));

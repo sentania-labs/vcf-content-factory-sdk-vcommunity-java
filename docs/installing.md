@@ -29,9 +29,8 @@ uninstalling one does not delete the other's.
 What carries over (owner decision, 2026-11-14: names stay, ids are our own):
 
 - **Metrics and properties.** The keys are the same names on the same vSphere objects, so the
-  history of those keys continues across the move. (The keys are the same by construction and
-  by the key comparison in `docs/design/`; the continuation of history across an uninstall and
-  install was not measured on an instance.)
+  history of those keys continues across the move. Measured on 8.18.7 (2026-11-16): after the
+  Python pack was uninstalled and this pak installed, each key kept one continuous series.
 - **Dashboards, views, reports, super metrics, symptoms, alerts and the recommendation** are
   replaced by this pak's copies, under new ids and with the same names. Anything you cloned
   or customized from the Python pack's content is yours to keep or to re-point at this pak's
@@ -52,10 +51,23 @@ own built-in view ids: Onur's 0.1.5 (41 views) and 0.1.6 to 0.3.1 (117), and Ewa
 deletes them** (measured on 8.18.7, 9.0.2 and 9.1.1; factory note
 `2026-11-12-vcommunity-upstream-builtin-view-ids`). Built-in dashboards that use them then show
 "The view does not exist". Before you uninstall one of those versions, have a clean export of the built-in
-views of the same VCF Operations version at hand (taken from an instance that never had the
-Python pack: an export from the affected instance holds the pack's copies). After the uninstall,
-import the views from that export (Content > Import, views); this was measured to restore
-them. This pak never uses a built-in view id for its own content, so it neither overwrites nor
+views of the same VCF Operations version at hand, taken from an instance that never had the
+Python pack: an export from the affected instance holds the pack's copies. The export has to
+include out-of-the-box content; the default export scope leaves built-in views out. After the
+uninstall, import that export:
+
+1. Sign in as an administrator and open **Administration > Control Panel > Content Management**
+   (the tile under "Content and Support"), then the **Import** tab. The path is the same on
+   8.18.7, 9.0.2 and 9.1.1.
+2. Browse to the export zip. The "File Content" table lists the views it holds.
+3. Leave "In case of conflict" on **Overwrite existing content** (the default) and import.
+4. The results table should show every view imported, none skipped or failed.
+
+Measured on 9.1.1 with Ewan's 0.8.1 (2026-11-16): the uninstall deleted all 120 built-in views,
+the import brought all 120 back (identical to before apart from whitespace in 12 descriptions),
+and the built-in dashboards rendered again. The same import was run on 9.0.2 and 8.18.7 (117
+views each) and is safe to repeat. Not verified: whether a restored view is protected from
+editing and deletion the way a never-deleted built-in view is. This pak never uses a built-in view id for its own content, so it neither overwrites nor
 deletes a built-in view; the 19 built-in views its dashboards and reports use in place must
 exist on your instance, which is why the restore matters.
 
@@ -68,7 +80,9 @@ between releases that keep their ids are in-place as usual.
 (2) have the clean built-in views export ready if your version is one of those named above;
 (3) uninstall the Python pack with remove-content; (4) restore the built-in views if it
 shipped any; (5) install this pak; (6) re-apply your check lists.
-The order is a recommendation. It was not run as a whole on an instance with this pak.
+Steps 3 to 5 were run in this order on 9.1.1 (uninstall of Ewan's 0.8.1, restore of the
+built-in views, fresh install of this pak, which then collected normally and left the built-in
+views untouched). Steps 1 and 6, the check lists, were not part of that run.
 
 **Same adapter kind as the retired earlier port.** `vcfcf_vcommunity` was also the
 adapter kind of the retired 2026 Java port of this pack. On an instance that still has
@@ -303,11 +317,23 @@ expiration date (a perpetual license publishes no Remaining Days and never raise
 licenses, the alert's severity is the band of the license nearest to expiring. This departs from the original pack,
 whose symptoms named one fixed license (design 5.8, Q17).
 
-**Upgrading from an earlier build: some values keep their last stored value.** A key that this build no longer sends
-is not deleted in VCF Operations (a pushed key cannot be deleted), so it keeps what it had. After upgrading to the build
-that carries DV-111, every cluster that has DRS off keeps the DRS Score of 0 it had, every host whose adapter list is
-not returned keeps its "Number of HBA" of 0, and a cluster that turns DRS off later keeps its last real score. They
-stop being updated; the old value stays until it ages out of a widget's time window or you clear it.
+**Upgrading from an earlier build or from the Python pack: some values keep their last stored value.** A key that this
+build no longer sends is not deleted in VCF Operations (a pushed key cannot be deleted), so it keeps what it had.
+- From build 25 on a value vCenter answered without is not sent at all (DV-112). Placeholders that the Python pack or
+  an earlier build sent (the texts `None`, `null`, `[]`, `N/A`, `Unknown`, an empty text, and a 0 for an unset count,
+  size or timeout) therefore stay on existing objects until a real value overwrites them; they are not cleared by the
+  upgrade. A new object simply has no such key. A chart or a filter over those keys can still show the old
+  placeholder text on objects that were collected before.
+- Every cluster that has DRS off keeps the DRS Score of 0 it had, every host whose adapter list was not returned keeps its
+  "Number of HBA" of 0, and a cluster that turns DRS off later keeps its last real score (DV-111).
+- Worst ESXi Memory Tiering Latency changes unit at the upgrade: it was the raw statistic (nanoseconds, so about 283,000
+  for a healthy host) and is now in microseconds (about 283), so its history shows a step down by a factor of 1,000
+  (DV-113). The Periodic Cluster Check builds its worst-5 % risk and its closed-for-business flag on Cluster Risk
+  Score samples, so the scores that were pinned before the upgrade colour one check window afterwards.
+- NIC Duplex, Tools Sync Time and Tools Upgrade Policy had placeholder values before (`half-duplex` for a link that
+  is down, `None`); the Tools keys are overwritten by the real value, a Duplex key that is no longer sent keeps its last
+  value.
+They stop being updated; the old value stays until it ages out of a widget's time window or is overwritten.
 
 **Two dashboards without Section rows.** "Overall Daily Check" (6 Section rows)
 and "vSphere Cluster Capacity 2.0" (2) use the Section widget, which VCF
@@ -414,12 +440,11 @@ If the Python pack was installed on the instance before, its six files
 (the same names) may already be in the store, and installing this pak replaces them
 the same way; uninstalling the Python pack removes its copies (inferred, see "Moving from the Python pack").
 
-**With the shipped check lists, two keys read `None`.** Every entry is commented out
-as shipped, so `Guest|Tools Sync Time` and `Guest|Tools Upgrade Policy` read the text
-`None` on every VM (design quirk Q1: the original pack looks them up under
-`config.tools`, a path its read never has unless `config.tools` is listed in the VM
-options file). List `config.tools` in your copy of the VM options file to get the
-real values.
+**The two Tools keys need no list.** `Guest|Tools Sync Time` and `Guest|Tools Upgrade Policy` carry the VM's real
+values on every VM whatever the check lists hold (from build 26; the original pack, and builds before 26, sent the
+text `None` unless `config.tools` was listed in the VM options file). A VM with no tools configuration has neither
+key. The old `None` is overwritten by the real value on the next collection, not left behind. A VM whose tools
+settings could not be read is counted as a withheld value.
 
 ## Step-by-Step Installation
 

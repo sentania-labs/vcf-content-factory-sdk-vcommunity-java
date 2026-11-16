@@ -331,14 +331,12 @@ public final class OpsReadsTest {
 
     static void sentinel() throws Exception {
         Answer a = (p, b) -> values(res("a", stat("cpu|x", 1000, "-1"), stat(StatKeys.CPU_USABLE, 1000, "-1")));
-        for (boolean asValue : new boolean[] {true, false}) {
-            Map<String, Map<String, Double>> got = new LinkedHashMap<>();
-            new OpsReads(ops(a, new ArrayList<>()), null, asValue)
-                    .latestStats(Arrays.asList("a"), Arrays.asList("cpu|x", StatKeys.CPU_USABLE), OpsReads.STALE_MS, NOW, got::put);
-            T.eq(asValue ? Double.valueOf(-1) : null, got.get("a").get("cpu|x"), "-1 as a statistic, switch " + asValue);
-            T.eq(Double.valueOf(-1), got.get("a").get(StatKeys.CPU_USABLE), "a usable capacity can be negative: always a value");
-        }
-        T.done("read: -1 is a reading as upstream (Q13) or no sample, and a usable capacity is signed");
+        Map<String, Map<String, Double>> got = new LinkedHashMap<>();
+        new OpsReads(ops(a, new ArrayList<>()), null)
+                .latestStats(Arrays.asList("a"), Arrays.asList("cpu|x", StatKeys.CPU_USABLE), OpsReads.STALE_MS, NOW, got::put);
+        T.eq(null, got.get("a").get("cpu|x"), "-1 is no sample, not a statistic");
+        T.eq(Double.valueOf(-1), got.get("a").get(StatKeys.CPU_USABLE), "a usable capacity can be negative: always a value");
+        T.done("read: -1 is no sample, and a usable capacity is signed");
     }
 
     static void stopping() throws Exception {

@@ -38,6 +38,8 @@ final class Coverage4 {
         if (row == 70 || row == 71) return "read back from the VM's properties, else its statistics; round(shares / size, 2); no value without both";
         if (row >= 153 && row <= 158) return "KPI: round(weighted mean of the rows, 2); withheld unless every row's inputs were read";
         if (row >= 159 && row <= 167) return "max / 90th percentile over the powered-on VMs of the cluster's hosts (by MoRef); bad packets: the worst host";
+        if (row == 173) return "worst host of the cluster; the statistic is in nanoseconds and is published in microseconds (DV-113)";
+        if (row == 182) return "never published: its input mem:NVMe|tier.usage does not exist in Operations (known gap, DV-109)";
         if (row == 170 || row == 171 || row == 172 || row == 175 || row == 177 || row == 179) return "worst host of the cluster; memory rows divide by DRAM plus the NVMe tier on a host with memory tiering, DRAM alone otherwise (DV-109); unreadable inputs withhold the family";
         if (row >= 168 && row <= 179) return "worst host of the cluster; unreadable inputs withhold the family";
         if (row == 181 || row == 183 || row == 184) return "of the cluster's usable capacity, the running hosts only; memory capacity is DRAM plus the NVMe tier on a host with memory tiering (DV-109)";
@@ -46,13 +48,13 @@ final class Coverage4 {
         if (row == 194) return "(compressed + swapped) / guest used memory x 100";
         if (row == 195) return "share of the conditions met, over four, or over three where the host has no quarantine property (DV-110); a host with no data counts 0; withheld when its reads failed";
         if (row == 196) return "published for connected hosts that have a NIC with both speed properties (DV-108: read as properties; needs net|configuredSpeed enabled in the policy)";
-        if (row == 197) return "member hosts below 100; a Datacenter whose hosts have no value is 0 as upstream (Q12); needs the host NIC configured speed property (DV-108)";
+        if (row == 197) return "member hosts below 100; a Datacenter none of whose hosts has a value gets no count (DV-112); needs the host NIC configured speed property (DV-108)";
         if (row == 198) return "sum of the vCenters' stored counts within 15 minutes";
         if (row == 199 || row == 200) return "once per window, when every cluster has been checked";
         if (row >= 201 && row <= 202) return "from every VM's stored properties, all vCenters";
         if (row >= 203 && row <= 208) return "from the stored cluster scores, all vCenters (previous cycle)";
         if (row == 209 || row == 210) return "from the stored availability, all vCenters (previous cycle)";
-        if (row == 211) return "hosts below 100 % of every vCenter, from the stored values (DV-108: the host figure needs the NIC configured speed property)";
+        if (row == 211) return "hosts below 100 % of every vCenter, from the stored values; none when no host has a fresh value (DV-112) (DV-108: the host figure needs the NIC configured speed property)";
         if (row == 212) return "lowest of this cycle's cluster values; withheld when any is unknown";
         if (row == 213) return "distinct names per Datacenter, summed; withheld when any part could not be read";
         if (row == 214) return "mean of VM Performance and Guest OS Performance; VM Performance alone without Tools";

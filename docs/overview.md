@@ -69,25 +69,24 @@ pushes nothing onto the vCenter's objects.
 
 ## Notable Behaviors
 
-- **A failed read sends nothing; an unset value is published as the original
-  prints it.** A value that could not be read (a path vCenter refused, a
-  property it could not read for that object, a call that failed, a content
-  library answer that did not come) is never replaced by a zero, `False`,
-  `Unknown` or any other placeholder: it is counted in `Collection|reads_failed`
-  and `Collection|values_withheld`, and the causes are in
-  `Collection|failure_causes` (every collector, with counts) and
-  `Collection Health|Collector:<name>|Causes`. A value that was read and is
-  simply not set is a reading, and is published the way the original pack prints
-  it (quirk Q9): the text `None` for an unset property, `null` for an unset EVC
-  mode, HA or DRS settings that are off, a missing vCenter setting or install
-  date, `[]` for no maximum EVC mode, `N/A` for a NIC with no PCI device, and
-  `0` for a count or a figure that is missing. Three keys are the exception: nothing is sent for a DRS Score while
-  DRS is off or the score is negative, nor for the HBA and SCSI Controllers counts of a list that was not returned
-  (DV-111), because their 0 would stand for "does not apply" or "unknown". A
-  NIC whose link is down is `half-duplex` (Q10). One switch,
-  `Quirks.UNSET_AS_UPSTREAM`, in `text/Quirks.java`, turns this off, and then an
-  unset value is not sent; those three keys do not follow it. A key that is not sent keeps its last value in VCF
-  Operations (a pushed key cannot be deleted).
+- **A failed read is counted; a value vCenter answered without is not sent.** A value that could not be read
+  (a path vCenter refused, a property it could not read for that object, a call that failed, a content library
+  answer that did not come) is never replaced by a zero, `False`, `Unknown` or any other placeholder: it is
+  counted in `Collection|reads_failed` and `Collection|values_withheld`, and the causes are in
+  `Collection|failure_causes` (every collector, with counts) and `Collection Health|Collector:<name>|Causes`.
+  A value that was read and is simply not set (unset, not returned, null) is not sent either, as the stock
+  vSphere adapter does it (DV-112): no `None`, `null`, `[]`, `N/A`, `Unknown`, no empty text and no 0 stands
+  in for it, and it is not counted as withheld and raises no warning. A returned value stays, even a 0, `False`,
+  an empty list (a count of 0) or an empty text. The same goes for a setting that does not apply (HA, DRS or
+  EVC switched off, DRS Score while DRS is off). A key that is not sent keeps its last value in VCF Operations
+  (a pushed key cannot be deleted), so a placeholder sent earlier by the Python pack or an earlier build stays
+  on an existing object until a real value overwrites it. A NIC whose link is down, or whose link has no duplex flag, has no Duplex key (DV-112). The
+  Content Library figures follow the same rule: Items Not Stored Locally and Total Size are sent only when every
+  item of the library carries the field (an empty library has a real 0), and Items Not Security Compliant counts
+  "of the items with a compliance verdict" and is not sent when none has one.
+- **Worst ESXi Memory Tiering Latency is in microseconds.** The statistic it reads is in nanoseconds; the row is
+  divided by 1,000 before it is scored and published (DV-113). A -1 ("no sample") is no reading and is left out; a 0.0
+  is a real reading.
 - **Derived metrics are read back from VCF Operations.** The scores, availability,
   network speed and shares are computed from the statistics and properties the
   VMware adapter already stores, read once per cycle in batches of 500, with the
@@ -128,8 +127,7 @@ pushes nothing onto the vCenter's objects.
   keys within a cycle or two of Ops knowing it.
 - **Matches the original, quirks included.** For now the pak reproduces what the
   original 0.8.1 publishes even where it looks wrong, so the first comparison
-  against it is exact: the two VM Tools keys are the text `None` (the real values when `config.tools` is
-  in the VM Options list), a VM with no
+  against it is exact: a VM with no
   network adapter has no Virtual Disk keys, PCI ids above 0x7FFF are signed
   (`-7f7a`), blank strings are pushed as they are, and so on. Each is a
   one-edit switch in `text/Quirks.java` and is listed in the design (section 5.8)
@@ -210,6 +208,7 @@ The pak carries the content of the original pack as VCF Operations content, inst
 - Guest monitoring is built and tested against a fake vCenter and ESXi host only; it has not run on a real Windows guest (`docs/p5-live-proof.md` lists the experiments).
 - The Datacenter count of Network Speed Degradation matches the Datacenter object by MoRef plus vCenter UUID; whether Operations gives a Datacenter those identifiers is unproven (experiment E1). Until it is, a Datacenter without them gets no count and the objects-not-matched figure is unaffected.
 - Not yet proven on a live instance: the P4 differential over 24 hours (the design's phase table).
+- Cluster Memory Tiering Consumption (`vCommunity|Cluster Consumption|Cluster Memory Tiering Consumption`) is never published: its input statistic `mem:NVMe|tier.usage` does not exist in VCF Operations. The real source is the vCenter counter `mem.tier.consumed` (MB, instances DRAM and NVMe), which needs a performance query this adapter does not make. This is a known gap (design, DV-109).
 - A new library, item or template is created at once and gets its values on the next collection (five minutes later). One that vCenter no longer has is marked not existing after 12 complete collections, and only when everything that could contain it was read.
 - Trust on First Use sends the credentials before any certificate check, as the
   original pack did. The certificate it presents is compared after the login with

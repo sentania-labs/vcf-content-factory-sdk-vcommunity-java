@@ -214,10 +214,17 @@ public final class OwnObjectsTest {
         Coverage3.asserted(o.kind, key);
     }
 
+    /** The key is absent because its source was unset on a read that worked (not because a read failed): recorded for the coverage table. */
+    static void unsetNone(OwnObject o, String key) {
+        none(o, key);
+        Coverage3.unset(o.kind, key);
+    }
+
     static void none(OwnObject o, String key) {
         T.check(!o.props().containsKey(key) && !o.stats().containsKey(key),
                 o.kind + " '" + o.name + "' must not carry " + key + " but has "
                         + o.props().get(key) + o.stats().get(key));
+        Coverage3.asserted(o.kind, key);
     }
 
     static Set<String> kinds(CycleEngine.Result r) {
@@ -257,7 +264,8 @@ public final class OwnObjectsTest {
             run("identity: kind, name and identifiers, never the Ops id", () -> identity(fake));
             run("links: one full child set per library that was read whole", () -> linkSets(fake));
             run("an absent text is the empty text, an absent figure is not a zero", () -> bare(fake));
-            run("the absent-text switch off: nothing for a field that was not returned", () -> absentTextOff(fake));
+            run("a field that was not returned is not sent", () -> absentFieldsNotSent(fake));
+            run("a library whose items carry the flags for some only", OwnObjectsTest::mixedLibrary);
             run("template paths that could not be read send nothing", () -> templatePathsFailed(fake));
             run("a failed cycle fails every object of the account", () -> failedCycle(fake));
             run("a repeated identifier counts twice; a deleted item or library is gone, not failed", () -> repeatsAndRaces(fake));
@@ -271,7 +279,6 @@ public final class OwnObjectsTest {
             run("the cycle deadline stops the read and proves nothing", () -> deadline(fake));
             run("TLS modes: the REST session goes through the account's posture", () -> tlsModes());
             run("session: one login, the session on every read, one logout, no secret in a line", () -> session(fake));
-            run("the absent-text switch", OwnObjectsTest::quirkSeam);
         }
         Coverage3.scenario = "coverage";
         Coverage3.verifyOrWrite();
@@ -287,13 +294,13 @@ public final class OwnObjectsTest {
             T.check(res.failure == null, "no failure: " + res.failure);
             OwnObjects own = res.own;
 
-            // Content Library: local, with a state and no subscription (upstream sends the empty text, Q8)
+            // Content Library: local, with a state and no subscription (nothing is sent for a field it does not have, DV-112)
             OwnObject a = lib(own, "lib-a");
             T.eq("cl-local", a.name, "library name");
             eq(a, LIB + "Type", "LOCAL");
             eq(a, LIB + "State", "ACTIVE");
-            eq(a, LIB + "Subscription URL", "");
-            eq(a, LIB + "Automatic Sync", "");
+            unsetNone(a, LIB + "Subscription URL");
+            unsetNone(a, LIB + "Automatic Sync");
             eq(a, LIB + "Items", 3.0);
             eq(a, LIB + "Items Not Stored Locally", 0.0);
             eq(a, LIB + "Items Not Security Compliant", 0.0);
@@ -331,21 +338,21 @@ public final class OwnObjectsTest {
             eq(a1, ITM + "Security Compliant", "True");
             eq(a1, ITM + "Certificate Verification", "INTERNAL");
             eq(a1, ITM + "Last Modified", "2026-11-01T09:01:58.636Z");
-            eq(a1, ITM + "Last Sync", ""); // a local item was never synced: the empty text, as upstream (Q8)
-            eq(a1, ITM + "Source Item ID", "");
+            unsetNone(a1, ITM + "Last Sync"); // a local item was never synced: nothing is sent (DV-112)
+            unsetNone(a1, ITM + "Source Item ID");
             eq(a1, ITM + "Size (GB)", 2.0);
 
             // an item with no files and an empty description: size 0 is a reading, "" is sent as it is
             OwnObject a2 = item(own, "item-a2");
             eq(a2, ITM + "Type", "iso");
             eq(a2, ITM + "Description", "");
-            eq(a2, ITM + "Content Version", "");
+            unsetNone(a2, ITM + "Content Version");
             eq(a2, ITM + "Certificate Verification", "NOT_AVAILABLE");
             eq(a2, ITM + "Size (GB)", 0.0);
 
             // 0.125 GiB is a tie
             eq(item(own, "item-a3"), ITM + "Size (GB)", 0.12);
-            eq(item(own, "item-a3"), ITM + "Certificate Verification", "");
+            unsetNone(item(own, "item-a3"), ITM + "Certificate Verification");
 
             // a subscribed library's items: not stored, not compliant, synced from a source
             OwnObject b1 = item(own, "item-b1");
@@ -495,40 +502,86 @@ public final class OwnObjectsTest {
         try (Rig r = new Rig(fake, vc, libraries())) {
             CycleEngine.Result res = r.run();
             OwnObjects own = res.own;
-            // a library with only an id and a name, on reads that worked: its texts are the empty text (Q8),
-            // and its counts are the original's: its one item lacks cached, security_compliance and size,
-            // so it counts as not stored and not compliant, with a size of 0 (Q9)
+            // a library with only an id and a name, on reads that worked: nothing it was not given is sent (DV-112),
+            // and nothing is counted as withheld. Its one item lacks cached, security_compliance and size, so it says
+            // nothing about them: no figure for those three counts, and the item count is what was read
             OwnObject d = lib(own, "lib-d");
-            T.eq(4, d.props().size(), "the four texts");
-            for (String v : d.props().values()) T.eq("", v, "an empty text, not a placeholder");
+            T.eq(0, d.props().size(), "no text is invented");
             eq(d, LIB + "Items", 1.0);
-            eq(d, LIB + "Items Not Stored Locally", 1.0);
-            eq(d, LIB + "Items Not Security Compliant", 1.0);
-            eq(d, LIB + "Total Size (GB)", 0.0);
+            for (String k : new String[] {"Type", "Subscription URL", "Automatic Sync", "State"}) unsetNone(d, LIB + k);
+            unsetNone(d, LIB + "Items Not Stored Locally"); // no flag read, no count
+            unsetNone(d, LIB + "Items Not Security Compliant");
+            unsetNone(d, LIB + "Total Size (GB)"); // no size read, no sum
+            T.eq(0, d.withheld(), "an unset value is not a failure");
             OwnObject di = item(own, "item-d1");
-            T.eq(10, di.props().size(), "the ten texts");
-            for (String v : di.props().values()) T.eq("", v, "an empty text, not a placeholder");
-            eq(di, ITM + "Size (GB)", 0.0);
+            T.eq(0, di.props().size(), "no text is invented");
+            unsetNone(di, ITM + "Size (GB)"); // no size, no figure
+            for (String k : new String[] {"Type", "Description", "Version", "Content Version", "Stored Locally",
+                "Security Compliant", "Certificate Verification", "Last Modified", "Last Sync", "Source Item ID"}) {
+                unsetNone(di, ITM + k);
+            }
             OwnObject t = tpl(own, "vm-10");
-            T.eq(6, t.props().size(), "the four texts and the two figures as text");
-            eq(t, TPL + "Guest OS", "");
-            eq(t, TPL + "vCPUs", "0");
-            eq(t, TPL + "Memory (GB)", "0.0");
-            eq(t, TPL + "Disk Used (GB)", 0.0);
+            T.eq(0, t.props().size(), "a bare template sends nothing it was not given");
+            unsetNone(t, TPL + "Disk Used (GB)"); // and no figure
+            for (String k : new String[] {"Guest OS", "Hardware Version", "vCPUs", "Memory (GB)", "Datastore", "VM Folder"}) {
+                unsetNone(t, TPL + k);
+            }
+            T.eq(0, t.withheld(), "none of it counted as withheld");
             for (OwnObject o : own.objects()) {
                 for (String v : o.props().values()) T.check(v != null, "no null value");
             }
         }
     }
 
-    /** With the switch off, the original's empty text for a field that was not returned is not sent. */
-    static void absentTextOff(FakeVc fake) throws Exception {
+    /**
+     * A library whose items carry the flags and the size for some and not for others (W3): Items Not Stored Locally
+     * and Total Size need every item to carry the field, so they are not sent; Items Not Security Compliant counts
+     * the items that have a verdict. An empty library keeps its real 0.
+     */
+    static void mixedLibrary() {
+        com.vcfcf.adapters.vcommunity.rest.LibraryData d = new com.vcfcf.adapters.vcommunity.rest.LibraryData();
+        com.vcfcf.adapters.vcommunity.rest.LibraryData.Library lib = new com.vcfcf.adapters.vcommunity.rest.LibraryData.Library("lib-m");
+        lib.detail = new java.util.LinkedHashMap<>();
+        lib.detail.put("name", "mixed");
+        lib.detail.put("type", "LOCAL");
+        lib.itemIds = new java.util.ArrayList<>(List.of("i1", "i2", "i3"));
+        String[] names = {"i1", "i2", "i3"};
+        Object[][] data = {{Boolean.FALSE, Boolean.FALSE, 1073741824.0}, {Boolean.TRUE, null, null}, {null, Boolean.TRUE, 2147483648.0}};
+        for (int i = 0; i < 3; i++) {
+            java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("name", names[i]);
+            if (data[i][0] != null) m.put("cached", data[i][0]);
+            if (data[i][1] != null) m.put("security_compliance", data[i][1]);
+            if (data[i][2] != null) m.put("size", data[i][2]);
+            lib.items.put(names[i], m);
+        }
+        d.libraries.add(lib);
+        OwnObject o = com.vcfcf.adapters.vcommunity.coll.LibraryCollector.collect(d,
+                new com.vcfcf.adapters.vcommunity.health.Failures()).own.objects().get(0);
+        eq(o, LIB + "Items", 3.0);
+        unsetNone(o, LIB + "Items Not Stored Locally"); // item i3 lacks the flag: a partial count would read as the whole
+        unsetNone(o, LIB + "Total Size (GB)"); // item i2 lacks a size
+        eq(o, LIB + "Items Not Security Compliant", 1.0); // of the two items with a verdict, i1 is not compliant
+        T.eq(0, o.withheld(), "an unset field is not a failure");
+        // every item carries the flag and the size: both are sent
+        for (String id : new String[] {"i2", "i3"}) {
+            lib.items.get(id).put("cached", Boolean.TRUE);
+            lib.items.get(id).put("size", 1073741824.0);
+        }
+        OwnObject all = com.vcfcf.adapters.vcommunity.coll.LibraryCollector.collect(d,
+                new com.vcfcf.adapters.vcommunity.health.Failures()).own.objects().get(0);
+        eq(all, LIB + "Items Not Stored Locally", 1.0);
+        eq(all, LIB + "Total Size (GB)", 3.0);
+    }
+
+    /** A field that was not returned is not sent (DV-112); one returned empty is sent as it is. */
+    static void absentFieldsNotSent(FakeVc fake) throws Exception {
         FakeLibraries l = libraries();
         fake.setRestHandler(l);
         LibraryData d = new LibraryReader("localhost:" + fake.port(), FakeLibraries.USER, FakeLibraries.PASSWORD,
                 TlsAndSessionTest.tofu(), new T.RecLog()).read(Long.MAX_VALUE, () -> NOW);
         com.vcfcf.adapters.vcommunity.health.Failures f = new com.vcfcf.adapters.vcommunity.health.Failures();
-        OwnObjects own = com.vcfcf.adapters.vcommunity.coll.LibraryCollector.collect(d, f, false).own;
+        OwnObjects own = com.vcfcf.adapters.vcommunity.coll.LibraryCollector.collect(d, f).own;
         OwnObject a = lib(own, "lib-a");
         T.eq("LOCAL", a.props().get(LIB + "Type"), "a returned text");
         T.check(!a.props().containsKey(LIB + "Subscription URL"), "a local library has none: nothing sent");
@@ -540,7 +593,7 @@ public final class OwnObjectsTest {
         T.eq(0, lib(own, "lib-d").props().size(), "a bare library sends no text");
         int withheld = 0;
         for (OwnObject o : own.objects()) withheld += o.withheld();
-        T.check(withheld >= 4 + 10, "and counts what it did not send: " + withheld);
+        T.eq(0, withheld, "and an unset field is not counted as withheld");
         // the same for a template
         com.vcfcf.adapters.vcommunity.coll.TemplateScan scan = new com.vcfcf.adapters.vcommunity.coll.TemplateScan();
         com.vcfcf.adapters.vcommunity.coll.TemplateScan.Row row = new com.vcfcf.adapters.vcommunity.coll.TemplateScan.Row();
@@ -548,14 +601,10 @@ public final class OwnObjectsTest {
         row.name = "bare";
         scan.rows.add(row);
         OwnObject t = com.vcfcf.adapters.vcommunity.coll.TemplateCollector.collect(scan, FakeVc.INSTANCE_UUID,
-                new java.util.HashMap<>(), new java.util.HashMap<>(), new com.vcfcf.adapters.vcommunity.health.Failures(),
-                false).own.objects().get(0);
-        T.eq(2, t.props().size(), "a bare template sends the two figures as text (Q9) and no text");
-        OwnObject t2 = com.vcfcf.adapters.vcommunity.coll.TemplateCollector.collect(scan, FakeVc.INSTANCE_UUID,
-                new java.util.HashMap<>(), new java.util.HashMap<>(), new com.vcfcf.adapters.vcommunity.health.Failures(),
-                true).own.objects().get(0);
-        T.eq(6, t2.props().size(), "with the switch on: the four texts and the two figures as text");
-        T.eq(1, t2.stats().size(), "and the disk figure, 0.0 (Q9)");
+                new java.util.HashMap<>(), new java.util.HashMap<>(), new com.vcfcf.adapters.vcommunity.health.Failures())
+                .own.objects().get(0);
+        T.eq(0, t.props().size(), "a bare template sends no text and no figure as text");
+        T.eq(0, t.stats().size(), "and no disk figure");
     }
 
     /** B4: a template path that could not be read is unknown, not unset: no 0, no 0.0, no empty text. */
@@ -568,7 +617,7 @@ public final class OwnObjectsTest {
             t.missing(p);
         }
         vc.add(t);
-        // a second template whose same paths are merely unset: upstream's text and zeros
+        // a second template whose same paths are merely unset: nothing is sent and nothing counted (DV-112)
         SoapFx.Obj u = new SoapFx.Obj("VirtualMachine", "vm-11").name("unset").put("config.template", SoapFx.bool(true));
         vc.add(u);
         try (Rig r = new Rig(fake, vc, new FakeLibraries())) {
@@ -578,8 +627,9 @@ public final class OwnObjectsTest {
                     + a.props() + a.stats());
             T.check(a.withheld() >= 7, "and the values are counted: " + a.withheld());
             OwnObject b = tpl(res.own, "vm-11");
-            T.eq("0", b.props().get(TPL + "vCPUs"), "unset: upstream's 0");
-            T.eq(Double.valueOf(0), b.stats().get(TPL + "Disk Used (GB)"), "unset: upstream's 0.0");
+            T.check(!b.props().containsKey(TPL + "vCPUs"), "unset: nothing, not a 0");
+            T.check(!b.stats().containsKey(TPL + "Disk Used (GB)"), "unset: nothing, not a 0.0");
+            T.eq(0, b.withheld(), "and an unset value is not counted");
             T.eq(Status.PARTIAL, res.summary.collectorStatus.get("template"), "partial");
         }
         // a path vCenter refuses (InvalidProperty): dropped from the read for every VM, and nothing for it
@@ -1070,14 +1120,4 @@ public final class OwnObjectsTest {
         T.eq(before, l.calls.size(), "and sends nothing");
     }
 
-    // ------------------------------------------------------------------ the switch
-
-    static void quirkSeam() {
-        T.eq(null, Quirks.ownText(null, false), "not returned: nothing when the switch is off (DV-17)");
-        T.eq("", Quirks.ownText(null, true), "not returned: the empty text, as the original, when the switch is on (Q8)");
-        T.eq("", Quirks.ownText("", false), "returned and empty: as it is (Q4)");
-        T.eq("  ", Quirks.ownText("  ", true), "returned and blank: as it is (Q4)");
-        T.eq("x", Quirks.ownText("x", false), "a value");
-        T.check(Quirks.ABSENT_OWN_TEXT_IS_EMPTY, "the shipped setting is the match (Q8)");
-    }
 }
