@@ -9,6 +9,7 @@ One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
   `feature_fallback: {font_color: omit}`: VCF Operations 8.18.7 rejected their templates on the cover page `FontColor` element (11 of 16 reports installed;
   measured 2026-11-15 UTC). Below 9.0.2 they ship without the cover page text color (cosmetic); 9.0.2 and 9.1.1 are unchanged. Design 10.1d, DV-107.
 - docs: installing guide notes for 8.18.7 (cycle time, the `ide0:0.autodetect` check-list note).
+- docs: licensing decided (owner, 2026-11-16): the whole pak, adapter code and all bundled content, is MIT. `NOTICE`, `docs/NOTICE.md` and `EULA.txt` drop the "terms pending" wording and the "no release tag until the owner confirms" gate, keep the acknowledgment of the upstream authors, the upstream license name and its Required Notice line. README, design and carried-text report updated. Documentation only; picked up by the next build.
 - build: `0.0.0.19`; built with factory main `0a8a4b7a`.
 
 ## 1.0.0.18 (Unreleased)

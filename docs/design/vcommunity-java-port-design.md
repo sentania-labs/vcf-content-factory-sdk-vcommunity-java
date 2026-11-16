@@ -5,7 +5,7 @@
 - **API map (the contract):** `knowledge/context/api-maps/vcommunity-e1-collection-map.md` and
   `knowledge/context/api-maps/vcommunity-e1-key-map.tsv` (rows are cited as `R<n>`, the 1-based data row
   number, header excluded; `R1` is `Configuration|Install Date|UTC`, `R257` is the `Options|<item>` family)
-- **Pak repo:** `sentania-labs/vcf-content-factory-sdk-vcommunity-java` (private), cloned at
+- **Pak repo:** `sentania-labs/vcf-content-factory-sdk-vcommunity-java` (private until the first release is cut), cloned at
   `content/sdk-adapters/vcommunity-java/` from the SDK template
 - **Author:** `sdk-adapter-author` (sonnet). Reviewer: `sdk-adapter-reviewer`.
 - **Date:** 2026-11-12. **Status:** design, awaiting owner answers to section 12.
@@ -45,7 +45,7 @@ dashboards, views, reports, alerts and symptoms ship from that repo.
 | Failure handling | report honestly: a failed or missing read sends nothing and is counted; never a zero, False or sentinel; license key masked; a bad check-list entry is skipped and reported |
 | Content route | grow the factory YAML route, no raw passthrough |
 | Edited built-in views | re-authored under ids of their own |
-| License | MIT, NOTICE crediting the original authors; repo private until the licensing record is complete |
+| License | MIT for the whole pak, code and bundled content (owner decision 2026-11-16, 10.1a); NOTICE crediting the original authors |
 
 ---
 
@@ -95,8 +95,8 @@ dashboards, views, reports, alerts and symptoms ship from that repo.
 `NOTICE` (repo root, shipped in the pak beside `LICENSE` by naming it in the README and copying it under
 `docs/`): credits Onur Yuzseven and the vCommunity contributors (vmbro/VCF-Operations-vCommunity) and
 e1-rahabok (VCF-vCommunity-Adapter) for the original design, key tree, KPI tables, content and check-list
-files; states that this pak is an independent Java reimplementation. Final wording waits on the owner's
-licensing record; the author writes a placeholder that the reviewer checks is present.
+files; states that this pak is an independent Java reimplementation. Final wording, 2026-11-16: the whole pak is MIT
+(owner decision, recorded in 10.1a); NOTICE keeps the upstream acknowledgment, license name and Required Notice line.
 
 `stitch_targets` (documentation only, `knowledge/context/tier2_architecture.md` "Push targets"):
 
@@ -1468,8 +1468,15 @@ Aria Operations 8.18.x as its minimum; 8.18.7, 9.0.2 and 9.1.1 remain the tested
   `content/dashboards/dashboards.properties`, as the source pak. The importer had inferred the binding from the folder
   name; the review (B1) removed it.
 - **Not in the factory registry, on purpose.** This pak is not in `knowledge/context/managed_paks.md` while the repository is
-  private (before any release tag), so `defect-gate --pak vcommunity-java` sees nothing for it. It is registered when the
-  owner confirms the licensing record and a release is planned.
+  private (before any release tag), so `defect-gate --pak vcommunity-java` sees nothing for it. It is registered when a release is
+  planned (the licensing gate is closed, 2026-11-16).
+- **Licensing (owner decision, 2026-11-16).** Verbatim: "Regarding licensing all authored or converted content is MIT."
+  The whole pak is MIT, adapter code and all bundled content. Provenance stays in `NOTICE`: the dashboards, views, reports,
+  super metrics, symptoms and alerts were converted from the content of the upstream vCommunity pack 0.8.1 (published under
+  PolyForm Noncommercial 1.0.0, its LICENSE file at tag v0.8.1), under this project's own ids and, for 101 views, descriptions;
+  the upstream authors are acknowledged and the upstream Required Notice line is kept. The owner holds the record of the
+  upstream authors' agreement; this repository does not carry it. The "private until the licensing record is complete" and
+  "no release tag until the owner confirms" gates are removed.
 - **Same adapter kind as the retired port** (Q8): an instance that still has the retired port's `1.0.0.9` pak sees this install as
   an upgrade of it; the installing guide says so.
 

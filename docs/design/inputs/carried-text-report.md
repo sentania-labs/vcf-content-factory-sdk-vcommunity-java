@@ -8,25 +8,25 @@ that the converter kept as the source pack wrote it. The importer records each a
 is the field's length in characters (checked against the YAML for a super metric description, 374, and a text
 widget, 504). It does not count identifiers, metric and property keys, formulas, symptom conditions or any
 other structured value. A field the converter replaced is not counted. Whether the carried text is protected
-expression, or is a title or a name too short to be one, is the owner's decision; this report only shows where
+expression, or is a title or a name too short to be one, is no longer a licensing gate (the whole pak is MIT, owner decision 2026-11-16); this report only shows where
 it is.
 
 ## Replaced text
 
-- 101 views have a replaced description: the 101 re-authored views (the ones that began as edited built-in
+- 102 views have a replaced description: the 101 re-authored views (the ones that began as edited built-in
   views), each described afresh from its subject, columns, filters and time settings
   (`docs/design/inputs/view_describe.tsv`). Of these, 0 still carry a source description.
 - 9 of those views also have a new title (`docs/design/inputs/view_rename.tsv`): the titles that equalled a
-  built-in view's. The other 92 keep the source title, which is counted below as carried.
+  built-in view's. The other 93 keep the source title, which is counted below as carried.
 - The 19 views that only renamed a built-in are not shipped (the dashboards and reports use the built-in in place).
 
 ## Totals
 
 | What | Fields | Characters |
 |---|---:|---:|
-| Importer report, 253 objects | 671 | 43881 |
+| Importer report, 253 objects | 670 | 43222 |
 | The two Section dashboards (from their YAML) | 81 | 5274 |
-| **All carried free text** | **752** | **49155** |
+| **All carried free text** | **751** | **48496** |
 
 ## By type
 
@@ -34,11 +34,10 @@ it is.
 |---|---:|---:|
 | alert | 8 | 204 |
 | dashboard | 478 | 25357 |
-| recommendation | 1 | 670 |
 | report | 32 | 8314 |
 | supermetric | 4 | 489 |
 | symptom | 10 | 405 |
-| view | 219 | 13716 |
+| view | 219 | 13727 |
 
 ## By type and field
 
@@ -53,14 +52,13 @@ Widget fields are grouped by what they are, not by widget number. The Section da
 | dashboard | widget description | 30 | 4208 |
 | dashboard | widget html | 4 | 1634 |
 | dashboard | widget title | 346 | 7266 |
-| recommendation | description | 1 | 670 |
 | report | description | 16 | 7846 |
 | report | name | 16 | 468 |
 | supermetric | description | 2 | 446 |
 | supermetric | name | 2 | 43 |
 | symptom | name | 10 | 405 |
 | view | description | 58 | 9293 |
-| view | name | 161 | 4423 |
+| view | name | 161 | 4434 |
 
 ## The ten largest fields
 
@@ -69,13 +67,13 @@ Widget fields are grouped by what they are, not by widget number. The Section da
 | 1 | report | VOA - Configuration | description | 675 |
 | 2 | report | VOA - Performance | description | 673 |
 | 3 | report | VOA - Inventory | description | 671 |
-| 4 | recommendation | vCommunityCollectionWarnings | description | 670 |
-| 5 | report | VOA - Capacity | description | 670 |
-| 6 | report | VOA - Executive Summary | description | 603 |
-| 7 | dashboard | Report: Executive Summary (page 3) | widget w3 html | 504 |
-| 8 | dashboard | Report: VM Performance | widget w3 html | 504 |
-| 9 | dashboard | Report: vSphere Storage Capacity (page 2) | description | 463 |
-| 10 | report | VOA - Datastores for CSV Export | description | 414 |
+| 4 | report | VOA - Capacity | description | 670 |
+| 5 | report | VOA - Executive Summary | description | 603 |
+| 6 | dashboard | Report: Executive Summary (page 3) | widget w3 html | 504 |
+| 7 | dashboard | Report: VM Performance | widget w3 html | 504 |
+| 8 | dashboard | Report: vSphere Storage Capacity (page 2) | description | 463 |
+| 9 | report | VOA - Datastores for CSV Export | description | 414 |
+| 10 | report | VOA - Distributed Port Groups for CSV Export | description | 414 |
 
 ## Not covered here
 

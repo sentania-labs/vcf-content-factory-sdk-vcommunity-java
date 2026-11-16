@@ -5,9 +5,8 @@ a vCenter over vim25 and pushes the `vCommunity|` keys onto the vCenter
 adapter's own objects through the VCF Operations Suite API, and adds three
 object kinds of its own (content libraries, library items and VM templates).
 It is a clean reimplementation: the key tree, the account fields and the
-check-list files follow the original pack, the code is new and MIT licensed. The content
-(views, dashboards and the rest) is converted from the original pack's content files; `NOTICE` says
-what that means for its terms.
+check-list files follow the original pack, the code is new. The content
+(views, dashboards and the rest) is converted from the original pack's content files; the whole pak, code and content, is MIT licensed (`NOTICE` has the provenance).
 
 Adapter kind `vcfcf_vcommunity`; distinct from the original Python pack's kind,
 so the two are never an upgrade of each other. Minimum product version: VCF Operations 8.18.x (tested on 8.18.7, 9.0.2 and 9.1.1).
@@ -306,4 +305,4 @@ prints `SECTIONS OMITTED` for them while the floor is below VCF Operations 9.1.1
 
 ## License
 
-MIT for the adapter code, see `LICENSE`. The bundled content derives from a PolyForm Noncommercial source and its terms are pending the owner's confirmation (`NOTICE`; the pak shows it as its license text, `EULA.txt`). `NOTICE` credits the authors of the original pack, whose design this port follows.
+MIT for the whole pak, the adapter code and all bundled content, see `LICENSE`. The bundled content was converted from the content files of the upstream vCommunity pack 0.8.1, which is published under its own license (PolyForm Noncommercial 1.0.0); it is released here under MIT by decision of this project's owner, who holds the record of the upstream authors' agreement (`NOTICE`; the pak shows it as its license text, `EULA.txt`). `NOTICE` credits the authors of the original pack, whose design this port follows.

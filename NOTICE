@@ -1,9 +1,7 @@
-PRIVATE. NO RELEASE TAG until the owner confirms the terms of the bundled content
-(see "Terms of the bundled content" below). This repository stays private until then.
-
 VCF Content Factory vCommunity
-Copyright (c) 2026 the VCF Content Factory authors. Licensed under the MIT
-License (see LICENSE).
+Copyright (c) 2026 the VCF Content Factory authors. The whole pak, the adapter
+code and all of the bundled content, is licensed under the MIT License (see
+LICENSE and "Terms of the bundled content" below).
 
 This pak is an independent Java reimplementation of the vCommunity management
 pack for VCF Operations. The design it follows (the vCommunity| key tree, the
@@ -21,8 +19,8 @@ same keys and values; the column names and the registry and file paths they use 
 Content (views, dashboards, reports, super metrics, symptoms, alerts, recommendation)
 ------------------------------------------------------------------------------------
 
-The content this pak installs is NOT independently written. It is converted, by an
-offline tool, from the content files of this source:
+The content this pak installs was converted, by an offline tool, from the content
+files of this source, which is acknowledged here as the origin of that content:
 
   Project:   VCF Operations vCommunity Management Pack ("vCommunity"), version 0.8.1
              (https://github.com/vmbro/VCF-Operations-vCommunity), as continued by
@@ -31,7 +29,7 @@ offline tool, from the content files of this source:
              7cc81338614a185bf3546f1d9112eb2e1a9c19c5a507eddad64a637339b05780: a factory
              build of the corrected content (the fix sent upstream as pull request 92 to
              e1-rahabok/VCF-vCommunity-Adapter) on the released 0.8.1 adapter image
-  License:   PolyForm Noncommercial License 1.0.0
+  Upstream license: PolyForm Noncommercial License 1.0.0
   Terms:     https://polyformproject.org/licenses/noncommercial/1.0.0
 
   Required Notice: Copyright (c) 2026 Onur Yuzseven — VCF Operations vCommunity Management Pack (https://github.com/vmbro/VCF-Operations-vCommunity)
@@ -60,18 +58,22 @@ What was written for this pak and is not carried from the source:
 Terms of the bundled content
 ----------------------------
 
-The adapter code of this pak (the Java source, the build files, the check-list file
-mechanism) is MIT licensed (LICENSE). The bundled content (views, dashboards, reports,
-super metrics, symptoms, alerts, the recommendation) derives from the source named above,
-which is distributed under the PolyForm Noncommercial License 1.0.0 (its LICENSE file,
-with the Required Notice line above, copyright Onur Yuzseven). The MIT license does not
-by itself grant rights in content derived from a source under other terms. THE TERMS
-UNDER WHICH THE CONVERTED CONTENT MAY BE REDISTRIBUTED ARE PENDING THE OWNER'S
-CONFIRMATION: nothing here is a statement that the content is MIT licensed or that the
-source's terms permit this use. Anyone who receives a copy of any part of that content
-from this pak also receives the terms URL and the Required Notice line above.
+The whole pak is licensed under the MIT License (LICENSE): the adapter code (the Java
+source, the build files, the check-list file mechanism) and all of the bundled content
+(views, dashboards, reports, super metrics, symptoms, alerts, the recommendation),
+whether it was authored for this project or converted from the content files of the
+source pack named above. The adapter itself is an independent Java implementation.
 
-PLACEHOLDER: the final wording of this notice, and the licensing terms under
-which the original design material and the converted content are reused, wait for the
-owner's licensing record. Until that record is complete this repository stays private
-and no release is to be tagged.
+Provenance of the converted content: the dashboards, views, reports, super metrics,
+symptoms and alerts were converted from the content of the upstream vCommunity pack
+(VCF Operations vCommunity Management Pack, version 0.8.1, by Onur Yuzseven and the
+contributors to vCommunity, as continued by e1-rahabok), under ids and, for 101 views,
+descriptions of this project's own.
+
+The upstream pack is published under its own license, the PolyForm Noncommercial
+License 1.0.0 (its LICENSE file at tag v0.8.1). The converted content is released here
+under the MIT License by decision of this project's owner, who holds the record of the
+upstream authors' agreement. The upstream authors are acknowledged above and the
+upstream Required Notice line is kept as the attribution it is:
+
+  Required Notice: Copyright (c) 2026 Onur Yuzseven — VCF Operations vCommunity Management Pack (https://github.com/vmbro/VCF-Operations-vCommunity)

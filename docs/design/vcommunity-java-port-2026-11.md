@@ -2,8 +2,7 @@
 
 - **Type:** managementpack
 - **Slug:** vcommunity-java-port-2026-11
-- **Authored YAML:** not assigned yet (new pak repo, private until the
-  licensing record is complete; name and adapter kind pending the owner's
+- **Authored YAML:** not assigned yet (new pak repo; name and adapter kind pending the owner's
   decision)
 - **Date:** 2026-11-12
 - **Status:** drafted
@@ -37,8 +36,8 @@
 > towards a reauthor.
 
 The turns about licensing and contributor consent are deliberately not
-reproduced here. The owner is handling that record; the pak repo stays
-private until it is complete, and the license chosen is MIT.
+reproduced here. The owner holds that record. Owner decision, 2026-11-16, verbatim: "Regarding licensing all authored or converted content is MIT."
+The whole pak, code and bundled content, is MIT; the licensing gate on a release tag is removed.
 
 ## Vision
 
