@@ -2,7 +2,10 @@
 #
 #   adapter_kind  MUST equal the AdapterKind key in describe.xml and
 #                 ADAPTER_KIND in VCommunityAdapter.java.
-#   build_number  bump on every build; CHANGELOG.md gets a matching line.
+#   version       the release line: 3.x is this port (Onur's pack is 1.x, Ewan's 2.x).
+#   build_number  bump on every build; CHANGELOG.md gets a matching line. It restarts at 1
+#                 with a new version (3.0.0 build 1 is the first release, after the 1.0.0
+#                 development builds 1 to 26); the release tag is v<version>.<build_number>.
 #   released      false while authoring; the official release is the .pak
 #                 CI builds on a v* git tag. Dev builds stamp 0.0.0.<build>.
 #
@@ -27,8 +30,8 @@ description: >
   event logs and sends the events. The pak also ships the content of the original
   pack (views, dashboards, reports, super metrics, symptoms, alerts and a
   recommendation) and the six check-list files.
-version: 1.0.0
-build_number: 26
+version: 3.0.0
+build_number: 1
 tier: 2
 released: false
 

@@ -83,7 +83,7 @@ dashboards, views, reports, alerts and symptoms ship from that repo.
 | `entry_class` | `com.vcfcf.adapters.vcommunity.VCommunityAdapter` |
 | `name` | `VCF Content Factory vCommunity` |
 | `description` | one paragraph, written new: Java port of the vCommunity management pack; pushes the `vCommunity|` keys onto the vCenter adapter's own objects; three own kinds; attribution sentence "Port of vCommunity by Onur Yuzseven (github.com/vmbro/VCF-Operations-vCommunity) as continued by e1-rahabok (github.com/e1-rahabok/VCF-vCommunity-Adapter) 0.8.1." |
-| `version` | `1.0.0`; dev builds stamp `0.0.0.<build>` (RULE-014); the release is the repo CI on a `v*` tag |
+| `version` | `3.0.0` (the first release is 3.0.0.1); dev builds stamp `0.0.0.<build>` (RULE-014); the release is the repo CI on a `v*` tag |
 | `tier` / `released` | `2` / `false` |
 | `vendor` | `VCF Content Factory` (explicit, so the line is reviewable) |
 | `vendor_contact` | omit while the repo is private |
@@ -1460,10 +1460,10 @@ later release; mint a new one.
 
 ### 10.1c Versioning
 
-Dev builds are stamped `0.0.0.N` (RULE-014); this build is `0.0.0.19`. The released line is to be labelled 3.0.x: Onur's pack is the 1.x
-line, Ewan's the 2.x line, this port the 3.x line. The version scheme and build numbers are unchanged by this record. Where the release version is
-set: `version` in `adapter.yaml` (currently `1.0.0`, to be changed to the 3.0.x value) and the `v*` git tag the repository's CI builds from; the dev stamp
-`0.0.0.<build_number>` comes from `build_number` in `adapter.yaml`. Not changed here.
+Dev builds are stamped `0.0.0.N` (RULE-014). The released line is 3.x: Onur's pack is the 1.x line, Ewan's the 2.x line, this port the 3.x line. The first
+release is **3.0.0.1** (a preview): `version: 3.0.0` and `build_number: 1` in `adapter.yaml`, tag `v3.0.0.1` (the release workflow requires the tag to equal
+`v<version>.<build_number>`). The build number restarts at 1 with the new version; the development builds 1 to 26 were under `1.0.0` and are stamped `0.0.0.N`,
+so nothing in the release line precedes it. The dev stamp `0.0.0.<build_number>` still comes from `build_number`.
 
 **Minimum product version (owner decision, 2026-11-14, verbatim):** "Also, minimum version should just be 8.18.x, not 8.18.7." The pak states VCF Operations /
 Aria Operations 8.18.x as its minimum; 8.18.7, 9.0.2 and 9.1.1 remain the tested versions and the versions of the lab measurements. The built manifest's

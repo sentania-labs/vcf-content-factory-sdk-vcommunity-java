@@ -1,7 +1,63 @@
 # Changelog
 
-One entry per build. Dev builds are stamped `0.0.0.<build>`; the release is the
-`v*` tag built by this repository's CI.
+Releases are `v<version>.<build_number>` tags built by this repository's CI. Development builds are stamped
+`0.0.0.<build>` and are kept below, under "Development builds".
+
+## 3.0.0.1 (preview)
+
+The first public preview of VCF Content Factory vCommunity, a Java port of the vCommunity management pack. It descends
+from Onur Yuzseven's vCommunity (the 1.x line) as continued by Ewan (e1-rahabok, 0.8.1), and is the 3.x line. It needs
+VCF Operations 8.18 or later and was tested on 8.18.7, 9.0.2 and 9.1.1. Send feedback as GitHub issues on this repository.
+
+**What stays the same as the Python pack 0.8.1**
+- The metric and property key names (`vCommunity|...`) are the same, on the same vSphere objects, so existing
+  dashboards, views, reports and super metrics that read them keep working (whether the history of a key continues across
+  the move was not measured on an instance).
+- The account fields, the six check-list files and the content (170 views, 52 dashboards, 16 reports, 3 super metrics,
+  10 symptoms, 4 alerts with 1 recommendation) are the same, converted.
+- All content is installed under this pak's own ids, so it never overwrites or deletes the Python pack's content or a
+  built-in view. The adapter kind is its own (`vcfcf_vcommunity`): this is not an upgrade of the Python pack. Uninstall
+  the Python pack first, then install this one (`docs/installing.md`).
+
+**Where it deliberately behaves differently from the Python pack** (each is a numbered decision in the design,
+section 5.7)
+- **Network Speed Degradation works.** The Python pack read NIC speeds as statistics, which are properties, so it
+  never published. This build reads them as properties, per NIC, for hosts that are connected. It needs the host
+  property `net|configuredSpeed` enabled in the active policy, and only NICs with a fixed speed in vCenter carry it
+  (DV-108).
+- **Memory consumed on hosts with memory tiering** is measured against DRAM plus the NVMe tier, and so are the other
+  memory rows of a tiered host, so it no longer passes 100 % (DV-109). Confirmed against the stock usage figure on
+  9.1.1.
+- **Worst ESXi Memory Tiering Latency is in microseconds** (the statistic is in nanoseconds), where the Python pack
+  scored the raw number and pinned the row at the worst score (DV-113).
+- **Host Operational Availability on 8.18** no longer caps a healthy host at 75: that version has no quarantine
+  property, so the condition is left out there (DV-110).
+- **DRS Score, Number of HBA and SCSI Controllers Count** send nothing when DRS is off or the list was not returned,
+  instead of a 0 that reads as the worst score or an empty set (DV-111).
+- **A value vCenter answered without is not published at all**: no `None`, `null`, `[]`, `N/A`, `Unknown`, empty text
+  or 0 stands in for it, as the stock vSphere adapter does. A returned value, even 0 or `False`, is sent. A value that
+  could not be read is counted in Collection Health instead (DV-112). This includes the Tools Sync Time and Tools
+  Upgrade Policy keys (real values, not `None`) and the NIC Duplex key (only from a returned flag). Because a pushed
+  key cannot be deleted, an old placeholder stays on an object until a real value replaces it.
+- **ESXi Host License Expiring** covers every license that has an expiration date, not only one named license; its
+  severity follows the license nearest to expiring (Q17).
+- **The package views** (nenic and nfnic vendor and version distributions, VIB Info) read the keys the adapter
+  publishes. They show data once `nenic`, `nfnic` and `nsx-host` are named in the packages list.
+- **vSphere Clusters not Green** is a shipped super metric that counts clusters whose Cluster Performance Score is below
+  75 (enable it in the policy on the vSphere World); two report dashboards chart it.
+- **Two views were corrected**: VM Memory Limit charts the memory limit (it charted the CPU limit), and the namespace CSV
+  view reads the namespace memory limit.
+- **Guest logon lockout protection**: the guest checks (off by default) ask for at most two refused logons per
+  credential in 24 hours and pause after that, so a wrong password cannot lock a domain account (DV-97).
+- **Collection Health keys**: the adapter reports its own health (`vCommunity|Collection Health|...`: per-collector
+  status, causes, values withheld, warnings), and a failed read is withheld and counted, never turned into a value.
+
+**Known gaps** are listed in `README.md` and `docs/overview.md`.
+
+## Development builds
+
+Before the first release the pak was built as development builds 1 to 26 (stamped `0.0.0.<build>`, under the version
+`1.0.0` in `adapter.yaml`). Their entries follow, newest first.
 
 ## 1.0.0.26 (Unreleased)
 

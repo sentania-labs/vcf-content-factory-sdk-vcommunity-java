@@ -9,7 +9,8 @@ vCenter adapter already has in VCF Operations: hosts, clusters, virtual machines
 datastores, datacenters, the vCenter object and the vSphere World. It also
 creates three object kinds of its own.
 
-This build is the sixth phase of the port. It provides the account, the vCenter
+This is **3.0.0.1, a preview release** (minimum VCF Operations 8.18; tested on 8.18.7, 9.0.2 and 9.1.1; send feedback as
+GitHub issues on this repository). It provides the account, the vCenter
 TLS modes, the session, Test Connection, the collection cycle with its health
 keys, the property keys of clusters, hosts, virtual machines, datastores and the
 vCenter, the three own kinds with their keys and relationship, and the derived
@@ -204,10 +205,10 @@ The pak carries the content of the original pack as VCF Operations content, inst
 
 ## Known Limitations
 
-- This build collects the property keys, the three own kinds, the derived metrics and, when switched on, the guest keys and Windows events, and ships the converted content; none of the content has been installed and looked at on a live instance in this build (`docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv`, `docs/p5-key-coverage.tsv`).
+- This build collects the property keys, the three own kinds, the derived metrics and, when switched on, the guest keys and Windows events, and ships the converted content (`docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv`, `docs/p5-key-coverage.tsv`). The development builds have been installed and have collected on lab instances of 8.18.7, 9.0.2 and 9.1.1. Verified live: Network Speed Degradation on 9.0.2 (build 22); the memory tiering divisor and the tiering latency unit on 9.1.1; the migration from a Python pack version (uninstall, restore the built-in views) on 9.1.1. *[Placeholder, to be filled in by the owner: the result of the live verification of build 26 on the three lab instances.]* The built-in dashboards and the converted content were not all looked at in a browser on every product line (`docs/design/dashboards-port-comparison.md`, section 6).
 - Guest monitoring is built and tested against a fake vCenter and ESXi host only; it has not run on a real Windows guest (`docs/p5-live-proof.md` lists the experiments).
 - The Datacenter count of Network Speed Degradation matches the Datacenter object by MoRef plus vCenter UUID; whether Operations gives a Datacenter those identifiers is unproven (experiment E1). Until it is, a Datacenter without them gets no count and the objects-not-matched figure is unaffected.
-- Not yet proven on a live instance: the P4 differential over 24 hours (the design's phase table).
+- The derived metrics were compared with the Python pack on the lab instances; the differences are the deliberate ones in `CHANGELOG.md` (DV-108 to DV-113). A 24 hour comparison of the whole set on the build that is released is not part of this preview.
 - Cluster Memory Tiering Consumption (`vCommunity|Cluster Consumption|Cluster Memory Tiering Consumption`) is never published: its input statistic `mem:NVMe|tier.usage` does not exist in VCF Operations. The real source is the vCenter counter `mem.tier.consumed` (MB, instances DRAM and NVMe), which needs a performance query this adapter does not make. This is a known gap (design, DV-109).
 - A new library, item or template is created at once and gets its values on the next collection (five minutes later). One that vCenter no longer has is marked not existing after 12 complete collections, and only when everything that could contain it was read.
 - Trust on First Use sends the credentials before any certificate check, as the
@@ -222,4 +223,4 @@ The pak carries the content of the original pack as VCF Operations content, inst
   writes its INFO line nowhere (no per-account log exists during a test, and
   only WARN reaches `collector.log`); what needs attention is one WARN line each.
   Whether the dialog can show text for a passing test is **unverified**.
-- Not yet proven on a live instance: see the phase 1 exit proof in the design.
+- The phase 1 behaviours (login, session, Test Connection) have run on the lab instances through the development builds; the dialog text of a passing Test Connection is the one thing listed as unverified above.

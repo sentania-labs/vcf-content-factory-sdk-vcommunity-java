@@ -13,22 +13,43 @@ so the two are never an upgrade of each other. Minimum product version: VCF Oper
 
 ## Status
 
-Phase 6 of the port (content). Phase 1 gave the account (the 19 fields and
-credential of the original pack), the three vCenter TLS modes, the vim25
-session, Test Connection and the cycle with its Collection Health keys and self
-metrics. Phase 2 added the property keys of clusters, hosts, virtual machines,
-datastores and the vCenter, phase 3 the three own kinds, phase 4 the derived
-metrics: the cluster, host and VM scores, availability, network speed, shares,
-port groups, resource pools, the periodic cluster check, the vSphere World
-roll-ups and the Business Application figures, phase 5 the guest checks (off by default)
-and Windows events. Phase 6 ships the content: 170 views, 52 dashboards, 16 reports,
-3 super metrics, 10 symptoms, 4 alerts with 1 recommendation, and the six check-list files
-(`docs/installing.md`, "Content"). `docs/p2-key-coverage.tsv`,
-`docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv` and `docs/p5-key-coverage.tsv` list every key of the key
-map with whether this build collects it and the test that proves it.
+**3.0.0.1, a preview release.** This is the first public build of the 3.x line, released to collect feedback; expect
+rough edges. It needs **VCF Operations 8.18 or later** and was tested on **8.18.7, 9.0.2 and 9.1.1**. The release notes
+are in `CHANGELOG.md` ("3.0.0.1 (preview)"), including where it deliberately differs from the Python pack it descends from.
+
+**Send feedback as GitHub issues on this repository.**
+
+What is in it: the account (the 19 fields and credential of the original pack), the three vCenter TLS modes, the vim25
+session, Test Connection and the collection cycle with its Collection Health keys and self metrics; the property keys of
+clusters, hosts, virtual machines, datastores and the vCenter; three object kinds of its own (content libraries, library
+items and VM templates); the derived metrics (the cluster, host and VM scores, availability, network speed, shares, port
+groups, resource pools, the periodic cluster check, the vSphere World roll-ups and the Business Application figures);
+the guest checks and Windows events (off by default); and the content: 170 views, 52 dashboards, 16 reports,
+3 super metrics, 10 symptoms, 4 alerts with 1 recommendation, and the six check-list files (`docs/installing.md`,
+"Content"). `docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv` and
+`docs/p5-key-coverage.tsv` list every key of the key map with whether this build collects it and the test that proves it.
 The design is in `docs/design/` (start with `vcommunity-java-port-design.md`).
 
-Network Speed Degradation needs the host NIC property `net|configuredSpeed` enabled in the active policy; see `docs/installing.md`, "Network Speed Degradation".
+**Live verification.** Network Speed Degradation was verified live on 9.0.2 (build 22). The memory tiering divisor and
+the tiering latency unit were confirmed live on 9.1.1. The migration from a Python pack version (uninstall, restore the
+built-in views from a clean export) was run on 9.1.1. *[Placeholder, to be filled in by the owner: the result of the
+live verification of build 26 on the three lab instances.]*
+
+### Known gaps
+
+- **Guest monitoring** (the Windows service and event collection, and the guest operating system keys) has been built and
+  tested against a fake vCenter and ESXi host only; it has not been run against a real Windows guest. It is off by default.
+- **Cluster Memory Tiering Consumption** publishes nothing: its input statistic does not exist in VCF Operations. The real
+  source is a vCenter performance counter this adapter does not read yet.
+- **Network Speed Degradation** needs the host NIC property `net|configuredSpeed` enabled in the active policy, and works
+  only for NICs with a fixed speed in vCenter (a NIC on auto-negotiate gets no configured speed). See
+  `docs/installing.md`, "Network Speed Degradation".
+- **Super metrics** ("CPU Usable Capacity Utilization", "Number of VM", "vSphere Clusters not Green") compute only when
+  the operator enables them in the policy.
+- **CPU Over-Commitment** (a DRS cluster setting) reads a DRS option name that has not been confirmed against a cluster
+  with the setting ticked; it may show nothing where the setting is in use (UB-6 in `docs/reviews/upstream-bug-audit-2026-11-16.md`).
+- **Restoring the built-in views** after uninstalling an affected Python pack version needs a clean export of the
+  built-in views that you provide (`docs/installing.md`, "Moving from the Python pack").
 
 The content is converted from the original pack's content files (see `NOTICE`); the
 conversion report and the list of text carried as written are in `docs/design/inputs/`.
@@ -194,8 +215,8 @@ set -e
 #    floating sdk-buildkit-v1 tag moves under you) and verify the published
 #    checksum before unpacking. Use the version this repo's release
 #    workflow pins (BUILDKIT_TAG in .github/workflows/build-pak-on-tag.yml);
-#    1.0.27 at the time of writing.
-BUILDKIT_VERSION=1.0.27
+#    1.0.29 at the time of writing.
+BUILDKIT_VERSION=1.0.29
 gh release download "sdk-buildkit-v$BUILDKIT_VERSION" \
   --repo sentania-labs/vcf-content-factory \
   --pattern "sdk-buildkit-$BUILDKIT_VERSION.tgz*"
@@ -254,7 +275,8 @@ This repo is the **single source of truth** for its `.pak`. The shippable artifa
 is built by CI, never on a laptop:
 
 1. Author + commit + push to `main`.
-2. **Push a `vX.Y.Z` tag.** The `build-pak-on-tag` workflow:
+2. **Push a `v<version>.<build_number>` tag** (it must equal `version` and `build_number` in `adapter.yaml`; for the first
+   release, `v3.0.0.1`). The `build-pak-on-tag` workflow:
    - pulls the `sdk-buildkit` tarball from the factory's Releases at the pinned
      `BUILDKIT_TAG` and verifies it against `BUILDKIT_SHA256` before extracting,
    - gates on the factory defect registry, fetched at `DEFECT_REGISTRY_COMMIT`,
