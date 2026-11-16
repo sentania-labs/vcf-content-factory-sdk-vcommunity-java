@@ -17,6 +17,9 @@ It is generated, never written by hand:
   * the id mapping                docs/design/inputs/import-report/id_map.tsv
                                   (source id -> id minted in the pak's own namespace)
   * the built-in view drops       docs/design/inputs/dropped.tsv
+  * the owner sign-offs of        docs/design/inputs/dashboard_signoffs.tsv
+    section 4 (dashboard, difference, owner statement, date; a row signs off
+    the section 4 entry of that dashboard name, any other stays "open")
 
 Per dashboard it prints the dashboard-level settings and the widgets. A
 widget is "identical" unless the importer's report records a difference at a
@@ -67,6 +70,26 @@ OPEN_TABLE = """| Product line | Instance (host, version, build) | Date seen | D
 | 9.0.x (9.0.2) | _open_ | _open_ | _open: all 52, the two Section dashboards without Section rows_ | _open_ | _open_ |
 | 9.1.x (9.1.1) | _open_ | _open_ | _open: all 52, the two Section dashboards with their Section rows (the Section variant)_ | _open_ | _open_ |
 """
+
+
+def load_signoffs(root):
+    """dashboard name -> (difference, owner statement, date) from inputs/dashboard_signoffs.tsv."""
+    path = root / "docs/design/inputs/dashboard_signoffs.tsv"
+    out = {}
+    if not path.exists():
+        return out
+    with path.open(newline="") as f:
+        for row in csv.DictReader(f, delimiter="\t"):
+            out[row["dashboard"]] = (row["difference"], row["owner_statement"], row["date"])
+    return out
+
+
+def signoff_text(signoffs, name):
+    s = signoffs.get(name)
+    if not s:
+        return "**Sign-off needed: _open_**"
+    diff, said, date = s
+    return f"**Signed off by the owner, {date}**, verbatim \"{said}\" ({diff})"
 
 
 def cell(v):
@@ -450,13 +473,14 @@ def render(root):
     # builtin refs
     head.append("## 4. Items for the owner under condition 3 (other than Section)\n")
     head.append("Differences in interaction wiring or subject the rule does not let pass without a sign-off. Listed from the importer's recorded losses, none removed by the port:\n")
+    signoffs = load_signoffs(root)
     nav = [(objs[f"dashboards/{f.name}"]["name"], objs[f"dashboards/{f.name}"]) for f in files
            if any(l["class"].startswith("navigation keyed") for l in objs[f"dashboards/{f.name}"]["losses"])]
     for n, o in nav:
         at = [a for l in o["losses"] if l["class"].startswith("navigation keyed") for a in l["at"]]
-        head.append(f"- **{n}**: {len(at)} recorded path(s), source navigation entries keyed by a widget that is not on the dashboard (stale in the source; they cannot fire there); the YAML does not carry them. **Sign-off needed: _open_**")
+        head.append(f"- **{n}**: {len(at)} recorded path(s), source navigation entries keyed by a widget that is not on the dashboard (stale in the source; they cannot fire there); the YAML does not carry them. {signoff_text(signoffs, n)}")
     if "vSphere Cluster Capacity 2.0" in [n for n, *_ in sections]:
-        head.append("- **vSphere Cluster Capacity 2.0**: the source dashboard name has no folder prefix while its `namePath` is `vCommunity`; the target 8.18.7 does not emit the `folder_in_name` omit (floor unknown), so the render carries the folder in the name (`dashboard.name`, set aside by the importer). Folder placement, not grid or wiring. **Sign-off needed: _open_**")
+        head.append(f"- **vSphere Cluster Capacity 2.0**: the source dashboard name has no folder prefix while its `namePath` is `vCommunity`; the target 8.18.7 does not emit the `folder_in_name` omit (floor unknown), so the render carries the folder in the name (`dashboard.name`, set aside by the importer). Folder placement, not grid or wiring. {signoff_text(signoffs, 'vSphere Cluster Capacity 2.0')}")
     head.append("")
     head.append("## 5. References to built-in views by id\n")
     dropped_ids = [k for k in builtin_refs if k in builtin]

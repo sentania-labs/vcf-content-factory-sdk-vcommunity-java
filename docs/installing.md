@@ -174,14 +174,18 @@ rest of the account, as any credential field is) and the collector asks vCenter 
 
 ### Account lockout
 
-A wrong Windows password must not lock the account. Until a logon has worked since the adapter started, **one VM is asked alone**; a
-refused logon counts, and **the second one pauses guest monitoring for 24 hours** (or until the account is edited, which starts the adapter
-again). A VM that refused the account is not asked again for 24 hours. Once a logon has worked, four VMs are asked at a time; if two
-refuse in one collection the credential is taken for changed and the phase pauses the same way (the VMs already started may be
-refused too: up to five refused logons at most). A restart of the adapter forgets all this (the framework keeps no state for an
-adapter), so it starts again with one VM alone: a restart loop costs one refused logon per restart. Tell your directory
-administrators these numbers: a wrong password costs at most two refused logons per start of the adapter and per day after that,
-a credential changed behind the adapter's back costs at most five once. Windows records each refused logon as event 4625 on the
+A wrong Windows password must not lock the account. One rule decides whether a VM is asked (DV-97): a VM is started only while the
+refused logons of the last 24 hours plus the VMs whose first logon is not yet answered stay below two. So the adapter causes at
+most **two refused logons in 24 hours** for one credential, however many VMs there are. Until a logon has worked since the adapter
+started, **one VM is asked alone** and none after a refusal in that collection (one refused logon in the first collection, a second in
+the next at most); **the second refusal pauses guest monitoring for 24 hours** (or until the account is edited, which starts the
+adapter again). After the pause one VM is tried alone, and one refusal pauses it again. A VM that refused the account is not asked
+again for 24 hours, and a refusal ends that VM's run (no cleanup retry carries the account again). An accepted logon does not wipe a
+refusal: two VMs that refuse within 24 hours pause the phase, as a changed credential does. A restart of the adapter forgets all this
+(the framework keeps no state for an adapter), so it starts again with one VM alone: a restart loop costs one refused logon per
+restart. Tell your directory administrators these numbers: a wrong password, or a credential changed before a collection, costs at most
+two refused logons per start of the adapter and per day after that; a credential changed while VMs are running costs at most five once
+(each running VM refuses once). Windows records each refused logon as event 4625 on the
 guest (and 4771 / 4776 on the domain controllers); `vmtoolsd` may retry once per call.
 
 ### Security products

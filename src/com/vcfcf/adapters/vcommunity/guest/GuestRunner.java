@@ -64,6 +64,12 @@ public final class GuestRunner {
         public java.util.function.Function<String, String> hostNameOf;
         /** Directories an earlier run could not remove from this guest (a guest that was unreachable then). */
         public List<String> leftover = new ArrayList<>();
+        /**
+         * Told, as soon as it is known, that the guest accepted the account (true, once) or refused it (false, once), so
+         * that the protection of the account (DV-97) hears of a logon when it happens and not when the VM's run ends.
+         * Null: nobody is told.
+         */
+        public java.util.function.Consumer<Boolean> logonSignal;
     }
 
     /** What came back from one VM, and what went wrong. */
@@ -82,6 +88,8 @@ public final class GuestRunner {
         public final List<String> leftBehind = new ArrayList<>();
         /** True once a call with the account was accepted by the guest's logon (the account is good on this VM). */
         public boolean loggedOn;
+        private java.util.function.Consumer<Boolean> signal;
+        private boolean refusalSignalled;
         /** True when the events program ended with its output read (so the window it covered is known to be done). */
         public boolean eventsOk;
         /** Set by a transfer that was refused for a certificate other than the recorded one (for the moved-VM retry). */
@@ -94,6 +102,18 @@ public final class GuestRunner {
             if (step == GuestStep.AUTH || step == GuestStep.UNAVAILABLE || step == GuestStep.TOOLS
                     || step == GuestStep.TLS) {
                 if (fatal == null) fatal = step;
+            }
+            if (step == GuestStep.AUTH && fatal == GuestStep.AUTH && !refusalSignalled) {
+                refusalSignalled = true;
+                if (signal != null) signal.accept(Boolean.FALSE);
+            }
+        }
+
+        /** A call with the account was accepted by the guest's logon. */
+        void logon() {
+            if (!loggedOn) {
+                loggedOn = true;
+                if (signal != null) signal.accept(Boolean.TRUE);
             }
         }
     }
@@ -129,6 +149,7 @@ public final class GuestRunner {
      */
     public Outcome run(Job job, long stopMs) throws InterruptedException {
         Outcome o = new Outcome();
+        o.signal = job.logonSignal;
         GuestPlan plan = job.plan;
         ops.limitTo(stopMs);
         try {
@@ -154,7 +175,7 @@ public final class GuestRunner {
             if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
             VimResult<Void> r = ops.deleteDirectory(job.vm, d);
             if (r.isOk() || "FileNotFound".equals(r.faultClass())) {
-                o.loggedOn = true;
+                o.logon();
                 continue;
             }
             o.leftBehind.add(d);
@@ -185,7 +206,7 @@ public final class GuestRunner {
                         + "made: " + d.message());
                 return;
             }
-            o.loggedOn = true;
+            o.logon();
             if (!DIRECTORY.matcher(d.value()).matches()) {
                 o.fail(GuestStep.DIRECTORY, which, "the guest named a temporary directory this port does not use; "
                         + "nothing was run and the directory was left alone");

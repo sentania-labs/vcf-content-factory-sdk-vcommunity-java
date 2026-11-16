@@ -176,6 +176,7 @@ public final class GuestEngineTest {
         run("an unsent events push is sent again", GuestEngineTest::eventsNotClean);
         run("one VM's failure is its own", GuestEngineTest::isolation);
         run("the account is not tried on every VM when it is refused", GuestEngineTest::accountProtection);
+        run("refused logons are bounded for every path (DV-97)", GuestEngineTest::lockoutBounds);
         run("prerequisites: no account, a bad TLS mode", GuestEngineTest::prerequisites);
         run("the cycle's time", GuestEngineTest::deadline);
         run("a cancelled cycle removes what it made", GuestEngineTest::cancelled);
@@ -453,6 +454,151 @@ public final class GuestEngineTest {
             int after = r.fx.log.size();
             cycles(r, 3);
             T.eq(after, r.fx.log.size(), "then paused");
+        }
+    }
+
+    // ------------------------------------------------------------------ DV-97: refused logons per credential generation
+
+    /** The refused logons each of {@code n} collections (five minutes apart) caused. */
+    static int[] refusedPer(Rig r, int n) throws Exception {
+        int[] out = new int[n];
+        for (int i = 0; i < n; i++) {
+            int before = r.fx.refusals.get();
+            r.clock.addAndGet(300_000);
+            r.run();
+            out[i] = r.fx.refusals.get() - before;
+        }
+        return out;
+    }
+
+    static void bound(String what, int[] got, int... want) {
+        T.eq(java.util.Arrays.toString(want), java.util.Arrays.toString(got), what + ": refused logons per collection");
+    }
+
+    static int sum(int[] a) {
+        int s = 0;
+        for (int x : a) s += x;
+        return s;
+    }
+
+    /**
+     * The invariant of DV-97, measured at the guest: the refused logons the adapter causes for one credential generation
+     * (one run of the adapter and one credential), counted over three or more consecutive collections, on every path
+     * that can start a VM. T is GuestPhase.REFUSALS_BEFORE_PAUSE (2) and W is GuestPhase.WORKERS (4).
+     */
+    static void lockoutBounds() throws Exception {
+        final int t = com.vcfcf.adapters.vcommunity.guest.GuestPhase.REFUSALS_BEFORE_PAUSE;
+        final int w = com.vcfcf.adapters.vcommunity.guest.GuestPhase.WORKERS;
+        // the probe, one VM: one refused logon, and the VM is not asked again
+        try (Rig r = new Rig(1, "serviceMonitoring", "Enabled")) {
+            r.fx.guest("vm-1").pass = "wrong";
+            bound("1 VM wrong", refusedPer(r, 4), 1, 0, 0, 0);
+        }
+        // the probe, two VMs: one in each of two collections, then the pause
+        try (Rig r = new Rig(2, "serviceMonitoring", "Enabled")) {
+            for (int i = 1; i <= 2; i++) r.fx.guest("vm-" + i).pass = "wrong";
+            bound("2 VMs wrong", refusedPer(r, 4), 1, 1, 0, 0);
+        }
+        // the proving collection: the first VM accepts, the other fifteen refuse (the finding on pull request 2)
+        try (Rig r = new Rig(16, "serviceMonitoring", "Enabled")) {
+            for (int i = 2; i <= 16; i++) r.fx.guest("vm-" + i).pass = "wrong";
+            int[] c = refusedPer(r, 4);
+            bound("16 VMs, vm-1 accepts, 15 refuse", c, t, 0, 0, 0);
+            T.eq("SKIPPED", r.health("Status"), "and the phase is paused");
+        }
+        // the probe finds the refusing VM first, the accepting one is last in the order
+        try (Rig r = new Rig(16, "serviceMonitoring", "Enabled")) {
+            for (int i = 1; i <= 16; i++) if (i != 9) r.fx.guest("vm-" + i).pass = "wrong";
+            bound("16 VMs, only vm-9 (last in the order) accepts", refusedPer(r, 4), 1, 1, 0, 0);
+        }
+        // every VM refuses
+        try (Rig r = new Rig(16, "serviceMonitoring", "Enabled")) {
+            for (int i = 1; i <= 16; i++) r.fx.guest("vm-" + i).pass = "wrong";
+            bound("16 VMs, all refuse", refusedPer(r, 4), 1, 1, 0, 0);
+        }
+        // the account worked and the credential then changed, at the start of a collection: fan-out in later collections
+        try (Rig r = new Rig(16, "serviceMonitoring", "Enabled")) {
+            r.run();
+            T.eq("OK", r.health("Status"), "first the account works on all 16");
+            for (int i = 1; i <= 16; i++) r.fx.guest("vm-" + i).pass = "rotated";
+            bound("16 VMs, the credential changed", refusedPer(r, 4), t, 0, 0, 0);
+        }
+        // one VM's own account stops working while the credential is good: one refused logon, never another
+        try (Rig r = new Rig(6, "serviceMonitoring", "Enabled")) {
+            r.run();
+            r.fx.guest("vm-3").pass = "changed-on-that-vm";
+            int[] c = refusedPer(r, 4);
+            bound("one VM's own account", c, 1, 0, 0, 0);
+            T.eq("PARTIAL", r.health("Status"), "the others are still asked");
+        }
+        // a restart each collection: one refused logon per restart
+        try (Rig r = new Rig(5, "serviceMonitoring", "Enabled")) {
+            for (int i = 1; i <= 5; i++) r.fx.guest("vm-" + i).pass = "wrong";
+            int total = 0;
+            for (int restart = 1; restart <= 6; restart++) {
+                r.newEngine();
+                total += refusedPer(r, 1)[0];
+                T.eq(restart, total, "restart " + restart + ": one refused logon per restart");
+            }
+        }
+        // a restart every three collections: at most T per run of the adapter
+        try (Rig r = new Rig(5, "serviceMonitoring", "Enabled")) {
+            for (int i = 1; i <= 5; i++) r.fx.guest("vm-" + i).pass = "wrong";
+            for (int run = 1; run <= 3; run++) {
+                r.newEngine();
+                bound("run " + run + " of the adapter", refusedPer(r, 3), 1, 1, 0);
+            }
+        }
+        // after the pause: one VM alone, and one refusal pauses again
+        try (Rig r = new Rig(4, "serviceMonitoring", "Enabled")) {
+            for (int i = 1; i <= 4; i++) r.fx.guest("vm-" + i).pass = "wrong";
+            bound("before the pause", refusedPer(r, 3), 1, 1, 0);
+            r.clock.addAndGet(24L * 3600_000);
+            bound("after the pause", refusedPer(r, 3), 1, 0, 0);
+            r.clock.addAndGet(24L * 3600_000);
+            bound("after the second pause", refusedPer(r, 3), 1, 0, 0);
+        }
+        // after the pause, with the account good again: it works at once and VMs are asked together
+        try (Rig r = new Rig(8, "serviceMonitoring", "Enabled")) {
+            for (int i = 1; i <= 8; i++) r.fx.guest("vm-" + i).pass = "wrong";
+            refusedPer(r, 2);
+            for (int i = 1; i <= 8; i++) r.fx.guest("vm-" + i).pass = GuestOpsTest.SECRET;
+            r.clock.addAndGet(24L * 3600_000);
+            bound("the credential put right", refusedPer(r, 3), 0, 0, 0);
+            T.eq("OK", r.health("Status"), "everything is asked again");
+        }
+        // the credential changes while VMs are running: each running VM refuses at most once, and none starts after
+        // the second refusal, so at most T + W - 1
+        try (Rig r = new Rig(16, "serviceMonitoring", "Enabled")) {
+            r.run();
+            r.fx.startDelayMs = 300;
+            Thread rotate = new Thread(() -> {
+                try {
+                    Thread.sleep(150);
+                } catch (InterruptedException e) {
+                    return;
+                }
+                for (int i = 1; i <= 16; i++) r.fx.guest("vm-" + i).pass = "rotated";
+            });
+            rotate.start();
+            int before = r.fx.refusals.get();
+            r.clock.addAndGet(300_000);
+            r.run();
+            rotate.join();
+            int mid = r.fx.refusals.get() - before;
+            for (Map.Entry<String, java.util.concurrent.atomic.AtomicInteger> e : r.fx.refusalsByVm.entrySet()) {
+                T.check(e.getValue().get() <= 1, e.getKey() + " refused " + e.getValue()
+                        + " logons: a refusal ends that VM's run, and nothing else carries the account (cleanup, polls)");
+            }
+            System.out.println("mid-collection change: " + mid + " refused logons");
+            T.check(mid >= 1 && mid <= t + w - 1, "a credential changed during a collection: at most " + (t + w - 1)
+                    + " refused logons, got " + mid);
+            r.fx.startDelayMs = 0;
+            int[] c = refusedPer(r, 3);
+            T.check(sum(c) <= Math.max(0, t - mid), "and the next collections add at most what is left of " + t + ": "
+                    + java.util.Arrays.toString(c) + " after " + mid);
+            int[] none = refusedPer(r, 3);
+            bound("then paused", none, 0, 0, 0);
         }
     }
 

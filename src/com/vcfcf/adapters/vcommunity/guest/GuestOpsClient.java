@@ -64,6 +64,12 @@ public final class GuestOpsClient {
     private final int callMs;
     /** The time this thread's VM runs out (epoch ms), or 0: a call is never allowed past it. */
     private final ThreadLocal<long[]> stop = ThreadLocal.withInitial(() -> new long[] {0});
+    /**
+     * True once a call of this thread's VM run was refused for the account: no other call of that run carries the account
+     * (DV-97: a refusal ends the run, and the cleanup, the process polls and the retries must not each be another refused
+     * logon).
+     */
+    private final ThreadLocal<boolean[]> refused = ThreadLocal.withInitial(() -> new boolean[] {false});
     private final java.util.function.LongSupplier clock;
 
     private long managersGeneration = -1;
@@ -90,6 +96,18 @@ public final class GuestOpsClient {
     /** Calls made by this thread are given no more time than is left until {@code stopMs}; 0 removes the limit. */
     public void limitTo(long stopMs) {
         stop.get()[0] = stopMs;
+        refused.get()[0] = false; // a new run (or the end of one) starts with the account trusted again
+    }
+
+    /** A call that carries the account: not sent after the account was refused in this run. */
+    private VimResult<XmlNode> withAccount(String body, String operation) {
+        if (refused.get()[0]) {
+            return VimResult.fault("InvalidGuestLogin", "not sent: the Windows account was refused earlier in this run "
+                    + "of this VM", null, 0, null);
+        }
+        VimResult<XmlNode> r = vim.call(body, operation, timeout());
+        if (!r.isOk() && classify(r, null) == GuestStep.AUTH) refused.get()[0] = true;
+        return r;
     }
 
     /** How long one call may take: the call limit, or the time left for this VM if that is shorter (at least a moment). */
@@ -236,10 +254,10 @@ public final class GuestOpsClient {
     public VimResult<Long> startProgram(String vm, String program, String arguments, String workingDirectory) {
         VimResult<Managers> m = managers();
         if (!m.isOk()) return VimResult.fault(m.faultClass(), m.message(), null, 0, m.cause());
-        VimResult<XmlNode> r = vim.call("<StartProgramInGuest xmlns=\"urn:vim25\">" + head(m.value().processes, vm)
+        VimResult<XmlNode> r = withAccount("<StartProgramInGuest xmlns=\"urn:vim25\">" + head(m.value().processes, vm)
                 + "<spec><programPath>" + VimXml.escape(program) + "</programPath><arguments>"
                 + VimXml.escape(arguments) + "</arguments><workingDirectory>" + VimXml.escape(workingDirectory)
-                + "</workingDirectory></spec></StartProgramInGuest>", "StartProgramInGuest", timeout());
+                + "</workingDirectory></spec></StartProgramInGuest>", "StartProgramInGuest");
         if (!r.isOk()) return VimResult.fault(r.faultClass(), clean(r), null, 0, r.cause());
         XmlNode rv = r.value().find("returnval");
         String t = rv == null ? null : rv.text();
@@ -253,8 +271,8 @@ public final class GuestOpsClient {
     public VimResult<ProcessState> process(String vm, long pid) {
         VimResult<Managers> m = managers();
         if (!m.isOk()) return VimResult.fault(m.faultClass(), m.message(), null, 0, m.cause());
-        VimResult<XmlNode> r = vim.call("<ListProcessesInGuest xmlns=\"urn:vim25\">" + head(m.value().processes, vm)
-                + "<pids>" + pid + "</pids></ListProcessesInGuest>", "ListProcessesInGuest", timeout());
+        VimResult<XmlNode> r = withAccount("<ListProcessesInGuest xmlns=\"urn:vim25\">" + head(m.value().processes, vm)
+                + "<pids>" + pid + "</pids></ListProcessesInGuest>", "ListProcessesInGuest");
         if (!r.isOk()) return VimResult.fault(r.faultClass(), clean(r), null, 0, r.cause());
         XmlNode rv = r.value().find("returnval");
         if (rv != null && String.valueOf(pid).equals(rv.childText("pid"))) {
@@ -278,8 +296,8 @@ public final class GuestOpsClient {
     public VimResult<Void> terminate(String vm, long pid) {
         VimResult<Managers> m = managers();
         if (!m.isOk()) return VimResult.fault(m.faultClass(), m.message(), null, 0, m.cause());
-        VimResult<XmlNode> r = vim.call("<TerminateProcessInGuest xmlns=\"urn:vim25\">" + head(m.value().processes, vm)
-                + "<pid>" + pid + "</pid></TerminateProcessInGuest>", "TerminateProcessInGuest", timeout());
+        VimResult<XmlNode> r = withAccount("<TerminateProcessInGuest xmlns=\"urn:vim25\">" + head(m.value().processes, vm)
+                + "<pid>" + pid + "</pid></TerminateProcessInGuest>", "TerminateProcessInGuest");
         return r.isOk() ? VimResult.<Void>ok(null, 0) : VimResult.<Void>fault(r.faultClass(), clean(r), null, 0, r.cause());
     }
 
@@ -293,8 +311,8 @@ public final class GuestOpsClient {
     private VimResult<XmlNode> file(String operation, String vm, String args) {
         VimResult<Managers> m = managers();
         if (!m.isOk()) return VimResult.fault(m.faultClass(), m.message(), null, 0, m.cause());
-        return vim.call("<" + operation + " xmlns=\"urn:vim25\">" + head(m.value().files, vm) + args + "</"
-                + operation + ">", operation, timeout());
+        return withAccount("<" + operation + " xmlns=\"urn:vim25\">" + head(m.value().files, vm) + args + "</"
+                + operation + ">", operation);
     }
 
     private VimResult<String> string(String operation, String vm, String args) {

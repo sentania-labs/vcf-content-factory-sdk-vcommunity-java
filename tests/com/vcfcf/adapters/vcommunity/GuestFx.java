@@ -107,6 +107,10 @@ final class GuestFx implements FakeVc.Handler, AutoCloseable {
     private final Map<String, String[]> tickets = new ConcurrentHashMap<>();
     private final AtomicInteger seq = new AtomicInteger(1000);
     final AtomicInteger deletes = new AtomicInteger();
+    /** Every guest call the fake refused for its account (InvalidGuestLogin): the refused logons of DV-97. */
+    final AtomicInteger refusals = new AtomicInteger();
+    /** The refused logons by VM. */
+    final Map<String, AtomicInteger> refusalsByVm = new ConcurrentHashMap<>();
     final AtomicInteger starts = new AtomicInteger();
     /** The most StartProgramInGuest calls being answered at once (the fake holds each for {@link #startDelayMs}). */
     final AtomicInteger maxActive = new AtomicInteger();
@@ -240,6 +244,8 @@ final class GuestFx implements FakeVc.Handler, AutoCloseable {
         String echo = g.echoSecrets ? " (account " + user + ", " + "z".repeat(g.echoPad) + "password " + pass + ")" : "";
         if (g.fault != null) return FakeVc.fault(g.fault, "guest operation refused" + echo);
         if (!g.user.equals(user) || !g.pass.equals(pass)) {
+            refusals.incrementAndGet();
+            refusalsByVm.computeIfAbsent(vm, k -> new AtomicInteger()).incrementAndGet();
             return FakeVc.fault("InvalidGuestLogin", "Failed to authenticate with the guest operating system "
                     + "using the supplied credentials." + echo);
         }
