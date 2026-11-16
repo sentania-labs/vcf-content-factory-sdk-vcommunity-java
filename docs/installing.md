@@ -85,17 +85,22 @@ NICs in VCF Operations, one pair per NIC: `net:<nic>|speed` (Network | Actual Sp
 `net:<nic>|configuredSpeed` (Network | Configured Speed, for example `net:vmnic0|configuredSpeed`).
 
 The vSphere adapter's stock policy does **not** collect the configured speed: in the VMWARE
-`HostSystem` describe the property `net|configuredSpeed` is not monitored by default (`net|speed` is).
-Until it is enabled, no host has the value, so the figure is not sent for any host, Datacenter or the
-World; each cycle the log carries one warning that names `net|configuredSpeed`, and the `kpi` collector
-shows PARTIAL in Collection Health. A NIC with no value, a zero, a value that is not a number, or no
-link (a disconnected NIC) does not count; a host none of whose NICs has both values gets no figure.
+`HostSystem` describe the property `net|configuredSpeed` has `default_monitored: false` (`net|speed` is
+collected). Until it is enabled, no host reports a configured NIC speed, so the figure is not sent for any
+host, Datacenter or the World. That is not a collection failure: `kpi` status, causes, warnings and the withheld
+count are unchanged, and the adapter log says so once at INFO (`F-POLICY-NIC-CONFIGURED-SPEED`) on the first
+cycle and again when it changes. A NIC with no value, a zero, a value that is not a number, or no link (a
+disconnected NIC reports a speed of 0) does not count; a host none of whose NICs has both values gets no figure,
+and only connected hosts count in the Datacenter and World numbers.
 
-To get the figure, enable the property `net|configuredSpeed` (Network | Configured Speed) for the host
-system object type in the policy that applies to your hosts. The exact steps in the policy editor are not
-yet verified live on 8.18.7, 9.0.2 or 9.1.1, so this guide does not give menu paths; look for the
-property by that name in the policy's host system attributes. The first value arrives with the next
-collection after the property is collected.
+To get the figure, enable the property `net|configuredSpeed` (Network | Configured Speed) as a HostSystem
+attribute in the policy that applies to your hosts. The steps in the policy editor are not yet verified live on
+8.18.7, 9.0.2 or 9.1.1, so this guide gives no menu paths. The first value arrives with the next collection after
+the property is collected.
+
+A NIC whose link speed is left on auto-negotiate in vCenter (30 of the 36 NICs in the lab) may report no
+configured speed even with the property enabled; this is not verified, because no lab host has collected the
+property yet. Such a NIC does not count.
 
 ## Permissions Required
 

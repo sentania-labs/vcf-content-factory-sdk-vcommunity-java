@@ -382,40 +382,44 @@ final class ObjectKpis {
             availabilityNoData = true;
             x.log.warn("No Operational Availability data for any host, so none is published this cycle");
         }
-        // network speed: nothing at all when not one NIC anywhere has both speeds (Q15, DV-108)
+        // network speed: nothing at all when not one NIC anywhere has both speeds (Q15, DV-108). Only connected
+        // hosts count: a stored property has no age limit, so a host that stopped answering would keep its speeds
         boolean anyActual = false;
         boolean anyConfigured = false;
         boolean anyPair = false;
         boolean nicFailed = false;
         for (HostF f : hostsByMoref.values()) {
             nicFailed |= f.nicFailed;
-            if (f.nic == null) continue;
+            if (f.nic == null || !Boolean.TRUE.equals(f.h.connected)) continue;
             anyActual |= !f.nic.actual.isEmpty();
             anyConfigured |= !f.nic.configured.isEmpty();
             for (String dev : f.nic.actual.keySet()) anyPair |= f.nic.configured.containsKey(dev);
         }
-        networkNoData = Quirks.NOTHING_WHEN_NO_HOST_HAS_DATA && !hostsByMoref.isEmpty() && !anyPair && !nicFailed;
-        if (networkNoData) {
+        // a failed NIC read does not decide this: the failure is counted where it happened, and the hosts that were
+        // read still say whether any of them has a pair
+        networkNoData = Quirks.NOTHING_WHEN_NO_HOST_HAS_DATA && !hostsByMoref.isEmpty() && !anyPair;
+        // the opt-in property being off is not a failure: it changes no status and no count, and is said once
+        // (on the first cycle and when it changes), at INFO
+        // (with no actual speed anywhere nothing can be said about it, so the last state stands)
+        if (anyActual) x.nicPolicyState(anyConfigured ? NIC_CONFIGURED_OK : NIC_CONFIGURED_OFF);
+        if (networkNoData && !nicFailed) {
             if (!anyActual) {
                 x.log.warn("No NIC speeds for any host, so no Network Speed Degradation this cycle");
-            } else if (!anyConfigured) {
-                // one line a cycle, and Collection Health shows PARTIAL: the property is off in the policy
-                x.gaps.merge(c, 1, Integer::sum);
-                x.withheld(1);
-                x.log.warn("No host reports the NIC property " + StatKeys.NIC_CONFIGURED_SPEED + " (Network|Configured"
-                        + " Speed), so no Network Speed Degradation is sent this cycle; enable that property in the"
-                        + " active policy");
-            } else {
+            } else if (anyConfigured) {
                 x.log.warn("No host has a NIC with both a speed and a configured speed, so no Network Speed"
                         + " Degradation this cycle");
             }
-        } else {
+        }
+        if (!networkNoData) {
             for (HostF f : hostsByMoref.values()) {
-                if (f.nicFailed) continue;
-                f.speed = f.nic == null ? null : NetworkSpeed.degradation(f.nic.actual, f.nic.configured);
+                if (f.nicFailed || f.nic == null || !Boolean.TRUE.equals(f.h.connected)) continue;
+                f.speed = NetworkSpeed.degradation(f.nic.actual, f.nic.configured);
             }
         }
     }
+
+    static final String NIC_CONFIGURED_OFF = "off";
+    static final String NIC_CONFIGURED_OK = "ok";
 
     private boolean availabilityNoData;
     private boolean networkNoData;

@@ -165,10 +165,6 @@ public final class Membership {
         if (roster != null) roster.hostRow(row);
     }
 
-    void addHost(String moref, String name, String cluster, Boolean connected, Set<String> portGroups) {
-        addHost(moref, name, cluster, connected, portGroups, new HashSet<>());
-    }
-
     void addHost(String moref, String name, String cluster, Boolean connected, Set<String> portGroups,
             Set<String> nics) {
         hosts.put(moref, new Host(moref, name == null ? "" : name, cluster, connected, portGroups, nics));

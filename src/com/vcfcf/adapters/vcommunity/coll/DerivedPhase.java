@@ -76,6 +76,8 @@ public final class DerivedPhase {
     private final OpsMapCache datacenterMaps = new OpsMapCache();
     private final UnscopedIds unscoped = new UnscopedIds();
     private final DeltaMemory delta = new DeltaMemory();
+    /** What the last cycle saw of the opt-in NIC configured speed property; null before the first cycle. */
+    private String nicPolicy;
 
     public DerivedPhase(Log log, LongSupplier clock) {
         this.log = log == null ? Log.NONE : log;
@@ -89,6 +91,7 @@ public final class DerivedPhase {
             return res;
         }
         DerivedContext x = new DerivedContext(in, clock, log);
+        x.nicPolicy = this::nicPolicyChanged;
         if (x.stop()) {
             x.deadlineHit = true;
             in.failures.add(C_KPI, FailureCause.DEADLINE, "derived metrics", 0,
@@ -121,6 +124,24 @@ public final class DerivedPhase {
         final long at = x.now();
         res.afterCleanPush = () -> delta.commit(at);
         return res;
+    }
+
+    /**
+     * The NIC configured speed property is opt-in (off in the stock policy). Not having it is no failure: nothing
+     * is counted and no status changes. It is said once at INFO when first seen missing, and again when that changes.
+     */
+    private void nicPolicyChanged(String state) {
+        String before = nicPolicy;
+        if (state.equals(before)) return;
+        nicPolicy = state;
+        if (ObjectKpis.NIC_CONFIGURED_OFF.equals(state)) {
+            log.info(FailureCause.POLICY_NIC_CONFIGURED_SPEED + ": no host reports a configured NIC speed ("
+                    + "net|configuredSpeed, Network | Configured Speed), so Network Speed Degradation is not sent;"
+                    + " the property is not collected unless the active policy enables it (a NIC left on"
+                    + " auto-negotiate may report none either way)");
+        } else if (before != null) {
+            log.info(FailureCause.POLICY_NIC_CONFIGURED_SPEED + ": a configured NIC speed is reported again");
+        }
     }
 
     private static Status status(DerivedContext x, Input in, String collector) {
