@@ -63,7 +63,7 @@ The full guide is in `docs/installing.md`, "Moving from the Python pack".
 `docs/README.md` indexes the docset: `overview.md`, `installing.md` (the account
 fields, TLS modes, Test Connection) and the generated inventory tree.
 `REFERENCE.md` lists the account, the self metrics and the own kinds' keys.
-`NOTICE` credits the original authors.
+`NOTICE` credits the original authors (see Credits below).
 
 ## What's here
 
@@ -303,6 +303,20 @@ packed as they are. `content_foreign_adapter_kinds: [VMWARE]` lets the symptoms 
 vCenter adapter objects, build. The two Section dashboards carry `section_fallback: omit`: the build
 prints `SECTIONS OMITTED` for them while the floor is below VCF Operations 9.1.1.
 
+## Credits
+
+Portions of this pak are derived from the vCommunity Management Pack for VCF Operations
+by its authors, included here under the MIT License with their permission. `NOTICE` has
+the full acknowledgments and the upstream Required Notice line.
+
+- Onur Yuzseven: the original vCommunity Management Pack and its adapter
+  ([VCF-Operations-vCommunity](https://github.com/vmbro/VCF-Operations-vCommunity)).
+- Iwan "e1" Rahabok: the dashboards, reports, super metrics and the pack's design, and the
+  continuation of the pack ([VCF-vCommunity-Adapter](https://github.com/e1-rahabok/VCF-vCommunity-Adapter)).
+- Brock Peterson: contributions to the pack, and the blog series that explains it and its use cases.
+- Mark Arbogast and Robert Mesropyan: credited by the upstream project as assisting Onur Yuzseven.
+- Other contributors in the upstream history: Dave Kaber, Alan Renouf and the contributor recorded as atm8119.
+
 ## License
 
-MIT for the whole pak, the adapter code and all bundled content, see `LICENSE`. The bundled content was converted from the content files of the upstream vCommunity pack 0.8.1, which is published under its own license (PolyForm Noncommercial 1.0.0); it is released here under MIT by decision of this project's owner, who holds the record of the upstream authors' agreement (`NOTICE`; the pak shows it as its license text, `EULA.txt`). `NOTICE` credits the authors of the original pack, whose design this port follows.
+MIT, Copyright (c) 2026 Scott Bowe, for the whole pak, the adapter code and all bundled content, see `LICENSE`. The bundled content was converted from the content files of the upstream vCommunity pack 0.8.1, which is published under its own license (PolyForm Noncommercial 1.0.0); it is released here under MIT by decision of this project's owner, who holds the record of the upstream authors' agreement (`NOTICE`, which carries the "portions derived from" statement and the acknowledgments; the pak shows it as its license text, `EULA.txt`).

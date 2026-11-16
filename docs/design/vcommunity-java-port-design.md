@@ -1480,6 +1480,16 @@ Aria Operations 8.18.x as its minimum; 8.18.7, 9.0.2 and 9.1.1 remain the tested
   the upstream authors are acknowledged and the upstream Required Notice line is kept. The owner holds the record of the
   upstream authors' agreement; this repository does not carry it. The "private until the licensing record is complete" and
   "no release tag until the owner confirms" gates are removed.
+- **Copyright holder and upstream credit (owner decision, 2026-11-16).** Verbatim: "We need to make sure that this repo, well, I'm the MIT
+  copyright holder. I don't know how we attribute to Onar, Iwan, and Brock, and the others that contributed to the upstream original
+  ones." (speech-to-text: Onur, Iwan, Brock.) Scott Bowe is the MIT copyright holder of the repository. `LICENSE` stays standard MIT with
+  his copyright line unchanged and nothing added inside it, so license scanners detect it. The upstream people are credited by name, no
+  email addresses, in `NOTICE` (also `docs/NOTICE.md` and `EULA.txt`, which stay equal to it): the first lines read "VCF Content Factory
+  vCommunity / Copyright (c) 2026 Scott Bowe.", followed by a "Portions are derived from the vCommunity Management Pack for VCF Operations
+  by its authors, named below, and are included here under the MIT License with their permission." line and an Acknowledgments section
+  (Onur Yuzseven, Iwan "e1" Rahabok, Brock Peterson, Mark Arbogast and Robert Mesropyan, and Dave Kaber, Alan Renouf and atm8119 from the
+  upstream history), whose roles follow the upstream README's Credits section at v0.8.1. Automated and tool identities and the copyright
+  holder are not listed as upstream contributors. The README has a Credits section with the same names and a pointer to `NOTICE`.
 - **Same adapter kind as the retired port** (Q8): an instance that still has the retired port's `1.0.0.9` pak sees this install as
   an upgrade of it; the installing guide says so.
 

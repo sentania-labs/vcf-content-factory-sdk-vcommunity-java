@@ -1,7 +1,11 @@
 VCF Content Factory vCommunity
-Copyright (c) 2026 the VCF Content Factory authors. The whole pak, the adapter
-code and all of the bundled content, is licensed under the MIT License (see
-LICENSE and "Terms of the bundled content" below).
+Copyright (c) 2026 Scott Bowe. The whole pak, the adapter code and all of the
+bundled content, is licensed under the MIT License (see LICENSE and "Terms of
+the bundled content" below).
+
+Portions are derived from the vCommunity Management Pack for VCF Operations by
+its authors, named below, and are included here under the MIT License with
+their permission.
 
 This pak is an independent Java reimplementation of the vCommunity management
 pack for VCF Operations. The design it follows (the vCommunity| key tree, the
@@ -15,6 +19,22 @@ account fields, the KPI tables, the content and the check-list files) comes from
 No source code of those projects is copied into this pak. That includes the PowerShell programs the guest phase sends
 to Windows guests: they are written for this pak (`GuestScripts`) from the columns the key map names, and produce the
 same keys and values; the column names and the registry and file paths they use are facts of Windows and of the key map.
+
+Acknowledgments
+---------------
+
+The vCommunity Management Pack for VCF Operations is the work of the people below,
+credited as the upstream project credits itself and as its commit history records them:
+
+  - Onur Yuzseven: the original vCommunity Management Pack and its adapter.
+  - Iwan "e1" Rahabok: the dashboards, reports, super metrics and the pack's design,
+    and the continuation of the pack (VCF-vCommunity-Adapter).
+  - Brock Peterson: contributions to the pack, and the blog series that explains it
+    and its use cases.
+  - Mark Arbogast and Robert Mesropyan: credited by the upstream project as assisting
+    Onur Yuzseven.
+  - Other contributors in the upstream history: Dave Kaber, Alan Renouf and the
+    contributor recorded as atm8119.
 
 Content (views, dashboards, reports, super metrics, symptoms, alerts, recommendation)
 ------------------------------------------------------------------------------------
