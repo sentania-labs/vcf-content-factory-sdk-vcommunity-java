@@ -32,8 +32,14 @@ The design is in `docs/design/` (start with `vcommunity-java-port-design.md`).
 
 **Live verification.** Network Speed Degradation was verified live on 9.0.2 (build 22). The memory tiering divisor and
 the tiering latency unit were confirmed live on 9.1.1. The migration from a Python pack version (uninstall, restore the
-built-in views from a clean export) was run on 9.1.1. *[Placeholder, to be filled in by the owner: the result of the
-live verification of build 26 on the three lab instances.]*
+built-in views from a clean export) was run on 9.1.1. Build 0.0.0.26 (the code of this release) was installed over earlier builds on 8.18.7, 9.0.2 and 9.1.1 on 2026-11-16 and
+collected with every collector OK and no warnings, failed reads or withheld values. Seen live: host availability on 8.18.7
+back at 100 (was 75); on 9.1.1 the memory rows and the Cluster Consumption score equal to what 9.0.2 publishes for the same
+cluster (consumed 60.40 against 60.38), Cluster Risk within about one point, and tiering latency in microseconds; VMware
+Tools properties as real values; no placeholder value pushed after the upgrade; the license symptom form matching a real
+license instance (proved with a temporary symptom); and "vSphere Clusters not Green" counting 1 of the scored clusters.
+Not seen: the five package views with data (no lab host runs those packages), and the widgets of "vSphere Cluster
+Performance 2.0" filling after a cluster is picked (the scripted selection did not register; not checked by hand).
 
 ### Known gaps
 
@@ -44,6 +50,9 @@ live verification of build 26 on the three lab instances.]*
 - **Network Speed Degradation** needs the host NIC property `net|configuredSpeed` enabled in the active policy, and works
   only for NICs with a fixed speed in vCenter (a NIC on auto-negotiate gets no configured speed). See
   `docs/installing.md`, "Network Speed Degradation".
+- **Alerts ship switched off.** The four alert definitions (ESXi Host NIC Disconnected, ESXi Host License Expiring,
+  Windows Service Down, vCommunity Collection Warnings) are not enabled in any policy by the install, as in the original
+  pack; enable the ones you want in your policy.
 - **Super metrics** ("CPU Usable Capacity Utilization", "Number of VM", "vSphere Clusters not Green") compute only when
   the operator enables them in the policy.
 - **CPU Over-Commitment** (a DRS cluster setting) reads a DRS option name that has not been confirmed against a cluster

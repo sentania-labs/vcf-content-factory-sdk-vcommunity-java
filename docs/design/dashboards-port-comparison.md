@@ -157,9 +157,9 @@ Open until the live install. Fill the table by hand; the generator keeps what is
 <!-- OPEN-TABLE-BEGIN: condition 4, filled by hand after the live install -->
 | Product line | Instance (host, version, build) | Date seen | Dashboards seen rendering | Seen by | Result |
 |---|---|---|---|---|---|
-| 8.18.x (8.18.7) | _open_ | _open_ | _open: all 52, the two Section dashboards without Section rows_ | _open_ | _open: placeholder, to be filled from the build 26 live verification_ |
-| 9.0.x (9.0.2) | _open_ | _open_ | _open: all 52, the two Section dashboards without Section rows_ | _open_ | _open: placeholder, to be filled from the build 26 live verification_ |
-| 9.1.x (9.1.1) | _open_ | _open_ | _open: all 52, the two Section dashboards with their Section rows (the Section variant)_ | _open_ | _open: placeholder, to be filled from the build 26 live verification_ |
+| 8.18.x (8.18.7) | _open_ | _open_ | _open: all 52, the two Section dashboards without Section rows_ | _open_ | build 26, 2026-11-16: all 52 dashboards present through the API; not opened one by one in a browser |
+| 9.0.x (9.0.2) | _open_ | _open_ | _open: all 52, the two Section dashboards without Section rows_ | _open_ | build 26, 2026-11-16: all 52 dashboards present through the API; not opened one by one in a browser |
+| 9.1.x (9.1.1) | _open_ | _open_ | _open: all 52, the two Section dashboards with their Section rows (the Section variant)_ | _open_ | build 26, 2026-11-16: all 52 dashboards present through the API; not opened one by one in a browser |
 <!-- OPEN-TABLE-END -->
 
 ## 7. Per-dashboard comparison (condition 2)
