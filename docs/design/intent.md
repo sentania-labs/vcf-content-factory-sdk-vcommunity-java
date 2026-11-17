@@ -22,7 +22,7 @@ aim is a pak that collects the same data, ships the same content, and is built a
   overwrites built-in views and uninstalling them deletes those views. This pak never does either. Content names stay the
   same, except where a re-authored view would share a title with a built-in view.
 - **Match 0.8.1 first, then improve deliberately.** The first target is the 0.8.1 behaviour, field for field: the same
-  account settings, credential, check-list files, scores and formulas. Where this pak differs, the difference is a recorded
+  account settings, credential, configuration files, scores and formulas. Where this pak differs, the difference is a recorded
   decision with a reason (the register in the design document), not a side effect.
 - **Say what could not be read.** A value that could not be read is left out and counted in the collection health keys. It is
   never replaced by a zero, `False` or placeholder text. A bad entry in a configuration file is skipped and reported, and does
