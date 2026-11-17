@@ -24,7 +24,7 @@ src/com/vcfcf/adapters/vcommunity/   # adapter source
   health/                            #   failure accounting, warning count, health keys
   json/                              #   small JSON reader and writer
 tests/com/vcfcf/adapters/vcommunity/ # plain-main tests, no SDK jar needed
-views/ dashboards/ reports/ supermetrics/ symptoms/ alerts/ recommendations/  # the content, as factory YAML
+views/ dashboards/ reports/ supermetrics/ symptoms/ alerts/ recommendations/  # the content, as YAML
 content/files/solutionconfig/        # the six check-list files, packed as they are
 docs/design/                         # the approved design, the collection map, key tables
 .github/workflows/                   # tests on push; release build on a v* tag
@@ -46,7 +46,7 @@ There is **no `lib/` of bundled jars** (see "C2 pak shape" below).
 ## Local dev build (preview)
 
 The official `.pak` is built by CI on a tag (next section). For a local preview,
-use the factory's builder. The Broadcom SDK jar for VCF Operations 9.0.2 is **not** shipped —
+use the VCF Content Factory builder. The Broadcom SDK jar for VCF Operations 9.0.2 is **not** shipped —
 supply it from a 9.0.2 appliance (JDK 17 or newer is needed to read it):
 
 ```sh
@@ -186,24 +186,23 @@ is built by CI, never on a laptop:
 1. Author + commit + push to `main`.
 2. **Push a `v<version>.<build_number>` tag** (it must equal `version` and `build_number` in `adapter.yaml`; for the first
    release, `v3.0.0.29`). The `build-pak-on-tag` workflow:
-   - pulls the `sdk-buildkit` tarball from the factory's Releases at the pinned
+   - pulls the `sdk-buildkit` tarball from the VCF Content Factory repository's Releases at the pinned
      `BUILDKIT_TAG` and verifies it against `BUILDKIT_SHA256` before extracting,
-   - gates on the factory defect registry, fetched at `DEFECT_REGISTRY_COMMIT`,
+   - gates on the VCF Content Factory defect registry, fetched at `DEFECT_REGISTRY_COMMIT`,
    - fetches the private Broadcom SDK jar from
      `sentania-labs/vcf-content-factory-sdk-runtime` (the jar is committed at
      that repo's root; no release asset is used), authenticated by the
      `SDK_RUNTIME_SSH_KEY` deploy key, at the pinned `SDK_RUNTIME_COMMIT`
      (never that repo's HEAD), and checks the jar against `SDK_JAR_SHA256`
      with `sha256sum -c` before anything compiles against it,
-   - builds the `.pak` deterministically (no agent, no factory checkout),
+   - builds the `.pak` deterministically (no factory checkout),
    - gates on `pak-compare` (zero BLOCKING required), and
    - attaches the `.pak` and a `SHA256SUMS` file to the tag's GitHub Release
      with a build-provenance attestation. A published release is never
      overwritten: re-running a tag whose Release already has assets
      fails.
 
-That Release asset **is** the release. A factory `/publish` that references this
-pak emits only a **pointer** to the latest Release — it never rebuilds or mirrors
+That Release asset **is** the release. The VCF Content Factory's publish step emits only a **pointer** to the latest Release; it never rebuilds or mirrors
 the binary.
 
 ### Required release environment secret

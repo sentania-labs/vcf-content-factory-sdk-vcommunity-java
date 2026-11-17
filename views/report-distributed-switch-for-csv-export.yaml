@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/report - voa - distributed switch for csv export/Report - VOA - Distributed Switch for CSV export.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+# Converted from vCommunity 0.8.1: content/reports/report - voa - distributed switch for csv export/Report - VOA - Distributed Switch for CSV export.xml
 id: 22090f0a-7648-595a-adcb-45a4a79329c5
 name: 'Report: Distributed Switch for CSV export'
 description: "A simple table for export as a CSV file. Used in report only, hence it has no formatting.\

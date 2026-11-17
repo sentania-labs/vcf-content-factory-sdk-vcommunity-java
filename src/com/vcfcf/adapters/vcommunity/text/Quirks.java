@@ -1,11 +1,11 @@
 package com.vcfcf.adapters.vcommunity.text;
 
 /**
- * The places where this port reproduces what upstream 0.8.1 publishes although it is not
- * what a careful reader would want (owner direction 2026-11-13: match first, then iterate).
+ * The places where this port first reproduced what upstream 0.8.1 publishes, although the source
+ * data supports something else (decision: match 0.8.1 first, then improve deliberately).
  * Each quirk has one constant and, where it needs logic, one method here; flipping the
  * constant changes the behaviour everywhere. The list, with the key rows, what upstream does
- * and what would be correct, is the design's "Upstream quirks reproduced for the match".
+ * and the alternative, is the design's section 5.8.
  *
  * <p>Q2 is read where it applies; Q6, the detailed-data cut, lives in
  * {@link DetailedDataParser#CUT_AT_FIRST_QUOTE}.

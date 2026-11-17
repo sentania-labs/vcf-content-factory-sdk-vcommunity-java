@@ -194,9 +194,9 @@ public final class OpsReadsTest {
     static void recordedNicProperties() throws Exception {
         String dir = "tests/fixtures/nic-properties/";
         Object[][] cases = {
-            {"devel-vcf-lab-mgmt-esx06-instanced-nic-both.json", 0.0, "link down reads 0.0"},
-            {"devel-vcf-lab-osa-esx03-instanced-nic-both.json", 10000.0, "a fixed 10000"},
-            {"devel_8_18-vcf-lab-wld01-esx01-instanced-nic-both.json", 1000.0, "8.18.7, 1000"},
+            {"nic-9.0.2-link-down-instanced-both.json", 0.0, "link down reads 0.0"},
+            {"nic-9.0.2-fixed-speed-instanced-both.json", 10000.0, "a fixed 10000"},
+            {"nic-8.18.7-instanced-both.json", 1000.0, "8.18.7, 1000"},
         };
         for (Object[] c : cases) {
             String raw = recording(dir + c[0]);
@@ -217,7 +217,7 @@ public final class OpsReadsTest {
                     "a key the resource does not have is dropped by the platform and absent here");
             T.eq(c[1].equals(0.0) ? null : (Double) c[1], NetworkSpeed.parseSpeed(text), "as a speed: " + c[2]);
         }
-        String emptyAnswer = responseOf(recording(dir + "devel-vcf-lab-mgmt-esx06-generic-net-speed-instanced-false.json"));
+        String emptyAnswer = responseOf(recording(dir + "nic-generic-net-speed-instanced-false.json"));
         Map<String, Map<String, String>> none = new LinkedHashMap<>();
         new OpsReads(ops((p, b) -> emptyAnswer, new ArrayList<>()), null)
                 .latestProperties(Arrays.asList("x"), Arrays.asList("net|speed"), none::put);

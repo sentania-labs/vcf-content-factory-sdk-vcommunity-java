@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+# Converted from vCommunity 0.8.1: content/reports/view - set 2/View - Set 2.xml
 id: 2ae1159e-d813-5cb3-94a6-b00da43defcc
 name: VM Performance List
 description: Lists powered-on VMs over the last 12 hours with guest hostname, three KPI scores, peak CPU

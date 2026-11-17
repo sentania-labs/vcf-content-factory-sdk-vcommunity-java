@@ -1,11 +1,10 @@
-# P5 live proof: guest operations and events on a real Windows VM
+# Guest operations and events: live test plan
 
-Guest monitoring has had one live run (9.0.2, build 26; see the guest section of `docs/installing.md` and issues
+Guest monitoring has had one live run (on 9.0.2; see the guest section of `docs/installing.md` and issues
 #28, #29, #30): it collected on two member servers and was refused on two domain controllers. The rest of this
-document is the full plan, most of which has not been run. Apart from that run, nothing in phase P5 has run against a real Windows guest. The fixture tests (`GuestOpsTest`, `GuestEngineTest`,
+document is the full plan, most of which has not been run. Apart from that run, the guest checks have not run against a real Windows guest. The fixture tests (`GuestOpsTest`, `GuestEngineTest`,
 `GuestUnitTest`) prove the port against a fake vCenter, a fake ESXi host and the program texts it sends; they cannot
-prove what PowerShell, VMware Tools and Operations do with them. This is the run that does, written to be carried
-out without the author. Design reference: section 8 of `docs/design/vcommunity-java-port-design.md`; the
+prove what PowerShell, VMware Tools and Operations do with them. This is the run that does, written so that anyone can carry it out. Design reference: section 8 of `docs/design/vcommunity-java-port-design.md`; the
 experiment names G1 to G9 are its section 8.7.
 
 Do not run it on a production Operations instance. The pak and the account are test fixtures; the Windows account
@@ -15,7 +14,7 @@ needs rights in the guest, and every run below leaves nothing in the guest that 
 
 | Item | Detail |
 |---|---|
-| Pak | build 13 or later (`0.0.0.13`), installed on 9.0.2 devel; the account described in `docs/installing.md` already collecting properties (P2 to P4), with **Allow Insecure SSL off (the default) and the vCenter certificate accepted in Validate Connection** (guest monitoring does not run with Allow Insecure SSL on) |
+| Pak | a current build, installed on a test instance of VCF Operations; the account described in `docs/installing.md` already collecting properties, with **Allow Insecure SSL off (the default) and the vCenter certificate accepted in Validate Connection** (guest monitoring does not run with Allow Insecure SSL on) |
 | Windows VM A | Windows Server 2019 or 2022 or Windows 11, VMware Tools running, guest family shown as Windows by vCenter, on a vCenter host the collector can reach on port 443 |
 | Windows VM B | a hardened guest: a domain controller (or a member server) with a GPO setting PowerShell execution policy to AllSigned or Restricted at the MachinePolicy scope |
 | Windows VM C | a guest under AppLocker or WDAC in Constrained Language Mode (`$ExecutionContext.SessionState.LanguageMode` shows `ConstrainedLanguage`) |
@@ -30,11 +29,11 @@ Guest OS Service Monitoring Status `Enabled`; Windows Event Log Monitoring Statu
 TLS Validation `Pinned`; Windows Service Configuration File `windows_service_list`; Windows Event Log Configuration
 File `windows_event_list`.
 
-The two lists. Do not edit the shipped files: clone each in Administration > Configurations > Management Packs Configuration > Configuration Files (9.1.1), type the `.xml` extension in the copy's name (`windows_service_list_p5.xml`, `windows_event_list_p5.xml`), edit the copies (they land in User Defined), and enter `windows_service_list_p5` and `windows_event_list_p5` (no `.xml`) in the account fields above. The copies hold:
+The two lists. Do not edit the shipped files: clone each in Administration > Configurations > Management Packs Configuration > Configuration Files (9.1.1), type the `.xml` extension in the copy's name (`windows_service_list_test.xml`, `windows_event_list_test.xml`), edit the copies (they land in User Defined), and enter `windows_service_list_test` and `windows_event_list_test` (no `.xml`) in the account fields above. The copies hold:
 
-- `windows_service_list_p5.xml`: `<windowsServices>Spooler,W32Time,wuauserv,NoSuchService</windowsServices>` (one name that does not
+- `windows_service_list_test.xml`: `<windowsServices>Spooler,W32Time,wuauserv,NoSuchService</windowsServices>` (one name that does not
   exist on purpose)
-- `windows_event_list_p5.xml`:
+- `windows_event_list_test.xml`:
   ```xml
   <Events>
     <Log Name="System"><EventID>7036</EventID><EventID>7045</EventID></Log>
@@ -120,20 +119,20 @@ text.
 
 | Experiment | Steps | Pass |
 |---|---|---|
-| G6 localised guest | VM D with the events section (5) enabled. Produce an error event in the System log (`eventcreate /l System /t ERROR /id 7036 /so test /d "p5 proof"`) | the event reaches the VM with the severity `IMMEDIATE` (red) although the guest's level text is not English; the message starts `[WindowsEvent-<the guest's level word> ` |
+| G6 localised guest | VM D with the events section (5) enabled. Produce an error event in the System log (`eventcreate /l System /t ERROR /id 7036 /so test /d "guest proof"`) | the event reaches the VM with the severity `IMMEDIATE` (red) although the guest's level text is not English; the message starts `[WindowsEvent-<the guest's level word> ` |
 | G8 four at a time | an Operations instance with at least 8 Windows VMs on one vCenter, tools running | `Collection|guest_vms_done` is the number of Windows VMs within three collections; the collector log shows no vCenter fault about too many operations; vCenter's task list shows at most four guest operations at a time from the account. Record the cycle's `Collection|cycle_seconds` with the guest phase on |
 
 ## 5. Windows events, G5 and G9
 
 1. Create a recognisable event on VM A inside the last five minutes: `eventcreate /l Application /t ERROR /id 1000
-   /so p5proof /d "P5 live proof one"` (the list above covers Application 1000; `eventcreate` ids are limited to
+   /so guestproof /d "guest live proof one"` (the list above covers Application 1000; `eventcreate` ids are limited to
    1 to 1000).
 2. Wait one collection.
 
 Expected:
 
 - The VM's Events tab shows one event whose message starts `[WindowsEvent-Error [Timestamp=...] [Category=Application]
-  [EventID=1000] [Source=p5proof] [Message=P5 live proof one]]`.
+  [EventID=1000] [Source=guestproof] [Message=guest live proof one]]`.
 - The event's severity is Immediate for Error, Warning for Warning, Information for Information; Critical for a
   critical event.
 - G9: the event is visible in a browser on 8.18.7, 9.0.2 and 9.1.1 (one pass per line; the first is 9.0.2).
@@ -169,7 +168,7 @@ further warning.
 | A program that does not end | on VM A hold the program: start `powershell.exe` with a debugger attached, or use a guest under heavy CPU load so the program takes more than five minutes | after 300 s the program is stopped (`F-GUEST-TIMEOUT`) and the directory is removed; the other programs of the VM still run |
 | Powered off VM | power off VM A | no guest operation, no `F-GUEST-TOOLS` for a powered-off VM |
 | Large log | a Windows event whose message is over 2,000 characters | the event arrives cut at 2,000 characters with `...` |
-| Hostile service name | on VM A create a service whose display name contains `|` (`sc.exe create p5pipe binPath= C:\Windows\notepad.exe DisplayName= "A|B"`) and add `p5pipe` to the list | no `Services:A|B` key; `F-GUEST-ROW` appears in `Causes`; the other services are published. Delete the service after |
+| Hostile service name | on VM A create a service whose display name contains `|` (`sc.exe create guestpipe binPath= C:\Windows\notepad.exe DisplayName= "A|B"`) and add `guestpipe` to the list | no `Services:A|B` key; `F-GUEST-ROW` appears in `Causes`; the other services are published. Delete the service after |
 | Disabled again | set both monitoring switches back to `Disabled` | after one collection no guest operation is made: the collector log shows none, vCenter's task list shows no `StartProgramInGuest`, and the old guest properties stay as they were |
 
 ## 7. Secrets and clean-up (every run)
@@ -186,7 +185,7 @@ further warning.
    the collector (kill the collector service during a run) is not removed by the port: record it, and remove it by hand.
 4. On the collector, no file with the guest's output or the password exists on disk (the port writes none).
 
-## 8. Checks the review of build 12 added
+## 8. Further checks
 
 1. **One and two Windows VMs.** With exactly one Windows VM, then exactly two, with a wrong password on a throwaway account: count 4625 over
    four collections. One VM: one. Two VMs: two. Then nothing.

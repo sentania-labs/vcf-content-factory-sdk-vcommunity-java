@@ -1,29 +1,26 @@
-# API Map: vCommunity (e1-rahabok 0.8.1 line) collection, for the Java SDK port
+# Collection map: vCommunity (e1-rahabok 0.8.1 line), for the Java SDK port
 
 What the Python pack `e1-rahabok/VCF-vCommunity-Adapter` calls (vCenter vim25 SOAP, vSphere Automation REST,
 VMware Tools guest operations, the VCF Operations Suite API), mapped to every key it publishes. Written so that
-`mp-designer` and `sdk-adapter-author` can work without reopening the Python. Intent:
-`knowledge/designs/managementpacks/vcommunity-java-port-2026-11.md`.
+the Java adapter can be built without reopening the Python. Intent: [intent.md](intent.md).
 
 ## Provenance
 
-- **Authored by:** api-cartographer
 - **Target instance:** none contacted. Source tree of `e1-rahabok/VCF-vCommunity-Adapter` at commit `0ef8586`
   (0.8.1 plus 27 commits), project under `Management Pack/`, docs under `docs/`, plus the vendored Python
   Integration SDK runtime library 1.0.1 (`aria.ops`) that the pack pins.
-- **Last updated:** 2026-11-12
-- **Update history:**
-  - 2026-11-12 — initial mapping. Source reading only, no live calls. Every one of the 254 published keys from the
+- **History:**
+  - Initial mapping. Source reading only, no live calls. Every one of the 254 published keys from the
     prior inventory (`published_keys.tsv`) re-checked against the publishing call site and annotated; the three
     check-list key families added; companion table `vcommunity-e1-key-map.tsv` written beside this file.
-- **Evidence basis:** source reading of the pack at `0ef8586` and of its pinned SDK runtime library; the session's
+- **Evidence basis:** source reading of the pack at `0ef8586` and of its pinned SDK runtime library; the
   prior inventory (`published_keys.tsv`, `definition_keys.tsv`, `definition_only_keys.tsv`, `kpi_tables.tsv`,
   `open_issues.txt`) used as an index and verified line by line; vSphere API data-type knowledge where marked
   `[inferred from docs]`.
 - **Notes:** Nothing here was seen on a wire. A claim tagged `[src]` means `[documented in source 0ef8586]` at the
   `file:line` cited (paths relative to `Management Pack/app/`). Behaviour the source cannot settle is tagged
   `[unverified]` and collected under Gaps / Questions. No lab hostnames, addresses, credentials or customer names
-  appear here. The upstream inventory TSVs live in session scratch, not in the repo; the facts they carried that
+  appear here. The facts the upstream inventory carried that
   matter are restated here.
 
 ## How to use this map
@@ -230,8 +227,7 @@ Parse, for the five list files `[src utils/config_files.py:18-24]`:
 
 - XML parse of the body; the items are the root element's text split on `,`, each stripped, empties dropped.
 - XML comments are dropped by the parser and the text on both sides of a comment is joined, so `<!-- item, -->`
-  lines contribute nothing and uncommented lines contribute their text `[observed with Python 3 ElementTree in
-  scratch, 2026-11-12]`.
+  lines contribute nothing and uncommented lines contribute their text `[observed with Python 3 ElementTree]`.
 - Only text before the first child element counts (text after a child is a tail and is ignored).
 - **A newline is not a separator.** Two items on two lines without a comma become one item containing a newline.
   The shipped `windows_service_list.xml` has commented examples without commas, so uncommenting them as they are
@@ -697,7 +693,7 @@ or publish nothing.
     mean and count aggregates are then published over the rest (D1, D2, D3, D4, D8, D11, D12, Business
     Applications).
 
-## Known-wrong or undecided behaviour the port inherits
+## Open and undecided behaviour in vCommunity 0.8.1 that the port inherits
 
 | Issue | State in source at `0ef8586` | Keys or paths |
 |---|---|---|

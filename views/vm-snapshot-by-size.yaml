@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+# Converted from vCommunity 0.8.1: content/reports/view - set 3/View - Set 3.xml
 id: d2499f38-35d0-5383-9f12-86331ab1a069
 name: VM Snapshot by Size
 description: 'Bar chart of virtual machines whose snapshot age is above one day, grouped by snapshot size

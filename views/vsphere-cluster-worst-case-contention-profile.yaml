@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+# Converted from vCommunity 0.8.1: content/reports/view - set 3/View - Set 3.xml
 id: a6caeb24-0c1f-5673-8b3c-b373a8f42be8
 name: vSphere Cluster Worst-Case Contention Profile
 description: 'Top 20 clusters with running VMs over the last month: worst VM CPU ready and memory contention

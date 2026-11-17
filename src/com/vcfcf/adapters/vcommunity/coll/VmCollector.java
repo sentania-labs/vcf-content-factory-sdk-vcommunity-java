@@ -87,7 +87,7 @@ public final class VmCollector {
         for (String p : SCALARS) r.path(p);
         // the VM Template objects are built from the same read (design 4.11)
         for (String p : TemplateScan.PATHS) r.path(p);
-        // the host the VM runs on, for the cluster and host figures (P4); not a key of its own
+        // the host the VM runs on, for the cluster and host figures; not a key of its own
         r.path("runtime.host", PathSpec.shallow());
         for (String p : TOOLS_PATHS) r.path(p);
         r.path(DEVICES, PathSpec.keepingInElements("key", "deviceInfo.label", "controllerKey", "busNumber",

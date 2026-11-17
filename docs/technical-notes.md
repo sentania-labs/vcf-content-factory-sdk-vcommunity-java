@@ -175,7 +175,7 @@ The pak carries the content of the original pack as VCF Operations content, inst
 | Alert definitions | 4 (with 1 recommendation) |
 | Check-list files | 6 |
 
-- The content is converted from the original pack's content files by the factory's offline importer and
+- The content is converted from the original pack's content files by an offline importer and
   checked against them field by field (`docs/design/inputs/import-report/`). Names, descriptions, widget titles and layout are the
   original's; every id is minted for this pak (namespace `vcfcf_vcommunity`), so none is shared with the Python pack.
   The 101 views that began as edited copies of VCF Operations' own views have descriptions written

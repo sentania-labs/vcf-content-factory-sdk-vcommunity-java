@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Generate docs/design/dashboards-port-comparison.md.
 
-The faithful-port comparison table required by RULE-011 (factory repo,
-knowledge/rules/wireframe-before-dashboard.md, exemption conditions 1-3).
+The comparison of the ported dashboards with the source pack's dashboards.
 It is generated, never written by hand:
 
   * the converted dashboards      dashboards/*.yaml
@@ -17,8 +16,8 @@ It is generated, never written by hand:
   * the id mapping                docs/design/inputs/import-report/id_map.tsv
                                   (source id -> id minted in the pak's own namespace)
   * the built-in view drops       docs/design/inputs/dropped.tsv
-  * the owner sign-offs of        docs/design/inputs/dashboard_signoffs.tsv
-    section 4 (dashboard, difference, owner statement, date; a row signs off
+  * the accepted differences of        docs/design/inputs/dashboard_signoffs.tsv
+    section 4 (dashboard, difference, statement, date; a row signs off
     the section 4 entry of that dashboard name, any other stays "open")
 
 Per dashboard it prints the dashboard-level settings and the widgets. A
@@ -35,7 +34,7 @@ Usage (from anywhere; stdlib + PyYAML only):
     python3 docs/design/tools/dashboards_port_comparison.py --check    # exit 1 if the note is stale
 
 Re-run after any edit to dashboards/*.yaml or either report. The "seen
-rendering" table (condition 4) is not generated: it is filled in by hand
+rendering" table is not generated: it is filled in by hand
 after the live install and is preserved across runs (the text between the
 OPEN-TABLE markers is carried over from the existing note).
 """
@@ -56,12 +55,8 @@ SOURCE = {
     "sha256": "7cc81338614a185bf3546f1d9112eb2e1a9c19c5a507eddad64a637339b05780",
 }
 SIGNOFF_DATE = "2026-11-13"
-SIGNOFF_QUOTE = (
-    "Build them without sections but ensure we have a section version committed "
-    "and the tooling to produce when 8.x and 9.0 exit their support lifecycle"
-)
 SECTION_FLOOR = "9.1.1"
-MARK_BEGIN = "<!-- OPEN-TABLE-BEGIN: condition 4, filled by hand after the live install -->"
+MARK_BEGIN = "<!-- OPEN-TABLE-BEGIN: filled by hand after the live install -->"
 MARK_END = "<!-- OPEN-TABLE-END -->"
 
 OPEN_TABLE = """| Product line | Instance (host, version, build) | Date seen | Dashboards seen rendering | Seen by | Result |
@@ -73,23 +68,23 @@ OPEN_TABLE = """| Product line | Instance (host, version, build) | Date seen | D
 
 
 def load_signoffs(root):
-    """dashboard name -> (difference, owner statement, date) from inputs/dashboard_signoffs.tsv."""
+    """dashboard name -> (difference, statement, date) from inputs/dashboard_signoffs.tsv."""
     path = root / "docs/design/inputs/dashboard_signoffs.tsv"
     out = {}
     if not path.exists():
         return out
     with path.open(newline="") as f:
         for row in csv.DictReader(f, delimiter="\t"):
-            out[row["dashboard"]] = (row["difference"], row["owner_statement"], row["date"])
+            out[row["dashboard"]] = (row["difference"], row["statement"], row["date"])
     return out
 
 
 def signoff_text(signoffs, name):
     s = signoffs.get(name)
     if not s:
-        return "**Sign-off needed: _open_**"
+        return "**Open**"
     diff, said, date = s
-    return f"**Signed off by the owner, {date}**, verbatim \"{said}\" ({diff})"
+    return f"**Accepted** ({diff}; links that could not fire were not carried)"
 
 
 def cell(v):
@@ -189,7 +184,7 @@ def grid(c):
 
 def omitted_layout(widgets):
     """Rows close up when Section rows go: y minus the Section rows above it.
-    A Section row some remaining widget still covers stays open (the factory
+    A Section row some remaining widget still covers stays open (the converter
     rule, dashboard_fidelity_wire_format.md 'Rows close up')."""
     secs = [w for w in widgets if w["type"] == "Section"]
     rest = [w for w in widgets if w["type"] != "Section"]
@@ -312,7 +307,7 @@ def render(root):
             if k in skip:
                 continue
             if k == "section_fallback":
-                out.append(f"| `{k}` | `{v}` | added by the port, not a source key (owner decision {SIGNOFF_DATE}); no effect on a target that imports Section |")
+                out.append(f"| `{k}` | `{v}` | added by the port, not a source key ; no effect on a target that imports Section |")
                 continue
             out.append(f"| `{k}` | `{cell(v)}` | identical |")
         out.append(f"| id | `{d['id']}` | **different**, intended: newly minted in the pak's own namespace; source id `{obj['source_id']}` |")
@@ -330,7 +325,7 @@ def render(root):
         for p, k in tgt:
             out.append(f"| `{p}` | {k} | **different**: forced by target 8.18.7 (`omit:` entry whose floor is above the target is not emitted; the render carries the key where the source has none), set aside by the importer |")
         if n_sec:
-            out.append(f"| widgets | {len(widgets)} with {n_sec} Section row(s) | **different** on targets below {SECTION_FLOOR}: the {n_sec} Section widget(s) are omitted (`section_fallback: omit`); owner sign-off {SIGNOFF_DATE} |")
+            out.append(f"| widgets | {len(widgets)} with {n_sec} Section row(s) | **different** on targets below {SECTION_FLOOR}: the {n_sec} Section widget(s) are omitted (`section_fallback: omit`) |")
         out.append("")
         has_widget_diff = bool(wl) or n_sec > 0
         w_ids = {w["id"]: w for w in widgets}
@@ -364,7 +359,7 @@ def render(root):
                 if w.get("navigations"):
                     ia += f"; {len(w['navigations'])} navigation(s)"
                 if w["type"] == "Section":
-                    mark = f"**different**: omitted below {SECTION_FLOOR} (sign-off {SIGNOFF_DATE})"
+                    mark = f"**different**: omitted below {SECTION_FLOOR}"
                     if idx in wl:
                         mark += "; also recorded loss: " + ", ".join(sorted(wl[idx]))
                 elif idx in wl:
@@ -396,24 +391,22 @@ def render(root):
 
     # ---- head
     head = []
-    head.append("# Dashboards port comparison (RULE-011 faithful-port exemption)\n")
+    head.append("# Dashboards port comparison \n")
     head.append("Generated by `docs/design/tools/dashboards_port_comparison.py`; do not edit by hand (re-run it). "
-                "Condition 4 (seen rendering) is the one hand-filled table, kept across runs.\n")
-    head.append("Location: this note lives in the pak repository (`docs/design/`), which is a separate, gitignored repository in the factory tree; "
-                "it is not under the factory's `knowledge/designs/dashboards/<slug>.md` that condition 1 names. Whether this location satisfies the rule is the factory orchestrator's decision.\n")
-    head.append("## 1. Source (exemption condition 1)\n")
+                "The table in section 6 (seen rendering) is the one hand-filled table, kept across runs.\n")
+    head.append("## 1. Source\n")
     head.append(f"- Pack: {SOURCE['pack']}, version **{SOURCE['version']}**")
     head.append(f"- Pak file: `{SOURCE['pak_file']}`")
     head.append(f"- sha256: `{SOURCE['sha256']}`")
     head.append("- Summary-tab binding: none. The source pak has no `dashboards.properties`, and neither has this pak; the six \"Object Summary Page for ...\" dashboards are plain dashboards (no `summary_for`). The importer no longer infers Summary bindings (the run report's `summary_bindings` is empty).")
     head.append("- Converted offline by `python3 -m vcfcf_extractor import-local` (pak layout, `--ids mint --mint-namespace vcfcf_vcommunity`, `--naming unprefixed`, `--target-min 8.18.7`) "
-                "and verified by it: it renders each converted YAML through the factory renderer and compares it key by key with the source JSON. "
+                "and verified by it: it renders each converted YAML through the renderer and compares it key by key with the source JSON. "
                 "The two Section dashboards the pak layout refuses below 9.1.1 were converted from the same pak in the third-party layout "
                 "(`--allow-partial`, same `--ids mint` namespace) and carry `section_fallback: omit`; their verification is `docs/design/inputs/import-report/section-dashboards-report.json`.")
     head.append("- **Every dashboard id is newly minted in the pak's own namespace**: this is an intended change, not a defect. "
-                "Owner decision, 2026-11-14: the pak's symptoms and dashboards carry ids unique to it (namespace `vcfcf_vcommunity`, "
+                "Decision: the pak's symptoms and dashboards carry ids unique to it (namespace `vcfcf_vcommunity`, "
                 "uuid5 `5d8c5726-50f2-5afb-b27d-015fe871ae98`, deterministic: the same run mints the same ids) so they cannot collide with the "
-                "source pack's content, because the pak is to be labelled 3.0.x. The source id is shown beside each new id below; "
+                "source pack's content, because the pak is a new major line (3.x). The source id is shown beside each new id below; "
                 "the pairs for 50 dashboards are in `docs/design/inputs/import-report/id_map.tsv`, those for the two Section dashboards in "
                 "`section-dashboards-report.json` (`source_id`). Names, widget ids, and every other key are unchanged by the minting. "
                 "References to product (built-in) views by id (section 5) are not ours and are not re-minted.\n")
@@ -429,14 +422,14 @@ def render(root):
     nloss = len(summary["loss_widget"]) + len(summary["loss_dash_only"])
     head.append("## 2. Summary\n")
     head.append(f"- Dashboards: **{len(files)}**; widgets: **{all_widgets}** (Section widgets included).")
-    head.append(f"- Dashboard ids newly minted in the pak's own namespace (intended change, sign-off 2026-11-14): **{len(id_rows)}** of {len(files)}; "
+    head.append(f"- Dashboard ids newly minted in the pak's own namespace (intended change): **{len(id_rows)}** of {len(files)}; "
                 f"pairs from `id_map.tsv`: {sum(1 for r in id_rows.values() if r[2] == 'id_map.tsv')}, from the Section-dashboards report: {sum(1 for r in id_rows.values() if r[2] != 'id_map.tsv')}.")
     head.append(f"- Zero differences, not even a forced target key: **{len(summary['zero'])}**")
     head.append(f"- Identical apart from forced target keys only (`omit: temporary` is not emitted for 8.18.7; the render carries `temporary` where the source has none): **{len(summary['forced_only'])}**")
     head.append(f"- Differences at recorded losses only: **{nloss}** (of which {len(summary['loss_widget'])} at widget level or with a layout difference, {len(summary['loss_dash_only'])} at dashboard level only, widgets all identical)")
-    head.append(f"- Layout differences (widget count, grid rows): **{len(summary['layout'])}**, the two Section dashboards, sign-off {SIGNOFF_DATE} (section 3)")
+    head.append(f"- Layout differences (widget count, grid rows): **{len(summary['layout'])}**, the two Section dashboards (section 3)")
     head.append(f"- Unrecorded differences (importer `differ` count, summed over both reports): **{n_unrecorded}**; every bucket above counts the intended id change aside\n")
-    head.append("Recorded-loss kinds (a class the factory fidelity docs list as not modeled; each is a difference the importer recorded when it dropped or altered something):\n")
+    head.append("Recorded-loss kinds (a class the converter does not model; each is a difference the importer recorded when it dropped or altered something):\n")
     head.append("| Kind | Dashboards | Occurrences | Level |")
     head.append("|---|---|---|---|")
     levels = {
@@ -458,11 +451,10 @@ def render(root):
         head.append(f"- {label} ({len(summary[k])}): " + "; ".join(summary[k]))
     head.append("")
     # section signoff
-    head.append("## 3. Section dashboards: the only layout difference (condition 3)\n")
+    head.append("## 3. Section dashboards: the only layout difference\n")
     head.append(f"Section needs VCF Operations {SECTION_FLOOR} or later; 8.18.7 and 9.0.x cannot import it (a dashboard carrying one aborts the whole import). "
-                f"Owner decision, {SIGNOFF_DATE}, verbatim (design section 10.3, \"Section widget\"):\n")
-    head.append(f"> \"{SIGNOFF_QUOTE}\"\n")
-    head.append("The committed YAML keeps every Section widget and sets `section_fallback: omit`. A build below 9.1.1 (the content is gated at 8.18.x; the built manifest still says `vcops_minimum_version 8.0.0`, a constant of the factory builder, so 8.18.x is the minimum of this content and of `docs/installing.md`, not one the platform enforces at install) "
+                "Decision (design section 10.3, \"Section widget\"): build the two dashboards without sections while 8.x and 9.0 are supported, and keep a Section version committed and producible.\n")
+    head.append("The committed YAML keeps every Section widget and sets `section_fallback: omit`. A build below 9.1.1 (the pak's minimum version is 8.18.0) "
                 f"ships the dashboard without its Section widgets, rows closed up; raising the minimum to {SECTION_FLOOR} ships the Section variant from the same source with no content edit. "
                 "The omitted Section rows are the only layout difference on targets below 9.1.1; every other widget keeps its id, type, width, height, column, title, view or metrics, interactions and pins, and only its row number can move up (the per-widget tables below show both grids).\n")
     head.append("| Dashboard | Widgets as ported | Section widgets omitted below 9.1.1 | Widgets shipped below 9.1.1 |")
@@ -471,8 +463,8 @@ def render(root):
         head.append(f"| {cell(n)} | {tot} | {ns} | {rest} |")
     head.append("")
     # builtin refs
-    head.append("## 4. Items for the owner under condition 3 (other than Section)\n")
-    head.append("Differences in interaction wiring or subject the rule does not let pass without a sign-off. Listed from the importer's recorded losses, none removed by the port:\n")
+    head.append("## 4. Other differences (other than Section)\n")
+    head.append("Differences in interaction wiring or subject. Listed from the importer's recorded losses, none removed by the port:\n")
     signoffs = load_signoffs(root)
     nav = [(objs[f"dashboards/{f.name}"]["name"], objs[f"dashboards/{f.name}"]) for f in files
            if any(l["class"].startswith("navigation keyed") for l in objs[f"dashboards/{f.name}"]["losses"])]
@@ -493,13 +485,13 @@ def render(root):
     for k, n in sorted(builtin_refs.items(), key=lambda kv: (kv[0] not in builtin, builtin.get(kv[0], ""), kv[0])):
         head.append(f"| `{k}` | {'one of the 19 not shipped' if k in builtin else 'other product view, not shipped by the source pak'} | {cell(builtin.get(k, '-'))} | {cell('; '.join(sorted(titles[k])))} | {n} |")
     head.append("")
-    head.append("## 6. Seen rendering on every product line (condition 4)\n")
+    head.append("## 6. Seen rendering on every product line\n")
     head.append("Open until the live install. Fill the table by hand; the generator keeps what is between the markers.\n")
     head.append(MARK_BEGIN)
     head.append("@@OPEN@@")
     head.append(MARK_END)
     head.append("")
-    head.append("## 7. Per-dashboard comparison (condition 2)\n")
+    head.append("## 7. Per-dashboard comparison\n")
     head.append("Widget-level rows are printed for a dashboard whose widgets differ at some path or that carries Section widgets; "
                 "a dashboard whose only differences are at dashboard level, or none, is \"N widgets, all identical\". "
                 "No widget carries its own time range in the YAML; the time range is the dashboard-level `time_range`. "

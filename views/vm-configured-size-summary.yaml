@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+# Converted from vCommunity 0.8.1: content/reports/view - collection01/View - Collection01.xml
 id: b07a6546-2d32-5c10-b824-2c004c35bdad
 name: VM Configured Size Summary
 description: 'A summary table showing the average, largest and smallest VM in the environment by their

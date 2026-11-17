@@ -1,4 +1,4 @@
-dashboard	difference	owner_statement	date
-Critical Business Applications	navigation entries keyed by a widget that is not on the dashboard are not carried; the owner was asked whether to drop the dead navigation links	All good.	2026-11-16
-VM Capacity (new)	navigation entries keyed by a widget that is not on the dashboard are not carried; the owner was asked whether to drop the dead navigation links	All good.	2026-11-16
-vSphere Cluster Performance 2.0	navigation entries keyed by a widget that is not on the dashboard are not carried; the owner was asked whether to drop the dead navigation links	All good.	2026-11-16
+dashboard	difference	statement	date
+Critical Business Applications	navigation entries keyed by a widget that is not on the dashboard are not carried	Accepted	2026-11-16
+VM Capacity (new)	navigation entries keyed by a widget that is not on the dashboard are not carried	Accepted	2026-11-16
+vSphere Cluster Performance 2.0	navigation entries keyed by a widget that is not on the dashboard are not carried	Accepted	2026-11-16

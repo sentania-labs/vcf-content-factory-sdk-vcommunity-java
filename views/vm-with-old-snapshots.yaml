@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/vm with old snapshots vcommunity/VM with old Snapshots vCommunity.xml
+# Converted from vCommunity 0.8.1: content/reports/vm with old snapshots vcommunity/VM with old Snapshots vCommunity.xml
 id: fe27ac2c-f319-51fd-911e-5b90b0612ee0
 name: VM with old Snapshots
 description: Count of snapshots grouped by age. Snapshot should only be used as protection of change.

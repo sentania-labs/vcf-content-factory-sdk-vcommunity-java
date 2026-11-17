@@ -1,16 +1,14 @@
-# Design Artifact: VCF Content Factory vCommunity (Java port of e1-rahabok 0.8.1)
+# Design: VCF Content Factory vCommunity (Java port of vCommunity 0.8.1)
 
-- **Type:** managementpack, Tier 2 (Java SDK)
-- **Intent and owner decisions:** `knowledge/designs/managementpacks/vcommunity-java-port-2026-11.md`
-- **API map (the contract):** `knowledge/context/api-maps/vcommunity-e1-collection-map.md` and
-  `knowledge/context/api-maps/vcommunity-e1-key-map.tsv` (rows are cited as `R<n>`, the 1-based data row
+- **Type:** management pack, Java SDK adapter
+- **Intent:** [intent.md](intent.md)
+- **Collection map and key map (the contract):** [vcommunity-e1-collection-map.md](vcommunity-e1-collection-map.md) and
+  [vcommunity-e1-key-map.tsv](vcommunity-e1-key-map.tsv) (rows are cited as `R<n>`, the 1-based data row
   number, header excluded; `R1` is `Configuration|Install Date|UTC`, `R257` is the `Options|<item>` family)
-- **Pak repo:** `sentania-labs/vcf-content-factory-sdk-vcommunity-java` (private until the first release is cut), cloned at
-  `content/sdk-adapters/vcommunity-java/` from the SDK template
-- **Author:** `sdk-adapter-author` (sonnet). Reviewer: `sdk-adapter-reviewer`.
-- **Date:** 2026-11-12. **Status:** design, awaiting owner answers to section 12.
+- **Repository:** `sentania-labs/vcf-content-factory-sdk-vcommunity-java`
+- **Source followed:** vCommunity 0.8.1 (`e1-rahabok/VCF-vCommunity-Adapter`), a continuation of `vmbro/VCF-Operations-vCommunity`.
 
-This design is written so the author never opens the Python pack. Where it says "per the TSV", the row's
+This design is written so that the adapter can be built without opening the Python pack. Where it says "per the TSV", the row's
 `source`, `transform` and `when_absent_or_failed` columns are the specification, overridden only by the
 honesty rules in section 5 and the deviation register (section 5.7).
 
@@ -19,39 +17,34 @@ honesty rules in section 5 and the deviation register (section 5.7).
 ## Original Request
 
 Port `e1-rahabok/VCF-vCommunity-Adapter` 0.8.1 (continuation of `vmbro/VCF-Operations-vCommunity`) to the
-factory's Java SDK, fresh from the current template, with full key, content and initial configuration parity.
-Verbatim prompts and the owner's decisions are in the intent file above.
+Java adapter SDK, with full key, content and initial configuration parity. The goals and decisions are in
+[intent.md](intent.md).
 
-## Tier decision
+## Why a Java adapter
 
-Tier 2. Triggers (RULE-004, `knowledge/rules/tier-routing.md`): non-HTTP transport (vim25 SOAP over raw HTTP
-plus guest operations), client-side joins across vCenter and the Suite API, custom response transforms
-(regex over `guestDetailedData`, KPI arithmetic), per-instance long-lived state (certificate, periodic
-check), programmatic in-guest actions. Lessons that bind: `cross-runtime-pak-upgrade-split-brain.md`
-(distinct kind, no in-place upgrade from the Python pack), `stitch-moid-not-unique-across-vcenters.md`,
-`foreign-resource-property-push.md`, `pak-content-must-not-reuse-stock-ids.md`.
+The pak needs a transport that is not HTTP (vim25 SOAP over raw HTTP, plus guest operations), joins between vCenter and
+the Suite API on the client side, custom response transforms (a regular expression over `guestDetailedData`, KPI
+arithmetic), state that lives as long as the adapter instance (the certificate record, the periodic cluster check) and
+programmatic actions inside guests. A declarative management pack definition cannot express those. The adapter kind is
+distinct from the Python pack's, so there is no in-place upgrade from it. Bundled dashboards, views, reports, alerts and
+symptoms ship from the same repository.
 
-Delivery: the pak lives in its own repo (above). It is **not yet in `knowledge/context/managed_paks.md`**, deliberately while the repository is private (10.1a);
-the orchestrator adds the entry (name `vcommunity-java`, remote, target) before authoring. Bundled
-dashboards, views, reports, alerts and symptoms ship from that repo.
+## Decisions
 
-## Interview Answers (owner, 2026-11-12, from the intent file)
-
-| Question | Answer |
+| Topic | Decision |
 |---|---|
 | Names | repo `vcf-content-factory-sdk-vcommunity-java`, adapter kind `vcfcf_vcommunity`, display name `VCF Content Factory vCommunity` |
 | Key tree | `vCommunity|...` unchanged, same instance names, same objects |
-| Content names | upstream names, `content_naming: unprefixed`; a re-authored view whose title equals a built-in's gets a distinct title |
-| Failure handling | report honestly: a failed or missing read sends nothing and is counted; never a zero, False or sentinel; license key masked; a bad check-list entry is skipped and reported |
-| Content route | grow the factory YAML route, no raw passthrough |
+| Content names | upstream names; a re-authored view whose title equals a built-in's gets a distinct title |
+| Failure handling | a failed or missing read sends nothing and is counted; never a zero, False or sentinel; the license key is masked; a bad check-list entry is skipped and reported |
 | Edited built-in views | re-authored under ids of their own |
-| License | MIT for the whole pak, code and bundled content (owner decision 2026-11-16, 10.1a); NOTICE crediting the original authors |
+| License | MIT for the whole pak, code and bundled content (10.1a); `NOTICE` credits the original authors |
 
 ---
 
 ## 0. Ground rules for the author
 
-1. **Java 11 bytecode, JDK APIs of 11 only** (RULE-019): no records, text blocks, switch expressions,
+1. **Java 11 bytecode, JDK APIs of 11 only** (the SDK's runtime): no records, text blocks, switch expressions,
    `String.strip()` is fine (11), `HttpClient` is not used on vim25 paths. Compile legs: 8.18.7, 9.0.2, 9.1.1.
 2. **vim25 is raw SOAP 1.1 over `HttpsURLConnection`, parsed with JDK StAX.** No JAX-WS, no `vim25.jar`
    (the 9.1 JAX-WS provider collision, documented in the compliance `VSphereClient` header). Port the
@@ -83,7 +76,7 @@ dashboards, views, reports, alerts and symptoms ship from that repo.
 | `entry_class` | `com.vcfcf.adapters.vcommunity.VCommunityAdapter` |
 | `name` | `VCF Content Factory vCommunity` |
 | `description` | one paragraph, written new: Java port of the vCommunity management pack; pushes the `vCommunity|` keys onto the vCenter adapter's own objects; three own kinds; attribution sentence "Port of vCommunity by Onur Yuzseven (github.com/vmbro/VCF-Operations-vCommunity) as continued by e1-rahabok (github.com/e1-rahabok/VCF-vCommunity-Adapter) 0.8.1." |
-| `version` | `3.0.0` (the first release is 3.0.0.29); dev builds stamp `0.0.0.<build>` (RULE-014); the release is the repo CI on a `v*` tag |
+| `version` | `3.0.0` (the first release is 3.0.0.29); dev builds stamp `0.0.0.<build>`; the release is the repo CI on a `v*` tag |
 | `tier` / `released` | `2` / `false` |
 | `vendor` | `VCF Content Factory` (explicit, so the line is reviewable) |
 | `vendor_contact` | omit while the repo is private |
@@ -95,10 +88,10 @@ dashboards, views, reports, alerts and symptoms ship from that repo.
 `NOTICE` (repo root, shipped in the pak beside `LICENSE` by naming it in the README and copying it under
 `docs/`): credits Onur Yuzseven and the vCommunity contributors (vmbro/VCF-Operations-vCommunity) and
 e1-rahabok (VCF-vCommunity-Adapter) for the original design, key tree, KPI tables, content and check-list
-files; states that this pak is an independent Java reimplementation. Final wording, 2026-11-16: the whole pak is MIT
-(owner decision, recorded in 10.1a); NOTICE keeps the upstream acknowledgment, license name and Required Notice line.
+files; states that this pak is an independent Java reimplementation. The whole pak is MIT (10.1a); `NOTICE` keeps the
+upstream acknowledgment, license name and Required Notice line.
 
-`stitch_targets` (documentation only, `knowledge/context/tier2_architecture.md` "Push targets"):
+`stitch_targets` (documentation only):
 
 | adapter_kind / resource_kind | identity | key_groups |
 |---|---|---|
@@ -112,8 +105,8 @@ files; states that this pak is an independent Java reimplementation. Final wordi
 | Container / Tier, BusinessService, Enterprise | Suite API resource id from the Container tree | `vCommunity|Business Application|*` |
 
 Kind-name check before the first install (open question Q8): `vcfcf_vcommunity` and the display name
-`VCF Content Factory vCommunity` were the retired 2026 port's (`managed_paks.md` "Retired paks"). Recon must
-confirm no lab instance still registers that kind; if one does, uninstall it first (credential stash per
+`VCF Content Factory vCommunity` were the identity of an earlier, retired Java port of the pack. Check
+that no instance still registers that kind; if one does, uninstall it first (credential stash per
 `pak-uninstall-cascades-credentials.md`), or the new pak installs as an "upgrade" of the old one.
 
 ---
@@ -124,7 +117,7 @@ confirm no lab instance still registers that kind; if one does, uninstall it fir
 
 The 18 fields keep upstream's keys, types, defaults, enums and required flags, except that upstream's `vcenter_tls_validation` and `vcenter_thumbprint` are replaced by `allowInsecure` (DV-114). Identifying = no `identType`
 (main form, part of account uniqueness); advanced = `identType="2"` (Advanced Settings; works because each
-is `required="false"` or has a non-empty default, `knowledge/context/python_integration_sdk.md` 2.3).
+is `required="false"` or has a non-empty default).
 Labels are configuration parity and are listed; descriptions are written new by the author (short,
 factual, no upstream prose).
 
@@ -182,7 +175,7 @@ the 26 own keys get labels and units in the UI, which the 228 foreign keys canno
 
 `vCommunityCollector` is the cycle anchor, not a World: one object per adapter instance, discovered from the
 account values alone so it exists while vCenter is unreachable, and the whole cycle runs in its `collect()`
-(the vsanperf `VsanPerfCollector` pattern, `knowledge/designs/vsanperf-mp-v1.md` build 7 addendum). *Since P3
+(the same pattern as the vSAN performance pak's collector object). *Since P3
 (DV-78, 4.11.1) the cycle runs in the enumeration that precedes the collects, the collector's `collect()` reports
 it, and a failed cycle fails every object's `collect()` as well, so that the account still goes DOWN.* Without
 it a cycle with zero libraries would have nothing to collect and an unreachable vCenter could not show DOWN.
@@ -193,7 +186,7 @@ has a reachable first hop (`traversal-spec-root-must-be-reachable.md`). Verify t
 Icons (`icons/icons.yaml`): adapter instance `adapter_instance`, `vCommunityCollector` `adapter_instance`.
 **TOOLSET GAP T4:** need new hints `content_library` (three book spines on a shelf), `library_item` (a single
 document with a folded corner over a small box), `vm_template` (a monitor outline with a dashed stencil
-border). Until `tooling` adds them, the three kinds use `default`.
+border). Until the SDK offers them, the three kinds use `default`.
 
 ### 2.4 Self and health metrics on the adapter instance (declared, `Collection|*`)
 
@@ -324,8 +317,7 @@ next collection.
   `pushPropertiesBatch`. Until T3 lands the key is withheld (counted), not sent as text, because mixing a
   string sample into a key whose history is numeric is untested (E3).
 
-What is known about labels, units and deletion (from `knowledge/context/investigations/2026-11-06-suite-api-instanced-push.md`
-and `suite_api_batch_push.md`):
+What is known about labels, units and deletion (from earlier measurements of the Suite API push):
 
 - Pushed undeclared keys land and are registered on the resource on first push; instanced keys work.
 - **No label, no unit.** The UI's metadata comes from the resource's own adapter kind (VMWARE); our
@@ -811,16 +803,16 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-21 | failed batch caps host availability at 75 | hosts and clusters of a failed batch withheld | report honestly | no false availability drops during Suite API trouble |
 | DV-22 | Datacenter count 0 with no host values | nothing (**restored by DV-112**; it stood superseded by quirk Q12 between builds 10 and 25); nothing too when a member host's read failed | report honestly | no false 0 |
 | DV-23 | certificate `Recorded`/`Unknown` on failed read-back or probe; recorded thumbprint overwritten | withheld; recorded value never overwritten | a failed read must not reset trust history | no spurious `Recorded` after an Ops hiccup; a real change is never masked |
-| DV-24 | aggregates over partial batches | withheld unless all input reads succeeded | report honestly (issue 60) | fewer values during partial failures, none of them wrong |
-| DV-25 | full host license key published | masked to the last group | secret hygiene (owner decision) | views show `*****-...-MN90P` |
-| DV-26 | one invalid VM Options path fails the whole VM read; object values published as Python text | invalid path skipped and reported, VM read unaffected; a data object or list value skipped (see DV-75 for references); an entry is read as a value of one element, so one that is huge or deeply nested cannot fail the page (DV-74) | isolation (owner decision); Python object text is not reproducible | a typo in the list costs one key, not every VM key |
+| DV-24 | aggregates over partial batches | withheld unless all input reads succeeded | report honestly (issue 60) | fewer values during partial failures, none of them incorrect |
+| DV-25 | full host license key published | masked to the last group | secret hygiene | views show `*****-...-MN90P` |
+| DV-26 | one invalid VM Options path fails the whole VM read; object values published as Python text | invalid path skipped and reported, VM read unaffected; a data object or list value skipped (see DV-75 for references); an entry is read as a value of one element, so one that is huge or deeply nested cannot fail the page (DV-74) | isolation (decision); Python object text is not reproducible | a typo in the list costs one key, not every VM key |
 | DV-27 | file read failure or invalid XML: list empty this cycle | fetch or parse failure keeps the last good list; an absent file clears it | do not silently stop collecting on an Ops hiccup | check-list keys keep updating through transient store errors; the event says so |
 | DV-28 | Windows service and event files read every cycle, events raised for them even with monitoring Disabled | read only when the matching monitoring is Enabled | no spurious configuration events | no warning events about files nobody uses |
 | DV-29 | unknown guest TLS mode fails the whole cycle | guest phase off for the cycle, health `guest` = FAILED, rest collects | isolation | a typo there no longer stops all collection |
-| DV-30 | event-list structure not checked (silent in the guest) | validated, problem reported, list not used | report honestly | operator told the file is wrong |
+| DV-30 | event-list structure not checked (silent in the guest) | validated, problem reported, list not used | report honestly | operator told the file is not usable |
 | DV-31 | events sent as SDK events in the collect result (configuration problems on vCenter, Windows events on VMs) | `POST /api/events/bulk` as DIAGNOSTIC/LOG | NOTIFICATION events pushed onto a foreign VM are silently dropped; DIAGNOSTIC lands (`vcommunity-notification-events-foreign-vm.md`) | events appear on the object's events/troubleshooting timeline, not the notification stream (Q11) |
 | DV-32 | Warnings in Last Cycle counts every logger's WARN records | counts the pak's WARN lines and failed push batches; adds the health keys of 5.2 and the self metrics of 2.4 | the pak cannot hook every logger; failures need their own counts | counts can differ from upstream's; more health detail |
-| DV-33 | PCI ids formatted from signed shorts (ids above 0x7FFF negative) | **retired in the P2 review**: reproduced for the match, quirk Q3 (section 5.8) | the owner wants an exact match first | `-7f7a` as upstream; see Q3 for the correct form |
+| DV-33 | PCI ids formatted from signed shorts (ids above 0x7FFF negative) | **retired in the P2 review**: reproduced for the match, quirk Q3 (section 5.8) | exact match first (decision: match 0.8.1, then improve) | `-7f7a` as upstream; see Q3 for the correct form |
 | DV-34 | unknown SCSI controller type shows a Python class name | the vim25 type name | Python names not reproducible | different text for rare controller types |
 | DV-35 | resource pool levels from Ops PARENT relationships, one GET per pool | from the vim25 pool tree | P calls per cycle down to one read | same values if E9 confirms; else fallback **P4 review B2:** the vCenter holds each Supervisor namespace as a ResourcePool (it carries `ResourcePool.namespace`); Operations holds it as a `Namespace` object, so its pool list, and upstream's count, never has it. The port reads `namespace` with `parent` and leaves out a pool that has it, a vApp and everything under either. The lab baseline has the `Namespaces` pool counted and its 13 namespaces not; a Supervisor cluster is E9's case and needs an account on a vCenter that has one |
 | DV-36 | port groups read again per Datacenter | from the host bulk read plus DVPG per Datacenter | cost | none |
@@ -854,7 +846,7 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-64 | (not in upstream) | a check-list entry skipped inside a file that was read is a reported problem (WARN, counted in the skipped total), not a failed read; the file's `check_lists` status is PARTIAL, FAILED only when every file failed and none is in force | the list is in force | `reads_failed` counts files, not entries |
 | DV-65 | host used as entered | a Unicode host name is converted to its punycode form for the certificate name check, the URL and the probe | the name check wants the ASCII form | Unicode names work in Enabled mode |
 | DV-66 | SOAP answers read whole | answers built into a tree are capped at 1 MiB and 32 levels; redirects are not followed | bound memory and keep the session cookie from leaving | an oversized or deeply nested answer fails the call |
-| DV-67 | Test Connection reads each check-list file in use (section 11, P1) | a Test Connection on a not-yet-saved account does not read the check-list files and does not ask whether the Suite API answers: the Suite API client cannot be built in that context (the per-instance credential it uses is supplied to a configured account; observed live 2026-11-13 as `IllegalStateException` in every test). The report says so as a plain line, not a warning; any other reason the client cannot be built is still a WARN with the exception class. The files are read every cycle in collection, where a missing or bad one is counted and reported. Owner accepted 2026-11-13 by delegation ("give me a match and let's iterate from there"); to be revisited if a live Edit-then-Validate on an existing account shows the client can be built there | the client does not exist during a test | Test Connection never shows check-list outcomes for a new account; they appear in the first cycle |
+| DV-67 | Test Connection reads each check-list file in use (section 11, P1) | a Test Connection on a not-yet-saved account does not read the check-list files and does not ask whether the Suite API answers: the Suite API client cannot be built in that context (the per-instance credential it uses is supplied to a configured account; observed live 2026-11-13 as `IllegalStateException` in every test). The report says so as a plain line, not a warning; any other reason the client cannot be built is still a WARN with the exception class. The files are read every cycle in collection, where a missing or bad one is counted and reported. Decision: match 0.8.1 first; to be revisited if a live Edit-then-Validate on an existing account shows the client can be built there | the client does not exist during a test | Test Connection never shows check-list outcomes for a new account; they appear in the first cycle |
 
 | DV-68 | the Ops resource lists are read every cycle | each kind's list is read when missing, after a failed read, every 12th cycle, and again for objects it does not know: at once for a new one, then after 2, 4, 8 and every 12 cycles at most while it stays missing. A failed refresh keeps the previous list (same vCenter UUID only) | cost; found in the P2 review (W3): the first version left a VM keyless for up to 12 cycles | a VM the vCenter adapter discovers a few minutes late has keys within about two cycles of Ops knowing it; one the adapter never models costs a list read every 12th cycle |
 | DV-69 | (not an upstream key) | `Objects Not Matched` counts the vCenter objects of the four kinds with no unique Ops resource as well as the vCenter object; sent only when the vCenter lookup and every kind's read and list completed and no deadline hit | additive (5.2); DV-63 | the figure is absent in a cycle that could not measure it |
@@ -894,15 +886,15 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-103 | the Windows account is sent to vCenter whatever the vCenter TLS mode, Trust on First Use (the default) included | the guest phase does not run while Allow Insecure SSL is on: health `Collector:guest|Status` FAILED with `F-GUEST-TLS-INSECURE` (this was `F-GUEST-TLS-MODE` under Trust on First Use), Test Connection says so as a warning when a guest switch is on, and nothing is sent to vCenter. With the default (verified) it runs with no extra TLS setup. The constant `GuestPlan.REQUIRE_CHECKED_VCENTER_TLS` that reversed this is deleted | a Windows account is usually more privileged than the read-only vCenter account, and with verification off it would cross a connection nobody checked | enabling guest monitoring needs Allow Insecure SSL off and the vCenter certificate accepted |
 | DV-104 | a fixed look-back of five minutes for every VM, every cycle | the look-back is the time since that VM's events were last read, plus a minute, between 5 and 60 minutes; a VM last read longer ago than that is looked at for the 60 and the minutes before are counted (`F-GUEST-WINDOW`, collector PARTIAL). Records are still the newest one per (log, event id), as upstream's `-MaxEvents 1`. A VM is asked every collection when the time allows, as upstream's serial run does within its 1800 s, so this only matters at scale (DV-43) or after a gap | events of collections in which a VM was not reached would otherwise be skipped for good | fewer silently missed events |
 | DV-105 | the Cluster Delta counts are published once per window, as the stored samples say (DV-86, no memory) | the same, plus a memory of 30 minutes after a clean push of the counts: Operations does not read a stored value back at once (a minute or four, so the next collection, five minutes later, may still not see it), and the read-back alone sent the same counts twice (two consecutive collections after a restart, third live differential, L2). After the 30 minutes the read-back decides again, so counts that never landed are sent again | L2 | one publication per window |
-| DV-106 | the 101 views that began as edited built-in views ship under built-in ids (released 0.8.1) | **retired 2026-11-14 (10.1):** build 16 and earlier kept the ids of the corrected upstream build (pull request 92, `--ids keep`), which would have been shared with upstream if merged. From build 17 every content id is minted in `vcfcf_vcommunity` (`--ids mint --mint-namespace vcfcf_vcommunity`; `docs/design/inputs/import-report/id_map.tsv`), so no id is shared with any Python pack line | the owner's decision (1) below; also avoids burned symptom ids (10.1b) | no sharing, so no overwrite or shared deletion; the co-install outcomes of earlier builds no longer apply, the pak states plainly that side by side is unsupported (installing guide, "Moving from the Python pack") |
+| DV-106 | the 101 views that began as edited built-in views ship under built-in ids (released 0.8.1) | **retired 2026-11-14 (10.1):** build 16 and earlier kept the ids of the corrected upstream build (pull request 92, `--ids keep`), which would have been shared with upstream if merged. From build 17 every content id is minted in `vcfcf_vcommunity` (`--ids mint --mint-namespace vcfcf_vcommunity`; `docs/design/inputs/import-report/id_map.tsv`), so no id is shared with any Python pack line | decision (1) in 10.1; also avoids burned symptom ids (10.1b) | no sharing, so no overwrite or shared deletion; the co-install outcomes of earlier builds no longer apply, the pak states plainly that side by side is unsupported (installing guide, "Moving from the Python pack") |
 | DV-107 | the five summary reports carry a cover page font color | the color is left out of those five templates where the target cannot import it (floor 9.0.2; 8.18.7 measured 2026-11-15) | version-forced: the product rejects the element, and a rejected template is a missing report | cover page text in the default color on versions below 9.0.2; nothing else changes |
 | DV-108 | Network Speed Degradation reads each NIC's `net:<nic>\|speed` and `net:<nic>\|configuredSpeed` as statistics | the two are properties of the host (describe cache, `VMWARE/HostSystem`, sources 9.0.2 and 8.18.7), so they are read as properties with `properties/latest/query`, by the exact per-NIC keys built from the NIC names vCenter reports for the host (`config.network.pnic`). The answer carries the value in a numeric `data` array (recorded 2026-11-16 on 9.0.2 and 8.18.7, `tests/fixtures/nic-properties/`); a key the resource does not have is dropped by the platform; the generic `net\|speed` without `instanced:true` answers nothing, and with it expands to every NIC the resource ever had, so the exact keys were kept (they also leave out NICs vCenter no longer lists). Text that is not a number, zero (a link that is down reads 0.0) or no value leaves that NIC out; a NIC counts only with both values. Only connected hosts count (the host figure was always published for connected hosts only; the Datacenter and World counts now match it, because a property has no age limit and the statistic it replaces had one, so a host that stopped answering would otherwise keep its last speeds in the count). Published keys and formula are unchanged. A host whose NIC list or NIC read failed is withheld and counted, and does not decide the "nothing anywhere" case, so a Datacenter is never published as 0 when no host was measured | defect in the original (a statistics read never returns a property, so the figure was never published) | Network Speed Degradation, the Datacenter count and the World count are now published. They need the opt-in host property `net\|configuredSpeed` (Network \| Configured Speed), `default_monitored: false`, so the stock policy does not collect it. That is **not a collection failure** (decision 2026-11-16): while no host reports it nothing is sent for the figure, and `kpi` status, `Causes`, `Warnings in Last Cycle` and `Values Withheld in Last Cycle` do not change. Collection Health has no informational slot, so it is said once at INFO on the first cycle and again when it changes, as `F-POLICY-NIC-CONFIGURED-SPEED` (never added to the failure list, never counted toward the FAILED rule). Real failures (a host's NIC list unreadable, a NIC read batch failed) keep their ordinary signalling. Whether a NIC left on auto-negotiate reports a configured speed is not verified (30 of 36 lab pNICs have no `linkSpeed` set in vCenter) |
 | DV-109 | memory rows divide by the host's DRAM tier capacity alone (R170 Highest ESXi Memory Consumed, R181 Cluster-wide ESXi Memory Consumed, and the ballooned, zip and swap, reservation, over-commit and monster VM rows, with the scores and rollups built on them) | on a host with memory tiering every one of those rows divides by the host's memory capacity, DRAM tier plus the NVMe tier size (`mem:NVMe\|memory_tier_size`); a host with no tier statistic, a tier of 0, or with the DRAM taken from the provisioned memory (which already holds both tiers, nothing is added) divides as before, bit for bit. No row stays on DRAM alone: none of them measures something that lives only in DRAM (memory ballooned, compressed, swapped, reserved or allocated is taken from the host's whole memory). Rationale: with tiering the host's memory capacity is both tiers; that is what the same hosts report through a 9.0.2 instance, which has no DRAM tier statistic and so falls back to the provisioned memory; and the rows must agree with each other and across VCF Operations versions | defect in the original: the consumed statistic counts memory in both tiers, so over DRAM alone it passes 100 % (a 9.1.1 lab host: consumed 151,967,904 KB over a DRAM tier of 131,784,480 KB is 115.3 %; over DRAM plus the 131,784,480 KB tier it is 57.7 %); the other rows were 2 times too high on a 1:1 tier by the same cause. DRAM plus tier equals the host's provisioned memory (263,568,960 against 263,570,560 KB, 1,600 KB apart). Cross-check against the 9.0.2 instance, which publishes the same cluster's rows over the provisioned memory: 9.1.1 old value times DRAM over (DRAM plus tier) is 116.48 x 0.5 = 58.24 against 58.23 published by 9.0.2 for Highest ESXi Memory Consumed; cluster-wide consumed 132.05 / 2 = 66.03 against 66.03; ballooned 4.73 / 2 = 2.36 against 2.36; over-commit 0.99 / 2 = 0.50 against 0.50; monster VM 1.91 / 2 = 0.95 against 0.95 | the rows read what the memory is on tiered clusters (vSphere 9 and VCF 9.1 with tiering on); clusters without tiering give exactly the values they gave. Risk is not yet fully right on tiered clusters: the NVMe latency row (UB-5, scale unconfirmed) and the Memory Tiering Consumption row (UB-3, input never present) are separate defects. Once UB-3 is fixed, NVMe pressure would count in both R181 and R182. The first Periodic window after an upgrade mixes values from before and after this change. **Reconciled live (9.1.1, 2026-11-16 19:39Z, read only):** esx02 consumed 155,410,992 KB; DRAM plus NVMe tier size 263,568,960 KB gives 58.964 %; the stock `mem|usage_average` reads 58.959 %; DRAM alone would give 117.93 %. esx01: 41.853 % against a stock 41.847 %. A host without tiering, osa-esx01: consumed over DRAM 32.21 % against a stock 32.20 %. The divisor agrees with the stock figure to within 0.006 points on tiered and non-tiered hosts. Only 1:1 tiers are in the live data (the 4:1 wld hosts are covered by a unit test only). Known gap, for the record and not acted on: the input of Cluster Memory Tiering Consumption (R182, `mem:NVMe|tier.usage`) does not exist in Operations at all; the real source is the vCenter counter `mem.tier.consumed` (id 1001, MB, instances DRAM and NVMe), which needs a performance query this adapter does not make, so the row stays dead (UB-3) |
 | DV-110 | the fourth availability condition (`runtime\|quarantineState` is `notInQuarantine`) counts as not met when the property is absent | whether the version has the property is decided once per cycle from the whole answer: if no host read in the cycle carries `runtime|quarantineState` (the 8.18 VMWARE adapter does not store it, recorded on 8.18.7 in `tests/fixtures/host-properties/`), the condition is left out for every host, neither met nor failed, and the figure is the share of the other three (3 of 3 is 100; 2 of 3 is 66.67). If any host carries it, the version has it and a host lacking it does not meet the condition (3 of 4 is 75), as before; a host really in quarantine scores 75. A read that failed is not this case: it withholds the figure, with either version | defect in the original: on 8.18 a healthy host could never score above 75, and the cluster, vCenter and World figures built on it showed 75 as well (the same nine hosts read 100 on 9.0.2 and 9.1.1) | on 8.18 the host, cluster, vCenter and World availability read 100 when healthy; a host in maintenance reads 66.67 where it read 50. No change on 9.x |
 | DV-111 | a DRS Score of 0 while DRS is off or the score is negative (Q9), a Number of HBA of 0 and a SCSI Controllers Count of 0 when the list was not returned | nothing is sent in those cases: with DRS off there is nothing to score, and 0 is the worst score; a negative score is outside the 0 to 100 scale and is taken to mean "no score yet" (an assumption, not a documented value); a host or VM whose adapter or device list was not returned has an unknown count, not zero. A DRS score of 0 vCenter gave with DRS on, and a list that came back empty (a real count of 0), are still sent. A DRS score is counted as withheld only when the cluster summary or its DRS setting could not be read, not when DRS is off. An unknown HBA or SCSI count is counted as a withheld value. Number of Effective Hosts and the P3 figures R229, R230, R233, R244, R250-R252 followed in DV-112 | the zero stood for "does not apply" or "unknown", on a scale where it means the worst or an empty set | a chart or average over clusters no longer counts a DRS-off cluster as badly balanced; HBA and SCSI counts appear only when known. **A key that is no longer sent keeps its last stored value in VCF Operations** (a pushed key cannot be deleted): after the upgrade every DRS-off cluster keeps the 0 it had, every host whose HBA list is not returned keeps its "0", and a cluster that turns DRS off keeps its last real score, until the value ages out of each widget's window. The installing guide says so in its upgrade notes |
-| DV-112 | **the Q8 and Q9 families.** A value vCenter answered without (unset, not returned, null) is published as a placeholder: the texts `None`, `null`, `[]`, `N/A`, `Unknown`, the empty text for an absent library, item or template field, and a 0 or `0.0` for an unset count, timeout or size. every key of the kinds below. The rows a test saw send nothing when unset are marked in `docs/p2-key-coverage.tsv` and `docs/p3-key-coverage.tsv` (derived from what the sweep and the scenarios observed; the final count is in the CHANGELOG) | an unset value is not sent at all: no placeholder of any kind, no 0, and it is not counted as withheld and raises no warning. This is what the stock vSphere adapter does (owner decision 2026-11-16) and restores DV-08 to DV-18 and DV-22 as first planned (DV-18 as stated here). The seams `UNSET_AS_UPSTREAM`, `ABSENT_OWN_TEXT_IS_EMPTY`, `TOOLS_ALWAYS_NONE`, `DUPLEX_HALF_WHEN_DOWN`, `EMPTY_DATACENTER_COUNT_IS_ZERO`, `NEGATIVE_ONE_STAT_IS_A_VALUE` and `STALE_HOST_VALUE_COUNTS_AS_ZERO` (Q1, Q8, Q9, Q10, Q12, Q13, Q16) and the helpers `orNone`, `orNull`, `orText`, `scalarOrNone`, `ownText` and `strippedIfTruthy` are deleted, not switched. What stays in `Quirks.java` changes how a real value is read or counted (blank text, PCI id format, a -1 timeout, the Virtual Disk rule, repeated items, the Business Application rule, no availability when no host answered), never what stands in for a missing one. A value that could not be read is still withheld and counted, and a failed read stays a failure; only "answered without" changed. What a read that worked can return, family by family: **a returned empty or blank text** (a vCenter setting, an HBA model, a customization status, a library description) is a value and is sent as the stripped text, the empty text included; **an unset path or a missing element** sends nothing; **a feature that is switched off** (HA off, DRS off, EVC off) sends none of the settings that do not apply; **a returned 0, `false`, or an empty list** is a real value and is sent (an HBA list that came back empty is a count of 0; a SCSI count of 0; a Search Domain list with no entry sends nothing, because it carries no domain); **a Detailed Data field that came back empty** is the empty text; **a cluster with no summary at all** sends neither EVC key (EVC Enabled is `False` only for a summary that came back without a mode), **a link that is down or has no duplex flag** sends no Duplex, **a DNS configuration without the DHCP flag**, **a disk without a backing**, **an adapter without an address type**, **a NIC without a PCI device** send nothing for what they lack. Datastore Number of Extents is sent only for a datastore that has VMFS information (an NFS, vSAN or vVol datastore has no extent list, so no count), and an unset VM Op Notification Timeout sends nothing (a value read below zero is still 0, Q5). **Content Library**: Items Not Stored Locally and Total Size are sent only when every item of the library carries the field (an empty library has a real 0 of each); Items Not Security Compliant counts the items that have a compliance verdict (an item with no verdict cannot be non-compliant) and is not sent when none has one. A partial figure would read as the whole, so none is sent. Whether items usually omit the flags is still E-L1. **Also brought in line, because they invent a value for an input that is unset or does not apply:** Q1 (the Tools settings were the text `None` on every VM), Q10 (Duplex `half-duplex` for a down link or a missing flag), Q12 (a Datacenter count of 0 when no member host was measured), Q13 (-1, the "no sample" marker, scored as a perfect reading) and Q16 (a World count of 0 when no stored host value is fresh). Kept, because they only change how a real value is read or counted: Q2 (no disks for a VM without a network adapter), Q3 (signed PCI ids), Q4 (blank text as it is), Q5 (-1 timeout to 0), Q6 (the detailed-data cut), Q7, Q11 (repeated items counted twice), Q14 (Business Application takes the higher), Q15 (no availability when no host answered), Q17 (fixed by content) | restores what was planned: the keys carry what vCenter said, and a placeholder cannot be mistaken for a value | a key vCenter answered without is absent instead of `None`, `null`, `[]`, `N/A`, `Unknown`, empty or 0. **A key that is no longer sent keeps its last stored value in VCF Operations** (a pushed key cannot be deleted), so the placeholders sent by the Python pack and by earlier builds remain on existing objects until a real value overwrites them; the installing guide says so. Content that filtered on a placeholder text would stop matching (none ships; the shipped content was checked) |
+| DV-112 | **the Q8 and Q9 families.** A value vCenter answered without (unset, not returned, null) is published as a placeholder: the texts `None`, `null`, `[]`, `N/A`, `Unknown`, the empty text for an absent library, item or template field, and a 0 or `0.0` for an unset count, timeout or size. every key of the kinds below. The rows a test saw send nothing when unset are marked in `docs/p2-key-coverage.tsv` and `docs/p3-key-coverage.tsv` (derived from what the sweep and the scenarios observed; the final count is in the CHANGELOG) | an unset value is not sent at all: no placeholder of any kind, no 0, and it is not counted as withheld and raises no warning. This is what the stock vSphere adapter does (decision: publish nothing for an unset value) and restores DV-08 to DV-18 and DV-22 as first planned (DV-18 as stated here). The seams `UNSET_AS_UPSTREAM`, `ABSENT_OWN_TEXT_IS_EMPTY`, `TOOLS_ALWAYS_NONE`, `DUPLEX_HALF_WHEN_DOWN`, `EMPTY_DATACENTER_COUNT_IS_ZERO`, `NEGATIVE_ONE_STAT_IS_A_VALUE` and `STALE_HOST_VALUE_COUNTS_AS_ZERO` (Q1, Q8, Q9, Q10, Q12, Q13, Q16) and the helpers `orNone`, `orNull`, `orText`, `scalarOrNone`, `ownText` and `strippedIfTruthy` are deleted, not switched. What stays in `Quirks.java` changes how a real value is read or counted (blank text, PCI id format, a -1 timeout, the Virtual Disk rule, repeated items, the Business Application rule, no availability when no host answered), never what stands in for a missing one. A value that could not be read is still withheld and counted, and a failed read stays a failure; only "answered without" changed. What a read that worked can return, family by family: **a returned empty or blank text** (a vCenter setting, an HBA model, a customization status, a library description) is a value and is sent as the stripped text, the empty text included; **an unset path or a missing element** sends nothing; **a feature that is switched off** (HA off, DRS off, EVC off) sends none of the settings that do not apply; **a returned 0, `false`, or an empty list** is a real value and is sent (an HBA list that came back empty is a count of 0; a SCSI count of 0; a Search Domain list with no entry sends nothing, because it carries no domain); **a Detailed Data field that came back empty** is the empty text; **a cluster with no summary at all** sends neither EVC key (EVC Enabled is `False` only for a summary that came back without a mode), **a link that is down or has no duplex flag** sends no Duplex, **a DNS configuration without the DHCP flag**, **a disk without a backing**, **an adapter without an address type**, **a NIC without a PCI device** send nothing for what they lack. Datastore Number of Extents is sent only for a datastore that has VMFS information (an NFS, vSAN or vVol datastore has no extent list, so no count), and an unset VM Op Notification Timeout sends nothing (a value read below zero is still 0, Q5). **Content Library**: Items Not Stored Locally and Total Size are sent only when every item of the library carries the field (an empty library has a real 0 of each); Items Not Security Compliant counts the items that have a compliance verdict (an item with no verdict cannot be non-compliant) and is not sent when none has one. A partial figure would read as the whole, so none is sent. Whether items usually omit the flags is still E-L1. **Also brought in line, because they invent a value for an input that is unset or does not apply:** Q1 (the Tools settings were the text `None` on every VM), Q10 (Duplex `half-duplex` for a down link or a missing flag), Q12 (a Datacenter count of 0 when no member host was measured), Q13 (-1, the "no sample" marker, scored as a perfect reading) and Q16 (a World count of 0 when no stored host value is fresh). Kept, because they only change how a real value is read or counted: Q2 (no disks for a VM without a network adapter), Q3 (signed PCI ids), Q4 (blank text as it is), Q5 (-1 timeout to 0), Q6 (the detailed-data cut), Q7, Q11 (repeated items counted twice), Q14 (Business Application takes the higher), Q15 (no availability when no host answered), Q17 (fixed by content) | restores what was planned: the keys carry what vCenter said, and a placeholder cannot be mistaken for a value | a key vCenter answered without is absent instead of `None`, `null`, `[]`, `N/A`, `Unknown`, empty or 0. **A key that is no longer sent keeps its last stored value in VCF Operations** (a pushed key cannot be deleted), so the placeholders sent by the Python pack and by earlier builds remain on existing objects until a real value overwrites them; the installing guide says so. Content that filtered on a placeholder text would stop matching (none ships; the shipped content was checked) |
 | DV-113 | Worst ESXi Memory Tiering Latency (R173) scores the raw `mem:NVMe\|latency.read_latest` against limits of 150 to 600 microseconds | the statistic is in **nanoseconds** (VCF Operations declares unit ns for `mem\|latency.read_latest`; the vCenter counter is `mem.latency.read`, id 129, unit nanosecond; measured on 9.1.1: about 283,000 in Operations on esx02, 61,692 to 356,302 in vCenter 20 second samples), so it is divided by 1,000 before it is scored and published. A 0.0 (esx01 reports it) is a real reading and stays; a -1, the "no sample" marker, is no reading (the read drops it before the division, Q13 is gone), so the host is left out of the cluster maximum and nothing is published for it (it used to show as -1, and after the division would have shown as 0.0) | defect in the original: every real value was 1,000 times the limit, so the row was pinned at the worst score whenever the tier was read (UB-5) | the published figure is now in microseconds, the unit its label and limits always said; the history of this key shows a step down by a factor of 1,000 at the upgrade, and the Periodic Cluster Check's worst-5 % risk and closed-for-business flag are built on Cluster Risk Score samples, so the pinned scores from before the upgrade colour one window. No shipped dashboard, view or report charts it. Cluster Risk on tiered clusters stops being pinned at the worst score by this row |
-| DV-114 | upstream's vCenter TLS Validation (Trust on First Use by default, Enabled, Pinned) and the vCenter Thumbprint field | the vCenter certificate is verified by default (platform trust with the framework name check, accept in Validate Connection); one advanced opt-out `allowInsecure` (default `false`, the key, label and type of the other VCF Content Factory paks) turns trust and name checks off; Trust on First Use and Pinned are removed and nothing reads the old two fields, so there is no hidden third mode. Guest monitoring does not run while it is on (DV-103). The Certificate keys are published in both settings. The ESXi host check of the guest phase (Pinned, Strict, Disabled) is unchanged | owner decision 2026-11-16: behave like the built-in adapters and our other paks; upstream's default sent credentials before any check (Q6, now resolved) | a new account verifies; an account made on an earlier development build becomes verified on upgrade and fails with "not trusted by this collector" until the certificate is accepted (installing guide, "Upgrading from a development build"); describe identifiers: `vcenter_tls_validation` and `vcenter_thumbprint` removed, `allowInsecure` added (all `identType="2"`, so the account's identity is unchanged) |
+| DV-114 | upstream's vCenter TLS Validation (Trust on First Use by default, Enabled, Pinned) and the vCenter Thumbprint field | the vCenter certificate is verified by default (platform trust with the framework name check, accept in Validate Connection); one advanced opt-out `allowInsecure` (default `false`, the key, label and type of the other VCF Content Factory paks) turns trust and name checks off; Trust on First Use and Pinned are removed and nothing reads the old two fields, so there is no hidden third mode. Guest monitoring does not run while it is on (DV-103). The Certificate keys are published in both settings. The ESXi host check of the guest phase (Pinned, Strict, Disabled) is unchanged | decision: behave like the built-in adapters and the other VCF Content Factory paks; upstream's default sent credentials before any check (Q6, now resolved) | a new account verifies; an account made on an earlier development build becomes verified on upgrade and fails with "not trusted by this collector" until the certificate is accepted (installing guide, "Upgrading from a development build"); describe identifiers: `vcenter_tls_validation` and `vcenter_thumbprint` removed, `allowInsecure` added (all `identType="2"`, so the account's identity is unchanged) |
 | DV-115 | a setting left alone is stored by the 9.1.1 form as the text `null` (no choice is preselected) and the pak read it as a value that is not allowed, warning on every cycle | an absent, blank or `null` (any case, trimmed) value is "not set" for every optional setting and takes the default silently; `describe.xml` flags the default `<enum>` choice with `default="true"`; a value that is not allowed warns once per configuration change in the account log, not through the cycle counter, and is published as the vCenter property `vCommunity|Collection Health|Configuration Warnings` (outside the counter) and shown by Test Connection; an invalid On/Off value is warned (it was silently Disabled); a blank check-list file field still reads no file (DV-62) | the form and the platform store `null`; a per-cycle WARN made Collection Health show a warning for as long as the value stood | `ConfigTest.unsetValues` (absent, blank, `null`, valid, invalid for each enumerated and numeric field, the file fields and Allow Insecure SSL); `DescribeTest` (default flag); `EngineTest.configurationWarnings`, `HealthTest` |
 
 
@@ -910,17 +902,18 @@ Superseded by quirk Q9 and Q8 (P2 and P3 live fixes, builds 7 to 10) and **resto
 
 106 rows (DV-55, DV-58 and DV-59 are conditional or retired; DV-33 is retired into quirk Q3; DV-17 and DV-22 stood superseded by Q8, Q9 and Q12 and are restored by DV-112; DV-109 to DV-113 are the later additions; DV-78 to DV-82 are the P3 additions, proposed; DV-86 to DV-93 are the P4 additions, proposed; DV-94 to DV-105 are the P5 additions and the P5 review, proposed). DV-22 is superseded for a Datacenter whose reads worked by quirk Q12.
 
-### 5.8 Upstream quirks reproduced for the match (candidates to fix after the first differential)
+### 5.8 Where vCommunity 0.8.1 behaves in a way this pak first matched, and what changed
 
-Owner direction, 2026-11-13: "give me a match and let's iterate from there." Where upstream 0.8.1 does
-something a careful reader would not want and the result is visible in published keys or values, the port
-reproduces it for now. Each quirk has one seam, a named constant or method in `text/Quirks.java` (or the one
-class named), so that it can be flipped in one edit. Found by reading `git show v0.8.1:<path>` of the original;
-the factory's local clone of it is 31 commits past that tag and already fixes Q1 and Q2.
+Decision: match 0.8.1 first, then change behaviour deliberately. Where 0.8.1 publishes a value or key in a way that differs from
+what the source data supports, and the result is visible in published keys or values, the pak first reproduced 0.8.1 and
+recorded the difference here. Each reproduced behaviour has one seam, a named constant or method in `text/Quirks.java` (or the
+one class named), so that it can be changed in one edit. Rows marked fixed have been changed and their seam removed. Found by
+reading the 0.8.1 source (`git show v0.8.1:<path>` of the original); a later development branch of vCommunity is 31 commits past that tag and
+already changes Q1 and Q2.
 
-| Q | Key rows | What upstream 0.8.1 does | What would be correct | The one place to change |
+| Q | Key rows | What vCommunity 0.8.1 does | The alternative | The one place to change |
 |---|---|---|---|---|
-| Q1 | R105 Tools Sync Time, R106 Tools Upgrade Policy | **fixed in DV-112.** Upstream looked up `prop_dict.get("config.tools")`, a key its VM read never returns, so it sent the text `None` for both on every VM | the values of `config.tools.syncTimeWithHost` and `toolsUpgradePolicy` | none: `TOOLS_ALWAYS_NONE` is deleted; the two leaf paths are read on every VM, sent as read, nothing when unset, withheld and counted when the read failed |
+| Q1 | R105 Tools Sync Time, R106 Tools Upgrade Policy | **fixed in DV-112.** 0.8.1 looks up `prop_dict.get("config.tools")`, a key its VM read does not return, so it sends the text `None` for both on every VM | the values of `config.tools.syncTimeWithHost` and `toolsUpgradePolicy` | none: `TOOLS_ALWAYS_NONE` is deleted; the two leaf paths are read on every VM, sent as read, nothing when unset, withheld and counted when the read failed |
 | Q2 | R124-R130 Virtual Disk keys (seven per disk) | `vm_disk.py` returns before the disk loop when the VM has no `VirtualEthernetCard`, so such a VM has no Virtual Disk key | the disk keys on every VM that has a disk | `Quirks.DISKS_NEED_A_VNIC` (read in `VmCollector.devices`) |
 | Q3 | R33, R34, R35 PCI Vendor, Device and SubVendor ID | `f"{v:04x}"` of the signed 16-bit id the API sends: 0x8086 (Intel) is `-7f7a`, -1 is `-001`, an id under 0x8000 is four digits | the unsigned id, `8086` | `Quirks.PCI_IDS_SIGNED` and `Quirks.pciId` |
 | Q4 | every string key that is present but blank, for example R3/R4 license key and edition (empty), R11 Max EVC, R21-R25 adapter fields, R28-R29, R31-R32, R36, R38 NIC fields, R40-R46 package fields, R110 Customization Status, R112-R118 Detailed Data, R122-R123 vNIC, R130 disk share level, R145 EVC Mode (and EVC Enabled for a mode of spaces), R226 Patch Level, and a blank cell of a guest's output (R72 to R80: an empty operating system value, service status or start type; the service's own `Name` too) | pushes the empty string, or a value of spaces stripped to the empty string where upstream calls `.strip()`; an empty value where it tests truthiness is no key | nothing for a blank value | `Quirks.BLANK_STRINGS_PUSHED`, `Quirks.text`, `Quirks.strippedIfTruthy` |
@@ -928,12 +921,12 @@ the factory's local clone of it is 31 commits past that tag and already fixes Q1
 | Q6 | R112-R118 Detailed Data | the pattern `(\w+)=['"](.*?)['"]` ends a value at the first quote of either kind, so `prettyName='Windows "11" Pro'` is `Windows` | end a value at the quote that opened it | `DetailedDataParser.CUT_AT_FIRST_QUOTE` |
 | Q7 | R2-R6 Licensing | two assignments with the same license name on one host share one instance; their fields overwrite one another one by one, so keys of both can remain (a key the second lacks keeps the first's) | one instance per assignment (or per name and key) | `HostCollector.addLicenses` (the instance name is `a.name`) |
 | Q8 | R227, R228, R231, R232 (VM Template Guest OS, Hardware Version, Datastore, VM Folder), R234-R243 (Library Item texts), R245-R248 (Content Library texts) | **removed: fixed in DV-112.** Upstream pushes the empty string for a field the answer or the read does not have | nothing for a field that was not returned | none: the switch and `Quirks.ownText` are deleted |
-| Q9 | every P2 property row built with `str(prop_dict.get(path))` or one of the original's placeholders (`None`, `null`, `[]`, `N/A`, `Unknown`, 0), and the P3 figures R229, R230, R233, R244, R250-R252 | **removed: fixed in DV-112** (with DV-111 for DRS Score, HBA and SCSI counts, and DV-08 to DV-18 as first planned). A value vCenter answered without is not sent; a value that could not be read is withheld and counted | nothing for an unset value | none: `UNSET_AS_UPSTREAM`, `orNone`, `orNull`, `orText` and `scalarOrNone` are deleted |
+| Q9 | every property row built with `str(prop_dict.get(path))` or one of the original's placeholders (`None`, `null`, `[]`, `N/A`, `Unknown`, 0), and the figures R229, R230, R233, R244, R250-R252 | **removed: fixed in DV-112** (with DV-111 for DRS Score, HBA and SCSI counts, and DV-08 to DV-18 as first planned). A value vCenter answered without is not sent; a value that could not be read is withheld and counted | nothing for an unset value | none: `UNSET_AS_UPSTREAM`, `orNone`, `orNull`, `orText` and `scalarOrNone` are deleted |
 | Q10 | R39 NIC Duplex | **removed: fixed in DV-112.** Upstream sent `half-duplex` for a NIC with no link speed and for a link whose duplex flag is not true | duplex only from a returned flag | none: `DUPLEX_HALF_WHEN_DOWN` is deleted |
 | Q11 | R249-R252 Content Library counts | an identifier the item list names twice is counted twice (`len(items)`, and the sums and flags with it), though it is one item | each item once | `Quirks.REPEATED_ITEM_COUNTED_TWICE` (read in `LibraryReader.idList`, `LibraryCollector.aggregates`) |
 | Q12 | R197 Total Network Speed Degradation on a Datacenter | **removed: fixed in DV-112.** Upstream counted a host with no comparable NIC as none, so a Datacenter whose hosts all lack a value was published as `0` | nothing for a Datacenter with no member host that has a value (DV-22) | none: `EMPTY_DATACENTER_COUNT_IS_ZERO` is deleted; a Datacenter with a member host whose read failed is never published |
 | Q13 | every KPI input (R153-R194, R195, R221 and the rows that read a latest statistic) | **removed: fixed in DV-112.** Upstream used a latest statistic as read, so `-1` (the platform's "no sample" marker) scored as a reading, perfect on a lower-is-better row | a latest statistic of exactly -1 is no sample (the two usable-capacity statistics, which can be negative, are exempt) | none: `NEGATIVE_ONE_STAT_IS_A_VALUE` is deleted; the filter is always on in `OpsReads.latestStats`. A -1 memory tier latency is no reading and is left out of the cluster maximum |
-| Q14 | R216 Business Application Performance | the value is the HIGHER of its K8S Namespaces' performance values and the lowest of its Tiers' (upstream issue 6), so a healthy namespace hides an unhealthy tier | the lowest of all the parts, or whatever the owner decides | `Quirks.APPLICATION_TAKES_HIGHER` (read in `BusinessApps.application`) |
+| Q14 | R216 Business Application Performance | the value is the HIGHER of its K8S Namespaces' performance values and the lowest of its Tiers' (upstream issue 6), so a healthy namespace hides an unhealthy tier | the lowest of all the parts, or another rule | `Quirks.APPLICATION_TAKES_HIGHER` (read in `BusinessApps.application`) |
 | Q15 | R195, R196, R197, R212, R221 | publishes no availability for any host, cluster or vCenter when no host answered either of the two reads (a vCenter whose hosts are all unreported), and no Network Speed Degradation for any host or Datacenter when no host has any NIC speed ("No NIC speeds for any host"), instead of 0 % (the four-condition formula behind the availability is DV-110; **the network speed part is fixed in DV-108**: upstream read the speeds as statistics, which are properties, so this case was every cycle; here the case is only a real absence of speeds) | with the answers read, availability of every host 0 % | `Quirks.NOTHING_WHEN_NO_HOST_HAS_DATA` (read in `ObjectKpis.hosts`); a failed read is never this case Upstream's test of "no host answered" is on the answer to the `sys|poweredOn` statistic and to the three condition properties; the port reads the 23 statistics and 7 properties in one request each and tests whether the answer names the host at all (as upstream does, whether or not a sample survived the age limit). Both give the same on real data, where `runtime|connectionState` is always stored. Both warnings of the original are logged, so `Warnings in Last Cycle` and `First Warning` agree |
 | Q16 | R211 Total Network Speed Degradation on the vSphere World | **removed: fixed in DV-112.** Upstream published the count (0) whenever the answer named any host, even when every stored host value was older than ten minutes | a count only while some host has a fresh stored value | none: `STALE_HOST_VALUE_COUNTS_AS_ZERO` is deleted |
 | Q17 | R6 Licensing Remaining Days; the 7 condition symptoms of the alert "ESXi Host License Expiring" | **fixed by the content change of build 23.** Every symptom read `vCommunity\|Licensing:vSphere 8 Enterprise Plus for VCF\|Remaining Days`, the key of one fixed license name, not instanced; Java and upstream publish Remaining Days per license name | an instanced key (one symptom family for any license name), or a configurable name | the seven `symptoms/condition-*.yaml` files that name the key (content, not Java); Java needs no change. The symptoms now read the generic `vCommunity|Licensing|Remaining Days` with `instanced: true`, so the alert covers every license that has an expiration date (perpetual licenses publish no Remaining Days); its severity is the band of the license nearest to expiring. Whether a license instance that stops being published (a renamed product) keeps its symptom active is not checked live |
@@ -958,7 +951,7 @@ average of two samples in one five-minute bucket (0.5) is neither a close nor an
 
 Reproduced in P5 without a seam, because the output is what the guest writes and nothing is in the way: the operating system keys take the last row of the output; two services with one display name share an instance and the later one wins; a process that is gone from the guest's process list counts as finished; no more than 100 events of one VM in a collection; the event message carries the guest's own level text (severity comes from the number, DV-42). An empty cell of the guest's output is the empty text, quirk Q4 (the design's first draft of 8.5 withheld it): its seam is `Quirks.BLANK_STRINGS_PUSHED`, read through `Quirks.text` in `GuestRows`. A column that is absent withholds the key (the service start type of a guest whose output has no `StartType` column, DV-41).
 
-Map corrections found while building P4 (the map is the cartographer's; these are for it): **M1** the map (D9) and design 7.1 say Close for Business bands are "red below 20, orange below 40"; upstream 0.8.1 (`periodic_cluster_check.py`, and its test `test_bands`) uses red below 25, orange below 50, yellow below 75 on the health, and the port follows the code. **M2** design Appendix A and "KPI limits (49 rows)" count the header line of `kpi_tables.tsv`: there are 48 rows (9 + 12 + 5 + 9 + 9 + 4); `KpiTest` pins every one to the source table. **M3** map D1 says the cluster rows read "one request per cluster"; the port reads each data set once for the vCenter, in batches of 500 (design 4.1).
+Corrections to the collection map found while building P4: **M1** the map (D9) and design 7.1 say Close for Business bands are "red below 20, orange below 40"; upstream 0.8.1 (`periodic_cluster_check.py`, and its test `test_bands`) uses red below 25, orange below 50, yellow below 75 on the health, and the port follows the code. **M2** design Appendix A and "KPI limits (49 rows)" count the header line of `kpi_tables.tsv`: there are 48 rows (9 + 12 + 5 + 9 + 9 + 4); `KpiTest` pins every one to the source table. **M3** map D1 says the cluster rows read "one request per cluster"; the port reads each data set once for the vCenter, in batches of 500 (design 4.1).
 
 Not a quirk of upstream but a place where the port could not reproduce it: a VM Options list that holds exactly
 `config.tools` returned real values upstream (the path was then a key of its read); the port now reads the two
@@ -1051,9 +1044,8 @@ worst-percent from the low end of the Cluster Performance Score samples, Worst R
 ### 7.3 Fixture format for the upstream worked examples
 
 Upstream's tests carry worked examples (inputs and expected outputs). These are facts; they are re-expressed
-as JSON vectors, not code. **Who:** `api-cartographer` extracts them into
-`knowledge/context/api-maps/vcommunity-e1-kpi-fixtures/` (one file per upstream test module), one vector per
-example; the author copies them into `tests/fixtures/kpi/` and a plain-JDK test runs every file.
+as JSON vectors, not code. They are kept in `tests/fixtures/kpi/` (one file per upstream test module, one vector per
+example), and a plain-JDK test runs every file.
 
 Two vector shapes:
 
@@ -1161,8 +1153,8 @@ pass on a real hardened Windows guest and on all three platform lines.
   timeouts still apply. Results of VMs that finish after the main push are pushed at the end of the phase in
   one more batch.
 
-### 8.2 Call sequence (raw SOAP through `GuestOpsClient`, lifted in shape from the retired
-`/mnt/holding/vcf-content-factory/retired-paks/vcommunity-os/src/.../GuestOpsClient.java`, fixed)
+### 8.2 Call sequence (raw SOAP through `GuestOpsClient`, in the shape of an earlier,
+retired Java port's `GuestOpsClient`, with its faults corrected)
 
 Auth: `NamePasswordAuthentication(winUser, winPass, interactiveSession=false)` in every call; never logged.
 Constants as upstream: temp parent `C:\Windows\Temp`, interpreter
@@ -1239,7 +1231,7 @@ transfer).
 
 - Transport: `POST /api/events/bulk` with `eventType: DIAGNOSTIC`, `diagnosticSubType: LOG`, `resourceId` =
   the foreign object's Suite API id, `startTimeUTC` = now. **TOOLSET GAP T2:** the framework stitcher has no
-  events call; `tooling` adds `pushEvents(List<Event>)` (never throws, returns sent/failed counts, one WARN
+  events call; the Suite API client gains `pushEvents(List<Event>)` (never throws, returns sent/failed counts, one WARN
   per cycle on failure).
 - Windows events: one per CSV row, at most 100 per VM per cycle (rest counted), message
   `[WindowsEvent-<Level> <Event>]`, severity from `LevelNumber` (1 CRITICAL, 2 IMMEDIATE, 3 WARNING, 4 or 5
@@ -1326,9 +1318,9 @@ real vim25 client and a real TLS transfer against a fake vCenter and ESXi host t
   keep their last value, as before P5); a per-VM backoff after a single refusal.
 - **Still to run:** G1 to G9 on a real guest (`docs/design/guest-live-test-plan.md`).
 
-### 8.9 The P5 review (build 13)
+### 8.9 Changes made after review of the guest phase
 
-`docs/reviews/p5-guest-review.md` asked for changes; each finding and what was done:
+A review of the guest phase asked for changes; each finding and what was done:
 
 - **B1** the account protection (DV-97) was rebuilt: refusals are counted across collections, one VM alone until a logon works, a
   cap of two, a 24 hour pause, one VM that refused is left alone for 24 hours, a restart is one VM alone and one attempt. The
@@ -1399,7 +1391,7 @@ All pools are created per cycle with named threads and shut down in finally; int
 
 ### 9.3 Heap budget in the collector JVM
 
-Budget: **65 MB peak per instance, 35 MB retained between cycles** (`knowledge/context/investigations/2026-11-06-collector-jvm-sizing.md`
+Budget: **65 MB peak per instance, 35 MB retained between cycles** (measured on a collector node)
 Budget: 10 % of about 650 MB headroom on the devel 9.0.2 embedded collector, `-Xmx1024m`; the Cloud Proxy heap
 is unknown; vsanperf adopted the same, `vsanperf-mp-v1.md` D6, and measured a 6.3 MB peak delta in its
 default case, `vsanperf-mp-v3.md` "Heap").
@@ -1433,7 +1425,7 @@ one live run on the largest lab vCenter on each line:
 
 ## 10. Content plan
 
-Everything ships as factory YAML in the pak repo under `views/`, `dashboards/`, `reports/`, `supermetrics/`,
+Everything ships as YAML in the pak repo under `views/`, `dashboards/`, `reports/`, `supermetrics/`,
 `symptoms/`, `alerts/`, and the six check-list files under `content/files/solutionconfig/` (the builder now
 packs `content/files/**`, `sdk_builder.py` "content/files/"). Inventory of 0.8.1 (session evaluation, see
 "Map and inventory insufficiencies" below): 52 dashboards, 189 distinct views, 16 reports, 3 super metrics,
@@ -1441,16 +1433,20 @@ packs `content/files/**`, `sdk_builder.py` "content/files/"). Inventory of 0.8.1
 
 ### 10.1 Id and name rules
 
-**Rule (owner decisions, 2026-11-14).** Every content id is minted in this pak's namespace `vcfcf_vcommunity` (deterministic
-uuid5, `--ids mint --mint-namespace vcfcf_vcommunity`; the old-to-new map is `docs/design/inputs/import-report/id_map.tsv`, and
+**Rule.** Every content id is minted in this pak's namespace `vcfcf_vcommunity` (deterministic
+uuid5; the old-to-new map is `docs/design/inputs/import-report/id_map.tsv`, and
 `section-dashboards-report.json` for the two Section dashboards). Content names are kept. Metric and property keys are kept.
 Built-in (product) views that content references in place keep their product ids; they are not shipped.
 
-Owner statements, verbatim, 2026-11-14:
+Decisions and reasons:
 
-1. "Our symptoms and dashboards should all have, unique to us IDs and everything generated in our namespace so that there's no collisions, because we're going to ultimately label this as 3.0.x."
-2. "Metrics and properties by name should stay the same so that we retain history across major upgrade versions of O-NORs to E1s to Rs. But if there's dashboard symptoms, alert things that are going to cause collisions, we need to address those. Names should be consistent so that there's not issues, but IDs should be unique." (The transcription garbles names; the meaning is that history is kept across the upgrade from Onur's pack, to Ewan's, to this one.)
-3. "if somebody tries to install this while the other pack is installed, like, we can't work around that ... the guidance needs to be in the README, uninstall the Python pack, onurs 1.0, or Ewans 2.0, and then install ours. Like, if they install and have both running side by side, they're gonna have a bad time no matter what we do."
+1. Symptoms, dashboards and all other content carry ids unique to this pak, generated in its namespace. Reason: no collision
+   with the Python pack's content or with built-in content, and the pak is a new major line (3.x).
+2. Metric and property names stay the same. Reason: history is kept across the upgrade from vCommunity 0.1 to 0.8.1 to this
+   pak. Where content (dashboards, symptoms, alerts) would collide, the ids change and the names stay consistent.
+3. Installing this pak next to the Python pack is not supported and cannot be worked around from this side. The guidance in
+   the README is: uninstall the Python pack (vCommunity 0.1 to 0.8.1), then install this one. Reason: both write the same
+   keys onto the same objects.
 
 | Content | Id | Name |
 |---|---|---|
@@ -1463,7 +1459,7 @@ Owner statements, verbatim, 2026-11-14:
 Consequences: the stock-id guard has nothing to check for content ids (none is a product id; it still checks the pak, `stock-id-check`).
 The pak shares no content id with any Python pack line, so installing it overwrites nothing of theirs and uninstalling either deletes nothing
 of the other's; the one shared thing is the six check-list file names. Running both packs is still unsupported (same keys onto the same objects,
-same content names), so the README and installing guide say: uninstall the Python pack (Onur's 1.x or Ewan's 2.x) first, then install this
+same content names), so the README and installing guide say: uninstall the Python pack (vCommunity 0.1 to 0.8.1) first, then install this
 one. The deviations that existed only because ids were shared with upstream (DV-54, DV-106, the co-install outcomes of builds 15 and 16) are
 superseded or retired above.
 
@@ -1471,25 +1467,28 @@ superseded or retired above.
 
 A deleted symptom definition is soft-deleted; about 45 days later (global setting `CANCELLED_ALERTS_SYMPTOMS_RETENTION_TIME_IN_DAYS`) a cleaner
 removes the tombstone but leaves a relationship row, and re-creating that id then fails with a duplicate-key error, takes down every symptom
-of the same import batch and leaves the alert installed with empty conditions (factory note
-`2026-11-14-symptom-duplicate-key-on-902.md`; measured on 9.0.2, same code in 8.18.7 and 9.1.1 by bytecode). With upstream ids, this pak's alerts
+of the same import batch and leaves the alert installed with empty conditions (measured on 9.0.2, same code in 8.18.7 and 9.1.1 by bytecode). With upstream ids, this pak's alerts
 failed that way on an instance where the upstream pack had been removed months earlier. Own ids avoid it. Do not resurrect a dropped symptom id in a
 later release; mint a new one.
 
 ### 10.1c Versioning
 
-Dev builds are stamped `0.0.0.N` (RULE-014). The released line is 3.x: Onur's pack is the 1.x line, Ewan's the 2.x line, this port the 3.x line. The first
+Dev builds are stamped `0.0.0.N`. The released line is 3.x: vCommunity 0.1 to 0.8.1 is the Python line, this port the 3.x line. The first
 release is **3.0.0.29** (a preview): `version: 3.0.0` and `build_number: 29` in `adapter.yaml`, tag `v3.0.0.29` (the release workflow requires the tag to equal
-`v<version>.<build_number>`). The build number is carried forward, not restarted (owner decision 2026-11-16): the lab has dev build `0.0.0.26` installed, and a `0.0.0.1`
+`v<version>.<build_number>`). The build number is carried forward, not restarted: dev build `0.0.0.26` was already installed on test instances, and a `0.0.0.1`
 would be a downgrade, so the build under 3.0.0 is 29 (27 and 28 were earlier numbers under 3.0.0) and dev builds stamp `0.0.0.29`; the development builds 1 to 26 were under `1.0.0`. The dev stamp `0.0.0.<build_number>` still comes from `build_number`.
 
-**Minimum product version (owner decision, 2026-11-14, verbatim):** "Also, minimum version should just be 8.18.x, not 8.18.7." The pak states VCF Operations /
-Aria Operations 8.18.x as its minimum; 8.18.7, 9.0.2 and 9.1.1 remain the tested versions and the versions of the lab measurements. The built manifest's
-`vcops_minimum_version` is a constant of the factory builder (8.0.0 at build 17) and is being changed there to 8.18.0 separately; the pak does not work around it.
+**Minimum product version.** The pak states VCF Operations / Aria Operations 8.18.x as its minimum (not 8.18.7);
+8.18.7, 9.0.2 and 9.1.1 remain the tested versions. The built manifest says `vcops_minimum_version: 8.18.0`.
 
-**Migration across an id change (owner decision, 2026-11-14, verbatim):** "don't develop any workarounds or anything like that. Just, like, assume people are going to be doing things with a clean slate, like uninstalling and then installing fresh, and like our upgrading with converting IDs is a weird one-off that we're introducing onto ourselves." The supported path onto this pak, from the Python pack and from any dev build up to 0.0.0.16 (different content ids), is uninstall then fresh install. Build 17 observation: on 9.0.2, an in-place upgrade across the id change left the old-id views in place, and views and report templates with the same names under the new ids failed to import. Not pursued. Upgrades between releases that keep ids are in-place as usual.
+**Migration across an id change.** Decision: no workaround. Assume a clean slate: uninstall, then install fresh; converting ids
+in place is a one-off this pak does not take on. Reason: an in-place conversion would need to maintain a second set of ids for
+no lasting benefit. The supported path onto this pak, from the Python pack and from any dev build up to 0.0.0.16 (different
+content ids), is uninstall then fresh install. Observation on 9.0.2 with an earlier dev build: an in-place upgrade across the
+id change left the old-id views in place, and views and report templates with the same names under the new ids failed to
+import. Not pursued. Upgrades between releases that keep ids are in-place as usual.
 
-### 10.1a Conversion decisions recorded after the P6 review
+### 10.1a Conversion decisions
 
 - **Duplicate symptom id.** The source pak defines `SymptomDefinition-7675759b-2ca0-4847-87ed-e3e23acdf7a5` twice
   under two names: "Windows Service Down" (`symptomdefs/Windows Service Down Symptom.xml`) and "Windows Service
@@ -1499,64 +1498,43 @@ Aria Operations 8.18.x as its minimum; 8.18.7, 9.0.2 and 9.1.1 remain the tested
 - **No Summary binding.** The six "Object Summary Page for ..." dashboards carry no `summary_for`, so the pak has no
   `content/dashboards/dashboards.properties`, as the source pak. The importer had inferred the binding from the folder
   name; the review (B1) removed it.
-- **Not in the factory registry, on purpose.** This pak is not in `knowledge/context/managed_paks.md` while the repository is
-  private (before any release tag), so `defect-gate --pak vcommunity-java` sees nothing for it. It is registered when a release is
-  planned (the licensing gate is closed, 2026-11-16).
-- **Licensing (owner decision, 2026-11-16).** Verbatim: "Regarding licensing all authored or converted content is MIT."
-  The whole pak is MIT, adapter code and all bundled content. Provenance stays in `NOTICE`: the dashboards, views, reports,
-  super metrics, symptoms and alerts were converted from the content of the upstream vCommunity pack 0.8.1 (published under
-  PolyForm Noncommercial 1.0.0, its LICENSE file at tag v0.8.1), under this project's own ids and, for 101 views, descriptions;
-  the upstream authors are acknowledged and the upstream Required Notice line is kept. The owner holds the record of the
-  upstream authors' agreement; this repository does not carry it. The "private until the licensing record is complete" and
-  "no release tag until the owner confirms" gates are removed.
-- **Copyright holder and upstream credit (owner decision, 2026-11-16).** Verbatim: "We need to make sure that this repo, well, I'm the MIT
-  copyright holder. I don't know how we attribute to Onar, Iwan, and Brock, and the others that contributed to the upstream original
-  ones." (speech-to-text: Onur, Iwan, Brock.) Scott Bowe is the MIT copyright holder of the repository. `LICENSE` stays standard MIT with
-  his copyright line unchanged and nothing added inside it, so license scanners detect it. The upstream people are credited by name, no
-  email addresses, in `NOTICE` (also `docs/NOTICE.md` and `EULA.txt`, which stay equal to it): the first lines read "VCF Content Factory
-  vCommunity / Copyright (c) 2026 Scott Bowe.", followed by a "Portions are derived from the vCommunity Management Pack for VCF Operations
-  by its authors, named below, and are included here under the MIT License with their permission." line and an Acknowledgments section
-  (Onur Yuzseven, Iwan "e1" Rahabok, Brock Peterson, Mark Arbogast and Robert Mesropyan, and Dave Kaber, Alan Renouf and atm8119 from the
-  upstream history), whose roles follow the upstream README's Credits section at v0.8.1. Automated and tool identities and the copyright
-  holder are not listed as upstream contributors. The README has a Credits section with the same names and a pointer to `NOTICE`.
+- **Licensing.** The whole pak is MIT, adapter code and all bundled content. Provenance stays in `NOTICE`: the dashboards,
+  views, reports, super metrics, symptoms and alerts were converted from the content of vCommunity 0.8.1 (published under
+  PolyForm Noncommercial 1.0.0), under this project's own ids and, for 101 views, descriptions. They are released here under
+  the MIT License with the agreement of the vCommunity authors, as `NOTICE` says. `LICENSE` is standard MIT; the vCommunity
+  authors are credited by name in `NOTICE` (also `docs/NOTICE.md` and `EULA.txt`, which stay equal to it) and in the README.
 - **Same adapter kind as the retired port** (Q8): an instance that still has the retired port's `1.0.0.9` pak sees this install as
   an upgrade of it; the installing guide says so.
 
-### 10.1d Report cover page text color (version-forced, 2026-11-15)
+### 10.1d Report cover page text color (forced by the product version)
 
-Measured on a fresh install of build 18 on 8.18.7 (2026-11-15 UTC): five report templates (`voa-capacity`, `voa-configuration`,
+Measured on a fresh install on 8.18.7: five report templates (`voa-capacity`, `voa-configuration`,
 `voa-executive-summary`, `voa-inventory`, `voa-performance`) were rejected (`cvc-complex-type.2.4.d: Invalid content was found starting with element
-'FontColor'`), so 11 of 16 report templates existed; 9.0.2 and 9.1.1 import all 16. From build 19 those five YAML files opt in with
-`feature_fallback: {font_color: omit}`; the factory (main `0a8a4b7a`) then leaves the cover page font color out of the built template where the
+'FontColor'`), so 11 of 16 report templates existed; 9.0.2 and 9.1.1 import all 16. Those five YAML files opt in with
+`feature_fallback: {font_color: omit}`, which leaves the cover page font color out of the built template where the
 target floor cannot import it. The other cover page formatting and `ColorizeListView` are unchanged, and the other eleven reports are byte-identical.
 The color is cosmetic. Recorded as DV-107.
 
 ### 10.2 Re-authoring the 101 views from a neutral spec
 
-For each, `view-author` receives a spec file `knowledge/designs/views/vcommunity-<slug>.md` with: subject
-(adapter kind and resource kind), columns (metric or property key, aggregation, unit, transformation), filters,
-sort, thresholds/colours, summary rows, time setting. Titles and descriptions are written new from the spec,
-never copied. Specs are derived from upstream's XML by the orchestrator (facts only).
+Each view was re-authored from a neutral spec: subject (adapter kind and resource kind), columns (metric or property key,
+aggregation, unit, transformation), filters, sort, thresholds and colours, summary rows, time setting. Titles and descriptions
+are written new from the spec, never copied. The specs were derived from upstream's XML (facts only).
 
 Subject re-pointing: content on upstream's own kinds (`vCommunity:Content Library` etc.) is re-pointed to
 `vcfcf_vcommunity` (DV-50). Content on VMWARE and Container kinds keeps its subjects.
 
-### 10.3 Dependencies on tooling in flight (content build is sequenced after these land)
+### 10.3 Content build notes
 
-| Need | Status |
+| Topic | Decision |
 |---|---|
-| View schema fidelity (every column/filter/summary form upstream uses) | in flight |
-| Importer fidelity (upstream XML to neutral spec without loss) | in flight |
-| Dashboard time range and hidden flag | in flight |
-| Report gaps; alert gaps (recommendations on sync, #346) | in flight |
-| Stock-id guard at build, install and uninstall | #345 |
-| Section widget | Measured 2026-11-13: not importable on 8.18.7 or 9.0.2 (factory note `2026-11-13-section-widget-on-8x-and-90.md`). Two of the 52 carry it: "Overall Daily Check" (6 Sections) and "vSphere Cluster Capacity 2.0" (2). **Owner decision, 2026-11-13 (verbatim): "Build them without sections but ensure we have a section version committed and the tooling to produce when 8.x and 9.0 exit their support lifecycle".** So: the committed dashboard YAML keeps the Section widgets and opts in to the factory's Section fallback; while the pak's minimum product version is below the Section threshold the build ships both dashboards without their Section header rows, and raising the minimum version produces the Section version from the same source with no content edit. This is the recorded sign-off for RULE-011 exemption condition 3 (forced widget-count difference); the comparison table for these two lists the omitted Section rows as the only layout difference. Tooling: factory branch `feat/section-fallback`, in flight. |
-| Super metrics on foreign objects need policy enablement (`environment-totals-are-computed-metrics-not-super-metrics.md`) | document in the installing guide; the three SMs stay SMs (no percentile in ComputedMetrics, and they are upstream content) |
+| Section widget | Not importable on 8.18.7 or 9.0.2 (measured); VCF Operations imports it only from 9.1.1. Two of the 52 dashboards carry it: "Overall Daily Check" (6 Sections) and "vSphere Cluster Capacity 2.0" (2). Decision: build them without sections while the pak's minimum version is below 9.1.1, and keep a version with sections producible from the same source. The committed dashboard YAML keeps the Section widgets and opts in to a Section fallback; while the minimum product version is below the Section threshold the build ships both dashboards without their Section header rows, and raising the minimum version produces the Section version from the same source with no content edit. The comparison table for these two lists the omitted Section rows as the only layout difference. |
+| Super metrics on foreign objects | They need policy enablement. The installing guide says so; the three super metrics stay super metrics (a computed metric has no percentile, and they are upstream content). |
 
 Alerts: `content_foreign_adapter_kinds: [VMWARE, Container]` covers "ESXi Host NIC Disconnected", "ESXi Host
 License Expiring", "Windows Service Down" and "vCommunity Collection Warnings". Each depends on keys this
 design keeps (NIC Status R30, Remaining Days R6, Service Status R79, Warnings R253). New-key alerts fire from the
-second sample (`new-metric-alerts-need-two-samples.md`). RULE-011 applies to the dashboards (Q7).
+second sample .
 
 ### 10.4 Check-list files across a pak upgrade (measured 2026-11-14)
 
@@ -1586,33 +1564,30 @@ Each phase ends with: validate-sdk, build-sdk (0.0.0.N), pak-compare zero BLOCKI
 
 **Differential check (TOOLSET GAP T5).** Run e1 0.8.1 collector-only (built from the sentania-labs fork with
 its content stripped, so no stock ids are installed) on one lab Ops instance and the Java pak on another, both
-against the same vCenter. A `tooling` CLI compares the two instances' `vCommunity|*` keys per (VCID, MoRef or
+against the same vCenter. A key-differential tool compares the two instances' `vCommunity|*` keys per (VCID, MoRef or
 own identifier, key): key set equal; properties equal; metrics within 0.01 after rounding (or within a stated
 tolerance for timing-skewed KPIs); every difference must map to a DV id listed in
 `tests/fixtures/differential/expected-deviations.tsv` in the pak repo.
 
 | Phase | Scope | Exit proof |
 |---|---|---|
-| P0 Prerequisites | managed_paks entry; T1, T2, T3 in the framework (tooling, framework-reviewer, PR); kpi table and content inventories committed (insufficiencies 1-3); recon for Q8 | registry reader lists the pak; buildkit release carrying T1-T3 |
+| P0 Prerequisites | build tooling T1, T2, T3; KPI table and content inventories committed (insufficiencies 1-3); check of the old kind registration (Q8) | build tooling release carrying T1-T3 |
 | P1 Skeleton and configuration parity | describe.xml (2.1-2.4), `VCommunityConfig`, TLS (verified by default), probe, session, `vCommunityCollector`, Test Connection (login, Suite API reachability, each check-list file's outcome and item count in the result message), health keys, self metrics | account dialog on 9.0.2 matches 0.8.1 field for field (labels, defaults, enums, main vs Advanced) seen in a browser; Test Connection passes in all three TLS modes against a lab vCenter and fails with the right text for a wrong pin; collector object DATA_RECEIVING; self metrics present |
 | P2 Properties | 4.3-4.8 and 4.10 property rows, licensing mask, check lists, VM Options isolation | differential over the property rows: equal or registered; a deliberately bad VM Options entry costs only its key |
 | P3 Own objects | libraries, items, templates, relationship, traversal | objects, identifiers, Content Library > Library Item in the UI tree; differential on R227-R252. **Built in build 7** (4.11.1, `docs/p3-key-coverage.tsv`); the live proof is still to run |
 | P4 Derived metrics | section 7, 4.9, 4.12, Datacenter, resource pools, port groups, periodic check across one full window | fixture tests green; differential within tolerance over 24 hours with at least one periodic window and one Delta. **Built in build 10** (7.4, `docs/p4-key-coverage.tsv`); the live proof is still to run |
 | P5 Guest and events | section 8, T2 | experiments G1-G9 pass; keys and events on a Windows VM and on the hardened DC. **Built in build 12** (8.8, `docs/p5-key-coverage.tsv`); the live proof is `docs/design/guest-live-test-plan.md`, still to run |
 | P6 Content | section 10, after the tooling items land | stock-id guard clean on all three lines; dashboards counted after install (52); views render; alerts fire after two samples |
-| P7 Scale and release | 9.4 runs; sdk-adapter-reviewer gate; defect gate (RULE-012) | heap and deadline within budget; RULE-019 install record (installed and collecting, account state checked after the restart watch) on 8.18.7, 9.0.2 and 9.1.1 in `knowledge/context/reviews/`; `v1.0.0` tag through CI |
+| P7 Scale and release | 9.4 runs; code review; defect gate | heap and deadline within budget; install record (installed and collecting, account state checked after the restart watch) on 8.18.7, 9.0.2 and 9.1.1; release tag through CI |
 
-RULE-019 notes: 8.18.7 Cloud Proxies can miss a new kind's jar (`remote-collector-upgrade-start-race.md` third
-mode): confirm `plugins/inbound/vcfcf_vcommunity.jar` on each proxy before creating an instance there. 8.18 has
+Note: 8.18.7 Cloud Proxies can miss a new kind's jar (a collector upgrade race): confirm `plugins/inbound/vcfcf_vcommunity.jar` on each proxy before creating an instance there. 8.18 has
 no unsigned-pak switch.
 
 ---
 
-## 12. Open questions for the owner
+## 12. Design questions and their resolutions
 
-Each with a recommendation; none blocks P0-P1.
-
-| Q | Question | Recommendation |
+| Q | Question | Resolution |
 |---|---|---|
 | Q1 | A property whose source becomes unset while the read works (HA turned off, link down Duplex, Detailed Data gone) keeps its last value forever if we send nothing, so a view would show the old HA settings for a cluster with HA off. | On a set-to-unset transition seen in memory, push `""` once (DV-55); first sight of an unset field sends nothing. Honest blank beats a stale value. **Edge reproduced (second live differential L1):** when `config.tools` is in the VM Options list, upstream's read holds it and the two keys carry the real values (`False`/`True`, `manual`); the port then reads `config.tools` (only its printed fields) and sends them, `None` for a VM with no tools configuration. Without it in the list, `None` on every VM |
 | Q2 | Keep these as readings, not failures: NIC Status `Disconnected` (the bundled alert needs it), EVC Enabled `False`, KPI 100 when every scored row is green, Consumption 100 at zero usable capacity, Collection Health `0` / `None in the last cycle`, resource-pool `0` for a cluster with no pools. | Keep all six. |
@@ -1620,8 +1595,8 @@ Each with a recommendation; none blocks P0-P1.
 | Q4 | World and Business Application keys: every pak instance computes and writes the same values (parity, last writer wins with equal values). | Keep parity for 1.0; measure the World cost in P7; add a freshness gate only if it is material. |
 | Q5 | VM Template objects only exist upstream when the VMware adapter also models the template as a VM. | Create one for every vCenter template (DV-47). |
 | Q6 | vCenter TLS default stays Trust on First Use (configuration parity), which sends credentials before any check. | **Resolved (DV-114, 2026-11-16):** the default is verified, Trust on First Use and Pinned are removed, and Allow Insecure SSL is the one opt-out. |
-| Q7 | RULE-011 for 52 ported dashboards. | One HTML mock per dashboard generated from the upstream definition, approved in batches by dashboard family in plan mode; the rule is met per dashboard, the review is batched. |
-| Q8 | `vcfcf_vcommunity` / `VCF Content Factory vCommunity` were the retired port's identity. | Keep the names; recon confirms no instance registers the kind before the first install. |
+| Q7 | How the 52 ported dashboards are checked. | One mock per dashboard generated from the upstream definition, reviewed in batches by dashboard family. |
+| Q8 | `vcfcf_vcommunity` / `VCF Content Factory vCommunity` were the retired port's identity. | Keep the names; confirm that no instance registers the kind before the first install. |
 | Q9 | Differential environment: e1 0.8.1 must run somewhere, and installing it as shipped overwrites 117 built-in views. | Collector-only build from the fork (content stripped) on one lab instance; never co-installed with the Java pak. |
 | Q10 | Guest operations at scale: upstream allowed 1,800 s per cycle; a 5-minute cycle allows about 240 s. | Deadline-bound phase, 4 parallel guests, rotating cursor (DV-43). |
 | Q11 | Windows and configuration events appear as DIAGNOSTIC events (troubleshooting timeline), not notifications. | Accept; NOTIFICATION is dropped by the platform. |
@@ -1654,15 +1629,15 @@ Each with a recommendation; none blocks P0-P1.
 | E-N3 | A library, item or template deleted in vCenter: marked not existing after 12 cycles and deleted after retention; and a returned object gets back (DV-79) |
 | G1-G9 | Section 8.7 |
 
-## TOOLSET GAPS
+## Build tooling the design relied on
 
-| Id | Owner | Gap |
+| Id | Component | Need |
 |---|---|---|
-| T1 | tooling | `SuiteApiStitcher.post(path, jsonBody)` returning the body and throwing like `get` (non-2xx as `SuiteApiHttpException`), for the three query endpoints of E4. The facade has `get` only today. |
-| T2 | tooling | `SuiteApiStitcher.pushEvents(events)` to `POST /api/events/bulk` (8.6). **Landed** (#355, buildkit 1.0.27); used by `OpsPort.pushEvents` since build 12. |
-| T3 | tooling | numeric property values in `pushPropertiesBatch` (R43). |
-| T4 | tooling | icon hints `content_library`, `library_item`, `vm_template` (2.3). |
-| T5 | tooling | key differential CLI across two Ops instances (section 11). |
+| T1 | build tooling | `SuiteApiStitcher.post(path, jsonBody)` returning the body and throwing like `get` (non-2xx as `SuiteApiHttpException`), for the three query endpoints of E4. The facade has `get` only today. |
+| T2 | build tooling | `SuiteApiStitcher.pushEvents(events)` to `POST /api/events/bulk` (8.6). **Landed** (#355, buildkit 1.0.27); used by `OpsPort.pushEvents` since build 12. |
+| T3 | build tooling | numeric property values in `pushPropertiesBatch` (R43). |
+| T4 | build tooling | icon hints `content_library`, `library_item`, `vm_template` (2.3). |
+| T5 | build tooling | key differential CLI across two Ops instances (section 11). |
 
 ## Key Risks
 
@@ -1676,20 +1651,17 @@ Each with a recommendation; none blocks P0-P1.
    holder. StAX and page size 50 are mandatory, not optimizations.
 5. **Differential noise**: KPIs read Ops stats at slightly different moments on two instances. Tolerances and
    a 24-hour window are needed before calling a mismatch.
-6. **Content volume** (52 dashboards, 189 views) waits on four in-flight tooling items and a stock-id guard; the
+6. **Content volume** (52 dashboards, 189 views) waited on four build tooling items and a stock-id guard; the
    collector can ship (P1-P5) ahead of content but a 1.0 release needs both.
 7. **Migration hazard for users of upstream**: uninstalling upstream 0.8.1 deletes the 117 built-in views it
    shipped under stock ids. The installing guide must say so and give the recovery path before anyone swaps.
 8. **Old kind registration** (Q8) can turn the first install into an upgrade of the retired port.
 
-## Map and inventory insufficiencies found while designing
+## Gaps in the map and inventories found while designing
 
-1. `kpi_tables.tsv` (the 48 limit rows; the 49 counted its header, M2) is cited by the map but lives only in session scratch, against RULE-015.
-   The values are copied into Appendix A so this design stands alone; the file should be committed beside the
-   map.
+1. `kpi_tables.tsv` (the 48 limit rows; the 49 counted its header, M2) is cited by the map. The values are copied into Appendix A so this design stands alone.
 2. The content inventory, the 101 edited-built-in view ids, the 19 rename-only ids and the three additional ids
-   (`dropped19.txt`, `extra3.txt`, `content_inventory.tsv`) also live only in session scratch; section 10 cannot
-   be executed until they are committed.
+   (`dropped19.txt`, `extra3.txt`, `content_inventory.tsv`) are committed under `docs/design/inputs/`.
 3. The map's instance-field table lacks labels, display order, `port` being `required` with identType 2, and the
    `integer` type of the numeric fields; section 2.1 took them from upstream's generated definition.
 4. D6 "Guest CPU Run Queue per vCPU": whether `guest|20_sec_peak_cpu_queue` is divided by the vCPU count is not
@@ -1697,7 +1669,7 @@ Each with a recommendation; none blocks P0-P1.
 5. Resource-pool "level" (R218-R219) is defined against Ops relationships only; the vim25 equivalent (root pool,
    VirtualApps) needs E9.
 6. Per-row rendering of Python `str()` for floats and datetimes is given by example in the TSV; Appendix B fixes
-   the rules, and the cartographer should confirm them against upstream's published values in the differential.
+   the rules, and the differential should confirm them against upstream's published values.
 7. Collection interval is not stated in the map (the 10-minute staleness implies 5 minutes); 5 is assumed.
 
 ---

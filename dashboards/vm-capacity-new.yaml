@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/vm capacity 2.0/VM Capacity 2.0.json
+# Converted from vCommunity 0.8.1: content/dashboards/vm capacity 2.0/VM Capacity 2.0.json
 id: ddeb19f0-9aaf-5bfa-bf1a-720d85c0e7d7
 name: VM Capacity (new)
 description: Monitor the capacity of VMs. This dashboard lists all the hosts with their capacity remaining

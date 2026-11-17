@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+# Converted from vCommunity 0.8.1: content/reports/view - set 3/View - Set 3.xml
 id: a77e2d82-4bca-58ce-bd1a-c1f95295023b
 name: vSphere Cluster CPU Utilization
 description: 'Trend line of cluster CPU utilization. Value is in percentage, where 100% means the cluster

@@ -1,20 +1,9 @@
-# Canonical per-pak CI workflow for an independent SDK adapter repo.
-#
-# This file is the SOURCE OF TRUTH for the workflow that ships in
-# sentania-labs/vcf-content-factory-sdk-template and every pak instantiated
-# from it. It lives in the factory (under designs/) so it stays diffable and
-# can be updated centrally; copy it to `.github/workflows/build-pak-on-tag.yml`
-# in the pak repo.
-#
-# Drift: the pak repos carry copies of this file and drift when a fix lands in
-# only one place (the version check below reached the paks first; issue #11).
-# When this file changes, diff it against each child's copy (compliance,
-# unifi, synology, vcommunity, ...) and propagate; when a child gains a fix,
-# back-port it here first.
+# Release workflow for this adapter repository. It follows the shared template for
+# VCF Content Factory SDK adapter paks (sentania-labs/vcf-content-factory-sdk-template).
 #
 # Contract: push a `v*` tag on the pak repo -> a headless runner pulls the
 # published sdk-buildkit tarball from the factory repo's Releases, builds the
-# .pak deterministically (no agent, no factory checkout), gates on pak-compare,
+# .pak deterministically (no factory checkout), gates on pak-compare,
 # and attaches the .pak to this tag's GitHub Release.
 #
 # Two jobs (issue #18 CI1). `build` holds only a read token and runs
@@ -118,7 +107,7 @@ jobs:
           fi
           echo "Tagged commit ${GITHUB_SHA} is on main."
 
-      # Defect gate (factory RULE-012). Runs FIRST — before any expensive
+      # Defect gate. Runs FIRST — before any expensive
       # setup/build — so a v* tag fails fast and never produces a .pak while
       # an open *blocking* defect names this pak in the factory registry.
       #
@@ -143,7 +132,7 @@ jobs:
       - name: Test the vendored defect gate
         run: python3 -m unittest discover -s tests/ci -p 'test_*.py' -v
 
-      - name: Defect gate (RULE-012)
+      - name: Defect gate
         env:
           DEFECT_PAK_NAME: ""   # leave empty to derive from the repo name
           GH_TOKEN: ${{ github.token }}   # public-repo API read only

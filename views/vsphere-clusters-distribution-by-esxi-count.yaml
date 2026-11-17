@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+# Converted from vCommunity 0.8.1: content/reports/view - set 4/View - Set 4.xml
 id: 2c27ebb7-d761-5f31-afdd-58f14823cbac
 name: vSphere Clusters distribution by ESXi count
 description: Bar chart showing how many clusters contain each number of ESXi hosts, one bar per host count.

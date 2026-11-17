@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 4/View - Set 4.xml
+# Converted from vCommunity 0.8.1: content/reports/view - set 4/View - Set 4.xml
 id: a731dc46-7ad4-5f19-9a47-c17714c51c07
 name: vSphere Cluster DRS Automation Level
 description: Donut chart of clusters grouped by their DRS migration threshold setting, one slice per value,

@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+# Converted from vCommunity 0.8.1: content/reports/view - collection01/View - Collection01.xml
 id: 22770b5a-c10b-5a13-9b72-db2be66b94c5
 name: VM with Hot Remove CPU
 description: Bar chart counting virtual machines that have CPU hot remove set to true.

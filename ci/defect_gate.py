@@ -658,7 +658,7 @@ if __name__ == "__main__":
                 print(format_defect_line(_entry))
             print(
                 f"\n{len(_blockers)} open blocking defect(s) found. "
-                f"See RULE-012 and context/defects.md."
+                f"See the defect registry (defects.md)."
             )
             _sys.exit(2)
         else:
@@ -671,7 +671,7 @@ if __name__ == "__main__":
                 print(format_defect_line(_entry))
             print(
                 f"\n{len(_blockers)} open blocking defect(s) block release of {_pak_name!r}. "
-                f"Refused by RULE-012. See context/defects.md."
+                f"Refused by the defect gate. See the defect registry (defects.md)."
             )
             _sys.exit(2)
 

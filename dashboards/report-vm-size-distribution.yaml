@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+# Converted from vCommunity 0.8.1: content/dashboards/To be used in reports/Input dashboards.json
 id: 5b2d2bb1-647c-56d0-9f1e-da4de9d5c0f0
 name: 'Report: VM Size Distribution'
 description: "Part of a report covering configuration. Designed to be run on a weekly basis, and be compared\

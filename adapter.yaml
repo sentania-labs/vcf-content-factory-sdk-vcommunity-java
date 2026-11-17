@@ -50,7 +50,7 @@ content_naming: unprefixed
 # APPLICATIONDISCOVERY or Container subjects are not checked by it).
 content_foreign_adapter_kinds: [VMWARE]
 
-# The content as converted from the original pack by the factory's offline importer
+# The content as converted from the original pack by an offline importer
 # (docs/design/inputs/import-report/): 170 views, 52 dashboards, 16 reports, 3 super
 # metrics, 10 symptoms, 4 alerts, 1 recommendation. The two Section dashboards
 # (overall-daily-check, vsphere-cluster-capacity-2-0) carry section_fallback: omit:

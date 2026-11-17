@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/alertdefs/ESXi Host License Expiring.xml
+# Converted from vCommunity 0.8.1: content/alertdefs/ESXi Host License Expiring.xml
 name: ESXi Host License Expiring
 description: ESXi Host License Expiring
 id: 8179982d-8676-5f3d-9259-5eb64fe66e10

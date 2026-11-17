@@ -92,7 +92,7 @@ def main():
     a("is the field's length in characters (checked against the YAML for a super metric description, 374, and a text")
     a("widget, 504). It does not count identifiers, metric and property keys, formulas, symptom conditions or any")
     a("other structured value. A field the converter replaced is not counted. Whether the carried text is protected")
-    a("expression, or is a title or a name too short to be one, is no longer a licensing gate (the whole pak is MIT, owner decision 2026-11-16); this report only shows where")
+    a("expression, or is a title or a name too short to be one, is no longer a licensing gate (the whole pak is MIT); this report only shows where")
     a("it is.")
     a("")
     a("## Replaced text")

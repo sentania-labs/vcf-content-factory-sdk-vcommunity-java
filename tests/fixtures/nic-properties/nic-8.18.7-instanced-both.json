@@ -10,7 +10,7 @@
   ]
  },
  "status": 200,
- "host": "vcf-lab-wld01-esx01.int.sentania.net",
+ "host": "esxi-host.example.test",
  "response": {
   "values": [
    {

@@ -8,7 +8,7 @@ that the converter kept as the source pack wrote it. The importer records each a
 is the field's length in characters (checked against the YAML for a super metric description, 374, and a text
 widget, 504). It does not count identifiers, metric and property keys, formulas, symptom conditions or any
 other structured value. A field the converter replaced is not counted. Whether the carried text is protected
-expression, or is a title or a name too short to be one, is no longer a licensing gate (the whole pak is MIT, owner decision 2026-11-16); this report only shows where
+expression, or is a title or a name too short to be one, is no longer a licensing gate (the whole pak is MIT); this report only shows where
 it is.
 
 ## Replaced text
