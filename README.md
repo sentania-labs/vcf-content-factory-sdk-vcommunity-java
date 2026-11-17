@@ -6,6 +6,8 @@ to your clusters, hosts, VMs, datastores and vCenters, with 52 dashboards, 170 v
 It is a Java rewrite of the community [vCommunity pack](#credits). Metric and property names are unchanged, so
 history carries over from the Python pack.
 
+Built using the [VCF Content Factory](https://github.com/sentania-labs/vcf-content-factory).
+
 ## Status
 
 **3.0.0.29 is a preview for evaluation.** Expect rough edges, and please report what you find as
