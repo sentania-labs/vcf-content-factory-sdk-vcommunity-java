@@ -83,7 +83,7 @@ dashboards, views, reports, alerts and symptoms ship from that repo.
 | `entry_class` | `com.vcfcf.adapters.vcommunity.VCommunityAdapter` |
 | `name` | `VCF Content Factory vCommunity` |
 | `description` | one paragraph, written new: Java port of the vCommunity management pack; pushes the `vCommunity|` keys onto the vCenter adapter's own objects; three own kinds; attribution sentence "Port of vCommunity by Onur Yuzseven (github.com/vmbro/VCF-Operations-vCommunity) as continued by e1-rahabok (github.com/e1-rahabok/VCF-vCommunity-Adapter) 0.8.1." |
-| `version` | `1.0.0`; dev builds stamp `0.0.0.<build>` (RULE-014); the release is the repo CI on a `v*` tag |
+| `version` | `3.0.0` (the first release is 3.0.0.29); dev builds stamp `0.0.0.<build>` (RULE-014); the release is the repo CI on a `v*` tag |
 | `tier` / `released` | `2` / `false` |
 | `vendor` | `VCF Content Factory` (explicit, so the line is reviewable) |
 | `vendor_contact` | omit while the repo is private |
@@ -122,7 +122,7 @@ confirm no lab instance still registers that kind; if one does, uninstall it fir
 
 ### 2.1 Adapter instance kind `vcfcf_vcommunity` (type 7), `monitoringInterval="5"`, `credentialKind="vsphere_user"`
 
-The 19 fields keep upstream's keys, types, defaults, enums and required flags. Identifying = no `identType`
+The 18 fields keep upstream's keys, types, defaults, enums and required flags, except that upstream's `vcenter_tls_validation` and `vcenter_thumbprint` are replaced by `allowInsecure` (DV-114). Identifying = no `identType`
 (main form, part of account uniqueness); advanced = `identType="2"` (Advanced Settings; works because each
 is `required="false"` or has a non-empty default, `knowledge/context/python_integration_sdk.md` 2.3).
 Labels are configuration parity and are listed; descriptions are written new by the author (short,
@@ -136,8 +136,7 @@ factual, no upstream prose).
 | 3 | `vm_adv_settings_config_file` | string | false | `vm_advanced_parameters` | | identifying | VM Advanced Parameters Config File |
 | 4 | `vm_configuration_config_file` | string | false | `vm_options` | | identifying | VM Options Config File |
 | 5 | `port` | integer | true | `443` | | advanced | Port |
-| 6 | `vcenter_tls_validation` | string | false | `Trust on First Use` | `Trust on First Use`, `Enabled`, `Pinned` | advanced | vCenter TLS Validation |
-| 7 | `vcenter_thumbprint` | string | false | none | | advanced | vCenter Thumbprint (SHA-256) |
+| 6 | `allowInsecure` | string | false | `false` | | advanced | Allow Insecure SSL |
 | 8 | `cluster_check_period_hours` | string | false | `24` | `01`,`02`,`04`,`06`,`08`,`12`,`24` | advanced | Cluster Check Period (hours) |
 | 9 | `periodic_cluster_check_time` | string | false | `00:00` | | advanced | Cluster Check Time (UTC) |
 | 10 | `cluster_check_worst_percent` | integer | false | `5` | | advanced | Cluster Check Worst Percent |
@@ -152,9 +151,9 @@ factual, no upstream prose).
 
 Parsing (`VCommunityConfig`, SDK-free) follows the map's Configuration table exactly: the same fallbacks
 (period 24, time 00:00, worst 5, monster 50/40/256) with one WARN per field per cycle (upstream logs period
-twice; DV-53), case-insensitive TLS modes, empty TLS mode = default, `"6"` and `"06"` both accepted,
-`serviceMonitoring`/`winEventMonitoring` compared case-sensitively with `Enabled` (parity). Thumbprint
-normalisation: strip whitespace, `:` and `-`, lowercase, hex only, length 64 or 128.
+twice; DV-53), only the text `true` (any case, not trimmed) turns certificate verification off, `"6"` and `"06"` both accepted,
+`serviceMonitoring`/`winEventMonitoring` compared case-sensitively with `Enabled` (parity).
+Removed fields: the old `vcenter_tls_validation` and `vcenter_thumbprint` are never read, whatever an old account holds.
 
 Note for the author: whether the UI shows the enum *values* (`01`) or anything else for the period pulldown
 is not known for Tier 2 describe; ship the values as upstream's keys.
@@ -218,23 +217,39 @@ they land even when the vCenter object cannot be resolved. *Corrected after the 
 | `Collection|guest_vms_done` / `guest_vms_pending` | metric | count | guest phase progress (section 8) |
 | `Collection|last_error` | property | | first failure cause text, credential-free; `None in the last cycle` when none |
 
-### 2.5 vCenter TLS: upstream modes on a Java in-collector adapter
+### 2.5 vCenter TLS: verified by default, one opt-out (DV-114)
 
-All three modes stay as configured values (configuration parity). One SDK-free class `VcenterTls` builds the
-`SSLSocketFactory` and hostname verifier for the SOAP client, the REST client and the certificate probe.
+The vCenter connection is verified by default, as the built-in adapters and the other VCF Content Factory paks (unifi,
+synology) do it; upstream's three modes (Trust on First Use, Enabled, Pinned) and the thumbprint field are gone. One SDK-free
+class `VcenterTls` builds the `SSLSocketFactory` and hostname verifier for the SOAP client and the REST client (the
+certificate probe is separate, below).
 
-| Mode | Upstream | Java | Identical? |
-|---|---|---|---|
-| Trust on First Use | no check before login; certificate watched afterwards | trust-all trust manager and all-true hostname verifier, built per instance (same posture as the framework's `insecureSslContext()`), on SOAP and REST; the per-cycle probe feeds the Certificate keys | Yes on the wire. Same weakness (credentials sent before any check); flagged to the owner (Q6). FIPS 9.1 collector: E15 |
-| Enabled | system trust store (SOAP), certifi bundle (REST), TLS 1.2+, hostname checked | platform trust: `getPlatformSslContext(host)` (chain against the instance's trust, including certificates the admin accepts in the Validate Connection dialog) plus the framework name check (`CertificateNames.secure(conn, factory)` on every `HttpsURLConnection`); `certificateCheckUrls` returns `https://<host>:<port>` in this mode only, so the accept dialog appears | **No.** Trust anchors differ (collector trust plus accepted certificates, not the proxy OS store or certifi). A self-signed vCenter that upstream refuses can be accepted here. Name checking is equivalent. DV-52 |
-| Pinned | pyVmomi thumbprint compare before anything is sent; REST pinned with SHA-256 only | adapter-managed `X509TrustManager`: SHA-256 (64 hex) or SHA-512 (128 hex) of the leaf DER equals the normalised field, chain and name ignored, checked during the handshake before credentials. Used by SOAP and REST alike | Yes for SOAP. REST also accepts a 128-hex pin (DV-51). Invalid or empty pin in Pinned mode: the cycle fails with a credential-free message naming the field (same as upstream SOAP; upstream REST skipped libraries) |
+| Setting | Java | Differs from upstream |
+|---|---|---|
+| `allowInsecure` not `true` (the default) | platform trust: `getPlatformSslContext(host)` (the chain against the instance's trust, including certificates the admin accepts in the Validate Connection dialog) plus the name check: the trust manager `getPlatformSslContext(dialledHost)` returns (chain, then name, during the handshake) and the framework's strict verifier `CertificateNames.secure(conn, factory)` on every `HttpsURLConnection`, which makes the JDK's own post-handshake name check final; `certificateCheckUrls` returns `https://<host>:<port>` so the accept dialog appears; `certificateFailureMessage` says what to do for an unaccepted certificate and for a name mismatch. Credentials are sent only after both checks pass | **Yes.** Upstream's default was Trust on First Use (credentials before any check). Trust anchors are the collector's trust plus accepted certificates. DV-52, DV-114 |
+| `allowInsecure` = `true` | trust-all trust manager and all-true hostname verifier (the same posture as the framework's insecure context), on SOAP and REST; Test Connection and the configure log warn; the guest phase does not run (DV-103) | Same wire behaviour as upstream's Trust on First Use, now an explicit opt-out |
 
-- The per-cycle probe (`ThumbprintProbe`): one raw TLS handshake to `host:port`, trust-all, 10 s timeout,
-  nothing sent after the handshake, SHA-256 of the leaf DER, lowercase hex. Every mode. Failure: presented
-  thumbprint unknown, counted (cause `F-CERT-PROBE`), Certificate Status withheld (DV-23).
-- `certificateFailureMessage` override: point at the vCenter TLS Validation field and its three modes.
-- Unknown mode text (not one of the three after case folding): the cycle fails at configure with a message
-  naming the field (parity).
+- The per-cycle probe (`ThumbprintProbe`): one raw TLS handshake to `host:port`, trust-all, 10 s timeout, nothing sent after
+  the handshake, SHA-256 of the leaf DER, lowercase hex. It runs in both settings (it reads the presented certificate, it does
+  not trust it), so the Certificate keys are published whether or not verification is on, on every cycle that connects. The
+  probe runs after the login (step A2 of the cycle), so with verification on a certificate the collector does not trust fails the
+  login first and nothing is published that cycle: `Changed` appears only for a new certificate the collector already trusts, and an
+  untrusted renewal is a login failure. Failure: presented thumbprint unknown, counted (cause `F-CERT-PROBE`),
+  Certificate Status withheld (DV-23).
+- **Live results (2026-11-16).** Build 27 on 8.18.7: an upgraded account failed closed on its first cycle (no vCenter login), the
+  accept dialog fixed it, and the old identifiers were gone right after the upgrade. Build 27 on 9.0.2: the lab CA was already
+  trusted, so no dialog and a verified first cycle. Build 29 on 9.1.1 (fresh install, FIPS collector): the dropdown defaults
+  preselected (DV-115), accept dialog, four clean verified cycles. Not generalised: build 29 was installed on 9.1.1 only, and
+  the dropdown preselection was seen on 9.1.1 only. Three preview behaviours were found and left open: a new account with an
+  untrusted certificate shows no failure on the account (#34), the failure sentences are cut off in the log (#35),
+  and Validate Connection shows no warning with Allow Insecure SSL on (#36). Details: `docs/installing.md`, "TLS".
+- Failure sentences (`TlsFailure.explain`): untrusted chain (accept it in Validate Connection), a name the certificate does not
+  carry (enter a name that is on it; accepting does not help), expired or revoked; each also under the FIPS provider's own alert
+  shape, which is why the walk follows causes and suppressed exceptions.
+- FIPS 9.1 collectors (E15): the default path is the platform's own trust, which already works there. The trust managers that
+  remain are `TrustAllManager` (Allow Insecure SSL, and the probe) and `PinnedTrustManager`, now only the ESXi host channel of
+  the guest phase; nothing else depended on the removed Trust on First Use and Pinned modes (the probe and the guest phase
+  were checked).
 
 Guest file-transfer TLS (section 8.4) is a second, separate trust manager.
 
@@ -401,10 +416,10 @@ older vCenter) is handled the same way.
 com.vcfcf.adapters.vcommunity
   VCommunityAdapter            SDK: lifecycle, describe, test, discover, collect, ports wiring
   OpsPort                      SDK: SuiteApiStitcher adapter (reads, pushes, events)
-  VCommunityConfig             19 fields, credential, fallbacks, warnings
+  VCommunityConfig             18 fields, credential, fallbacks, warnings
   CycleEngine                  phases A-F, deadline, pools, Failures
   vim/   VimSoapClient, VimResult, BulkReader (StAX), BulkRow, MoRef, VDevice, GuestOpsClient
-  tls/   VcenterTls, PinnedTrustManager, ThumbprintProbe, GuestTls, CertificateState
+  tls/   VcenterTls, TrustAllManager, PinnedTrustManager (ESXi channel only), ThumbprintProbe, GuestTls, CertificateState
   ops/   OpsResourceMap, OpsReads (latest stats/properties/history parsers), PushSet, LastPushed, EventBatch
   inv/   Inventory, Membership (VM->host->cluster->Datacenter by MoRef)
   coll/  ClusterCollector, HostCollector, VmCollector, DatastoreCollector, VCenterCollector,
@@ -588,8 +603,8 @@ Plain-JDK tests cover every class outside the two SDK-marked ones, with fixtures
   (`collectRelationships`). Discovery alone (`getDiscoverer`) delivers only the collector and reads nothing.
 - **REST.** `RestClient` (login `POST /api/session` Basic, `GET` with the `vmware-api-session-id` header,
   `DELETE /api/session` in a `finally`) takes the account's `VcenterTls`, the same object the SOAP session and the
-  probe use, so Trust on First Use, Enabled (platform trust and name check) and Pinned (SHA-256 or SHA-512,
-  compared before the Basic header is sent) apply to it and there is no other way to connect. One REST session
+  probe use, so the verified posture (platform trust and name check, decided before the Basic header is sent) or Allow Insecure SSL
+  applies to it and there is no other way to connect. One REST session
   per cycle (parity), 10 s connect, 60 s read, 16 MiB per answer, redirects off. `LibraryReader` reads libraries and
   items on a pool of 4 (DV-46 isolation); the list calls answer identifiers only and the API does not page them,
   so a library of N items costs N calls, each checked against the cycle deadline. Each answer is cut down to the
@@ -690,6 +705,7 @@ Added on the same object (additive; alerts may use them):
 | `vCommunity|Collection Health|Objects Not Matched` | metric | vCenter objects with no unique Ops resource |
 | `vCommunity|Collection Health|Cycle Seconds` | metric | cycle wall time |
 | `vCommunity|Collection Health|First Failure` | property | first rule-1 cause text; `None in the last cycle` when none |
+| `vCommunity|Collection Health|Configuration Warnings` | property | (DV-115; not an upstream key, so it has no row in the key map or the coverage table; it is asserted in `HealthTest` and `EngineTest.configurationWarnings`) each setting whose value is not allowed, the value and what is used instead, one text; `None in the configuration` when every setting is usable. Outside `Warnings in Last Cycle`; pushed with the other health properties (on change, full refresh every 12th cycle) |
 | `vCommunity|Collection Health|Collector:<name>|Status` | property | `OK`, `PARTIAL`, `FAILED`, `SKIPPED` (switched off or prerequisite failed), `NOT RUN` (deadline); `<name>` in `cluster, host, vm, datastore, vcenter, world, datacenter, library, template, business_applications, check_lists, guest, kpi` |
 | `vCommunity|Collection Health|Collector:<name>|Failures` | metric | rule-1 count for that collector |
 | `vCommunity|Collection Health|Collector:<name>|Causes` | property | the distinct failure causes of that collector with the number of failed reads of each, in the order first seen, at most 8 and 250 characters: `F-HOST-INSTALLDATE x1; F-HOST-PACKAGES x1`; `None in the last cycle` when none. *Added in build 9 so that a differential can say which reads failed from the health keys alone.* The account also carries every collector's causes in one line in `Collection|failure_causes` |
@@ -822,8 +838,8 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-48 | template datastore and folder names read per object | from bulk reads | cost | none |
 | DV-49 | every property pushed every cycle | properties on change, full refresh every 12th cycle and after start | bytes | property sample timestamps update less often; values identical |
 | DV-50 | own kinds under adapter kind `vCommunity` | under `vcfcf_vcommunity`; content subjects re-pointed | new kind (lesson: no cross-runtime upgrade) | own objects are new objects; no history carried |
-| DV-51 | Pinned REST accepts SHA-256 only | SOAP and REST accept SHA-256 or SHA-512 | one trust manager | a 128-hex pin also works for libraries |
-| DV-52 | Enabled uses the proxy OS trust store (SOAP) and certifi (REST) | platform trust plus the accept dialog | in-collector adapter | a self-signed vCenter can be accepted in Validate Connection |
+| DV-51 | Pinned REST accepts SHA-256 only | **removed with Pinned (DV-114)**: there is no vCenter pin any more | one trust manager | none |
+| DV-52 | Enabled uses the proxy OS trust store (SOAP) and certifi (REST) | platform trust plus the accept dialog (now the default, DV-114) | in-collector adapter | a self-signed vCenter can be accepted in Validate Connection |
 | DV-53 | invalid instance fields warned twice per cycle | once | noise | one warning |
 | DV-54 | 101 views that are edited built-in views ship under built-in ids; 19 renamed built-ins ship under built-in ids | **superseded 2026-11-14 (10.1):** every content id is minted in this pak's namespace `vcfcf_vcommunity`; the 101 views have new descriptions (nine with new titles) under new ids; the 19 are not shipped, referenced in place by their built-in ids | `pak-content-must-not-reuse-stock-ids.md` | installing or removing the pak never overwrites or deletes built-in views; 101 views have new descriptions and nine new titles |
 | DV-55 | (only if Q1 is accepted) `None`/`null` sent while a feature is off | on a set-to-unset transition, `""` pushed once | a property keeps its last value forever | a turned-off feature's settings show blank, not their old values |
@@ -875,7 +891,7 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-100 | the guest keys, the events and the health keys are one result | the main push does not wait for the guest phase: the values, events and `Collector:guest|Status`, `|Failures`, `|Causes` follow in a push of their own; the vCenter's aggregate health keys of that cycle (`Reads Failed in Last Cycle`, `Values Withheld`, `First Failure`, `First Warning`) were sent before it ran; the account's `Collection|reads_failed`, `failure_causes` and `last_error` include it | a slow guest must not delay the other keys | look at the `Collector:guest|*` keys for guest failures |
 | DV-101 | a Windows VM whose tools are not OK is skipped in silence | a powered-on Windows VM whose tools are not OK is counted (`F-GUEST-TOOLS`, the collector is PARTIAL) | report honestly | health shows how many were not asked and why |
 | DV-102 | the script is uploaded as a file and started with `-Command`; the event list file is made with `CreateTemporaryFileInGuest` | no script file: the program is `-EncodedCommand` text (8.3); the input and the output are each a file the guest names (`CreateTemporaryFileInGuest`, our prefix and suffix, a name that must have the expected form), inside the directory the guest names (its path must have the expected form); the output file exists before the program runs, so the program always writes its header line and an output with no header is a failure (`F-GUEST-PARSE`), never "none found"; the sent input is checked by a listing of its name and size; the program's working directory is `C:\\Windows\\Temp`, so the directory can be removed after the program is stopped | nothing is written under a name chosen here, nothing a local user can swap for code; none found is told from did not run | none |
-| DV-103 | the Windows account is sent to vCenter whatever the vCenter TLS mode, Trust on First Use (the default) included | the guest phase does not run while vCenter TLS Validation is Trust on First Use: health `Collector:guest|Status` FAILED with `F-GUEST-TLS-MODE`, Test Connection says so as a warning when a guest switch is on, and nothing is sent to vCenter. Enabled or Pinned runs it. One named constant, `GuestPlan.REQUIRE_CHECKED_VCENTER_TLS`, reverses this (the phase then runs and warns once per start) | a Windows account is usually more privileged than the read-only vCenter account, and in that mode it would cross a connection nobody checked (owner decision Q6 covers the vCenter account only) | enabling guest monitoring needs vCenter TLS Validation changed to Enabled or Pinned first |
+| DV-103 | the Windows account is sent to vCenter whatever the vCenter TLS mode, Trust on First Use (the default) included | the guest phase does not run while Allow Insecure SSL is on: health `Collector:guest|Status` FAILED with `F-GUEST-TLS-INSECURE` (this was `F-GUEST-TLS-MODE` under Trust on First Use), Test Connection says so as a warning when a guest switch is on, and nothing is sent to vCenter. With the default (verified) it runs with no extra TLS setup. The constant `GuestPlan.REQUIRE_CHECKED_VCENTER_TLS` that reversed this is deleted | a Windows account is usually more privileged than the read-only vCenter account, and with verification off it would cross a connection nobody checked | enabling guest monitoring needs Allow Insecure SSL off and the vCenter certificate accepted |
 | DV-104 | a fixed look-back of five minutes for every VM, every cycle | the look-back is the time since that VM's events were last read, plus a minute, between 5 and 60 minutes; a VM last read longer ago than that is looked at for the 60 and the minutes before are counted (`F-GUEST-WINDOW`, collector PARTIAL). Records are still the newest one per (log, event id), as upstream's `-MaxEvents 1`. A VM is asked every collection when the time allows, as upstream's serial run does within its 1800 s, so this only matters at scale (DV-43) or after a gap | events of collections in which a VM was not reached would otherwise be skipped for good | fewer silently missed events |
 | DV-105 | the Cluster Delta counts are published once per window, as the stored samples say (DV-86, no memory) | the same, plus a memory of 30 minutes after a clean push of the counts: Operations does not read a stored value back at once (a minute or four, so the next collection, five minutes later, may still not see it), and the read-back alone sent the same counts twice (two consecutive collections after a restart, third live differential, L2). After the 30 minutes the read-back decides again, so counts that never landed are sent again | L2 | one publication per window |
 | DV-106 | the 101 views that began as edited built-in views ship under built-in ids (released 0.8.1) | **retired 2026-11-14 (10.1):** build 16 and earlier kept the ids of the corrected upstream build (pull request 92, `--ids keep`), which would have been shared with upstream if merged. From build 17 every content id is minted in `vcfcf_vcommunity` (`--ids mint --mint-namespace vcfcf_vcommunity`; `docs/design/inputs/import-report/id_map.tsv`), so no id is shared with any Python pack line | the owner's decision (1) below; also avoids burned symptom ids (10.1b) | no sharing, so no overwrite or shared deletion; the co-install outcomes of earlier builds no longer apply, the pak states plainly that side by side is unsupported (installing guide, "Moving from the Python pack") |
@@ -886,6 +902,8 @@ Every place the Java pak intentionally differs from upstream 0.8.1. "Effect" is 
 | DV-111 | a DRS Score of 0 while DRS is off or the score is negative (Q9), a Number of HBA of 0 and a SCSI Controllers Count of 0 when the list was not returned | nothing is sent in those cases: with DRS off there is nothing to score, and 0 is the worst score; a negative score is outside the 0 to 100 scale and is taken to mean "no score yet" (an assumption, not a documented value); a host or VM whose adapter or device list was not returned has an unknown count, not zero. A DRS score of 0 vCenter gave with DRS on, and a list that came back empty (a real count of 0), are still sent. A DRS score is counted as withheld only when the cluster summary or its DRS setting could not be read, not when DRS is off. An unknown HBA or SCSI count is counted as a withheld value. Number of Effective Hosts and the P3 figures R229, R230, R233, R244, R250-R252 followed in DV-112 | the zero stood for "does not apply" or "unknown", on a scale where it means the worst or an empty set | a chart or average over clusters no longer counts a DRS-off cluster as badly balanced; HBA and SCSI counts appear only when known. **A key that is no longer sent keeps its last stored value in VCF Operations** (a pushed key cannot be deleted): after the upgrade every DRS-off cluster keeps the 0 it had, every host whose HBA list is not returned keeps its "0", and a cluster that turns DRS off keeps its last real score, until the value ages out of each widget's window. The installing guide says so in its upgrade notes |
 | DV-112 | **the Q8 and Q9 families.** A value vCenter answered without (unset, not returned, null) is published as a placeholder: the texts `None`, `null`, `[]`, `N/A`, `Unknown`, the empty text for an absent library, item or template field, and a 0 or `0.0` for an unset count, timeout or size. every key of the kinds below. The rows a test saw send nothing when unset are marked in `docs/p2-key-coverage.tsv` and `docs/p3-key-coverage.tsv` (derived from what the sweep and the scenarios observed; the final count is in the CHANGELOG) | an unset value is not sent at all: no placeholder of any kind, no 0, and it is not counted as withheld and raises no warning. This is what the stock vSphere adapter does (owner decision 2026-11-16) and restores DV-08 to DV-18 and DV-22 as first planned (DV-18 as stated here). The seams `UNSET_AS_UPSTREAM`, `ABSENT_OWN_TEXT_IS_EMPTY`, `TOOLS_ALWAYS_NONE`, `DUPLEX_HALF_WHEN_DOWN`, `EMPTY_DATACENTER_COUNT_IS_ZERO`, `NEGATIVE_ONE_STAT_IS_A_VALUE` and `STALE_HOST_VALUE_COUNTS_AS_ZERO` (Q1, Q8, Q9, Q10, Q12, Q13, Q16) and the helpers `orNone`, `orNull`, `orText`, `scalarOrNone`, `ownText` and `strippedIfTruthy` are deleted, not switched. What stays in `Quirks.java` changes how a real value is read or counted (blank text, PCI id format, a -1 timeout, the Virtual Disk rule, repeated items, the Business Application rule, no availability when no host answered), never what stands in for a missing one. A value that could not be read is still withheld and counted, and a failed read stays a failure; only "answered without" changed. What a read that worked can return, family by family: **a returned empty or blank text** (a vCenter setting, an HBA model, a customization status, a library description) is a value and is sent as the stripped text, the empty text included; **an unset path or a missing element** sends nothing; **a feature that is switched off** (HA off, DRS off, EVC off) sends none of the settings that do not apply; **a returned 0, `false`, or an empty list** is a real value and is sent (an HBA list that came back empty is a count of 0; a SCSI count of 0; a Search Domain list with no entry sends nothing, because it carries no domain); **a Detailed Data field that came back empty** is the empty text; **a cluster with no summary at all** sends neither EVC key (EVC Enabled is `False` only for a summary that came back without a mode), **a link that is down or has no duplex flag** sends no Duplex, **a DNS configuration without the DHCP flag**, **a disk without a backing**, **an adapter without an address type**, **a NIC without a PCI device** send nothing for what they lack. Datastore Number of Extents is sent only for a datastore that has VMFS information (an NFS, vSAN or vVol datastore has no extent list, so no count), and an unset VM Op Notification Timeout sends nothing (a value read below zero is still 0, Q5). **Content Library**: Items Not Stored Locally and Total Size are sent only when every item of the library carries the field (an empty library has a real 0 of each); Items Not Security Compliant counts the items that have a compliance verdict (an item with no verdict cannot be non-compliant) and is not sent when none has one. A partial figure would read as the whole, so none is sent. Whether items usually omit the flags is still E-L1. **Also brought in line, because they invent a value for an input that is unset or does not apply:** Q1 (the Tools settings were the text `None` on every VM), Q10 (Duplex `half-duplex` for a down link or a missing flag), Q12 (a Datacenter count of 0 when no member host was measured), Q13 (-1, the "no sample" marker, scored as a perfect reading) and Q16 (a World count of 0 when no stored host value is fresh). Kept, because they only change how a real value is read or counted: Q2 (no disks for a VM without a network adapter), Q3 (signed PCI ids), Q4 (blank text as it is), Q5 (-1 timeout to 0), Q6 (the detailed-data cut), Q7, Q11 (repeated items counted twice), Q14 (Business Application takes the higher), Q15 (no availability when no host answered), Q17 (fixed by content) | restores what was planned: the keys carry what vCenter said, and a placeholder cannot be mistaken for a value | a key vCenter answered without is absent instead of `None`, `null`, `[]`, `N/A`, `Unknown`, empty or 0. **A key that is no longer sent keeps its last stored value in VCF Operations** (a pushed key cannot be deleted), so the placeholders sent by the Python pack and by earlier builds remain on existing objects until a real value overwrites them; the installing guide says so. Content that filtered on a placeholder text would stop matching (none ships; the shipped content was checked) |
 | DV-113 | Worst ESXi Memory Tiering Latency (R173) scores the raw `mem:NVMe\|latency.read_latest` against limits of 150 to 600 microseconds | the statistic is in **nanoseconds** (VCF Operations declares unit ns for `mem\|latency.read_latest`; the vCenter counter is `mem.latency.read`, id 129, unit nanosecond; measured on 9.1.1: about 283,000 in Operations on esx02, 61,692 to 356,302 in vCenter 20 second samples), so it is divided by 1,000 before it is scored and published. A 0.0 (esx01 reports it) is a real reading and stays; a -1, the "no sample" marker, is no reading (the read drops it before the division, Q13 is gone), so the host is left out of the cluster maximum and nothing is published for it (it used to show as -1, and after the division would have shown as 0.0) | defect in the original: every real value was 1,000 times the limit, so the row was pinned at the worst score whenever the tier was read (UB-5) | the published figure is now in microseconds, the unit its label and limits always said; the history of this key shows a step down by a factor of 1,000 at the upgrade, and the Periodic Cluster Check's worst-5 % risk and closed-for-business flag are built on Cluster Risk Score samples, so the pinned scores from before the upgrade colour one window. No shipped dashboard, view or report charts it. Cluster Risk on tiered clusters stops being pinned at the worst score by this row |
+| DV-114 | upstream's vCenter TLS Validation (Trust on First Use by default, Enabled, Pinned) and the vCenter Thumbprint field | the vCenter certificate is verified by default (platform trust with the framework name check, accept in Validate Connection); one advanced opt-out `allowInsecure` (default `false`, the key, label and type of the other VCF Content Factory paks) turns trust and name checks off; Trust on First Use and Pinned are removed and nothing reads the old two fields, so there is no hidden third mode. Guest monitoring does not run while it is on (DV-103). The Certificate keys are published in both settings. The ESXi host check of the guest phase (Pinned, Strict, Disabled) is unchanged | owner decision 2026-11-16: behave like the built-in adapters and our other paks; upstream's default sent credentials before any check (Q6, now resolved) | a new account verifies; an account made on an earlier development build becomes verified on upgrade and fails with "not trusted by this collector" until the certificate is accepted (installing guide, "Upgrading from a development build"); describe identifiers: `vcenter_tls_validation` and `vcenter_thumbprint` removed, `allowInsecure` added (all `identType="2"`, so the account's identity is unchanged) |
+| DV-115 | a setting left alone is stored by the 9.1.1 form as the text `null` (no choice is preselected) and the pak read it as a value that is not allowed, warning on every cycle | an absent, blank or `null` (any case, trimmed) value is "not set" for every optional setting and takes the default silently; `describe.xml` flags the default `<enum>` choice with `default="true"`; a value that is not allowed warns once per configuration change in the account log, not through the cycle counter, and is published as the vCenter property `vCommunity|Collection Health|Configuration Warnings` (outside the counter) and shown by Test Connection; an invalid On/Off value is warned (it was silently Disabled); a blank check-list file field still reads no file (DV-62) | the form and the platform store `null`; a per-cycle WARN made Collection Health show a warning for as long as the value stood | `ConfigTest.unsetValues` (absent, blank, `null`, valid, invalid for each enumerated and numeric field, the file fields and Allow Insecure SSL); `DescribeTest` (default flag); `EngineTest.configurationWarnings`, `HealthTest` |
 
 
 Superseded by quirk Q9 and Q8 (P2 and P3 live fixes, builds 7 to 10) and **restored by DV-112 (build 25)**: DV-08, DV-09, DV-11, DV-12, DV-13 (an unset patch level, share level and backing send nothing), DV-14, DV-16 (also DV-111), DV-17 (text and figures) and DV-18 (the library counts, with the rule stated in DV-112); by Q10: DV-15. DV-10 stands: a failed `installDate` call is withheld and counted, and no image manager or no date sends nothing.
@@ -1301,7 +1319,7 @@ real vim25 client and a real TLS transfer against a fake vCenter and ESXi host t
     deadline; at 20 s past it a VM still being asked is interrupted (DV-96); an interrupt stops the phase, removes what it made and is
     passed on.
   - *Failures:* per VM, counted with their cause (`F-GUEST-TOOLS`, `-UNAVAILABLE`, `-AUTH`, `-TIMEOUT`, `-EXIT`, `-START`, `-UPLOAD`,
-    `-DOWNLOAD`, `-TLS`, `-TLS-MODE`, `-TOOLARGE`, `-HEADER`, `-PARSE`, `-ROW`, `-QUERY`, `-WINDOW`, `-DIRECTORY`, `-CLEANUP`); a failed program publishes nothing, and
+    `-DOWNLOAD`, `-TLS`, `-TLS-INSECURE`, `-TOOLARGE`, `-HEADER`, `-PARSE`, `-ROW`, `-QUERY`, `-WINDOW`, `-DIRECTORY`, `-CLEANUP`); a failed program publishes nothing, and
     nothing is ever "stopped" or "no events" because of a failure.
 - **Not built:** the explicit-cancel fallback for events if G5 shows no auto-cancel (8.6); a sweep of directories a crashed or
   restarted collector left in a guest (the memory of leftovers is not kept across a restart); DV-55 (Q1 is still undecided, so the blank-once on switch-off is not implemented and the feature-off properties
@@ -1460,10 +1478,10 @@ later release; mint a new one.
 
 ### 10.1c Versioning
 
-Dev builds are stamped `0.0.0.N` (RULE-014); this build is `0.0.0.19`. The released line is to be labelled 3.0.x: Onur's pack is the 1.x
-line, Ewan's the 2.x line, this port the 3.x line. The version scheme and build numbers are unchanged by this record. Where the release version is
-set: `version` in `adapter.yaml` (currently `1.0.0`, to be changed to the 3.0.x value) and the `v*` git tag the repository's CI builds from; the dev stamp
-`0.0.0.<build_number>` comes from `build_number` in `adapter.yaml`. Not changed here.
+Dev builds are stamped `0.0.0.N` (RULE-014). The released line is 3.x: Onur's pack is the 1.x line, Ewan's the 2.x line, this port the 3.x line. The first
+release is **3.0.0.29** (a preview): `version: 3.0.0` and `build_number: 29` in `adapter.yaml`, tag `v3.0.0.29` (the release workflow requires the tag to equal
+`v<version>.<build_number>`). The build number is carried forward, not restarted (owner decision 2026-11-16): the lab has dev build `0.0.0.26` installed, and a `0.0.0.1`
+would be a downgrade, so the build under 3.0.0 is 29 (27 and 28 were earlier numbers under 3.0.0) and dev builds stamp `0.0.0.29`; the development builds 1 to 26 were under `1.0.0`. The dev stamp `0.0.0.<build_number>` still comes from `build_number`.
 
 **Minimum product version (owner decision, 2026-11-14, verbatim):** "Also, minimum version should just be 8.18.x, not 8.18.7." The pak states VCF Operations /
 Aria Operations 8.18.x as its minimum; 8.18.7, 9.0.2 and 9.1.1 remain the tested versions and the versions of the lab measurements. The built manifest's
@@ -1576,7 +1594,7 @@ tolerance for timing-skewed KPIs); every difference must map to a DV id listed i
 | Phase | Scope | Exit proof |
 |---|---|---|
 | P0 Prerequisites | managed_paks entry; T1, T2, T3 in the framework (tooling, framework-reviewer, PR); kpi table and content inventories committed (insufficiencies 1-3); recon for Q8 | registry reader lists the pak; buildkit release carrying T1-T3 |
-| P1 Skeleton and configuration parity | describe.xml (2.1-2.4), `VCommunityConfig`, TLS modes, probe, session, `vCommunityCollector`, Test Connection (login, Suite API reachability, each check-list file's outcome and item count in the result message), health keys, self metrics | account dialog on 9.0.2 matches 0.8.1 field for field (labels, defaults, enums, main vs Advanced) seen in a browser; Test Connection passes in all three TLS modes against a lab vCenter and fails with the right text for a wrong pin; collector object DATA_RECEIVING; self metrics present |
+| P1 Skeleton and configuration parity | describe.xml (2.1-2.4), `VCommunityConfig`, TLS (verified by default), probe, session, `vCommunityCollector`, Test Connection (login, Suite API reachability, each check-list file's outcome and item count in the result message), health keys, self metrics | account dialog on 9.0.2 matches 0.8.1 field for field (labels, defaults, enums, main vs Advanced) seen in a browser; Test Connection passes in all three TLS modes against a lab vCenter and fails with the right text for a wrong pin; collector object DATA_RECEIVING; self metrics present |
 | P2 Properties | 4.3-4.8 and 4.10 property rows, licensing mask, check lists, VM Options isolation | differential over the property rows: equal or registered; a deliberately bad VM Options entry costs only its key |
 | P3 Own objects | libraries, items, templates, relationship, traversal | objects, identifiers, Content Library > Library Item in the UI tree; differential on R227-R252. **Built in build 7** (4.11.1, `docs/p3-key-coverage.tsv`); the live proof is still to run |
 | P4 Derived metrics | section 7, 4.9, 4.12, Datacenter, resource pools, port groups, periodic check across one full window | fixture tests green; differential within tolerance over 24 hours with at least one periodic window and one Delta. **Built in build 10** (7.4, `docs/p4-key-coverage.tsv`); the live proof is still to run |
@@ -1601,7 +1619,7 @@ Each with a recommendation; none blocks P0-P1.
 | Q3 | Disconnected hosts (issue 86): upstream stops publishing their Availability. | Publish Operational Availability for every host of the vCenter (DV-58); keep vim25 host properties skipped. |
 | Q4 | World and Business Application keys: every pak instance computes and writes the same values (parity, last writer wins with equal values). | Keep parity for 1.0; measure the World cost in P7; add a freshness gate only if it is material. |
 | Q5 | VM Template objects only exist upstream when the VMware adapter also models the template as a VM. | Create one for every vCenter template (DV-47). |
-| Q6 | vCenter TLS default stays Trust on First Use (configuration parity), which sends credentials before any check. | Keep the default for 1.0 as decided; make Enabled the default in 1.1 once the accept dialog is proven on all three lines. |
+| Q6 | vCenter TLS default stays Trust on First Use (configuration parity), which sends credentials before any check. | **Resolved (DV-114, 2026-11-16):** the default is verified, Trust on First Use and Pinned are removed, and Allow Insecure SSL is the one opt-out. |
 | Q7 | RULE-011 for 52 ported dashboards. | One HTML mock per dashboard generated from the upstream definition, approved in batches by dashboard family in plan mode; the rule is met per dashboard, the review is batched. |
 | Q8 | `vcfcf_vcommunity` / `VCF Content Factory vCommunity` were the retired port's identity. | Keep the names; recon confirms no instance registers the kind before the first install. |
 | Q9 | Differential environment: e1 0.8.1 must run somewhere, and installing it as shipped overwrites 117 built-in views. | Collector-only build from the fork (content stripped) on one lab instance; never co-installed with the Java pak. |
@@ -1627,7 +1645,7 @@ Each with a recommendation; none blocks P0-P1.
 | E12 | Pushed timestamps returned by history reads (map gap 18) |
 | E13 | PCI `vendorId` sign on the wire and upstream's published text (map gap 11) |
 | E14 | License `expirationDate` time zone on the SOAP wire (map gap 10) |
-| E15 | 9.1.1 FIPS collector: custom trust managers (TOFU, Pinned, guest) and SHA-1 digest |
+| E15 | 9.1.1 FIPS collector: custom trust managers (guest, and the insecure and probe ones) and SHA-1 digest. The vCenter connection itself uses the platform trust by default, the path that already works there (DV-114) |
 | E16 | Cloud Proxy collector heap and reachability of vCenter 443 and ESXi 443 |
 | E17 | The 19 rename-only built-in views exist with the same ids on all three lines |
 | E-L1 | How often library items omit `cached` / `security_compliance` |

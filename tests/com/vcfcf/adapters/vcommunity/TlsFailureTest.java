@@ -1,10 +1,7 @@
 package com.vcfcf.adapters.vcommunity;
 
-import com.vcfcf.adapters.vcommunity.VCommunityConfig.TlsMode;
 import com.vcfcf.adapters.vcommunity.health.Reachability;
 import com.vcfcf.adapters.vcommunity.tls.PinMismatchException;
-import com.vcfcf.adapters.vcommunity.tls.PinnedTrustManager;
-import com.vcfcf.adapters.vcommunity.tls.Thumbprints;
 import com.vcfcf.adapters.vcommunity.tls.TlsFailure;
 import com.vcfcf.adapters.vcommunity.tls.VcenterTls;
 import com.vcfcf.adapters.vcommunity.vim.About;
@@ -22,10 +19,9 @@ import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSocketFactory;
 
 /**
- * TLS failures read for what they say, whatever the provider wrapped around
- * them (finding 2 of the 0.0.0.2 live run: under FIPS the pin message was
- * lost). The FIPS provider's alert is an IOException that is not an
- * SSLException; this test builds that shape without the provider.
+ * TLS failures to the vCenter read for what they say, whatever the provider wrapped around them. The FIPS
+ * provider's alert is an IOException that is not an SSLException; this test builds that shape without the
+ * provider. A pin mismatch is only the ESXi host channel of the guest phase now ({@link TlsFailure#findPin}).
  */
 public final class TlsFailureTest {
 
@@ -72,88 +68,42 @@ public final class TlsFailureTest {
         return new PinMismatchException("ab".repeat(32), 256);
     }
 
+    static Throwable untrustedChain() {
+        return new SSLHandshakeException("PKIX path building failed").initCause(
+                new java.security.cert.CertPathBuilderException("unable to find valid certification path"));
+    }
+
+    static Throwable nameMismatch(String host) {
+        return new SSLHandshakeException("No subject alternative names matching IP address " + host + " found")
+                .initCause(new CertificateException("No subject alternative names matching IP address " + host + " found"));
+    }
+
     public static void main(String[] args) throws Exception {
-        shapes();
+        pinShapes();
         loopsAndDepth();
-        otherModes();
+        explained();
         throughTheClient();
-        staleRecord();
     }
 
-    /** N1: a mismatch recorded on this thread is never reported on a later unrelated failure. */
-    static void staleRecord() throws Exception {
-        try (FakeVc vc = new FakeVc(FakeVc.happy())) {
-            PinnedTrustManager tm = new PinnedTrustManager("ab".repeat(32));
-            // a mismatch is decided on this thread, outside any client call
-            try {
-                tm.checkServerTrusted(new X509Certificate[] {vc.cert}, "RSA");
-            } catch (CertificateException expected) {
-                // recorded
-            }
-            VcenterTls tls = VcenterTls.forTesting(TlsMode.PINNED,
-                    new FailingFactory(() -> new java.net.ConnectException("refused")), tm);
-            try (VimSoapClient c = new VimSoapClient("localhost:" + vc.port(), "svc", "pw", tls, new T.RecLog(), 5000, 10000, 10000)) {
-                VimResult<About> r = c.ensureSession();
-                T.notContains(r.message(), "pinned", "a stale record is not a pin mismatch: " + r.message());
-                T.check(Reachability.isUnreachable(r.cause()), "it is the refusal it was");
-            }
-            // and a record the cause walk did not need is still taken, so it cannot outlive the call
-            PinnedTrustManager tm2 = new PinnedTrustManager("ab".repeat(32));
-            VcenterTls tls2 = VcenterTls.forTesting(TlsMode.PINNED, new FailingFactory(
-                    () -> new SSLHandshakeException("x") {
-                        private static final long serialVersionUID = 1L;
-                        { initCause(pin()); }
-                    }, () -> {
-                        try {
-                            tm2.checkServerTrusted(new X509Certificate[] {vc.cert}, "RSA");
-                        } catch (CertificateException expected) {
-                            // recorded
-                        }
-                    }), tm2);
-            try (VimSoapClient c = new VimSoapClient("localhost:" + vc.port(), "svc", "pw", tls2, new T.RecLog(), 5000, 10000, 10000)) {
-                T.check(!c.ensureSession().isOk(), "fails");
-            }
-            T.check(tls2.takePinMismatch() == null, "the record did not outlive the call");
-            T.throwsIae(() -> VcenterTls.forTesting(TlsMode.ENABLED, new FailingFactory(() -> null), null),
-                    "Enabled", "the test seam refuses Enabled");
-        }
-        T.done("a pin mismatch record never outlives its call nor colours a later failure");
-    }
-
-    static void shapes() {
+    /** The guest phase's ESXi channel still finds a pin mismatch under any wrapping. */
+    static void pinShapes() {
         PinMismatchException pm = pin();
-        // JDK shape: SSLHandshakeException with the pin as its cause
         Throwable jdk = new SSLHandshakeException("PKIX path validation failed").initCause(pm);
         T.check(TlsFailure.findPin(jdk) == pm, "JDK shape");
-        // FIPS shape: an alert that is no SSLException, the pin two causes down
-        Throwable fips = new TlsFatalAlert("certificate_unknown(46)",
-                new CertificateException("certificate rejected", pm));
+        Throwable fips = new TlsFatalAlert("certificate_unknown(46)", new CertificateException("certificate rejected", pm));
         T.check(!(fips instanceof SSLException), "the FIPS shape is not an SSLException");
         T.check(TlsFailure.findPin(fips) == pm, "FIPS shape, by cause");
-        T.eq(pm.getMessage(), TlsFailure.explain(fips, TlsMode.PINNED), "the pin text, whole");
-        // the pin only among the suppressed exceptions
         Throwable sup = new TlsFatalAlert("certificate_unknown(46)", null);
         sup.addSuppressed(new RuntimeException("closing", pm));
         T.check(TlsFailure.findPin(sup) == pm, "FIPS shape, by suppressed");
-        // a bare alert says what it is, the mode, and invents nothing
-        String bare = TlsFailure.explain(new TlsFatalAlert("handshake_failure(40)", null), TlsMode.TRUST_ON_FIRST_USE);
-        T.contains(bare, "TlsFatalAlert: handshake_failure(40)", "names the alert");
-        T.contains(bare, "Trust on First Use", "names the mode");
-        T.notContains(bare, "No credential", "claims nothing it cannot know");
-        // not TLS: nothing to say
-        T.check(TlsFailure.explain(new java.net.ConnectException("refused"), TlsMode.PINNED) == null, "refused");
-        T.check(TlsFailure.explain(new java.net.SocketTimeoutException("slow"), TlsMode.ENABLED) == null, "timeout");
-        T.check(TlsFailure.explain(null, TlsMode.PINNED) == null, "null");
-        T.done("a pin mismatch is found under any wrapping, causes and suppressed alike");
+        T.done("a pin mismatch (ESXi channel) is found under any wrapping, causes and suppressed alike");
     }
 
     static void loopsAndDepth() {
-        // a cause loop does not hang the walk
         Exception a = new Exception("a");
         Exception b = new Exception("b", a);
         a.addSuppressed(b);
         T.check(TlsFailure.findPin(a) == null, "a suppressed loop ends");
-        // a very deep chain is bounded, and a pin beyond the bound is not claimed
         Throwable deep = pin();
         for (int i = 0; i < 200; i++) deep = new IOException("w" + i, deep);
         T.check(TlsFailure.findPin(deep) == null, "bounded walk");
@@ -163,127 +113,156 @@ public final class TlsFailureTest {
         T.done("the walk is cycle safe and bounded");
     }
 
-    static void otherModes() {
-        // Enabled: an untrusted chain is said in words the admin can act on
-        Throwable pkix = new SSLHandshakeException("PKIX path building failed").initCause(
-                new java.security.cert.CertPathBuilderException("unable to find valid certification path"));
-        String enabled = TlsFailure.explain(pkix, TlsMode.ENABLED);
-        T.contains(enabled, "not trusted by this collector", "Enabled, untrusted");
-        T.contains(enabled, "Validate Connection", "Enabled, what to do");
-        // the same shape wrapped as the FIPS alert
-        T.contains(TlsFailure.explain(new TlsFatalAlert("certificate_unknown(46)", pkix), TlsMode.ENABLED),
-                "not trusted by this collector", "Enabled, untrusted, FIPS shape");
-        // N2: an expired or revoked certificate does not get the 'accept it' advice
+    /** The sentences for the vCenter connection: verified, and with Allow Insecure SSL on. */
+    static void explained() {
+        // an untrusted chain, in words the admin can act on
+        String untrusted = TlsFailure.explain(untrustedChain(), false);
+        T.contains(untrusted, "not trusted by this collector", "untrusted");
+        T.contains(untrusted, "Validate Connection", "what to do");
+        T.contains(untrusted, "Allow Insecure SSL", "the opt-out is named");
+        T.contains(untrusted, "No credential was sent", "and nothing was sent");
+        T.notContains(untrusted, "Pinned", "no removed mode");
+        T.contains(TlsFailure.explain(new TlsFatalAlert("certificate_unknown(46)", untrustedChain()), false),
+                "not trusted by this collector", "untrusted, FIPS shape");
+        // a name the certificate does not carry: the name, and that accepting does not help
+        String name = TlsFailure.explain(nameMismatch("10.1.2.3"), false);
+        T.contains(name, "does not carry the name '10.1.2.3'", "names what was dialled");
+        T.contains(name, "Enter the vCenter by a name that is on its certificate", "what to do");
+        T.contains(name, "does not change a name mismatch", "accepting does not help");
+        T.notContains(name, "not trusted by this collector", "a name mismatch is not an untrusted chain");
+        T.contains(TlsFailure.explain(new TlsFatalAlert("certificate_unknown(46)", nameMismatch("vc.lab")), false),
+                "does not carry the name 'vc.lab'", "name mismatch, FIPS shape");
+        // the framework's own text for a name the certificate lacks, wrapped as the FIPS provider wraps it
+        T.contains(TlsFailure.explain(new TlsFatalAlert("certificate_unknown(46)", new CertificateException(
+                "No subject alternative name matching vc.lab in the target certificate")), false),
+                "does not carry the name 'vc.lab'", "the framework's name text, FIPS shape");
+        // 8.18.7: the platform trust manager with nothing accepted has an empty anchor set (W2)
+        Throwable anchors = new SSLHandshakeException("the trustAnchors parameter must be non-empty").initCause(
+                new java.security.InvalidAlgorithmParameterException("the trustAnchors parameter must be non-empty"));
+        T.contains(TlsFailure.explain(anchors, false), "not trusted by this collector", "8.18.7 empty anchors");
+        T.contains(TlsFailure.explain(new SSLHandshakeException("java.security.InvalidAlgorithmParameterException: the trustAnchors parameter must be non-empty"), false),
+                "not trusted by this collector", "8.18.7 text only");
+        T.contains(TlsFailure.explain(new IOException("HTTPS hostname wrong:  should be <vc1.lab.test>"), false),
+                "does not carry the name 'vc1.lab.test'", "the post-handshake rejection of the JDK");
+        // an expired or revoked certificate does not get the 'accept it' advice
         Throwable expired = new SSLHandshakeException("validity").initCause(
                 new java.security.cert.CertPathValidatorException("validity check failed", null, null, -1,
                         java.security.cert.CertPathValidatorException.BasicReason.EXPIRED));
-        String ex = TlsFailure.explain(expired, TlsMode.ENABLED);
+        String ex = TlsFailure.explain(expired, false);
         T.contains(ex, "expired, not yet valid or revoked", "expired");
-        T.notContains(ex, "Accept the certificate", "no accept advice for an expired certificate");
+        T.notContains(ex, "accept it", "no accept advice for an expired certificate");
         T.contains(TlsFailure.explain(new SSLHandshakeException("x").initCause(
-                new java.security.cert.CertificateExpiredException("NotAfter: x")), TlsMode.ENABLED),
+                new java.security.cert.CertificateExpiredException("NotAfter: x")), false),
                 "expired, not yet valid or revoked", "CertificateExpiredException");
-        T.contains(TlsFailure.explain(new TlsFatalAlert("certificate_expired(45)", new java.security.cert.CertPathValidatorException(
-                "revoked", null, null, -1, java.security.cert.CertPathValidatorException.BasicReason.REVOKED)), TlsMode.ENABLED),
-                "expired, not yet valid or revoked", "revoked, FIPS shape");
-        // N3: server text stays one line
-        String nl = TlsFailure.explain(new TlsFatalAlert("bad\nthing\r\n" + "x".repeat(400), null), TlsMode.PINNED);
-        T.notContains(nl, "\n", "no newline"); T.notContains(nl, "\r", "no carriage return");
+        // any other alert is named, with the checking state, and invents nothing
+        String bare = TlsFailure.explain(new TlsFatalAlert("handshake_failure(40)", null), false);
+        T.contains(bare, "TlsFatalAlert: handshake_failure(40)", "names the alert");
+        T.contains(bare, "certificate checking is on", "says verification is on");
+        T.notContains(bare, "No credential", "claims nothing it cannot know");
+        // server text stays one line
+        String nl = TlsFailure.explain(new TlsFatalAlert("bad\nthing\r\n" + "x".repeat(400), null), true);
+        T.notContains(nl, "\n", "no newline");
+        T.notContains(nl, "\r", "no carriage return");
         T.check(nl.length() < 400, "bounded: " + nl.length());
-        // outside Enabled an untrusted chain cannot happen; it is not described as one
-        T.notContains(TlsFailure.explain(pkix, TlsMode.PINNED), "not trusted by this collector", "Pinned");
-        // an Enabled failure that is not a chain failure (a name mismatch the framework checks) is a plain TLS line
-        T.contains(TlsFailure.explain(new TlsFatalAlert("certificate_unknown(46)", null), TlsMode.ENABLED),
-                "TlsFatalAlert: certificate_unknown(46)", "Enabled, other alert");
-        T.done("Enabled and the other modes say what failed");
+        // with Allow Insecure SSL nothing is checked, so a chain or a name failure cannot happen and is not described as one
+        T.notContains(TlsFailure.explain(untrustedChain(), true), "not trusted by this collector", "insecure, chain");
+        T.contains(TlsFailure.explain(new TlsFatalAlert("handshake_failure(40)", null), true),
+                "certificate checking is off (Allow Insecure SSL)", "insecure says so");
+        // not TLS: nothing to say
+        T.check(TlsFailure.explain(new java.net.ConnectException("refused"), false) == null, "refused");
+        T.check(TlsFailure.explain(new java.net.SocketTimeoutException("slow"), false) == null, "timeout");
+        T.check(TlsFailure.explain(null, false) == null, "null");
+        advice();
+        T.done("untrusted, name mismatch, expired and other failures each say what they are");
+    }
+
+    /** What Validate Connection adds after VCF Operations' own certificate message. */
+    static void advice() {
+        String base = "VCF Operations says: certificate problem.";
+        String u = TlsFailure.certificateAdvice(untrustedChain(), base, false);
+        T.check(u.startsWith(base), "the platform's text comes first");
+        T.contains(u, "Review the vCenter certificate here and accept it", "an untrusted chain is answered by accepting it");
+        T.eq(base, TlsFailure.certificateAdvice(nameMismatch("10.1.2.3"), base, false), "a name mismatch: the framework's text is enough");
+        T.eq(base, TlsFailure.certificateAdvice(untrustedChain(), base, true), "no usable host: unchanged");
+        Throwable expired = new SSLHandshakeException("validity").initCause(new java.security.cert.CertificateExpiredException("NotAfter"));
+        String e = TlsFailure.certificateAdvice(expired, base, false);
+        T.contains(e, "renew it on the vCenter", "expired is renewed");
+        T.notContains(e, "accept it", "and not accepted");
+        T.eq(base, TlsFailure.certificateAdvice(new java.net.ConnectException("refused"), base, false), "not a certificate failure: unchanged");
+        T.contains(TlsFailure.certificateAdvice(new SSLHandshakeException("the trustAnchors parameter must be non-empty"), base, false),
+                "accept it", "8.18.7 empty anchors are answered by accepting");
     }
 
     /** The client end to end: the message the caller gets, in each wrapping. */
     static void throughTheClient() throws Exception {
         try (FakeVc vc = new FakeVc(FakeVc.happy())) {
             Supplier<IOException>[] shapes = shapesToTry();
-            String[] names = {"JDK cause chain", "FIPS alert, cause chain", "FIPS alert, suppressed", "FIPS alert, nothing in the chain"};
+            String[] names = {"JDK untrusted", "FIPS alert, untrusted", "FIPS alert, name mismatch", "JDK name mismatch"};
+            String[] want = {"not trusted by this collector", "not trusted by this collector",
+                "does not carry the name '127.0.0.1'", "does not carry the name '127.0.0.1'"};
             for (int i = 0; i < shapes.length; i++) {
-                PinnedTrustManager tm = new PinnedTrustManager("ab".repeat(32));
-                final X509Certificate presented = vc.cert;
-                // the last shape hides the exception entirely: only the trust manager knows
-                final boolean hidden = i == 3;
-                Runnable handshake = !hidden ? () -> { } : () -> {
-                    try {
-                        tm.checkServerTrusted(new X509Certificate[] {presented}, "RSA");
-                    } catch (CertificateException expected) {
-                        // the provider swallowed it
-                    }
-                };
-                VcenterTls tls = VcenterTls.forTesting(TlsMode.PINNED, new FailingFactory(shapes[i], handshake), tm);
-                String want = hidden ? new PinMismatchException(Thumbprints.of(vc.cert, 256), 256).getMessage()
-                        : pin().getMessage();
+                VcenterTls tls = failing(shapes[i]);
                 int before = vc.requests.size();
                 T.RecLog log = new T.RecLog();
                 try (VimSoapClient c = new VimSoapClient("localhost:" + vc.port(), "svc", "very-secret-pw", tls, log, 5000, 10000, 10000)) {
                     VimResult<About> r = c.ensureSession();
                     T.check(!r.isOk(), names[i] + ": fails");
-                    T.eq(want, r.message(), names[i] + ": the caller gets the pin text, nothing else");
+                    T.contains(r.message(), want[i], names[i] + ": the caller gets the sentence");
+                    T.notContains(r.message(), "reading the service content failed", names[i] + ": no step prefix on a TLS failure");
                     T.check(!Reachability.isUnreachable(r.cause()), names[i] + ": not 'unreachable'");
                     T.notContains(log.all(), "very-secret-pw", names[i] + ": log");
                 }
                 T.eq(before, vc.requests.size(), names[i] + ": nothing reached the server");
             }
-            // an alert that is not a pin mismatch: the caller gets the alert, the mode, no invented text
-            VcenterTls other = VcenterTls.forTesting(TlsMode.TRUST_ON_FIRST_USE,
-                    new FailingFactory(() -> new TlsFatalAlert("handshake_failure(40)", null)), null);
+            // an alert that is no certificate failure: the caller gets the alert and the checking state
+            VcenterTls other = failing(() -> new TlsFatalAlert("handshake_failure(40)", null));
             try (VimSoapClient c = new VimSoapClient("localhost:" + vc.port(), "svc", "pw", other, new T.RecLog(), 5000, 10000, 10000)) {
                 VimResult<About> r = c.ensureSession();
                 T.check(!r.isOk(), "alert fails");
                 T.contains(r.message(), "TlsFatalAlert: handshake_failure(40)", "alert named");
-                T.contains(r.message(), "Trust on First Use", "mode named");
+                T.contains(r.message(), "certificate checking is on", "state named");
                 T.notContains(r.message(), "reading the service content failed", "no step prefix on a TLS failure");
             }
             // a failure that is no TLS failure keeps its step prefix
-            VcenterTls plain = VcenterTls.forTesting(TlsMode.TRUST_ON_FIRST_USE,
-                    new FailingFactory(() -> new java.net.ConnectException("refused")), null);
+            VcenterTls plain = failing(() -> new java.net.ConnectException("refused"));
             try (VimSoapClient c = new VimSoapClient("localhost:" + vc.port(), "svc", "pw", plain, new T.RecLog(), 5000, 10000, 10000)) {
                 VimResult<About> r = c.ensureSession();
                 T.contains(r.message(), "reading the service content failed", "step prefix");
                 T.check(Reachability.isUnreachable(r.cause()), "still unreachable");
             }
-            // the real thing, on this JDK: a wrong pin against a real handshake gives the same text
-            String real = Thumbprints.of(vc.cert, 256);
-        // a pin that differs from the real one, whatever the certificate of this run starts with (a fixed "00" equalled it 1 run in 256)
-        String wrong = (real.startsWith("00") ? "ff" : "00") + real.substring(2);
-            try (VimSoapClient c = TlsAndSessionTest.client(vc, TlsAndSessionTest.pinned(wrong), "svc", "pw", new T.RecLog())) {
-                VimResult<About> r = c.ensureSession();
-                T.check(r.message().startsWith("vCenter presented a certificate other than the pinned one"), "real handshake: " + r.message());
-            }
-            // the Enabled mode on a real handshake against a certificate the platform does not trust
-            VcenterTls enabled = VcenterTls.create(TlsMode.ENABLED, "", javax.net.ssl.SSLContext.getDefault(),
+            // the real thing, on this JDK: a certificate the platform does not trust
+            VcenterTls verified = VcenterTls.create(false, javax.net.ssl.SSLContext.getDefault(),
                     (conn, factory) -> conn.setSSLSocketFactory(factory));
-            try (VimSoapClient c = TlsAndSessionTest.client(vc, enabled, "svc", "pw", new T.RecLog())) {
+            try (VimSoapClient c = TlsAndSessionTest.client(vc, verified, "svc", "pw", new T.RecLog())) {
                 VimResult<About> r = c.ensureSession();
                 T.contains(r.message(), "not trusted by this collector", "collect path text for an untrusted chain");
                 T.notContains(r.message(), "PKIX", "no provider text");
             }
         }
-        T.done("through the client: the pin text reaches the caller in every wrapping, and the other modes speak plainly");
+        T.done("through the client: each certificate failure reaches the caller as a sentence, in every wrapping");
+    }
+
+    static javax.net.ssl.SSLContext platform() {
+        try {
+            return javax.net.ssl.SSLContext.getDefault();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /** A verified posture whose every socket fails the way a provider fails a handshake (the name check is the caller's). */
+    static VcenterTls failing(Supplier<IOException> shape) {
+        return VcenterTls.create(false, platform(), (conn, factory) ->
+                conn.setSSLSocketFactory(new FailingFactory(shape)));
     }
 
     @SuppressWarnings("unchecked")
     static Supplier<IOException>[] shapesToTry() {
         Supplier<IOException>[] s = new Supplier[4];
-        s[0] = () -> {
-            SSLHandshakeException e = new SSLHandshakeException("handshake failed");
-            e.initCause(pin());
-            return e;
-        };
-        s[1] = () -> new TlsFatalAlert("certificate_unknown(46)", new CertificateException("rejected", pin()));
-        s[2] = () -> {
-            TlsFatalAlert e = new TlsFatalAlert("certificate_unknown(46)", null);
-            e.addSuppressed(new RuntimeException("while closing", pin()));
-            return e;
-        };
-        // The provider hid the exception completely; only the trust manager knows what it decided.
-        // The trust manager is asked first, as a handshake would: the factory below does it.
-        s[3] = () -> new TlsFatalAlert("certificate_unknown(46)", null);
+        s[0] = () -> (IOException) untrustedChain();
+        s[1] = () -> new TlsFatalAlert("certificate_unknown(46)", untrustedChain());
+        s[2] = () -> new TlsFatalAlert("certificate_unknown(46)", nameMismatch("127.0.0.1"));
+        s[3] = () -> (IOException) nameMismatch("127.0.0.1");
         return s;
     }
 }

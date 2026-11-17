@@ -17,6 +17,7 @@ import com.vcfcf.adapters.vcommunity.health.WarnCounter;
 import com.vcfcf.adapters.vcommunity.list.CheckListStore;
 import com.vcfcf.adapters.vcommunity.rest.LibraryReader;
 import com.vcfcf.adapters.vcommunity.tls.ThumbprintProbe;
+import com.vcfcf.adapters.vcommunity.tls.TlsFailure;
 import com.vcfcf.adapters.vcommunity.tls.VcenterTls;
 import com.vcfcf.adapters.vcommunity.vim.VimSoapClient;
 
@@ -173,16 +174,21 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
             OpsPort ops = sas == null ? null : new OpsPort(sas);
             CycleEngine engine = new CycleEngine(cfg, vim, ThumbprintProbe.TLS, ops,
                     new CheckListStore(warns), warns, System::currentTimeMillis, libraries);
+            // A setting with a value that is not allowed is reported here, once per configuration change, and
+            // not through the cycle's counter: it would otherwise raise Warnings in Last Cycle on every cycle
+            // until someone edits the account. The default is used meanwhile.
+            for (String w : cfg.warnings) logWarn(w);
             if (cfg.guestTlsError != null) {
                 logWarn(cfg.guestTlsError + "; guest operations stay off until it is fixed");
             }
             this.runtime = new Runtime(cfg, vim, sas, engine);
             // Never the password, the Windows password, a token or a session. // REDACT-SECRET
             logInfo("VCommunityAdapter configured: " + cfg + " suiteApi=" + (sas != null));
-            if (cfg.tlsMode == VCommunityConfig.TlsMode.TRUST_ON_FIRST_USE) {
-                logInfo("vCenter TLS Validation is Trust on First Use: this account sends its "
-                        + "credentials to whatever answers, before any certificate check. On a "
-                        + "network that is not fully trusted, set Pinned or Enabled.");
+            if (cfg.allowInsecure) {
+                logWarn("Allow Insecure SSL is true for " + cfg.hostPort() + ": the vCenter certificate is not "
+                        + "verified, so the vCenter credentials go to whatever answers at that address, and "
+                        + "guest monitoring stays off. Set Allow Insecure SSL to false unless this is a lab "
+                        + "vCenter you accept that for.");
             }
         } catch (IllegalArgumentException e) {
             this.configError = e.getMessage();
@@ -204,13 +210,10 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
                 getCredentialField(rc, VCommunityConfig.C_WIN_PASSWORD)); // REDACT-SECRET
     }
 
-    /** The TLS posture of the account's mode (design 2.5). */
+    /** The TLS posture of the account (design 2.5): platform trust with the name check, unless Allow Insecure SSL. */
     private VcenterTls buildTls(VCommunityConfig cfg) {
-        SSLContext platform = null;
-        if (cfg.tlsMode == VCommunityConfig.TlsMode.ENABLED) {
-            platform = getPlatformSslContext(cfg.dialledHost());
-        }
-        return VcenterTls.create(cfg.tlsMode, cfg.thumbprint, platform, CertificateNames::secure);
+        SSLContext platform = cfg.allowInsecure ? null : getPlatformSslContext(cfg.dialledHost());
+        return VcenterTls.create(cfg.allowInsecure, platform, CertificateNames::secure);
     }
 
     /** The Suite API client, or null (logged at WARN: nothing can be pushed) when this instance cannot have one. */
@@ -244,7 +247,7 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
     // Validate Connection: the certificate review
     // ------------------------------------------------------------------
 
-    /** Offered only in the Enabled mode; the other two modes do not use the platform's trust. */
+    /** Offered unless Allow Insecure SSL is on: the connection uses the platform's trust, so there is a certificate to accept. */
     @Override
     protected List<String> certificateCheckUrls(ResourceConfig rc) {
         String url = VCommunityConfig.certificateCheckUrl(k -> getIdentifier(rc, k));
@@ -254,10 +257,8 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
     @Override
     protected String certificateFailureMessage(Throwable failure, ResourceConfig rc,
             String defaultMessage) {
-        return defaultMessage + " The vCenter TLS Validation setting (Advanced Settings) chooses "
-                + "how the vCenter certificate is treated: Trust on First Use accepts any "
-                + "certificate, Enabled needs a certificate this collector trusts (accept it "
-                + "here), Pinned compares the certificate with the vCenter Thumbprint.";
+        // VCF Operations' own text comes first (defaultMessage); this adds only what is true for the failure
+        return TlsFailure.certificateAdvice(failure, defaultMessage, CertificateNames.isNoUsableHost(failure));
     }
 
     // ------------------------------------------------------------------

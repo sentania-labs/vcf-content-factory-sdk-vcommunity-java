@@ -1,6 +1,8 @@
 # P5 live proof: guest operations and events on a real Windows VM
 
-Nothing in phase P5 has run against a real Windows guest. The fixture tests (`GuestOpsTest`, `GuestEngineTest`,
+Guest monitoring has had one live run (9.0.2, build 26; see the guest section of `docs/installing.md` and issues
+#28, #29, #30): it collected on two member servers and was refused on two domain controllers. The rest of this
+document is the full plan, most of which has not been run. Apart from that run, nothing in phase P5 has run against a real Windows guest. The fixture tests (`GuestOpsTest`, `GuestEngineTest`,
 `GuestUnitTest`) prove the port against a fake vCenter, a fake ESXi host and the program texts it sends; they cannot
 prove what PowerShell, VMware Tools and Operations do with them. This is the run that does, written to be carried
 out without the author. Design reference: section 8 of `docs/design/vcommunity-java-port-design.md`; the
@@ -13,7 +15,7 @@ needs rights in the guest, and every run below leaves nothing in the guest that 
 
 | Item | Detail |
 |---|---|
-| Pak | build 13 or later (`0.0.0.13`), installed on 9.0.2 devel; the account described in `docs/installing.md` already collecting properties (P2 to P4), with **vCenter TLS Validation set to Enabled or Pinned** (guest monitoring does not run in Trust on First Use) |
+| Pak | build 13 or later (`0.0.0.13`), installed on 9.0.2 devel; the account described in `docs/installing.md` already collecting properties (P2 to P4), with **Allow Insecure SSL off (the default) and the vCenter certificate accepted in Validate Connection** (guest monitoring does not run with Allow Insecure SSL on) |
 | Windows VM A | Windows Server 2019 or 2022 or Windows 11, VMware Tools running, guest family shown as Windows by vCenter, on a vCenter host the collector can reach on port 443 |
 | Windows VM B | a hardened guest: a domain controller (or a member server) with a GPO setting PowerShell execution policy to AllSigned or Restricted at the MachinePolicy scope |
 | Windows VM C | a guest under AppLocker or WDAC in Constrained Language Mode (`$ExecutionContext.SessionState.LanguageMode` shows `ConstrainedLanguage`) |
@@ -28,11 +30,11 @@ Guest OS Service Monitoring Status `Enabled`; Windows Event Log Monitoring Statu
 TLS Validation `Pinned`; Windows Service Configuration File `windows_service_list`; Windows Event Log Configuration
 File `windows_event_list`.
 
-The two lists (Administration, Configuration Files, `SolutionConfig`):
+The two lists. Do not edit the shipped files: clone each in Administration > Configurations > Management Packs Configuration > Configuration Files (9.1.1), type the `.xml` extension in the copy's name (`windows_service_list_p5.xml`, `windows_event_list_p5.xml`), edit the copies (they land in User Defined), and enter `windows_service_list_p5` and `windows_event_list_p5` (no `.xml`) in the account fields above. The copies hold:
 
-- `windows_service_list.xml`: `<Services>Spooler,W32Time,wuauserv,NoSuchService</Services>` (one name that does not
+- `windows_service_list_p5.xml`: `<windowsServices>Spooler,W32Time,wuauserv,NoSuchService</windowsServices>` (one name that does not
   exist on purpose)
-- `windows_event_list.xml`:
+- `windows_event_list_p5.xml`:
   ```xml
   <Events>
     <Log Name="System"><EventID>7036</EventID><EventID>7045</EventID></Log>
@@ -217,7 +219,7 @@ further warning.
     measured. Compare `[Timestamp=...]` with `"$($e.TimeCreated)"` run in Windows PowerShell 5.1 on a localised guest.
 13. **FIPS.** On a 9.1.1 FIPS collector run sections 1 and 3: a missing SHA-1 shows as `F-GUEST-TLS` naming SHA-1, once, not as a
     failed upload per VM.
-14. **vCenter TLS mode.** With vCenter TLS Validation on Trust on First Use and a guest switch on: `F-GUEST-TLS-MODE`, no
+14. **Allow Insecure SSL.** With Allow Insecure SSL set to `true` and a guest switch on: `F-GUEST-TLS-INSECURE`, no
     guest operation, no request with the Windows account (vCenter's task list shows none), and Test Connection warns.
 15. **Properties.** After a collection, read `vCommunity|Options|config.tools` of a VM that has it in its VM Options list and
     compare its text with the Python pack's on the same VM: the last field ends `fault =  } }` (two spaces) in Python.

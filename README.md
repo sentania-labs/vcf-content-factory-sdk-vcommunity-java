@@ -9,26 +9,80 @@ check-list files follow the original pack, the code is new. The content
 (views, dashboards and the rest) is converted from the original pack's content files; the whole pak, code and content, is MIT licensed (`NOTICE` has the provenance).
 
 Adapter kind `vcfcf_vcommunity`; distinct from the original Python pack's kind,
-so the two are never an upgrade of each other. Minimum product version: VCF Operations 8.18.x (tested on 8.18.7, 9.0.2 and 9.1.1).
+so the two are never an upgrade of each other. Minimum product version: VCF Operations 8.18.x. Collection was tested on 8.18.7, 9.0.2 and 9.1.1; see Status for what was seen live and on which build.
 
 ## Status
 
-Phase 6 of the port (content). Phase 1 gave the account (the 19 fields and
-credential of the original pack), the three vCenter TLS modes, the vim25
-session, Test Connection and the cycle with its Collection Health keys and self
-metrics. Phase 2 added the property keys of clusters, hosts, virtual machines,
-datastores and the vCenter, phase 3 the three own kinds, phase 4 the derived
-metrics: the cluster, host and VM scores, availability, network speed, shares,
-port groups, resource pools, the periodic cluster check, the vSphere World
-roll-ups and the Business Application figures, phase 5 the guest checks (off by default)
-and Windows events. Phase 6 ships the content: 170 views, 52 dashboards, 16 reports,
-3 super metrics, 10 symptoms, 4 alerts with 1 recommendation, and the six check-list files
-(`docs/installing.md`, "Content"). `docs/p2-key-coverage.tsv`,
-`docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv` and `docs/p5-key-coverage.tsv` list every key of the key
-map with whether this build collects it and the test that proves it.
+**3.0.0.29, a preview release.** This is the first public build of the 3.x line, released to collect feedback; expect
+rough edges. It needs **VCF Operations 8.18 or later**. The release notes are in `CHANGELOG.md` ("3.0.0.29 (preview)"),
+including where it deliberately differs from the Python pack it descends from.
+
+**Send feedback as GitHub issues on this repository.**
+
+What is in it: the account (the original pack's fields and credential, with the vCenter TLS setting replaced by Allow Insecure SSL: the vCenter certificate is verified by default), the vim25
+session, Test Connection and the collection cycle with its Collection Health keys and self metrics; the property keys of
+clusters, hosts, virtual machines, datastores and the vCenter; three object kinds of its own (content libraries, library
+items and VM templates); the derived metrics (the cluster, host and VM scores, availability, network speed, shares, port
+groups, resource pools, the periodic cluster check, the vSphere World roll-ups and the Business Application figures);
+the guest checks and Windows events (off by default); and the content: 170 views, 52 dashboards, 16 reports,
+3 super metrics, 10 symptoms, 4 alerts with 1 recommendation, and the six check-list files (`docs/installing.md`,
+"Content"). `docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv` and
+`docs/p5-key-coverage.tsv` list every key of the key map with whether this build collects it and the test that proves it.
 The design is in `docs/design/` (start with `vcommunity-java-port-design.md`).
 
-Network Speed Degradation needs the host NIC property `net|configuredSpeed` enabled in the active policy; see `docs/installing.md`, "Network Speed Degradation".
+**What was verified live (2026-11-16), and where.**
+
+- **Build 0.0.0.29, 9.1.1 only** (a fresh install that followed `docs/installing.md`, on a FIPS collector): the dropdown
+  defaults preselected on the Add Account form; the certificate review dialog and accept in Validate Connection, then verified
+  collection (four clean cycles, nothing withheld); Allow Insecure SSL on and back off; an invalid setting reported once and
+  shown in `Configuration Warnings`; uninstall and reinstall; the "vSphere Cluster Performance 2.0" dashboard filling after a
+  cluster is picked (click the row, then "Internal interaction"); 412 series per steady cycle, as on 0.0.0.26.
+- **Build 0.0.0.27, 8.18.7 and 9.0.2** (upgraded accounts): verified by default. On 8.18.7 the upgraded account failed closed
+  and the accept dialog fixed it; on 9.0.2 the lab CA was already trusted, so there was no dialog. Build 29 has not been
+  installed on 8.18.7 or 9.0.2.
+- **Earlier builds:** Network Speed Degradation (9.0.2, build 22); the memory tiering divisor and latency unit (9.1.1);
+  the migration from a Python pack version, including restoring the built-in views (9.1.1); build 0.0.0.26 over earlier
+  builds on all three versions, collecting with every collector OK.
+- **Not verified:** the values the guest checks publish (one live run on 9.0.2, below); the five package views with data (no lab
+  host runs those packages); the first-sight certificate status `Recorded`; an expired certificate on a live instance.
+
+### Known issues and unverified
+
+Most items are tracker issues; the labels are `inherited` (carried over from the Python pack), `design` and `unverified`.
+
+- **First install, two things to know** (`docs/installing.md`, "Step-by-Step Installation"): the pak is unsigned, so tick
+  "Ignore the PAK file signature checking" before uploading or the upload fails with only "Upload failed."; and enter the
+  vCenter by a name that is on its certificate (an IP address fails the name check, and the field is part of the account's identity).
+- **Certificate handling, three behaviours.** A new account whose certificate is not trusted looks healthy and collects nothing:
+  accept the certificate in Validate Connection before saving ([#34](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/34)). The certificate failure sentences are cut off in the
+  account log ([#35](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/35)). Validate Connection shows no warning when Allow Insecure SSL is on; the warning is in `collector.log` ([#36](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/36)).
+- **Guest monitoring** (off by default) has had one live run, on 9.0.2: it collected on two member servers and was
+  refused on two domain controllers, which paused it for every VM; the values it published were not checked. [#28](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/28): health and log do
+  not name the VM that refused; [#29](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/29): whether it should be its own pak; [#30](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/30): which Windows rights the account needs; [#17](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/17): there is no
+  per-VM scope. See `docs/installing.md`, "Guest monitoring".
+- **Cluster Memory Tiering Consumption** publishes nothing ([#7](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/7)).
+- **CPU Over-Commitment** may read the wrong DRS option name ([#8](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/8)).
+- **VM Snapshots List** is always empty ([#9](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/9)).
+- **VOA reports** show "No data" in their dashboard sections on 9.1.1 ([#10](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/10)).
+- **Critical Business Applications**: the tier chart filters on the wrong object kind ([#11](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/11)).
+- **Package views** (nenic, nfnic, VIB Info) are not verified with data ([#12](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/12)).
+- **Design items** ([#13](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/13) to [#20](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/20), label `design`): for example the check lists as account identity fields, case-sensitive on/off
+  text fields, one credential for both logins, no per-VM guest scope ([#17](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/17)) and alerts and most dashboards shipping disabled ([#20](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/20)).
+- **Data oddities** carried over from the Python pack ([#21](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/21) to [#27](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/27), label `inherited`): a VM with no network card gets no Virtual
+  Disk keys, PCI IDs printed as signed hex, VM Op Notification Timeout -1 shown as 0, detailed guest values cut at the first
+  quote, two licenses with one name overwriting each other, a Content Library item listed twice counted twice, and a healthy
+  namespace hiding an unhealthy tier.
+- **Network Speed Degradation** needs the host NIC property `net|configuredSpeed` enabled in the active policy, and works
+  only for NICs with a fixed speed in vCenter (a NIC on auto-negotiate gets no configured speed). See
+  `docs/installing.md`, "Network Speed Degradation".
+- **Alerts and super metrics need enabling in policy** (Administration > Configurations > Policy Definition > Edit, tiles
+  "Alerts and Symptoms" and "Metrics and Properties"; Configurations > Super Metrics; seen on 9.1.1, editor opened, nothing
+  changed). The four alert definitions (ESXi Host NIC Disconnected, ESXi Host License Expiring, Windows Service Down,
+  vCommunity Collection Warnings) and the super metrics ("CPU Usable Capacity Utilization", "Number of VM", "vSphere Clusters
+  not Green") are not enabled by the install, as in the original pack.
+- **Restoring the built-in views.** Evaluators moving from an affected Python pack version need an export of the built-in views
+  from a clean instance of the same product version (ask the maintainer); a script to do this will ship with the public release
+  ([#32](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/32)). See `docs/installing.md`, "Moving from the Python pack".
 
 The content is converted from the original pack's content files (see `NOTICE`); the
 conversion report and the list of text carried as written are in `docs/design/inputs/`.
@@ -47,8 +101,7 @@ it does not overwrite the Python pack's content, and uninstalling one does not d
   are this pak's copies under new ids and the same names. Anything you cloned or customized from
   the old content is yours to keep or re-point; the alert history of the old definitions stays with them.
 - Check-list files: the six default-named files are replaced on every pak upgrade, and
-  uninstalling the Python pack removes its copies of the same names (inferred from the platform's
-  code, not measured). Save your edited check lists first and re-apply them in copies under other names.
+  uninstalling a pak removes the check-list files it installed (measured for this pak on 9.1.1; not measured for the Python pack's own files). Save your edited check lists first and re-apply them in copies under other names.
 - Built-in views: some Python pack versions ship views under built-in view ids, and uninstalling
   them deletes those built-in views (measured). Have a clean export of the built-in views of the same
   product version at hand, from an instance that never had the Python pack, and import it after the
@@ -68,7 +121,7 @@ The full guide is in `docs/installing.md`, "Moving from the Python pack".
 ## Documentation
 
 `docs/README.md` indexes the docset: `overview.md`, `installing.md` (the account
-fields, TLS modes, Test Connection) and the generated inventory tree.
+fields, TLS, Test Connection) and the generated inventory tree.
 `REFERENCE.md` lists the account, the self metrics and the own kinds' keys.
 `NOTICE` credits the original authors (see Credits below).
 
@@ -82,13 +135,13 @@ icons/icons.yaml                     # kind -> icon map
 src/com/vcfcf/adapters/vcommunity/   # adapter source
   VCommunityAdapter.java             #   lifecycle, Test Connection, discovery (SDK side)
   OpsPort.java                       #   Suite API port (SDK side)
-  VCommunityConfig.java              #   the 19 fields, defaults, fallbacks (SDK-free)
+  VCommunityConfig.java              #   the 18 fields, defaults, fallbacks (SDK-free)
   CycleEngine.java                   #   one cycle: session, probe, lists, binding, properties, health
   ConnectionTester.java              #   Test Connection logic
   vim/                               #   raw SOAP session, paged streamed reads, no JAX-WS and no vim25.jar
   coll/                              #   what each object kind's keys read; the property phase
   text/                              #   Python text rules, license key mask
-  tls/                               #   trust on first use, platform trust, pin; probe
+  tls/                               #   platform trust with the name check, Allow Insecure SSL; probe; the ESXi pin check
   ops/                               #   resource identity, push set, push on change
   list/                              #   check-list files: parse, validate, store
   health/                            #   failure accounting, warning count, health keys
@@ -194,8 +247,8 @@ set -e
 #    floating sdk-buildkit-v1 tag moves under you) and verify the published
 #    checksum before unpacking. Use the version this repo's release
 #    workflow pins (BUILDKIT_TAG in .github/workflows/build-pak-on-tag.yml);
-#    1.0.27 at the time of writing.
-BUILDKIT_VERSION=1.0.27
+#    1.0.29 at the time of writing.
+BUILDKIT_VERSION=1.0.29
 gh release download "sdk-buildkit-v$BUILDKIT_VERSION" \
   --repo sentania-labs/vcf-content-factory \
   --pattern "sdk-buildkit-$BUILDKIT_VERSION.tgz*"
@@ -254,7 +307,8 @@ This repo is the **single source of truth** for its `.pak`. The shippable artifa
 is built by CI, never on a laptop:
 
 1. Author + commit + push to `main`.
-2. **Push a `vX.Y.Z` tag.** The `build-pak-on-tag` workflow:
+2. **Push a `v<version>.<build_number>` tag** (it must equal `version` and `build_number` in `adapter.yaml`; for the first
+   release, `v3.0.0.29`). The `build-pak-on-tag` workflow:
    - pulls the `sdk-buildkit` tarball from the factory's Releases at the pinned
      `BUILDKIT_TAG` and verifies it against `BUILDKIT_SHA256` before extracting,
    - gates on the factory defect registry, fetched at `DEFECT_REGISTRY_COMMIT`,

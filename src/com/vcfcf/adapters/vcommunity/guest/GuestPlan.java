@@ -31,7 +31,7 @@ public final class GuestPlan {
         NO_CREDENTIAL,
         /** The Guest File Transfer TLS Validation field holds a value that is not one of the three. */
         BAD_TLS_MODE,
-        /** The vCenter connection's certificate is not checked (Trust on First Use) and the Windows account would cross it. */
+        /** The vCenter connection's certificate is not checked (Allow Insecure SSL) and the Windows account would cross it. */
         VCENTER_TLS,
         /** Event monitoring is the only switch on and the event list has nothing to look for. */
         NOTHING_TO_DO
@@ -49,13 +49,6 @@ public final class GuestPlan {
     }
 
     public static final int MAX_QUERIES = 500;
-
-    /**
-     * True: the guest phase does not run while vCenter TLS Validation is Trust on First Use, because the Windows account
-     * would be sent to a vCenter that was not checked (DV-103). The original sends it regardless. False restores that
-     * (the phase then runs and warns once).
-     */
-    public static final boolean REQUIRE_CHECKED_VCENTER_TLS = true;
 
     /** Null when the phase runs. */
     public final Off off;
@@ -91,10 +84,11 @@ public final class GuestPlan {
         if (cfg.guestTlsError != null) {
             return off(Off.BAD_TLS_MODE, cfg.guestTlsError + "; guest operations stay off until it is fixed");
         }
-        if (REQUIRE_CHECKED_VCENTER_TLS && cfg.tlsMode == VCommunityConfig.TlsMode.TRUST_ON_FIRST_USE) {
-            return off(Off.VCENTER_TLS, "guest monitoring is enabled but vCenter TLS Validation is Trust on First Use, "
-                    + "so the Windows account would be sent to a vCenter whose certificate is not checked; set vCenter "
-                    + "TLS Validation to Enabled or Pinned (the vCenter Thumbprint field) to use it");
+        // the Windows account goes through the vCenter connection: never to one whose certificate is not checked (DV-103)
+        if (cfg.allowInsecure) {
+            return off(Off.VCENTER_TLS, "guest monitoring is enabled but Allow Insecure SSL is on, so the Windows "
+                    + "account would be sent to a vCenter whose certificate is not checked; turn Allow Insecure SSL "
+                    + "off (and accept the vCenter certificate in Validate Connection) to use guest monitoring");
         }
         if (!cfg.hasWindowsCredential()) {
             return off(Off.NO_CREDENTIAL, "guest monitoring is enabled but the account has no Windows user name "

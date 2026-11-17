@@ -9,8 +9,10 @@ vCenter adapter already has in VCF Operations: hosts, clusters, virtual machines
 datastores, datacenters, the vCenter object and the vSphere World. It also
 creates three object kinds of its own.
 
-This build is the sixth phase of the port. It provides the account, the vCenter
-TLS modes, the session, Test Connection, the collection cycle with its health
+This is **3.0.0.29, a preview release** (minimum VCF Operations 8.18; collection tested on 8.18.7, 9.0.2 and 9.1.1; the verified-by-default certificate handling was seen live with build 27 on 8.18.7 and
+9.0.2 and with build 29 on 9.1.1, and build 29 has been installed on 9.1.1 only; send feedback as GitHub issues on this
+repository). It provides the account, the vCenter
+TLS (verified by default), the session, Test Connection, the collection cycle with its health
 keys, the property keys of clusters, hosts, virtual machines, datastores and the
 vCenter, the three own kinds with their keys and relationship, and the derived
 metrics (scores, availability, network speed, shares, port groups, resource
@@ -150,13 +152,13 @@ pushes nothing onto the vCenter's objects.
   cannot be read this cycle leaves the last good list in force; a file that does
   not exist empties its list. The Windows service and event files are read only
   when their monitoring switch is on.
-- **vCenter TLS.** Three modes, set on the account: Trust on First Use (the
-  default; connects whatever the certificate), Enabled (the collector's trust,
-  with the certificate name checked), Pinned (the vCenter thumbprint). See
-  `installing.md`.
+- **vCenter TLS.** The vCenter certificate is verified by default, as the built-in adapters do it: the collector's own
+  trust (the certificate you review and accept in Validate Connection) and a check that the certificate carries the name
+  entered. One advanced setting, Allow Insecure SSL (default false, the same as the other VCF Content Factory paks),
+  turns both checks off; guest monitoring does not run while it is on. The Python pack's three modes (Trust on First
+  Use, Enabled, Pinned) and its thumbprint field are gone (DV-114). See `installing.md`.
 - **Guest monitoring (off by default).** With Guest OS Service Monitoring or Windows
-  Event Log Monitoring set to Enabled, a Windows account in the credential and vCenter TLS Validation set to
-  Enabled or Pinned, the collector asks each Windows VM that has its tools running, as far as the cycle's time allows,
+  Event Log Monitoring set to Enabled, a Windows account in the credential and Allow Insecure SSL off (the default), the collector asks each Windows VM that has its tools running, as far as the cycle's time allows,
   through the vSphere guest operations: a directory the guest names, a small PowerShell program sent as command text (no
   script file, no secret in its arguments), the output read back and the directory removed. Services (only the
   ones listed) and the operating system become properties of the VM; event log records become diagnostic events on it,
@@ -164,7 +166,7 @@ pushes nothing onto the vCenter's objects.
   failure of one VM is counted with its cause (`F-GUEST-*`, in the `Collector:guest` health keys) and never shown as a stopped
   service or as no events. The Windows account is protected from locking: one VM alone until a logon has worked, two refused
   logons pause the phase for 24 hours. The ESXi host's certificate is checked against the thumbprint vCenter has
-  recorded for it (Pinned and Strict). Nothing here has run on a real Windows guest yet:
+  recorded for it (Guest File Transfer TLS Validation: Pinned and Strict). Nothing here has run on a real Windows guest yet:
   `docs/p5-live-proof.md` is the run that proves it.
 - **Secrets stay out of logs and messages.** The vCenter and Windows passwords,
   session ids and tokens are never written to a log line or an error message.
@@ -204,22 +206,22 @@ The pak carries the content of the original pack as VCF Operations content, inst
 
 ## Known Limitations
 
-- This build collects the property keys, the three own kinds, the derived metrics and, when switched on, the guest keys and Windows events, and ships the converted content; none of the content has been installed and looked at on a live instance in this build (`docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv`, `docs/p5-key-coverage.tsv`).
-- Guest monitoring is built and tested against a fake vCenter and ESXi host only; it has not run on a real Windows guest (`docs/p5-live-proof.md` lists the experiments).
+- This build collects the property keys, the three own kinds, the derived metrics and, when switched on, the guest keys and Windows events, and ships the converted content (`docs/p2-key-coverage.tsv`, `docs/p3-key-coverage.tsv`, `docs/p4-key-coverage.tsv`, `docs/p5-key-coverage.tsv`). The development builds have been installed and have collected on lab instances of 8.18.7, 9.0.2 and 9.1.1. Verified live with build 0.0.0.29 on 9.1.1 only (fresh install following the guide, FIPS collector, 2026-11-16): the dropdown defaults preselected, the certificate review dialog and accept, verified collection (four clean cycles), Allow Insecure SSL on and off, an invalid setting shown once and in `Configuration Warnings`, uninstall and reinstall, and 412 series per steady cycle as on 0.0.0.26. Verified live with build 0.0.0.27 on 8.18.7 and 9.0.2 (upgraded accounts): verified by default; on 8.18.7 it failed closed and the accept dialog fixed it, on 9.0.2 the lab CA was already trusted so there was no dialog (`installing.md`, "TLS"). Earlier builds: Network Speed Degradation on 9.0.2 (build 22); the memory tiering divisor and the tiering latency unit on 9.1.1; the migration from a Python pack version (uninstall, restore the built-in views) on 9.1.1. Build 0.0.0.26 (before the certificate change of build 27 and the setting handling of build 28) was installed over earlier builds on 8.18.7, 9.0.2 and 9.1.1 on 2026-11-16 and collected with every collector OK and no warnings, failed reads or withheld values. Seen live: host availability on 8.18.7 back at 100 (was 75); on 9.1.1 the memory rows and the Cluster Consumption score equal to what 9.0.2 publishes for the same cluster (consumed 60.40 against 60.38), Cluster Risk within about one point, and tiering latency in microseconds; VMware Tools properties as real values; no placeholder value pushed after the upgrade; the license symptom form matching a real license instance (proved with a temporary symptom); and "vSphere Clusters not Green" counting 1 of the scored clusters. The "vSphere Cluster Performance 2.0" dashboard was seen working on 9.1.1 (on a picker, click the row, then choose "Internal interaction" from the menu that opens). Not seen: the values the guest checks publish, the five package views with data (no lab host runs those packages), the certificate status `Recorded`, and build 29 on 8.18.7 and 9.0.2. The built-in dashboards and the converted content were not all looked at in a browser on every product line (`docs/design/dashboards-port-comparison.md`, section 6).
+- Guest monitoring has had one live run (9.0.2, build 26): it collected on two member servers and was refused on two domain controllers, which paused it for every VM; the values it published were not checked. The tracker issues #28, #29, #30 and #17 cover what is open (`installing.md`, "Guest monitoring"; `docs/p5-live-proof.md` lists the experiments).
 - The Datacenter count of Network Speed Degradation matches the Datacenter object by MoRef plus vCenter UUID; whether Operations gives a Datacenter those identifiers is unproven (experiment E1). Until it is, a Datacenter without them gets no count and the objects-not-matched figure is unaffected.
-- Not yet proven on a live instance: the P4 differential over 24 hours (the design's phase table).
+- The derived metrics were compared with the Python pack on the lab instances; the differences are the deliberate ones in `CHANGELOG.md` (DV-108 to DV-113). A 24 hour comparison of the whole set on the build that is released is not part of this preview.
 - Cluster Memory Tiering Consumption (`vCommunity|Cluster Consumption|Cluster Memory Tiering Consumption`) is never published: its input statistic `mem:NVMe|tier.usage` does not exist in VCF Operations. The real source is the vCenter counter `mem.tier.consumed` (MB, instances DRAM and NVMe), which needs a performance query this adapter does not make. This is a known gap (design, DV-109).
 - A new library, item or template is created at once and gets its values on the next collection (five minutes later). One that vCenter no longer has is marked not existing after 12 complete collections, and only when everything that could contain it was read.
-- Trust on First Use sends the credentials before any certificate check, as the
-  original pack did. The certificate it presents is compared after the login with
-  the one recorded on the vCenter object, and `vCommunity|Certificate|Status`
-  says `Recorded`, `Unchanged` or `Changed` (for 24 hours); it is a report, not a
-  refusal. Use Pinned or Enabled on a network that is not fully trusted.
+- The vCenter certificate presented each cycle is compared with the one recorded on the vCenter object, and
+  `vCommunity|Certificate|Status` says `Recorded`, `Unchanged` or `Changed` (for 24 hours); it is a report, not a
+  refusal. It is published whether or not Allow Insecure SSL is on, on every cycle that connects: with verification on, a
+  certificate the collector does not trust fails the login first, so `Changed` appears only for a new certificate it trusts. With Allow Insecure SSL on the credentials go to
+  whatever answers at the address: use it for a lab only.
 - Test Connection: the pak logs in to the vCenter and reads its certificate.
   The Suite API and the check-list files are checked only where the test can
   build the Suite API client, which is normally not the case (no configured
   account yet); the report says so and it is not a warning. A passing test
   writes its INFO line nowhere (no per-account log exists during a test, and
   only WARN reaches `collector.log`); what needs attention is one WARN line each.
-  Whether the dialog can show text for a passing test is **unverified**.
-- Not yet proven on a live instance: see the phase 1 exit proof in the design.
+  The dialog shows "Info: Test connection successful." for a passing test (seen on 9.1.1).
+- The phase 1 behaviours (login, session, Test Connection) have run on the lab instances through the development builds.
