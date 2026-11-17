@@ -11,7 +11,7 @@
 - Optionally, a Windows account for the guest checks (off by default; see Guest monitoring below).
 
 **The minimum version.** The content of this pak is converted and gated for VCF
-Operations 8.18.x; that is the minimum version (owner decision, 2026-11-14). Collection was tested on 8.18.7, 9.0.2 and 9.1.1 with earlier builds (the certificate handling and the setting handling of this build are pending live proof: see "TLS" and "Configuration Fields"). The pak's manifest says `vcops_minimum_version: 8.18.0`, so an older instance refuses the install.
+Operations 8.18.x; that is the minimum version (owner decision, 2026-11-14). Collection was tested on 8.18.7, 9.0.2 and 9.1.1; what was seen live for the certificate handling and the settings is under "TLS: the vCenter certificate" (build 29 has been installed on 9.1.1 only). The pak's manifest says `vcops_minimum_version: 8.18.0`, so an older instance refuses the install.
 
 ## Moving from the Python pack
 
@@ -154,8 +154,10 @@ Connection does not change a name mismatch.
 
 What you see when it is not right (no credential was sent in any of them). In the **cycle** (the account's status,
 `Collection|last_error`, the log) the account reports the sentences below. In **Validate Connection**, VCF Operations
-shows its own certificate message first, and the pak adds advice after it only where it helps (accept the certificate
-for an untrusted one; renew it for an expired one; nothing for a name mismatch, whose message already says it):
+shows its own review dialog and certificate message first, and the pak adds advice after it where it helps (accept the certificate
+for an untrusted one; renew it for an expired one; enter a name on the certificate for a name mismatch). For a name mismatch the
+review dialog still appears first, and the pak's message comes after you click ACCEPT (accepting does not fix it); VCF Operations
+then asks "Proceed anyway?" and lets you save the account, which then fails every cycle:
 
 | Situation | What the account reports | What to do |
 |---|---|---|
@@ -184,11 +186,45 @@ hours, with the previous thumbprint and the time). A report, not a refusal; if t
 recorded, the status is left out rather than guessed. With verification on, a certificate the collector does not trust
 fails the login, so nothing is published that cycle (the vCenter object is not known without the login): `Changed` appears
 only for a new certificate the collector already trusts. A renewal by an untrusted certificate shows as a login failure
-with the "not trusted" sentence, never as `Changed`.
+with the "not trusted" sentence, never as `Changed`. After a reinstall the status reads `Unchanged` straight away, because the
+recorded thumbprint stays on the vCenter object; `Recorded` is only for a vCenter never seen before (it was not seen in the live runs).
 
-**Not yet verified live.** This build's certificate handling (verified by default, the accept dialog, the name check, the
-sentences above) has been tested with fakes, and with the BouncyCastle provider that the FIPS collector uses, but not yet on a
-VCF Operations instance. Collection itself ran on 8.18.7, 9.0.2 and 9.1.1 with earlier builds.
+**What was seen live.** With dev build 0.0.0.27 on **8.18.7** (a collector that trusts only leaf certificates) and **9.0.2**, and with
+build 0.0.0.29 on **9.1.1**. Each line is for the version named; nothing is claimed for the others.
+
+- **8.18.7, build 27, upgraded account:** the account upgraded in place from 0.0.0.26 kept its adapter instance id, listed
+  `allowInsecure` = `false` at once, and no longer listed `vcenter_tls_validation` or `vcenter_thumbprint` (the old values did
+  not stay until the next save). The first cycle failed closed after 0.0 s with no vCenter login (checked in the vCenter's
+  events) and the account showed ERROR with the pak's "not trusted" sentence. Edit account, Validate Connection showed "Review
+  and Accept Certificate" ("Untrusted certificate found.", the thumbprint, who it was issued to and by, the expiry, buttons
+  CANCEL and ACCEPT) with no password re-entry; after ACCEPT it said "Test connection successful."; saving gave a verified login
+  and clean cycles. The raw platform failure there is `the trustAnchors parameter must be non-empty` (inside
+  `CustomTrustManager$CustomCertificateException`); the operator sees the pak's sentence instead.
+- **9.0.2, build 27, upgraded account:** the lab's CA was already in the instance's trust, so there was no dialog: the account
+  logged in verified on its first cycle and Validate Connection went straight to "Info: Test connection successful." Right
+  after the install the account read FAILED/NONE and needed a start. Name mismatch (the vCenter entered by IP): the review dialog
+  came first, then after ACCEPT the error "The target's TLS certificate does not name <ip>. Open the account and enter the host
+  by a name on the certificate ... Accepting the certificate does not fix a name mismatch ...". On an account whose chain is also
+  untrusted the cycle reports "not trusted" first; the name message appears once the chain is trusted.
+- **9.1.1, build 29, fresh install on a FIPS collector, following this guide:** the Add Account form showed every dropdown on
+  its default (see "Configuration Fields"); Validate Connection on the new account showed "Review and Accept Certificate"
+  ("Untrusted certificate found.", CANCEL and ACCEPT), and after ACCEPT "Info: Test connection successful."; four clean
+  cycles followed with 0 warnings, 0 failed reads, 0 values withheld, every collector OK (guest SKIPPED) and `verifyCertificate=true`
+  in the log. Name mismatch (IP): the review dialog, then the name error with the pak's advice, then "Proceed anyway?" let the
+  account be saved; its cycles then failed after 0.0 s with no login (see the two behaviours below).
+- **Allow Insecure SSL** (8.18.7, 9.0.2 and 9.1.1): `true` collects with the configure WARN in the account log, `false` again is
+  verified on the next cycle without accepting the certificate again. On 9.1.1 Validate Connection with it on has no dialog
+  and succeeds at once; the WARN line is in `collector.log` on the node that runs the account's collector (found on 9.0.2 and
+  9.1.1, not found in any log on 8.18.7).
+- **Not seen:** `Recorded` (first sight) as a certificate status; an expired or revoked certificate on a live instance.
+
+**Three behaviours to know about (preview).** A **new** account whose certificate is not trusted looks healthy: it stays
+"Collecting" with an empty status message and publishes no `Collection|*` keys; only the account log says why (an account with
+existing resources does show ERROR, "Collection failed for all N resource(s)"). So **always click Validate Connection and
+accept the certificate before saving a new account**; tracker issue [#34](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/34). In the cycle log the certificate sentences are cut
+off before their end (the "not trusted" one loses its last sentence, the name one is cut mid-word); the table above has the full
+text; [#35](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/35). And **Validate Connection with Allow Insecure SSL on shows only "Test connection successful."**: the warning is in
+`collector.log`, not in the dialog; [#36](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/36).
 
 The ESXi host certificates used by guest file transfers are a separate setting (**Guest File Transfer TLS Validation**).
 
@@ -206,7 +242,7 @@ rest are under Advanced Settings.
 | VM Options Config File | `vm_configuration_config_file` | No | `vm_options` | Check-list file naming the VM configuration properties to collect, as dotted property paths. |
 | Port | `port` | Yes | 443 | HTTPS port of the vCenter. |
 | Allow Insecure SSL | `allowInsecure` | No | `false` | Only the text `true` turns off the certificate checks (see "TLS: the vCenter certificate"). Guest monitoring does not run while it is on. |
-| Cluster Check Period (hours) | `cluster_check_period_hours` | No | 24 | One of 01, 02, 04, 06, 08, 12, 24. |
+| Cluster Check Period (hours) | `cluster_check_period_hours` | No | 24 | One of 01, 02, 04, 06, 08, 12, 24; the form labels them "01 hour", "02 hours" ... "24 hours". |
 | Cluster Check Time (UTC) | `periodic_cluster_check_time` | No | 00:00 | Time of day, `HH:MM` UTC, at which a window ends. |
 | Cluster Check Worst Percent | `cluster_check_worst_percent` | No | 5 | 0 to 50: the share of a window's worst samples set aside. |
 | Monster VM CPU (% of host cores) | `monster_vm_cpu_percent_of_cores` | No | 50 | 1 to 100. |
@@ -221,8 +257,11 @@ rest are under Advanced Settings.
 **A setting that was left alone takes its default, silently.** The form on 9.1.1 shows "--Select--" for an
 enumerated field nobody touched and VCF Operations stores the text `null` for it; an absent value, a blank one and the
 text `null` (any case, spaces around it) all mean "not set" for every optional field above, and the default applies
-with no warning. The enumerated fields declare their default as the preselected choice, so a form that honours it
-preselects it. (A blank check-list file field is the one exception: it reads no file; the text `null` there is "not set".)
+with no warning. The enumerated fields declare their default as the preselected choice. **Seen on 9.1.1 with build 29:** the Add Account form,
+untouched, showed Cluster Check Period "24 hours", Guest OS Service Monitoring Status "Disabled", Guest File Transfer TLS
+Validation "Pinned" and Windows Event Log Monitoring Status "Disabled", with Allow Insecure SSL `false` and no "--Select--"; the stored values
+after saving were `24`, `Disabled`, `Pinned`, `Disabled` and `false`. On 9.0.2 with build 27 (before the fix) the form still showed
+"--Select--". The preselection was not looked at on 8.18.7 or 9.0.2 with build 29. (A blank check-list file field is the one exception: it reads no file; the text `null` there is "not set".)
 
 **A value that is not allowed** (a period not in the list, a time that is not `HH:MM`, a percentage outside its range,
 a switch that is neither Enabled nor Disabled, a guest TLS mode that is not one of the three) falls back to the default
@@ -233,7 +272,11 @@ time the account is configured** (saved, or the adapter started). It is not repe
 allowed, its value and what is used instead; `None in the configuration` when every setting is usable; it goes out with the
 other Collection Health properties, on change and in the full refresh every 12th cycle, and keeps its value in between);
 the lines of **Test Connection** (each as a WARNING in the result and a WARN in `collector.log`); and the WARN line in the
-account log. The shipped alert "vCommunity Collection Warnings" does not look at this property. (Builds before 28 warned every
+account log. The shipped alert "vCommunity Collection Warnings" does not look at this property. Seen on 9.1.1 with build 29
+(Cluster Check Period set to `7` through the API): one WARN at configure and none on later cycles, `Warnings in Last Cycle`
+stayed 0, the property named the setting about a minute after the cycle that computed it, and after the value was restored it
+cleared after the next cycle plus about a minute and a half. (Test Connection's WARN in `collector.log` was seen; the dialog
+itself was not looked at.) (Builds before 28 warned every
 cycle, so Collection Health showed a warning for as long as the value stood.)
 
 **Two every-cycle warnings stay on purpose.** Guest monitoring switched on while Allow Insecure SSL is on, and guest
@@ -479,9 +522,9 @@ development build 0.0.0.26 or earlier, upgraded in place:
 
 - **The account survives.** Its identity is the vCenter Server field and the four check-list file names; the removed and
   the added fields are all Advanced Settings and not part of it, so the platform does not need to recreate it.
-- **The old values are not read.** The platform keeps a removed identifier's stored value until the account is next saved
-  (seen on another pak's upgrade), and this build never reads `vcenter_tls_validation` or `vcenter_thumbprint`, whatever
-  they hold. So a Trust on First Use or Pinned account does **not** stay insecure or pinned.
+- **The old values are gone.** Seen on 8.18.7 and 9.0.2 (0.0.0.26 to 0.0.0.27, same adapter instance id): immediately after the
+  upgrade the API listed `allowInsecure` = `false` and no longer listed `vcenter_tls_validation` or `vcenter_thumbprint`. The
+  build never reads them anyway, so a Trust on First Use or Pinned account does **not** stay insecure or pinned.
 - **It becomes verified, silently.** The new field has no stored value, which reads as `false`: the account verifies the
   vCenter certificate from the first collection after the upgrade. If the collector does not already trust that
   certificate (a lab vCenter with a self-signed certificate, which the old default accepted), every cycle fails with
@@ -490,7 +533,9 @@ development build 0.0.0.26 or earlier, upgraded in place:
 - **What to do:** edit the account, click **Validate Connection**, review and accept the certificate, save. A lab that
   wants the old behaviour sets **Allow Insecure SSL** to `true` (guest monitoring then stays off). An account that had used
   Enabled and had accepted the certificate keeps working, because the accepted certificate is stored on the account.
-  This path (edit, then accept) is what is expected to work and has not been proven on an upgraded instance: **if the dialog
+  Seen on 8.18.7 with build 27: the upgraded account failed closed on its first cycle, Edit account, Validate Connection offered
+  the certificate with no password re-entry, ACCEPT then "Test connection successful.", and saving gave a verified login. On 9.0.2
+  (build 27) the lab CA was already trusted, so the account verified on its first cycle with no dialog. **If the dialog
   does not offer the certificate, or the new field is missing from the edit form, delete the account and create it again**
   (its content-library, item and template objects are recreated on the next collection; the keys on the vCenter objects are
   kept in VCF Operations).
@@ -534,8 +579,9 @@ overwrote four operator-edited files byte for byte). So an edit to a file with a
 Work on a copy under another name and point the account's field at it. The copy can only be made in the VCF Operations
 user interface: there is no API for cloning or creating one of these files.
 
-Where the files are (seen on 9.1.1): **Administration > Configurations > Management Packs Configuration**, section
-**Configuration Files**; the six shipped files are under **System Defined**. Their menu offers Edit, Delete, Clone, Move,
+Where the files are (seen on 9.1.1): **Administration > Configurations**, the **Management Packs Configuration** tile (it is below
+the fold on that page); the page shows the **System Defined** and **User Defined** folders directly, with no "Configuration
+Files" header. The six shipped files are under **System Defined**. Their menu offers Edit, Delete, Clone, Move,
 Export, Import and Create New Folder. (Not looked at on 8.18.7 or 9.0.2; the older wording "Infrastructure Operations" is
 not a menu on 9.1.1.)
 
@@ -585,39 +631,41 @@ settings could not be read is counted as a withheld value.
 
 ## Step-by-Step Installation
 
-The menu paths below were seen on 9.1.1. 8.18.7 and 9.0.2 may word them differently. Three things to know before you start:
-the pak is unsigned (step 2); the vCenter must be entered by a name on its certificate (an IP address fails the name check
-and the field cannot be edited later); and the choices of the dropdown fields should show their defaults preselected, which
-has not been seen live yet (a field left on "--Select--" is stored as `null` and read as the default).
+The menu paths below were seen on 9.1.1. 8.18.7 and 9.0.2 may word them differently. Two things to know before you start:
+the pak is unsigned (step 2), and the vCenter must be entered by a name on its certificate (an IP address fails the name check
+and the field cannot be edited later).
 
-1. **Administration > Integrations > Repository**, then **ADD**. The wizard has three steps: Select, End User License
-   Agreement (tick "I accept"), Install. Click **FINISH** when it is done. (A path that does not exist on 9.1.1:
+1. **Administration > Integrations > Repository**, then **ADD**. (A path that does not exist on 9.1.1:
    "Administration > Solutions > Add".)
-2. **The pak is unsigned.** The upload fails with only "Upload failed." unless **Ignore the PAK file signature checking** is
-   ticked; then confirm "You have selected a management pack that is unsigned. Install this management pack?".
+2. **The pak is unsigned: tick "Ignore the PAK file signature checking" before you click Upload.** Without it the upload fails
+   with only "Upload failed." Then upload; VCF Operations shows "Staging..." for about 30 seconds. Tick "I accept" on the End User
+   License Agreement page before **NEXT**, then confirm "You have selected a management pack that is unsigned. Install this
+   management pack?" with **YES**. **FINISH** appears only after the install reads "Applied and Cleaned (Completed)".
 3. **Administration > Integrations > Accounts > ADD**, then the tile **VCF Content Factory vCommunity**. (There is no "Data
    Sources" menu on 9.1.1.)
-4. Give the account a **Name** (required) and fill in **vCenter Server**. For the credential, give it a **Credential
-   name**, the vCenter user name and password; Windows User Name and Windows Password are optional. Open **Advanced
+4. Give the account a **Name** (required) and fill in **vCenter Server**. The credential field is a dropdown with a **+** icon
+   to create one: give it a **Credential name**, the vCenter user name and password; Windows User Name and Windows Password are optional. Open **Advanced
    Settings** for the rest; leave a field alone and its default applies.
 5. Click **Validate Connection**. If the collector does not already trust the vCenter certificate, VCF Operations shows it
    in a review dialog: check it and **accept** it, then the test runs and shows "Info: Test connection successful."
    Then click **Add**. (The vCenter Server field must carry a name that is on the certificate; see "TLS: the vCenter
    certificate".)
-6. The first collection runs about a second after Add, not at the next five-minute interval. The account shows
-   "Warning" (State: Collecting, Status: None) for the first minutes, then "Collecting".
+6. The first collection runs about a second after Add, not at the next five-minute interval (after an **Edit** and save, the first
+   cycle came either seconds later or at the next tick, up to a few minutes). The account shows "Warning" (State: Collecting,
+   Status: None) for the first minutes, then "Collecting". On 9.0.2 an account read FAILED/NONE right after an install and needed
+   a start.
 
 ## Uninstalling
 
 Seen on 9.1.1: **Administration > Integrations > Repository**, the **VCF Content Factory vCommunity** tile, its **...** menu, **Uninstall**. The
 dialog has no option about content: it only asks you to tick "I understand the risk and agree" and says that associated
-data and out-of-the-box content will be deleted. It takes about two minutes (a reinstall took about eight).
+data and out-of-the-box content will be deleted. The uninstall took about two minutes (2 min 17 s on 9.1.1); an install took six to eight minutes.
 
 What the uninstall removed (measured on 9.1.1):
 
 - the adapter instance (the account) and its credential;
-- all six check-list files, **including any edit you made in a file with a default name**; a copy under another name is
-  not one of them;
+- all six shipped check-list files, **including any edit you made in a file with a default name** (the API still listed them for
+  about a minute afterwards: it lags the UI by up to a minute); a copy under another name is not one of them and stayed;
 - all the content of the pak: 170 views, 52 dashboards, 16 report templates, 3 super metrics, 10 symptoms and 4 alerts (the recommendation and the inventory tree were not counted).
 
 What it left:
@@ -704,8 +752,14 @@ The UI fills in the text field defaults (on 9.1.1 before build 28 it preselected
   check-list file field as its default name, and an empty string as "no list".)
 - **The certificate must be accepted before the account can collect.** An account made through the API with the default
   Allow Insecure SSL (`false`) fails closed every cycle until the vCenter certificate is accepted: run
-  `POST /api/adapters/testConnection` and then `PATCH /api/adapters` with the accepted certificate (the UI's Validate
-  Connection does the same). Sending `allowInsecure` as `true` skips the checks (a lab only; guest monitoring stays off).
+  `POST /api/adapters/testConnection` (it returns 201 with `adapter-certificates`) and then `PATCH /api/adapters` with the accepted
+  certificate (the UI's Validate Connection does the same). **The PATCH body that works is the testConnection response itself, sent
+  back with `id` set to the real adapter instance id** (seen on 9.0.2); a flat body fails with 400 "'AdapterInstanceInfoDto.certificates'
+  cannot be null". Sending `allowInsecure` as `true` skips the checks (a lab only; guest monitoring stays off).
+- **To change an identifier of an existing account**, use `PUT /api/adapters` with the GET body minus `links` and `collectorGroupId`; the
+  accepted certificate survives that PUT (seen on 9.0.2).
+- **A second account for the same vCenter with the same host and the same four check-list file names is refused** (POST 500, "Resource ... already exists").
+- **The API lags the UI** for check-list files by up to about a minute.
 - **A new instance starts STOPPED.** Start it with
   `PUT /api/adapters/{id}/monitoringstate/start`.
 - **`POST /api/adapters/testConnection` stores the credential** it was given as a

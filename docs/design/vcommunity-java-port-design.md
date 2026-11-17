@@ -236,6 +236,13 @@ certificate probe is separate, below).
   login first and nothing is published that cycle: `Changed` appears only for a new certificate the collector already trusts, and an
   untrusted renewal is a login failure. Failure: presented thumbprint unknown, counted (cause `F-CERT-PROBE`),
   Certificate Status withheld (DV-23).
+- **Live results (2026-11-16).** Build 27 on 8.18.7: an upgraded account failed closed on its first cycle (no vCenter login), the
+  accept dialog fixed it, and the old identifiers were gone right after the upgrade. Build 27 on 9.0.2: the lab CA was already
+  trusted, so no dialog and a verified first cycle. Build 29 on 9.1.1 (fresh install, FIPS collector): the dropdown defaults
+  preselected (DV-115), accept dialog, four clean verified cycles. Not generalised: build 29 was installed on 9.1.1 only, and
+  the dropdown preselection was seen on 9.1.1 only. Three preview behaviours were found and left open: a new account with an
+  untrusted certificate shows no failure on the account (#34), the failure sentences are cut off in the log (#35),
+  and Validate Connection shows no warning with Allow Insecure SSL on (#36). Details: `docs/installing.md`, "TLS".
 - Failure sentences (`TlsFailure.explain`): untrusted chain (accept it in Validate Connection), a name the certificate does not
   carry (enter a name that is on it; accepting does not help), expired or revoked; each also under the FIPS provider's own alert
   shape, which is why the walk follows causes and suppressed exceptions.
