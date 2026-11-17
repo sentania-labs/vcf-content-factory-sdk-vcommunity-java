@@ -134,6 +134,12 @@ Enabled. Results and failures appear in the `Collector:guest` keys on the vCente
 
 Upgrade in place by uploading the new pak. Shipped configuration files are overwritten; your copies are kept.
 
+Two exceptions, where you must uninstall first and then install fresh:
+
+- **The Python vCommunity pack.** See [Moving from the Python pack](#moving-from-the-python-pack).
+- **The earlier Java port of vCommunity (version 1.0.0.x).** It also installed views under built-in view ids.
+  Uninstall it, [restore the built-in views](#restoring-built-in-views), then install this pak.
+
 ## Uninstalling
 
 **Administration > Integrations > Repository**, the pak's **...** menu, **Uninstall**. It takes about two minutes.
