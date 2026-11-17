@@ -96,6 +96,10 @@ Inferred, not measured. Remove the earlier port first, and restore the built-in 
 
 ## Network Speed Degradation
 
+**Limitation:** NICs on auto-negotiate (the normal setting for 10 GbE and faster) have no configured speed and are
+skipped, so this figure covers only fixed-speed NICs. Do not set a fixed speed to get it. See issue
+[#39](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/39).
+
 Network Speed Degradation (host), Total Network Speed Degradation (Datacenter and vSphere World)
 compare each host NIC's actual link speed with its configured speed. Both are properties of the host's
 NICs in VCF Operations, one pair per NIC: `net:<nic>|speed` (Network | Actual Speed) and
@@ -319,8 +323,8 @@ rest of the account, as any credential field is) and the collector asks vCenter 
 it is not ready for general use:
 
 - **Every powered-on Windows VM with VMware Tools running is in scope**, domain controllers included. There is no per-VM
-  filter or exclusion list, and no control over which VM goes first (the order is by vCenter object id). To keep a VM out,
-  power it off, stop its tools, or leave guest monitoring off. Only the services and events you list are collected.
+  filter or exclusion list, and no control over which VM goes first (the order is by vCenter object id). There is no supported way to keep one VM out;
+  if that matters, leave guest monitoring off. Only the services and events you list are collected.
 - **One refusal can stop everything.** The account (UPN form) was accepted on two member servers, and the collection ran
   there. Two domain controllers refused it (the account has no local logon right on a domain controller), and that paused
   guest collection for all VMs (see "Account lockout"). The values published for the two accepted VMs were not checked.
