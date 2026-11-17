@@ -1,13 +1,12 @@
 package com.vcfcf.adapters.vcommunity;
 
 import com.vcfcf.adapters.vcommunity.VCommunityConfig.GuestTlsMode;
-import com.vcfcf.adapters.vcommunity.VCommunityConfig.TlsMode;
 import com.vcfcf.adapters.vcommunity.list.ListKind;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/** The 19 fields: defaults, fallbacks, failures, redaction. */
+/** The 18 fields: defaults, fallbacks, failures, redaction. */
 public final class ConfigTest {
 
     private static final String PIN64 = "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899";
@@ -30,8 +29,8 @@ public final class ConfigTest {
         defaults();
         periodAndTime();
         wholeNumbers();
-        tlsModes();
-        thumbprints();
+        allowInsecure();
+        unsetValues();
         failures();
         guestAndSwitches();
         filesAndIdentity();
@@ -48,7 +47,7 @@ public final class ConfigTest {
         T.eq("vc.example.test", parse(fields()).asciiHost(), "ASCII is unchanged");
         T.eq("fe80::1", parse(fields("host", "fe80::1")).asciiHost(), "IPv6 literal is unchanged");
         T.eq("https://xn--bcher-kva.example:443", VCommunityConfig.certificateCheckUrl(
-                fields("host", "b\u00fccher.example", "vcenter_tls_validation", "Enabled")::get), "review URL");
+                fields("host", "b\u00fccher.example")::get), "review URL");
         T.eq("bad..name\u00fc", parse(fields("host", "bad..name\u00fc")).asciiHost(), "an unusable name is left as entered");
         T.done("config IDN host");
     }
@@ -57,8 +56,7 @@ public final class ConfigTest {
         VCommunityConfig c = parse(fields());
         T.eq("vc.example.test", c.host, "host");
         T.eq(443, c.port, "port default");
-        T.eq(TlsMode.TRUST_ON_FIRST_USE, c.tlsMode, "tls default");
-        T.eq("", c.thumbprint, "no thumbprint outside Pinned");
+        T.check(!c.allowInsecure, "a new account verifies the certificate");
         T.eq("esxi_advanced_system_settings", c.esxiSettingsFile, "esxi settings file");
         T.eq("esxi_packages", c.esxiPackagesFile, "esxi packages file");
         T.eq("vm_advanced_parameters", c.vmParamsFile, "vm params file");
@@ -132,47 +130,76 @@ public final class ConfigTest {
         T.done("config whole numbers");
     }
 
-    static void tlsModes() {
-        T.eq(TlsMode.TRUST_ON_FIRST_USE, parse(fields("vcenter_tls_validation", "")).tlsMode, "blank");
-        T.eq(TlsMode.TRUST_ON_FIRST_USE, parse(fields("vcenter_tls_validation", "trust on first use")).tlsMode, "lower");
-        T.eq(TlsMode.TRUST_ON_FIRST_USE, parse(fields("vcenter_tls_validation", "TRUST ON FIRST USE")).tlsMode, "upper");
-        T.eq(TlsMode.ENABLED, parse(fields("vcenter_tls_validation", "enabled")).tlsMode, "enabled");
-        T.eq(TlsMode.ENABLED, parse(fields("vcenter_tls_validation", " Enabled ")).tlsMode, "padded");
-        T.eq(TlsMode.PINNED, parse(fields("vcenter_tls_validation", "PINNED", "vcenter_thumbprint", PIN64)).tlsMode, "pinned");
-        T.throwsIae(() -> parse(fields("vcenter_tls_validation", "Strict")),
-                "vCenter TLS Validation 'Strict'", "unknown mode names the field and value");
-        T.throwsIae(() -> parse(fields("vcenter_tls_validation", "off")), "Trust on First Use", "lists the modes");
-        T.done("config TLS modes");
+    /** Each optional setting: absent, blank, the text null (any case, padded), a valid value, an invalid one. */
+    static void unsetValues() {
+        String[] unset = {null, "", "  ", "null", "NULL", " Null "};
+        // every field with its default, a valid non-default value, and an invalid one
+        Object[][] cases = {
+            {"cluster_check_period_hours", "12", "7", (java.util.function.Function<VCommunityConfig, Object>) c -> c.periodHours, 24, 12},
+            {"periodic_cluster_check_time", "06:30", "noon", (java.util.function.Function<VCommunityConfig, Object>) c -> c.checkHour * 100 + c.checkMinute, 0, 630},
+            {"cluster_check_worst_percent", "10", "51", (java.util.function.Function<VCommunityConfig, Object>) c -> c.worstPercent, 5, 10},
+            {"monster_vm_cpu_percent_of_cores", "60", "0", (java.util.function.Function<VCommunityConfig, Object>) c -> c.monsterCpuPercent, 50, 60},
+            {"monster_vm_memory_percent_of_dram", "30", "x", (java.util.function.Function<VCommunityConfig, Object>) c -> c.monsterMemPercent, 40, 30},
+            {"monster_vm_memory_min_gb", "128", "zero", (java.util.function.Function<VCommunityConfig, Object>) c -> c.monsterMemMinGb, 256, 128},
+            {"port", "8443", null, (java.util.function.Function<VCommunityConfig, Object>) c -> c.port, 443, 8443},
+            {"serviceMonitoring", "Enabled", "enabled", (java.util.function.Function<VCommunityConfig, Object>) c -> c.serviceMonitoring, false, true},
+            {"winEventMonitoring", "Enabled", "yes", (java.util.function.Function<VCommunityConfig, Object>) c -> c.eventMonitoring, false, true},
+            {"guest_tls_validation", "Strict", "Maybe", (java.util.function.Function<VCommunityConfig, Object>) c -> c.guestTlsMode, GuestTlsMode.PINNED, GuestTlsMode.STRICT},
+        };
+        for (Object[] k : cases) {
+            String key = (String) k[0];
+            @SuppressWarnings("unchecked")
+            java.util.function.Function<VCommunityConfig, Object> get = (java.util.function.Function<VCommunityConfig, Object>) k[3];
+            for (String u : unset) {
+                VCommunityConfig c = parse(fields(key, u));
+                T.eq(k[4], get.apply(c), key + " '" + u + "' is the default");
+                T.check(c.warnings.isEmpty() && c.guestTlsError == null, key + " '" + u + "' is silent: " + c.warnings);
+            }
+            VCommunityConfig ok = parse(fields(key, (String) k[1]));
+            T.eq(k[5], get.apply(ok), key + " valid value");
+            T.check(ok.warnings.isEmpty() && ok.guestTlsError == null, key + " valid is silent");
+            if (k[2] != null) {
+                VCommunityConfig bad = parse(fields(key, (String) k[2]));
+                // an unknown guest TLS mode has no fallback: guest operations stay off (DV-29)
+                T.eq(key.equals("guest_tls_validation") ? null : k[4], get.apply(bad), key + " invalid value falls back");
+                T.check(bad.warnings.size() + (bad.guestTlsError == null ? 0 : 1) == 1, key + " invalid is reported once: " + bad.warnings);
+            }
+        }
+        // a check-list file: the text null is the default; a blank field still reads no file (DV-62)
+        for (String u : new String[] {"null", "NULL", " null "}) {
+            VCommunityConfig c = parse(fields("esxi_adv_settings_config_file", u, "win_event_config_file", u));
+            T.eq("esxi_advanced_system_settings", c.esxiSettingsFile, "file '" + u + "' is the default");
+            T.eq("windows_event_list", c.winEventFile, "event file '" + u + "' is the default");
+            T.check(c.warnings.isEmpty(), "file null is silent");
+        }
+        T.eq("", parse(fields("esxi_adv_settings_config_file", "")).esxiSettingsFile, "a blank file field reads no file");
+        // Allow Insecure SSL: anything but the text true verifies
+        for (String u : unset) T.check(!parse(fields("allowInsecure", u)).allowInsecure, "allowInsecure '" + u + "' verifies");
+        T.check(parse(fields("allowInsecure", "TRUE")).allowInsecure, "TRUE is insecure");
+        T.check(!parse(fields("allowInsecure", "maybe")).allowInsecure, "any other text verifies");
+        // the review URL takes the same view of the port
+        T.eq("https://vc.example.test:443", VCommunityConfig.certificateCheckUrl(fields("port", "null")::get), "port null in the URL");
+        T.done("config unset values");
     }
 
-    static void thumbprints() {
-        T.eq(PIN64, VCommunityConfig.normalizeThumbprint(PIN64.toUpperCase()), "upper case");
-        StringBuilder colons = new StringBuilder();
-        for (int i = 0; i < PIN64.length(); i += 2) {
-            if (i > 0) colons.append(':');
-            colons.append(PIN64, i, i + 2);
-        }
-        T.eq(PIN64, VCommunityConfig.normalizeThumbprint(colons.toString().toUpperCase()), "colon form");
-        T.eq(PIN64, VCommunityConfig.normalizeThumbprint(" " + colons.toString().replace(':', ' ') + " "), "spaces");
-        T.eq(PIN64, VCommunityConfig.normalizeThumbprint(colons.toString().replace(':', '-')), "dashes");
-        String pin128 = PIN64 + PIN64;
-        T.eq(pin128, VCommunityConfig.normalizeThumbprint(pin128), "sha-512 length");
-        T.throwsIae(() -> VCommunityConfig.normalizeThumbprint(null), "empty", "null");
-        T.throwsIae(() -> VCommunityConfig.normalizeThumbprint("  :: "), "empty", "only separators");
-        T.throwsIae(() -> VCommunityConfig.normalizeThumbprint(PIN64.substring(1)), "63", "63 chars");
-        T.throwsIae(() -> VCommunityConfig.normalizeThumbprint("zz" + PIN64.substring(2)), "hexadecimal", "not hex");
-        T.throwsIae(() -> VCommunityConfig.normalizeThumbprint(PIN64.substring(0, 40)), "64 hex", "sha-1 length refused");
-
-        // Pinned needs a good pin; the other modes ignore the field whatever it holds.
-        T.throwsIae(() -> parse(fields("vcenter_tls_validation", "Pinned")), "Thumbprint", "Pinned with none");
-        T.throwsIae(() -> parse(fields("vcenter_tls_validation", "Pinned", "vcenter_thumbprint", "nothex")),
-                "hexadecimal", "Pinned with garbage");
-        T.eq("", parse(fields("vcenter_thumbprint", "garbage")).thumbprint, "TOFU ignores the field");
-        T.eq("", parse(fields("vcenter_tls_validation", "Enabled", "vcenter_thumbprint", "garbage")).thumbprint,
-                "Enabled ignores the field");
-        T.eq(PIN64, parse(fields("vcenter_tls_validation", "Pinned", "vcenter_thumbprint",
-                colons.toString().toUpperCase())).thumbprint, "Pinned stores the normalised pin");
-        T.done("config thumbprints");
+    static void allowInsecure() {
+        T.check(!parse(fields()).allowInsecure, "absent: verified");
+        T.check(!parse(fields("allowInsecure", "")).allowInsecure, "blank: verified");
+        T.check(!parse(fields("allowInsecure", "false")).allowInsecure, "false: verified");
+        T.check(!parse(fields("allowInsecure", "FALSE")).allowInsecure, "FALSE: verified");
+        T.check(parse(fields("allowInsecure", "true")).allowInsecure, "true: insecure");
+        T.check(parse(fields("allowInsecure", "TRUE")).allowInsecure, "any case");
+        T.check(!parse(fields("allowInsecure", " true")).allowInsecure, "a padded true verifies, as in the other paks");
+        T.check(!parse(fields("allowInsecure", "yes")).allowInsecure, "anything but true verifies");
+        T.check(!parse(fields("allowInsecure", "1")).allowInsecure, "1 verifies");
+        // the removed three-value setting and the thumbprint are not read at all, whatever they hold
+        T.check(!parse(fields("vcenter_tls_validation", "Trust on First Use")).allowInsecure, "the old TOFU value is ignored");
+        T.check(!parse(fields("vcenter_tls_validation", "Pinned", "vcenter_thumbprint", PIN64)).allowInsecure, "old Pinned ignored");
+        T.check(!parse(fields("vcenter_tls_validation", "bogus")).allowInsecure, "an unknown old value is ignored, not an error");
+        T.check(parse(fields("vcenter_tls_validation", "Enabled", "allowInsecure", "true")).allowInsecure, "only allowInsecure decides");
+        T.check(VCommunityConfig.parseAllowInsecure("true") && !VCommunityConfig.parseAllowInsecure(null), "the parse itself");
+        T.contains(parse(fields("allowInsecure", "true")).toString(), "verifyCertificate=false", "toString says it");
+        T.done("config Allow Insecure SSL");
     }
 
     static void failures() {
@@ -188,7 +215,7 @@ public final class ConfigTest {
         T.throwsIae(() -> VCommunityConfig.parse(fields()::get, "u", "", null, null), "Password", "empty password");
         // the message quotes no secret
         try {
-            VCommunityConfig.parse(fields("vcenter_tls_validation", "bogus")::get, "u", "s3cret-pw", null, null);
+            VCommunityConfig.parse(fields("port", "bogus")::get, "u", "s3cret-pw", null, null);
             throw new AssertionError("no failure");
         } catch (IllegalArgumentException e) {
             T.notContains(e.getMessage(), "s3cret-pw", "failure message");
@@ -241,8 +268,7 @@ public final class ConfigTest {
     }
 
     static void redaction() {
-        VCommunityConfig c = VCommunityConfig.parse(fields("vcenter_tls_validation", "Pinned",
-                "vcenter_thumbprint", PIN64)::get, "svc-user", "s3cret-pw", "winu", "w1nd0ws-pw");
+        VCommunityConfig c = VCommunityConfig.parse(fields()::get, "svc-user", "s3cret-pw", "winu", "w1nd0ws-pw");
         String s = c.toString();
         T.notContains(s, "s3cret-pw", "toString");
         T.notContains(s, "w1nd0ws-pw", "toString");
@@ -252,15 +278,13 @@ public final class ConfigTest {
     }
 
     static void certificateCheckUrl() {
-        T.eq("https://vc.example.test:443", VCommunityConfig.certificateCheckUrl(
-                fields("vcenter_tls_validation", "Enabled")::get), "Enabled offers the review");
+        T.eq("https://vc.example.test:443", VCommunityConfig.certificateCheckUrl(fields()::get), "the default offers the review");
         T.eq("https://vc.example.test:8443", VCommunityConfig.certificateCheckUrl(
-                fields("vcenter_tls_validation", "Enabled", "port", "8443")::get), "with the port");
-        T.check(VCommunityConfig.certificateCheckUrl(fields()::get) == null, "TOFU: none");
-        T.check(VCommunityConfig.certificateCheckUrl(fields("vcenter_tls_validation", "Pinned")::get) == null, "Pinned: none");
-        T.check(VCommunityConfig.certificateCheckUrl(fields("vcenter_tls_validation", "Enabled", "host", " ")::get) == null, "no host");
-        T.check(VCommunityConfig.certificateCheckUrl(fields("vcenter_tls_validation", "Enabled", "port", "x")::get) == null, "bad port never throws");
-        T.check(VCommunityConfig.certificateCheckUrl(fields("vcenter_tls_validation", "nonsense")::get) == null, "bad mode never throws");
+                fields("port", "8443")::get), "with the port");
+        T.check(VCommunityConfig.certificateCheckUrl(fields("allowInsecure", "true")::get) == null, "Allow Insecure SSL: none");
+        T.eq("https://vc.example.test:443", VCommunityConfig.certificateCheckUrl(fields("allowInsecure", "false")::get), "false offers it");
+        T.check(VCommunityConfig.certificateCheckUrl(fields("host", " ")::get) == null, "no host");
+        T.check(VCommunityConfig.certificateCheckUrl(fields("port", "x")::get) == null, "bad port never throws");
         T.done("config certificate check url");
     }
 }

@@ -99,10 +99,11 @@ public final class HealthTest {
         s.objectsUnmatched = null;
         CollectionHealth.vcenterKeys(ps, "vc-1", s);
         String p = "vCommunity|Collection Health|";
-        T.eq(new TreeSet<>(Arrays.asList(p + "First Warning", p + "First Failure")),
+        T.eq(new TreeSet<>(Arrays.asList(p + "First Warning", p + "First Failure", p + "Configuration Warnings")),
                 new TreeSet<>(ps.properties().get("vc-1").keySet()), "property keys");
         T.eq("None in the last cycle", ps.properties().get("vc-1").get(p + "First Warning"), "none text");
         T.eq("None in the last cycle", ps.properties().get("vc-1").get(p + "First Failure"), "none text");
+        T.eq("None in the configuration", ps.properties().get("vc-1").get(p + "Configuration Warnings"), "no configuration warnings");
         T.eq(new TreeSet<>(Arrays.asList(p + "Warnings in Last Cycle", p + "Reads Failed in Last Cycle",
                 p + "Values Withheld in Last Cycle", p + "Cycle Seconds")), new TreeSet<>(ps.stats().get("vc-1").keySet()), "stat keys");
         T.eq(0.0, ps.stats().get("vc-1").get(p + "Warnings in Last Cycle"), "a count of zero is a count");
@@ -110,6 +111,7 @@ public final class HealthTest {
 
         s.warnings = 3;
         s.firstWarning = "boom";
+        s.configWarnings = "Cluster Check Period '7' is not one of 01, 02. Using 24 hours.";
         s.firstFailure = "F-LOGIN: no";
         s.collectorStatus.put("check_lists", Status.PARTIAL);
         s.collectorFailures.put("check_lists", 2);
@@ -118,6 +120,7 @@ public final class HealthTest {
         CollectionHealth.vcenterKeys(ps2, "vc-1", s);
         Map<String, Object> pr = ps2.properties().get("vc-1");
         T.eq("boom", pr.get(p + "First Warning"), "first warning text");
+        T.eq("Cluster Check Period '7' is not one of 01, 02. Using 24 hours.", pr.get(p + "Configuration Warnings"), "config warnings text");
         T.eq("F-LOGIN: no", pr.get(p + "First Failure"), "first failure text");
         T.eq("PARTIAL", pr.get(p + "Collector:check_lists|Status"), "collector status");
         T.eq("NOT RUN", pr.get(p + "Collector:guest|Status"), "NOT RUN spelling");

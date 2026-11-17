@@ -51,7 +51,7 @@ public final class PropertiesTest {
             fake.setHandler(vc);
             cfg = EngineTest.cfg(cfgKv);
             vim = new VimSoapClient("localhost:" + fake.port(), "u", "p",
-                    VcenterTls.create(VCommunityConfig.TlsMode.TRUST_ON_FIRST_USE, "", null, null), warns,
+                    VcenterTls.create(true, null, null), warns,
                     5000, 20000, 20000);
             engine = new CycleEngine(cfg, vim,
                     (h, p, t) -> presented == null ? ThumbprintProbe.Result.failed("probe failed")

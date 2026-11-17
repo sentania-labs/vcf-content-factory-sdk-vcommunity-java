@@ -2,7 +2,6 @@ package com.vcfcf.adapters.vcommunity.vim;
 
 import com.vcfcf.adapters.vcommunity.Log;
 import com.vcfcf.adapters.vcommunity.health.Failures;
-import com.vcfcf.adapters.vcommunity.tls.PinMismatchException;
 import com.vcfcf.adapters.vcommunity.tls.TlsFailure;
 import com.vcfcf.adapters.vcommunity.tls.VcenterTls;
 
@@ -175,8 +174,8 @@ public final class VimSoapClient implements VimSession, VimReader {
                 + "<_this type=\"ServiceInstance\">ServiceInstance</_this>"
                 + "</RetrieveServiceContent>", "RetrieveServiceContent", false, shortReadMs);
         if (!sc.isOk()) {
-            // a pin mismatch already says everything; other failures get the step they hit
-            String m = TlsFailure.explain(sc.cause(), tls.mode()) != null ? sc.message()
+            // a certificate failure already says everything; other failures get the step they hit
+            String m = TlsFailure.explain(sc.cause(), tls.insecure(), url) != null ? sc.message()
                     : "reading the service content failed: " + sc.message();
             return VimResult.fault(sc.faultClass(), m, null, sc.bytes(), sc.cause());
         }
@@ -305,10 +304,8 @@ public final class VimSoapClient implements VimSession, VimReader {
             long maxBytes, StreamHandler handler) {
         try {
             return streamOnce(bodyXml, operation, readTimeoutMs, maxBytes, handler);
-        } catch (PinMismatchWrapper e) {
-            return VimResult.fault("Transport", e.getMessage(), null, 0, e.getCause());
         } catch (IOException e) {
-            String tlsText = TlsFailure.explain(e, tls.mode());
+            String tlsText = TlsFailure.explain(e, tls.insecure(), url);
             return VimResult.fault("Transport", tlsText != null ? tlsText : describe(e), null, 0, e);
         } catch (RuntimeException e) {
             return VimResult.fault("Transport", operation + " failed: "
@@ -318,14 +315,7 @@ public final class VimSoapClient implements VimSession, VimReader {
 
     private VimResult<Long> streamOnce(String bodyXml, String operation, int readTimeoutMs,
             long maxBytes, StreamHandler handler) throws IOException {
-        tls.clearPinMismatch();
-        HttpURLConnection conn;
-        try {
-            conn = open(bodyXml, operation, true, connectMs, readTimeoutMs, null);
-        } catch (IOException | RuntimeException e) {
-            rethrowPin(e);
-            throw e;
-        }
+        HttpURLConnection conn = open(bodyXml, operation, true, connectMs, readTimeoutMs, null);
         CappedInputStream body = null;
         javax.xml.stream.XMLStreamReader reader = null;
         try {
@@ -369,10 +359,6 @@ public final class VimSoapClient implements VimSession, VimReader {
                 return VimResult.fault("TooLarge", operation + " answered more than " + maxBytes
                         + " bytes; not read", null, body.read, null);
             }
-            PinMismatchException recorded = tls.takePinMismatch();
-            PinMismatchException pm = TlsFailure.findPin(e);
-            if (pm == null) pm = recorded;
-            if (pm != null) throw new PinMismatchWrapper(pm);
             throw e;
         }
     }
@@ -458,23 +444,12 @@ public final class VimSoapClient implements VimSession, VimReader {
             int readTimeoutMs, Holder<String> cookieOut) {
         try {
             return postOnce(bodyXml, operation, authenticated, connectMs, readTimeoutMs, cookieOut);
-        } catch (PinMismatchWrapper e) {
-            return VimResult.fault("Transport", e.getMessage(), null, 0, e.getCause());
         } catch (IOException e) {
-            String tlsText = TlsFailure.explain(e, tls.mode());
+            String tlsText = TlsFailure.explain(e, tls.insecure(), url);
             return VimResult.fault("Transport", tlsText != null ? tlsText : describe(e), null, 0, e);
         } catch (RuntimeException e) {
             return VimResult.fault("Transport", operation + " failed: "
                     + e.getClass().getSimpleName(), null, 0, e);
-        }
-    }
-
-    /** Carries the clean message of a pin mismatch out of the SSL exception around it. */
-    private static final class PinMismatchWrapper extends IOException {
-        private static final long serialVersionUID = 1L;
-
-        PinMismatchWrapper(PinMismatchException cause) {
-            super(cause.getMessage(), cause);
         }
     }
 
@@ -510,24 +485,9 @@ public final class VimSoapClient implements VimSession, VimReader {
         }
     }
 
-    /** A pin mismatch hidden under another exception is thrown as its own clean message. */
-    private void rethrowPin(Exception e) throws IOException {
-        PinMismatchException recorded = tls.takePinMismatch();
-        PinMismatchException pm = TlsFailure.findPin(e);
-        if (pm == null) pm = recorded;
-        if (pm != null) throw new PinMismatchWrapper(pm);
-    }
-
     private VimResult<XmlNode> postOnce(String bodyXml, String operation, boolean authenticated,
             int connectTimeoutMs, int readTimeoutMs, Holder<String> cookieOut) throws IOException {
-        tls.clearPinMismatch();
-        HttpURLConnection conn;
-        try {
-            conn = open(bodyXml, operation, authenticated, connectTimeoutMs, readTimeoutMs, cookieOut);
-        } catch (IOException | RuntimeException e) {
-            rethrowPin(e);
-            throw e;
-        }
+        HttpURLConnection conn = open(bodyXml, operation, authenticated, connectTimeoutMs, readTimeoutMs, cookieOut);
         CappedInputStream body = null;
         try {
             int code = conn.getResponseCode();
@@ -559,14 +519,6 @@ public final class VimSoapClient implements VimSession, VimReader {
             return faultResult(operation, code, fault);
         } catch (IOException | RuntimeException e) {
             conn.disconnect(); // never reuse a connection that failed
-            // Not only an SSLException: the FIPS provider throws its own alert, an IOException of
-            // another kind, with the pin mismatch below it. When the chain was rewrapped past
-            // recognition, the trust manager's own record of this thread's handshake answers.
-            // The record is always taken, so it never outlives the call that made it.
-            PinMismatchException recorded = tls.takePinMismatch();
-            PinMismatchException pm = TlsFailure.findPin(e);
-            if (pm == null) pm = recorded;
-            if (pm != null) throw new PinMismatchWrapper(pm);
             throw e;
         }
     }

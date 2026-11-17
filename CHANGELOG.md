@@ -3,18 +3,21 @@
 Releases are `v<version>.<build_number>` tags built by this repository's CI. Development builds are stamped
 `0.0.0.<build>` and are kept below, under "Development builds".
 
-## 3.0.0.1 (preview)
+## 3.0.0.29 (preview)
 
 The first public preview of VCF Content Factory vCommunity, a Java port of the vCommunity management pack. It descends
 from Onur Yuzseven's vCommunity (the 1.x line) as continued by Ewan (e1-rahabok, 0.8.1), and is the 3.x line. It needs
-VCF Operations 8.18 or later and was tested on 8.18.7, 9.0.2 and 9.1.1. Send feedback as GitHub issues on this repository.
+VCF Operations 8.18 or later. Collection was tested on 8.18.7, 9.0.2 and 9.1.1 with earlier builds; the verified-by-default
+certificate handling in this build is pending live proof. Send feedback as GitHub issues on this repository.
 
 **What stays the same as the Python pack 0.8.1**
 - The metric and property key names (`vCommunity|...`) are the same, on the same vSphere objects, so existing
-  dashboards, views, reports and super metrics that read them keep working (whether the history of a key continues across
-  the move was not measured on an instance).
-- The account fields, the six check-list files and the content (170 views, 52 dashboards, 16 reports, 3 super metrics,
-  10 symptoms, 4 alerts with 1 recommendation) are the same, converted.
+  dashboards, views, reports and super metrics that read them keep working (measured on 8.18.7: one continuous series per key
+  across the move).
+- The six check-list files and the content (170 views, 52 dashboards, 16 reports, 3 super metrics,
+  10 symptoms, 4 alerts with 1 recommendation) are the same, converted. The account fields are the Python pack's, except
+  that its vCenter TLS Validation and vCenter Thumbprint fields are replaced by Allow Insecure SSL (below), so the account has
+  18 fields where the Python pack had 19, and a new account verifies the vCenter certificate.
 - All content is installed under this pak's own ids, so it never overwrites or deletes the Python pack's content or a
   built-in view. The adapter kind is its own (`vcfcf_vcommunity`): this is not an upgrade of the Python pack. Uninstall
   the Python pack first, then install this one (`docs/installing.md`).
@@ -48,16 +51,69 @@ section 5.7)
 - **Two views were corrected**: VM Memory Limit charts the memory limit (it charted the CPU limit), and the namespace CSV
   view reads the namespace memory limit.
 - **Guest logon lockout protection**: the guest checks (off by default) ask for at most two refused logons per
-  credential in 24 hours and pause after that, so a wrong password cannot lock a domain account (DV-97).
+  credential in 24 hours and pause after that, so a wrong password costs at most two refused logons per credential per 24 hours (DV-97); a directory with a lockout
+  threshold of two or fewer would still lock the account.
+- **The vCenter certificate is verified by default** (the Python pack's default sent the credentials before any check).
+  A new account uses the collector's own trust with a name check: click Validate Connection, review and accept the
+  certificate in the standard dialog, and it is checked from then on. One advanced setting, **Allow Insecure SSL** (default
+  false, the same as the other VCF Content Factory paks), turns the checks off. The Python pack's Trust on First Use and
+  Pinned modes and its thumbprint field are removed (DV-114). Guest monitoring does not run while Allow Insecure SSL is on.
+  The `vCommunity|Certificate|...` keys are still published in both settings, on every cycle that connects (with verification
+  on, an untrusted certificate fails the login first, so `Changed` appears only for a new certificate the collector trusts).
+  **Not yet verified live.** Enter the vCenter by a name on its
+  certificate: an IP address fails the name check unless the certificate lists it, and because the vCenter Server field is the
+  account's identity, an account entered by IP needs a new account to fix.
+- **Untouched settings are silent** (DV-115). The 9.1.1 account form preselects nothing for a dropdown and stores the text
+  `null`; an absent, blank or `null` value of any optional setting takes its default without a warning, and the dropdowns
+  declare their default choice. A value that is not allowed warns once per configuration change and is shown in
+  `vCommunity|Collection Health|Configuration Warnings`; an invalid On/Off value is now reported where the Python pack
+  silently disabled it. **Not yet verified live.**
+- **Guest monitoring is not ready for general use.** It has had one live run (9.0.2): it collected on two member servers and
+  was refused on two domain controllers, which paused it for every VM; it has no per-VM scope. See issues #28, #29, #30 and
+  #17, and `docs/installing.md`, "Guest monitoring".
 - **Collection Health keys**: the adapter reports its own health (`vCommunity|Collection Health|...`: per-collector
   status, causes, values withheld, warnings), and a failed read is withheld and counted, never turned into a value.
 
-**Known gaps** are listed in `README.md` and `docs/overview.md`.
+**Known issues** are listed in `README.md` ("Known issues and unverified") and `docs/overview.md`, and in the tracker.
 
 ## Development builds
 
 Before the first release the pak was built as development builds 1 to 26 (stamped `0.0.0.<build>`, under the version
-`1.0.0` in `adapter.yaml`). Their entries follow, newest first.
+`1.0.0` in `adapter.yaml`); the counter is carried forward, so the release is build 29 under 3.0.0 (builds 27 and 28 were earlier numbers under 3.0.0) and dev builds of it stamp
+`0.0.0.29`. Their entries follow, newest first.
+
+### Build 29 (3.0.0.29)
+
+- fix(adapter): build 29, review of build 28. A setting with a value that is not allowed is now published on every
+  cycle's health keys as the vCenter property `vCommunity|Collection Health|Configuration Warnings` (each setting, its value
+  and what is used instead; `None in the configuration` when clean), outside `Warnings in Last Cycle`, and Test Connection
+  reports it (DV-115). Docs: first-install notes, the alerts and super metrics policy paths (seen on 9.1.1), the lockout
+  wording, the vCenter Server field is a name on the certificate, live proof credited to build 26 only, plus the review's nits.
+  An account whose check-list file field had stored the text `null` now reads the default file name, so its collector object
+  has a new identity after the upgrade (the old one is left as it was).
+
+### Build 28 (3.0.0.28)
+
+- fix(adapter): build 28 (DV-115). The account form on 9.1.1 preselects nothing for an enumerated field and stores the text
+  `null` for one nobody touched; `describe.xml` now flags the default choice of each enumerated field with `default="true"`
+  on the `<enum>` (the form the vendor SDK example and the working MPB Synology describe in the factory's wire reference use), as well as the identifier's own default.
+  An absent, blank or `null` (any case, trimmed) value of any optional setting is "not set": the default applies with no
+  warning. A value that is not allowed now warns once each time the account is configured, in the account log, and no
+  longer on every cycle, so it does not raise `Warnings in Last Cycle` for as long as the value stands; an invalid On/Off
+  value is reported too (it was silently Disabled), and a wrong Guest File Transfer TLS Validation stays a failed guest
+  collector without a per-cycle WARN. A blank check-list file field still reads no file (DV-62). Docs: 9.1.1 menu paths
+  (install, account, policy, check-list files, uninstall), the Uninstalling section, the check-list worked example, the
+  guest monitoring section from the first live run, and Known issues linked to the tracker.
+
+### Build 27 (3.0.0.27)
+
+- feat(adapter): build 27. The vCenter certificate is verified by default and Allow Insecure SSL replaces Trust on First Use,
+  Pinned and the thumbprint field (DV-114; `describe.xml`: `vcenter_tls_validation` and `vcenter_thumbprint` removed,
+  `allowInsecure` added). Guest monitoring refuses to run only while Allow Insecure SSL is on (`F-GUEST-TLS-INSECURE`).
+  Validate Connection adds advice only where it helps (accept an untrusted certificate, renew an expired one), the 8.18.7
+  "trustAnchors parameter must be non-empty" failure is read as an untrusted certificate, and the verified path fails closed
+  with a real expired-certificate handshake test. The build number is carried forward (no restart at 1), so the lab's
+  `0.0.0.26` is never downgraded. Docs: TLS, upgrade from a development build, API accounts, guest section corrections.
 
 ## 1.0.0.26 (Unreleased)
 

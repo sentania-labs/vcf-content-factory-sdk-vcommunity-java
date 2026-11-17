@@ -88,6 +88,7 @@ public final class ConnectionTester {
     public static Report run(VCommunityConfig cfg, VimSession vim, ThumbprintProbe.Probe probe,
             OpsApi ops, CheckListStore store, String notBuilt, boolean expected) throws Exception {
         Report r = new Report();
+        for (String w : cfg.configurationWarnings()) r.flag("WARNING: " + w);
         vim.beginCycle();
         VimResult<About> session = vim.ensureSession();
         if (!session.isOk()) {
@@ -101,17 +102,18 @@ public final class ConnectionTester {
         }
 
         ThumbprintProbe.Result pr = probe.probe(cfg.asciiHost(), cfg.port, 10_000);
-        String tlsLine = "vCenter TLS Validation: " + cfg.tlsMode.label + "; "
-                + (pr.ok() ? "the certificate's SHA-256 thumbprint is " + pr.thumbprint()
+        String tlsLine = (cfg.allowInsecure
+                ? "Allow Insecure SSL is on: the vCenter certificate is not verified (the credentials go to whatever answers at this address)"
+                : "the vCenter certificate is verified (trusted by this collector and carrying the name " + cfg.asciiHost() + ")")
+                + "; " + (pr.ok() ? "its SHA-256 thumbprint is " + pr.thumbprint()
                         : "the certificate thumbprint could not be read (" + pr.failure() + ")");
-        if (pr.ok()) r.lines.add(tlsLine);
+        if (pr.ok() && !cfg.allowInsecure) r.lines.add(tlsLine);
         else r.flag(tlsLine);
 
-        if ((cfg.serviceMonitoring || cfg.eventMonitoring) && com.vcfcf.adapters.vcommunity.guest.GuestPlan.REQUIRE_CHECKED_VCENTER_TLS
-                && cfg.tlsMode == VCommunityConfig.TlsMode.TRUST_ON_FIRST_USE) {
-            r.flag("WARNING: guest monitoring is enabled but will not run: vCenter TLS Validation is Trust on First "
-                    + "Use, and the Windows account would be sent to a vCenter whose certificate is not checked. Set "
-                    + "it to Enabled or Pinned (with the vCenter Thumbprint) to use guest monitoring");
+        if ((cfg.serviceMonitoring || cfg.eventMonitoring) && cfg.allowInsecure) {
+            r.flag("WARNING: guest monitoring is enabled but will not run: Allow Insecure SSL is on, and the Windows "
+                    + "account would be sent to a vCenter whose certificate is not checked. Turn Allow Insecure SSL off "
+                    + "(and accept the certificate in Validate Connection) to use guest monitoring");
         }
 
         boolean suite = false;

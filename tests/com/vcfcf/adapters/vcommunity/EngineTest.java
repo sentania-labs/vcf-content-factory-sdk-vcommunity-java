@@ -142,6 +142,7 @@ public final class EngineTest {
         vcenterObjectMissing();
         suiteApiMissing();
         checkListProblems();
+        configurationWarnings();
         pushFailure();
         probeFailure();
         deadline();
@@ -290,6 +291,32 @@ public final class EngineTest {
         T.check(!res.metrics().containsKey("Collection|objects_unmatched"), "no lookup, no count");
         T.check(!res.metrics().containsKey("Collection|checklist_entries_skipped"), "no lists, no count");
         T.done("engine: no Suite API client is reported, not hidden");
+    }
+
+    /** An invalid setting: durable Configuration Warnings every cycle, outside the cycle's warning count; Test Connection says it. */
+    static void configurationWarnings() throws Exception {
+        VCommunityConfig bad = cfg("cluster_check_period_hours", "7", "guest_tls_validation", "Maybe");
+        Rig r = new Rig(bad);
+        for (int cycle = 0; cycle < 2; cycle++) {
+            CycleEngine.Result res = r.run();
+            T.eq(0, res.summary.warnings, "cycle " + cycle + ": a bad setting is not a warning of the cycle");
+            if (cycle == 0) {
+                // a property goes out on change and on every 12th cycle, like the other health properties
+                Object cw = r.ops.pushedProps.get(cycle).get("vc-res-1").get(HEALTH + "Configuration Warnings");
+                T.contains(String.valueOf(cw), "Cluster Check Period '7'", "the setting and its value");
+                T.contains(String.valueOf(cw), "Using 24 hours", "and what is used instead");
+                T.contains(String.valueOf(cw), "Maybe", "the guest TLS value too");
+            }
+            r.clock.addAndGet(300_000);
+            T.eq(0.0, r.ops.pushedStats.get(cycle).get("vc-res-1").get(HEALTH + "Warnings in Last Cycle"), "counter untouched");
+        }
+        Rig ok = new Rig(cfg());
+        ok.run();
+        T.eq("None in the configuration", ok.ops.pushedProps.get(0).get("vc-res-1").get(HEALTH + "Configuration Warnings"), "clean: None");
+        ConnectionTester.Report rep = ConnectionTester.run(bad, r.vim, (h, p, t) -> ThumbprintProbe.Result.found("cd".repeat(32)),
+                r.ops, new CheckListStore(r.log));
+        T.contains(String.join("|", rep.attentionLines()), "Cluster Check Period '7'", "Test Connection reports it");
+        T.done("configuration warnings are published and tested");
     }
 
     static void checkListProblems() throws Exception {
@@ -454,7 +481,8 @@ public final class EngineTest {
                 r.ops, new CheckListStore(r.log));
         String text = rep.text();
         T.contains(text, "Logged in to VMware vCenter Server 8.0.3", "login");
-        T.contains(text, "Trust on First Use", "mode");
+        T.contains(text, "the vCenter certificate is verified", "the TLS posture is said");
+        T.notContains(text, "Allow Insecure SSL is on", "and it is not the insecure one");
         T.contains(text, "cd".repeat(32), "thumbprint shown");
         T.contains(text, "The VCF Operations Suite API answered", "suite api");
         T.contains(text, "ESXi Advanced System Settings 'esxi_advanced_system_settings': OK, 1 item(s)", "a file with its count");
@@ -472,14 +500,20 @@ public final class EngineTest {
                 clean.ops, new CheckListStore(clean.log));
         T.check(!ok.needsAttention(), "a clean report is not a warning: " + ok.text());
 
+        // Allow Insecure SSL is said in the report, and is a warning
+        VCommunityConfig insecureCfg = cfg("allowInsecure", "true");
+        Rig ir = new Rig(insecureCfg);
+        ConnectionTester.Report ip = ConnectionTester.run(insecureCfg, ir.vim, (h, p, t) -> ThumbprintProbe.Result.found("cd".repeat(32)),
+                ir.ops, new CheckListStore(ir.log));
+        T.contains(String.join("|", ip.attentionLines()), "Allow Insecure SSL is on: the vCenter certificate is not verified", "a warning");
         // W5: guest monitoring over a vCenter connection that is not checked is said, and is a warning
-        VCommunityConfig guestOn = cfg("serviceMonitoring", "Enabled");
+        VCommunityConfig guestOn = cfg("serviceMonitoring", "Enabled", "allowInsecure", "true");
         Rig gr = new Rig(guestOn);
         ConnectionTester.Report gp = ConnectionTester.run(guestOn, gr.vim, (h, p, t) -> ThumbprintProbe.Result.found("cd".repeat(32)),
                 gr.ops, new CheckListStore(gr.log));
         T.contains(gp.text(), "guest monitoring is enabled but will not run", "said in the test");
-        T.contains(String.join("|", gp.attentionLines()), "Trust on First Use", "as a warning");
-        VCommunityConfig guestOk = cfg("serviceMonitoring", "Enabled", "vcenter_tls_validation", "Enabled");
+        T.contains(String.join("|", gp.attentionLines()), "Allow Insecure SSL is on, and the Windows account", "as a warning");
+        VCommunityConfig guestOk = cfg("serviceMonitoring", "Enabled");
         Rig gk = new Rig(guestOk);
         T.notContains(ConnectionTester.run(guestOk, gk.vim, (h, p, t) -> ThumbprintProbe.Result.found("cd".repeat(32)), gk.ops,
                 new CheckListStore(gk.log)).text(), "will not run", "nothing to say when the connection is checked");

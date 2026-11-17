@@ -100,6 +100,8 @@ final class FakeVc implements AutoCloseable {
 
     private final ServerSocket server;
     final X509Certificate cert;
+    /** The certificate a client must trust for this server: the leaf, or the CA that signed it. */
+    final X509Certificate anchor;
     final List<Req> requests = new CopyOnWriteArrayList<>();
     final AtomicInteger connections = new AtomicInteger();
     private volatile Handler handler;
@@ -170,10 +172,19 @@ final class FakeVc implements AutoCloseable {
         return new FakeVc(h, "dns:localhost,ip:127.0.0.1", true);
     }
 
+    /** A server whose certificate expired yesterday (started three days ago, valid for one day). */
+    static FakeVc withExpiredCertificate(Handler h) throws Exception {
+        return new FakeVc(h, "dns:localhost,ip:127.0.0.1", false, "-3d");
+    }
+
     private static KeyStore sharedStore;
     private static char[] sharedPassword;
 
     private FakeVc(Handler h, String san, boolean shared) throws Exception {
+        this(h, san, shared, null);
+    }
+
+    private FakeVc(Handler h, String san, boolean shared, String startDate) throws Exception {
         this.handler = h;
         KeyStore store;
         char[] pw;
@@ -183,7 +194,7 @@ final class FakeVc implements AutoCloseable {
                 pw = sharedPassword;
             } else {
                 pw = randomPassword();
-                store = generate(san, pw);
+                store = generate(san, pw, startDate);
                 if (shared) {
                     sharedStore = store;
                     sharedPassword = pw;
@@ -191,6 +202,9 @@ final class FakeVc implements AutoCloseable {
             }
         }
         this.cert = (X509Certificate) store.getCertificate("fake");
+        // what a client must trust: the leaf itself when it is self-signed, else the CA that signed it
+        java.security.cert.Certificate ca = store.getCertificate("ca");
+        this.anchor = ca != null ? (X509Certificate) ca : this.cert;
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         kmf.init(store, pw);
         SSLContext ctx = SSLContext.getInstance("TLS");
@@ -203,10 +217,13 @@ final class FakeVc implements AutoCloseable {
     }
 
     /** A key pair and certificate from the JDK's keytool, in a temporary directory that is removed before this returns. */
-    private static KeyStore generate(String san, char[] pw) throws Exception {
+    private static KeyStore generate(String san, char[] pw, String startDate) throws Exception {
         Path dir = Files.createTempDirectory("fakevc");
         try {
             File ks = dir.resolve("ks.p12").toFile();
+            if (startDate != null) {
+                return generateExpired(dir, san, pw, startDate);
+            }
             run(javaTool("keytool"), "-genkeypair", "-alias", "fake", "-keyalg", "RSA", "-keysize", "2048",
                     "-validity", "2", "-dname", "CN=localhost", "-ext", "san=" + san,
                     "-storetype", "PKCS12", "-keystore", ks.getPath(), "-storepass", new String(pw),
@@ -258,6 +275,39 @@ final class FakeVc implements AutoCloseable {
 
     private static String javaTool(String name) {
         return new File(new File(System.getProperty("java.home"), "bin"), name).getPath();
+    }
+
+    /**
+     * A leaf signed by a CA of the test's own, whose validity ended yesterday. A self-signed leaf cannot be used for this: a
+     * trust anchor's dates are not checked, so only a leaf below an anchor shows the platform's expiry failure.
+     */
+    private static KeyStore generateExpired(Path dir, String san, char[] pw, String startDate) throws Exception {
+        String keytool = javaTool("keytool");
+        String p = new String(pw);
+        File ca = dir.resolve("ca.p12").toFile();
+        File ks = dir.resolve("ks.p12").toFile();
+        File csr = dir.resolve("leaf.csr").toFile();
+        File leaf = dir.resolve("leaf.pem").toFile();
+        File caPem = dir.resolve("ca.pem").toFile();
+        run(keytool, "-genkeypair", "-alias", "ca", "-keyalg", "RSA", "-keysize", "2048", "-validity", "30",
+                "-dname", "CN=test-ca", "-ext", "bc:c", "-storetype", "PKCS12", "-keystore", ca.getPath(),
+                "-storepass", p, "-keypass", p);
+        run(keytool, "-exportcert", "-alias", "ca", "-rfc", "-file", caPem.getPath(), "-keystore", ca.getPath(), "-storepass", p);
+        run(keytool, "-genkeypair", "-alias", "fake", "-keyalg", "RSA", "-keysize", "2048", "-validity", "30",
+                "-dname", "CN=localhost", "-ext", "san=" + san, "-storetype", "PKCS12", "-keystore", ks.getPath(),
+                "-storepass", p, "-keypass", p);
+        run(keytool, "-certreq", "-alias", "fake", "-file", csr.getPath(), "-keystore", ks.getPath(), "-storepass", p);
+        run(keytool, "-gencert", "-alias", "ca", "-infile", csr.getPath(), "-outfile", leaf.getPath(), "-rfc",
+                "-startdate", startDate, "-validity", "1", "-ext", "san=" + san, "-keystore", ca.getPath(),
+                "-storepass", p, "-keypass", p);
+        run(keytool, "-importcert", "-noprompt", "-alias", "ca", "-file", caPem.getPath(), "-keystore", ks.getPath(), "-storepass", p);
+        run(keytool, "-importcert", "-noprompt", "-alias", "fake", "-file", leaf.getPath(), "-keystore", ks.getPath(),
+                "-storepass", p, "-keypass", p);
+        KeyStore store = KeyStore.getInstance("PKCS12");
+        try (InputStream in = new FileInputStream(ks)) {
+            store.load(in, pw);
+        }
+        return store;
     }
 
     private static void run(String... cmd) throws Exception {
@@ -355,7 +405,7 @@ final class FakeVc implements AutoCloseable {
     javax.net.ssl.SSLContext trustingContext() throws Exception {
         KeyStore ts = KeyStore.getInstance("PKCS12");
         ts.load(null, null);
-        ts.setCertificateEntry("fake", cert);
+        ts.setCertificateEntry("fake", anchor);
         javax.net.ssl.TrustManagerFactory tmf = javax.net.ssl.TrustManagerFactory
                 .getInstance(javax.net.ssl.TrustManagerFactory.getDefaultAlgorithm());
         tmf.init(ts);

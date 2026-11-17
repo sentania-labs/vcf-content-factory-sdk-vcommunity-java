@@ -1,7 +1,6 @@
 package com.vcfcf.adapters.vcommunity;
 
 import com.vcfcf.adapters.vcommunity.VCommunityConfig.GuestTlsMode;
-import com.vcfcf.adapters.vcommunity.VCommunityConfig.TlsMode;
 import com.vcfcf.adapters.vcommunity.guest.GuestAuth;
 import com.vcfcf.adapters.vcommunity.guest.GuestFailure;
 import com.vcfcf.adapters.vcommunity.guest.GuestHttp;
@@ -69,7 +68,7 @@ public final class GuestOpsTest {
             fx = new GuestFx(FakeVc.happy());
             vc = FakeVc.withSharedCertificate(fx);
             vim = new VimSoapClient("localhost:" + vc.port(), "u", "p",
-                    VcenterTls.create(TlsMode.TRUST_ON_FIRST_USE, "", null, null), log, 5000, 20000, 20000);
+                    VcenterTls.create(true, null, null), log, 5000, 20000, 20000);
             T.check(vim.ensureSession().isOk(), "login");
             ops = new GuestOpsClient(vim, new GuestAuth(USER, SECRET));
             limits.scriptMs = 400;
