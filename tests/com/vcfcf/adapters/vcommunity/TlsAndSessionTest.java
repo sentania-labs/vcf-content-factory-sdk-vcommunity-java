@@ -31,6 +31,7 @@ public final class TlsAndSessionTest {
             probe(vc);
             insecureAccepts(vc);
             verifiedRefusesUntrusted(vc);
+            verifiedRefusesExpired();
             lowercaseCookieHeader(vc);
         }
         verifiedNameCheck();
@@ -102,6 +103,23 @@ public final class TlsAndSessionTest {
         T.throwsIae(() -> VcenterTls.create(false, null, null), "platform", "verified needs the platform context");
         T.check(VcenterTls.create(false, platform, securer).checksName(), "verified checks the name");
         T.done("a verified connection refuses an untrusted certificate");
+    }
+
+    /** An expired certificate, trusted otherwise: fails closed with the sentence that says to renew it, sending nothing. */
+    static void verifiedRefusesExpired() throws Exception {
+        try (FakeVc vc = FakeVc.withExpiredCertificate(FakeVc.happy())) {
+            VcenterTls tls = VcenterTls.create(false, vc.trustingContext(), nameChecking());
+            int before = vc.requests.size();
+            try (VimSoapClient c = client(vc, tls, "svc", "pw", new T.RecLog())) {
+                VimResult<About> r = c.ensureSession();
+                T.check(!r.isOk(), "an expired certificate is refused");
+                T.contains(r.message(), "expired, not yet valid or revoked", "says so: " + r.message());
+                T.contains(r.message(), "Renew the certificate", "and what to do");
+                T.notContains(r.message(), "accept it", "accepting does not help");
+            }
+            T.eq(before, vc.requests.size(), "nothing sent");
+        }
+        T.done("a verified connection refuses an expired certificate");
     }
 
     /** A proxy in front of the vCenter may send "set-cookie"; the session must still be kept. */

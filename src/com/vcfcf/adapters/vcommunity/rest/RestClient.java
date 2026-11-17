@@ -16,7 +16,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 /**
  * The vSphere Automation REST API of the vCenter (content libraries), over the same
- * {@link VcenterTls} posture as the SOAP session and the certificate probe: the account's TLS
+ * {@link VcenterTls} posture as the SOAP session (the certificate probe is separate and sends nothing): the account's TLS
  * setting (verified by default, or Allow Insecure SSL) decides the trust and the name check, both are
  * decided during the handshake before the credentials are sent, and no connection is made any other way. One REST session per use: log
  * in, read, log out in a {@code finally}. SDK-free and plain JDK.

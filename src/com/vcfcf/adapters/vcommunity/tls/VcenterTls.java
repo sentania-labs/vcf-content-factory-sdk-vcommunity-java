@@ -58,14 +58,6 @@ public final class VcenterTls {
         return new VcenterTls(false, platformCtx.getSocketFactory(), securer);
     }
 
-    /**
-     * A verified posture over a socket factory the caller built, for tests that need a provider's
-     * failure shape the JDK cannot produce (the FIPS provider's alerts). No name check.
-     */
-    public static VcenterTls forTesting(boolean allowInsecure, SSLSocketFactory factory) {
-        return new VcenterTls(allowInsecure, factory, null);
-    }
-
     /** True when the account turned verification off. */
     public boolean insecure() {
         return insecure;
@@ -77,7 +69,7 @@ public final class VcenterTls {
 
     /** Whether the certificate's name is checked at all (when verified). */
     public boolean checksName() {
-        return !insecure && securer != null;
+        return !insecure;
     }
 
     /**
@@ -85,7 +77,11 @@ public final class VcenterTls {
      * (verified) or a verifier that accepts every name (insecure).
      */
     public void secure(HttpsURLConnection conn) {
-        if (!insecure && securer != null) {
+        if (!insecure) {
+            if (securer == null) {
+                // cannot happen (create() refuses it): and a verified posture must never fall back to accepting any name
+                throw new IllegalStateException("a verified connection has no name check");
+            }
             securer.secure(conn, factory);
             return;
         }

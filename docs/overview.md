@@ -9,8 +9,9 @@ vCenter adapter already has in VCF Operations: hosts, clusters, virtual machines
 datastores, datacenters, the vCenter object and the vSphere World. It also
 creates three object kinds of its own.
 
-This is **3.0.0.1, a preview release** (minimum VCF Operations 8.18; tested on 8.18.7, 9.0.2 and 9.1.1; send feedback as
-GitHub issues on this repository). It provides the account, the vCenter
+This is **3.0.0.27, a preview release** (minimum VCF Operations 8.18; collection tested on 8.18.7, 9.0.2 and 9.1.1 with earlier
+builds, the verified-by-default certificate handling of this build pending live proof; send feedback as GitHub issues on this
+repository). It provides the account, the vCenter
 TLS (verified by default), the session, Test Connection, the collection cycle with its health
 keys, the property keys of clusters, hosts, virtual machines, datastores and the
 vCenter, the three own kinds with their keys and relationship, and the derived
@@ -213,7 +214,8 @@ The pak carries the content of the original pack as VCF Operations content, inst
 - A new library, item or template is created at once and gets its values on the next collection (five minutes later). One that vCenter no longer has is marked not existing after 12 complete collections, and only when everything that could contain it was read.
 - The vCenter certificate presented each cycle is compared with the one recorded on the vCenter object, and
   `vCommunity|Certificate|Status` says `Recorded`, `Unchanged` or `Changed` (for 24 hours); it is a report, not a
-  refusal, and it is published whether or not Allow Insecure SSL is on. With Allow Insecure SSL on the credentials go to
+  refusal. It is published whether or not Allow Insecure SSL is on, on every cycle that connects: with verification on, a
+  certificate the collector does not trust fails the login first, so `Changed` appears only for a new certificate it trusts. With Allow Insecure SSL on the credentials go to
   whatever answers at the address: use it for a lab only.
 - Test Connection: the pak logs in to the vCenter and reads its certificate.
   The Suite API and the check-list files are checked only where the test can

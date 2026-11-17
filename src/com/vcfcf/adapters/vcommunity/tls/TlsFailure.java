@@ -76,6 +76,7 @@ public final class TlsFailure {
                 + "); certificate checking is " + (insecure ? "off (Allow Insecure SSL)" : "on");
     }
 
+    /** The same patterns as the framework's {@code CertificateNames.MISMATCH_HOST_PATTERNS} (that class is SDK side and not on this one's class path); keep the two in step. */
     private static final java.util.regex.Pattern[] MISMATCH_HOST = {
         java.util.regex.Pattern.compile("No subject alternative name matching (\\S+) in the "),
         java.util.regex.Pattern.compile("No subject alternative (?:DNS )?names? matching (?:IP address )?(\\S+) found"),
@@ -83,7 +84,25 @@ public final class TlsFailure {
         java.util.regex.Pattern.compile("(?i)https hostname.*should be <([^>]+)>"),
     };
 
-    /** The name a mismatch failure says the certificate lacks, or null (for the message only). */
+    /**
+     * What Validate Connection adds after VCF Operations' own certificate message ({@code certificateFailureMessage}):
+     * advice for the failure, or {@code defaultMessage} unchanged when it already says everything. The framework's text
+     * is enough for a name mismatch and for "no usable host"; an expired, not yet valid or revoked certificate is
+     * renewed, not accepted; only an untrusted chain is answered by accepting the certificate.
+     */
+    public static String certificateAdvice(Throwable failure, String defaultMessage, boolean noUsableHost) {
+        if (noUsableHost || find(failure, 4) != null) return defaultMessage;
+        if (find(failure, 3) != null) {
+            return defaultMessage + " The certificate is expired, not yet valid or revoked: renew it on the vCenter. "
+                    + "Accepting it here does not help.";
+        }
+        if (find(failure, 1) != null) {
+            return defaultMessage + " Review the vCenter certificate here and accept it, and it is checked from then "
+                    + "on. Allow Insecure SSL (Advanced Settings) switches the check off; it is not for production.";
+        }
+        return defaultMessage;
+    }
+
     /** The host of a URL, for a message; null when there is none. Never throws. */
     static String hostOf(String url) {
         if (url == null) return null;
@@ -95,6 +114,7 @@ public final class TlsFailure {
         }
     }
 
+    /** The name a mismatch failure says the certificate lacks, or null (for the message only). */
     static String mismatchedHost(Throwable t) {
         Throwable hit = find(t, 4);
         if (hit == null) return null;
@@ -147,7 +167,10 @@ public final class TlsFailure {
                     }
                     break;
                 case 1:
-                    if (cur instanceof java.security.cert.CertPathBuilderException
+                    // 8.18.7: the platform trust manager with no accepted certificate has an empty anchor set
+                    if (cur instanceof java.security.InvalidAlgorithmParameterException
+                            || mentions(cur, "trustAnchors parameter must be non-empty")
+                            || cur instanceof java.security.cert.CertPathBuilderException
                             || cur instanceof java.security.cert.CertPathValidatorException
                             || cur.getClass().getSimpleName().equals("CustomCertificateException")
                             || mentions(cur, "PKIX path building failed")

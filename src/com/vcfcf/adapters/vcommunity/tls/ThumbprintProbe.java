@@ -12,8 +12,8 @@ import javax.net.ssl.TrustManager;
 
 /**
  * Reads the SHA-256 thumbprint the vCenter presents: one TLS handshake,
- * every certificate accepted, nothing sent after it (design 2.5). Run in
- * every mode, so the certificate can be watched whatever the setting.
+ * every certificate accepted, nothing sent after it (design 2.5). Run whether or
+ * not the connection is verified, so the certificate can be watched whatever the setting.
  */
 public final class ThumbprintProbe {
 

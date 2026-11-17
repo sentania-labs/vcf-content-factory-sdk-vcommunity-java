@@ -3,18 +3,21 @@
 Releases are `v<version>.<build_number>` tags built by this repository's CI. Development builds are stamped
 `0.0.0.<build>` and are kept below, under "Development builds".
 
-## 3.0.0.1 (preview)
+## 3.0.0.27 (preview)
 
 The first public preview of VCF Content Factory vCommunity, a Java port of the vCommunity management pack. It descends
 from Onur Yuzseven's vCommunity (the 1.x line) as continued by Ewan (e1-rahabok, 0.8.1), and is the 3.x line. It needs
-VCF Operations 8.18 or later and was tested on 8.18.7, 9.0.2 and 9.1.1. Send feedback as GitHub issues on this repository.
+VCF Operations 8.18 or later. Collection was tested on 8.18.7, 9.0.2 and 9.1.1 with earlier builds; the verified-by-default
+certificate handling in this build is pending live proof. Send feedback as GitHub issues on this repository.
 
 **What stays the same as the Python pack 0.8.1**
 - The metric and property key names (`vCommunity|...`) are the same, on the same vSphere objects, so existing
   dashboards, views, reports and super metrics that read them keep working (whether the history of a key continues across
   the move was not measured on an instance).
-- The account fields, the six check-list files and the content (170 views, 52 dashboards, 16 reports, 3 super metrics,
-  10 symptoms, 4 alerts with 1 recommendation) are the same, converted.
+- The six check-list files and the content (170 views, 52 dashboards, 16 reports, 3 super metrics,
+  10 symptoms, 4 alerts with 1 recommendation) are the same, converted. The account fields are the Python pack's, except
+  that its vCenter TLS Validation and vCenter Thumbprint fields are replaced by Allow Insecure SSL (below), so the account has
+  18 fields where the Python pack had 19, and a new account verifies the vCenter certificate.
 - All content is installed under this pak's own ids, so it never overwrites or deletes the Python pack's content or a
   built-in view. The adapter kind is its own (`vcfcf_vcommunity`): this is not an upgrade of the Python pack. Uninstall
   the Python pack first, then install this one (`docs/installing.md`).
@@ -54,8 +57,11 @@ section 5.7)
   certificate in the standard dialog, and it is checked from then on. One advanced setting, **Allow Insecure SSL** (default
   false, the same as the other VCF Content Factory paks), turns the checks off. The Python pack's Trust on First Use and
   Pinned modes and its thumbprint field are removed (DV-114). Guest monitoring does not run while Allow Insecure SSL is on.
-  The `vCommunity|Certificate|...` keys are still published in both settings. Enter the vCenter by a name on its
-  certificate: an IP address fails the name check unless the certificate lists it.
+  The `vCommunity|Certificate|...` keys are still published in both settings, on every cycle that connects (with verification
+  on, an untrusted certificate fails the login first, so `Changed` appears only for a new certificate the collector trusts).
+  **Not yet verified live.** Enter the vCenter by a name on its
+  certificate: an IP address fails the name check unless the certificate lists it, and because the vCenter Server field is the
+  account's identity, an account entered by IP needs a new account to fix.
 - **Collection Health keys**: the adapter reports its own health (`vCommunity|Collection Health|...`: per-collector
   status, causes, values withheld, warnings), and a failed read is withheld and counted, never turned into a value.
 
@@ -64,7 +70,18 @@ section 5.7)
 ## Development builds
 
 Before the first release the pak was built as development builds 1 to 26 (stamped `0.0.0.<build>`, under the version
-`1.0.0` in `adapter.yaml`). Their entries follow, newest first.
+`1.0.0` in `adapter.yaml`); the counter is carried forward, so the release is build 27 under 3.0.0 and dev builds of it stamp
+`0.0.0.27`. Their entries follow, newest first.
+
+### Build 27 (3.0.0.27)
+
+- feat(adapter): build 27. The vCenter certificate is verified by default and Allow Insecure SSL replaces Trust on First Use,
+  Pinned and the thumbprint field (DV-114; `describe.xml`: `vcenter_tls_validation` and `vcenter_thumbprint` removed,
+  `allowInsecure` added). Guest monitoring refuses to run only while Allow Insecure SSL is on (`F-GUEST-TLS-INSECURE`).
+  Validate Connection adds advice only where it helps (accept an untrusted certificate, renew an expired one), the 8.18.7
+  "trustAnchors parameter must be non-empty" failure is read as an untrusted certificate, and the verified path fails closed
+  with a real expired-certificate handshake test. The build number is carried forward (no restart at 1), so the lab's
+  `0.0.0.26` is never downgraded. Docs: TLS, upgrade from a development build, API accounts, guest section corrections.
 
 ## 1.0.0.26 (Unreleased)
 

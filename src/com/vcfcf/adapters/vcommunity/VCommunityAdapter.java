@@ -17,6 +17,7 @@ import com.vcfcf.adapters.vcommunity.health.WarnCounter;
 import com.vcfcf.adapters.vcommunity.list.CheckListStore;
 import com.vcfcf.adapters.vcommunity.rest.LibraryReader;
 import com.vcfcf.adapters.vcommunity.tls.ThumbprintProbe;
+import com.vcfcf.adapters.vcommunity.tls.TlsFailure;
 import com.vcfcf.adapters.vcommunity.tls.VcenterTls;
 import com.vcfcf.adapters.vcommunity.vim.VimSoapClient;
 
@@ -252,17 +253,8 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
     @Override
     protected String certificateFailureMessage(Throwable failure, ResourceConfig rc,
             String defaultMessage) {
-        if (CertificateNames.isNameMismatch(failure)) {
-            String h = CertificateNames.mismatchedHost(failure);
-            return defaultMessage + " The certificate does not carry the name " + (h == null ? "you entered"
-                    : "'" + h + "'") + ": enter the vCenter by a name that is on its certificate (an IP address "
-                    + "works only if the certificate lists it), or reissue the certificate. Accepting a "
-                    + "certificate does not change a name mismatch. Allow Insecure SSL (Advanced Settings) "
-                    + "switches the certificate checks off; it is not for production.";
-        }
-        return defaultMessage + " Review the vCenter certificate here and accept it, and it is checked from "
-                + "then on. Allow Insecure SSL (Advanced Settings) switches the check off; it is not for "
-                + "production.";
+        // VCF Operations' own text comes first (defaultMessage); this adds only what is true for the failure
+        return TlsFailure.certificateAdvice(failure, defaultMessage, CertificateNames.isNoUsableHost(failure));
     }
 
     // ------------------------------------------------------------------

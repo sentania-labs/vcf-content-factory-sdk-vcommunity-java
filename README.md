@@ -9,13 +9,14 @@ check-list files follow the original pack, the code is new. The content
 (views, dashboards and the rest) is converted from the original pack's content files; the whole pak, code and content, is MIT licensed (`NOTICE` has the provenance).
 
 Adapter kind `vcfcf_vcommunity`; distinct from the original Python pack's kind,
-so the two are never an upgrade of each other. Minimum product version: VCF Operations 8.18.x (tested on 8.18.7, 9.0.2 and 9.1.1).
+so the two are never an upgrade of each other. Minimum product version: VCF Operations 8.18.x. Collection was tested on 8.18.7, 9.0.2 and 9.1.1 with earlier builds; the certificate handling of this build (verified by default) is not yet verified live.
 
 ## Status
 
-**3.0.0.1, a preview release.** This is the first public build of the 3.x line, released to collect feedback; expect
-rough edges. It needs **VCF Operations 8.18 or later** and was tested on **8.18.7, 9.0.2 and 9.1.1**. The release notes
-are in `CHANGELOG.md` ("3.0.0.1 (preview)"), including where it deliberately differs from the Python pack it descends from.
+**3.0.0.27, a preview release.** This is the first public build of the 3.x line, released to collect feedback; expect
+rough edges. It needs **VCF Operations 8.18 or later**. Collection was tested on **8.18.7, 9.0.2 and 9.1.1** with earlier builds; the
+certificate handling of this build (verified by default) is pending live proof. The release notes
+are in `CHANGELOG.md` ("3.0.0.27 (preview)"), including where it deliberately differs from the Python pack it descends from.
 
 **Send feedback as GitHub issues on this repository.**
 
@@ -112,7 +113,7 @@ icons/icons.yaml                     # kind -> icon map
 src/com/vcfcf/adapters/vcommunity/   # adapter source
   VCommunityAdapter.java             #   lifecycle, Test Connection, discovery (SDK side)
   OpsPort.java                       #   Suite API port (SDK side)
-  VCommunityConfig.java              #   the 19 fields, defaults, fallbacks (SDK-free)
+  VCommunityConfig.java              #   the 18 fields, defaults, fallbacks (SDK-free)
   CycleEngine.java                   #   one cycle: session, probe, lists, binding, properties, health
   ConnectionTester.java              #   Test Connection logic
   vim/                               #   raw SOAP session, paged streamed reads, no JAX-WS and no vim25.jar
@@ -285,7 +286,7 @@ is built by CI, never on a laptop:
 
 1. Author + commit + push to `main`.
 2. **Push a `v<version>.<build_number>` tag** (it must equal `version` and `build_number` in `adapter.yaml`; for the first
-   release, `v3.0.0.1`). The `build-pak-on-tag` workflow:
+   release, `v3.0.0.27`). The `build-pak-on-tag` workflow:
    - pulls the `sdk-buildkit` tarball from the factory's Releases at the pinned
      `BUILDKIT_TAG` and verifies it against `BUILDKIT_SHA256` before extracting,
    - gates on the factory defect registry, fetched at `DEFECT_REGISTRY_COMMIT`,

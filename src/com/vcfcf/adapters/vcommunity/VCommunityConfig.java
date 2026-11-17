@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * The adapter instance's 19 fields and four credential fields, parsed when
+ * The adapter instance's 18 fields and four credential fields, parsed when
  * the adapter is configured (an edit of the account configures it again).
  * SDK-free: the adapter hands in a field reader, tests hand in a
  * map. Defaults, fallbacks and warnings follow the configuration contract of

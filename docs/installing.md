@@ -11,7 +11,7 @@
 - Optionally, a Windows account for the guest checks (off by default; see Guest monitoring below).
 
 **The minimum version.** The content of this pak is converted and gated for VCF
-Operations 8.18.x; that is the minimum version (owner decision, 2026-11-14). It was tested on 8.18.7, 9.0.2 and 9.1.1. The `manifest.txt` the pak carries says
+Operations 8.18.x; that is the minimum version (owner decision, 2026-11-14). Collection was tested on 8.18.7, 9.0.2 and 9.1.1 with earlier builds (the certificate handling of this build is pending live proof). The `manifest.txt` the pak carries says
 `vcops_minimum_version 8.0.0` (a constant of the factory builder, not a decision of this pak), so an
 8.10 to 8.17 instance will accept the install: do not install it on anything older than 8.18.x.
 
@@ -25,6 +25,10 @@ every list shows twice and the two collect over each other. There is no way to m
 from this pak's side. This pak is a separate adapter kind (`vcfcf_vcommunity`), and its
 content is minted under ids of its own, so it does not overwrite the Python pack's content and
 uninstalling one does not delete the other's.
+
+**The TLS setting does not carry over.** The Python pack's vCenter TLS Validation (Trust on First Use by default) and
+vCenter Thumbprint fields do not exist here: a new account verifies the vCenter certificate (accept it in Validate
+Connection) and the vCenter must be entered by a name on its certificate.
 
 What carries over (owner decision, 2026-11-14: names stay, ids are our own):
 
@@ -150,8 +154,10 @@ pass.
 address; most vCenter certificates carry names, so an address fails the name check. Accepting the certificate in Validate
 Connection does not change a name mismatch.
 
-What you see when it is not right (the same sentence in Validate Connection and in the cycle's failure; no credential was
-sent in any of them):
+What you see when it is not right (no credential was sent in any of them). In the **cycle** (the account's status,
+`Collection|last_error`, the log) the account reports the sentences below. In **Validate Connection**, VCF Operations
+shows its own certificate message first, and the pak adds advice after it only where it helps (accept the certificate
+for an untrusted one; renew it for an expired one; nothing for a name mismatch, whose message already says it):
 
 | Situation | What the account reports | What to do |
 |---|---|---|
@@ -160,18 +166,31 @@ sent in any of them):
 | The certificate is expired, not yet valid or revoked | "the vCenter's certificate is expired, not yet valid or revoked. Renew the certificate on the vCenter." | Renew it on the vCenter. |
 | The vCenter certificate is renewed later | the connection fails as in the first row | Validate Connection again and accept the new certificate. |
 
+**The name check stays on, and it means an account entered by IP address fails.** An account whose vCenter was entered by
+IP address, or by any name that is not on the certificate, fails every cycle until the vCenter is entered by a name the
+certificate carries. Accepting the certificate does not help. **The vCenter Server field is the account's identity** (with
+the four check-list file names), so changing it means a **new account** (and the content libraries, items and templates of
+the old one are recreated under it); you cannot repair such an account by editing the field. Plan the account with the
+certificate name from the start.
+
 **Allow Insecure SSL** (Advanced Settings, default `false`, the same setting as in the other VCF Content Factory paks)
 turns the certificate checks off, trust and name together. Only the text `true` does it. With it on, the vCenter user name
 and password go to whatever answers at that address, **guest monitoring does not run** (the Windows account would go the
-same way), the adapter logs a warning each time the account is configured, and Test Connection warns. Use it for a lab
-only.
+same way), the adapter logs a warning each time the account is configured, and Test Connection writes a WARN line to
+`collector.log` (the test itself passes). Use it for a lab only.
 
-**The certificate keys are published in both settings.** Every cycle the adapter reads the thumbprint the vCenter presents
-(one handshake that sends nothing) and compares it with the one recorded on the vCenter object:
+**The certificate keys are published in both settings, on every cycle that connects.** After the login, the adapter reads the
+thumbprint the vCenter presents (one handshake that sends nothing) and compares it with the one recorded on the vCenter object:
 `vCommunity|Certificate|Status` is `Recorded` (first sight), `Unchanged` or `Changed` (a different certificate, shown for 24
 hours, with the previous thumbprint and the time). A report, not a refusal; if the Suite API cannot give back what was
-recorded, the status is left out rather than guessed. With verification on, a certificate the collector does not trust makes
-the connection fail, and the probe still records what it saw.
+recorded, the status is left out rather than guessed. With verification on, a certificate the collector does not trust
+fails the login, so nothing is published that cycle (the vCenter object is not known without the login): `Changed` appears
+only for a new certificate the collector already trusts. A renewal by an untrusted certificate shows as a login failure
+with the "not trusted" sentence, never as `Changed`.
+
+**Not yet verified live.** This build's certificate handling (verified by default, the accept dialog, the name check, the
+sentences above) has been tested with fakes, and with the BouncyCastle provider that the FIPS collector uses, but not yet on a
+VCF Operations instance. Collection itself ran on 8.18.7, 9.0.2 and 9.1.1 with earlier builds.
 
 The ESXi host certificates used by guest file transfers are a separate setting (**Guest File Transfer TLS Validation**).
 
@@ -217,7 +236,7 @@ rest of the account, as any credential field is) and the collector asks vCenter 
 1. Leave **Allow Insecure SSL** off (the default) and accept the vCenter certificate in Validate Connection: guest monitoring
    needs no other TLS setup. With Allow Insecure SSL on, guest monitoring does not run: the Windows account would be sent to a
    vCenter whose certificate nobody checked. The collector says so in `Collector:guest|Status` (`FAILED`,
-   `F-GUEST-TLS-INSECURE`) and Test Connection warns. (The original sends the account regardless; DV-103.)
+   `F-GUEST-TLS-INSECURE`) and Test Connection writes a WARN line (the test itself passes). (The original sends the account regardless; DV-103.)
 2. Fill the credential's Windows User Name and Windows Password fields. **Use an account made for this, never an account whose
    lockout would hurt** (see "Account lockout" below). The user name is passed to the guest as you type it (the adapter does not
    change or check its form): *[TODO, owner: state the form the guest accepts here (local account, `DOMAIN\user`, or user@domain),
@@ -362,34 +381,6 @@ build no longer sends is not deleted in VCF Operations (a pushed key cannot be d
   value.
 They stop being updated; the old value stays until it ages out of a widget's time window or is overwritten.
 
-### Upgrading from a development build (the TLS settings changed)
-
-No release has used the old settings: the three-value **vCenter TLS Validation** (Trust on First Use, Enabled, Pinned) and
-**vCenter Thumbprint (SHA-256)** are gone, replaced by **Allow Insecure SSL** (default `false`). An account made on
-development build 0.0.0.26 or earlier, upgraded in place:
-
-- **The account survives.** Its identity is the vCenter Server field and the four check-list file names; the removed and
-  the added fields are all Advanced Settings and not part of it, so the platform does not need to recreate it.
-- **The old values are dropped and not read.** A removed identifier's stored value is dropped by the platform on upgrade
-  (seen on another pak's upgrade); even if it were kept, this build never reads `vcenter_tls_validation` or
-  `vcenter_thumbprint`, whatever they hold. So a Trust on First Use or Pinned account does **not** stay insecure or pinned.
-- **It becomes verified, silently.** The new field has no stored value, which reads as `false`: the account verifies the
-  vCenter certificate from the first collection after the upgrade. If the collector does not already trust that
-  certificate (a lab vCenter with a self-signed certificate, which the old default accepted), every cycle fails with
-  "the vCenter's certificate is not trusted by this collector" until the certificate is accepted. Nothing is collected in
-  between, and no credential is sent.
-- **What to do:** edit the account, click **Validate Connection**, review and accept the certificate, save. A lab that
-  wants the old behaviour sets **Allow Insecure SSL** to `true` (guest monitoring then stays off). An account that had used
-  Enabled and had accepted the certificate keeps working, because the accepted certificate is stored on the account.
-  This path (edit, then accept) is what is expected to work and has not been proven on an upgraded instance: **if the dialog
-  does not offer the certificate, or the new field is missing from the edit form, delete the account and create it again**
-  (its content-library, item and template objects are recreated on the next collection; the keys on the vCenter objects are
-  kept in VCF Operations).
-- **Guest monitoring** that was refused under Trust on First Use (`F-GUEST-TLS-MODE`) runs after the certificate is accepted
-  and the Windows account is filled in; the cause is now named `F-GUEST-TLS-INSECURE` and appears only with Allow
-  Insecure SSL on.
-
-
 **Two dashboards without Section rows.** "Overall Daily Check" (6 Section rows)
 and "vSphere Cluster Capacity 2.0" (2) use the Section widget, which VCF
 Operations imports only from 9.1.1. The pak is built for a floor below that, so
@@ -437,6 +428,37 @@ they are the original pack's own content).
 original pack wrote them are listed, by type and field, in
 `docs/design/inputs/carried-text-report.md`. The 101 views that began as edited copies of built-in views have
 descriptions written for this pak.
+
+## Upgrading from a development build (the TLS settings changed)
+
+No release has used the old settings: the three-value **vCenter TLS Validation** (Trust on First Use, Enabled, Pinned) and
+**vCenter Thumbprint (SHA-256)** are gone, replaced by **Allow Insecure SSL** (default `false`). An account made on
+development build 0.0.0.26 or earlier, upgraded in place:
+
+- **The account survives.** Its identity is the vCenter Server field and the four check-list file names; the removed and
+  the added fields are all Advanced Settings and not part of it, so the platform does not need to recreate it.
+- **The old values are not read.** The platform keeps a removed identifier's stored value until the account is next saved
+  (seen on another pak's upgrade), and this build never reads `vcenter_tls_validation` or `vcenter_thumbprint`, whatever
+  they hold. So a Trust on First Use or Pinned account does **not** stay insecure or pinned.
+- **It becomes verified, silently.** The new field has no stored value, which reads as `false`: the account verifies the
+  vCenter certificate from the first collection after the upgrade. If the collector does not already trust that
+  certificate (a lab vCenter with a self-signed certificate, which the old default accepted), every cycle fails with
+  "the vCenter's certificate is not trusted by this collector" until the certificate is accepted. Nothing is collected in
+  between, and no credential is sent.
+- **What to do:** edit the account, click **Validate Connection**, review and accept the certificate, save. A lab that
+  wants the old behaviour sets **Allow Insecure SSL** to `true` (guest monitoring then stays off). An account that had used
+  Enabled and had accepted the certificate keeps working, because the accepted certificate is stored on the account.
+  This path (edit, then accept) is what is expected to work and has not been proven on an upgraded instance: **if the dialog
+  does not offer the certificate, or the new field is missing from the edit form, delete the account and create it again**
+  (its content-library, item and template objects are recreated on the next collection; the keys on the vCenter objects are
+  kept in VCF Operations).
+- **An account entered by IP address, or by a name not on the certificate, fails the name check** and accepting the
+  certificate does not change that. Enter the vCenter by a name on the certificate: the vCenter Server field is part of the
+  account's identity, so this means a new account (with the content-library, item and template objects of the old one
+  recreated under it); or set **Allow Insecure SSL** to `true` for a lab (guest monitoring then stays off).
+- **Guest monitoring** that was refused under Trust on First Use (`F-GUEST-TLS-MODE`) runs after the certificate is accepted
+  and the Windows account is filled in; the cause is now named `F-GUEST-TLS-INSECURE` and appears only with Allow
+  Insecure SSL on.
 
 ## Check-list files
 
@@ -509,16 +531,20 @@ settings could not be read is counted as a withheld value.
    select **VCF Content Factory vCommunity**.
 3. Fill in **vCenter Server** and the credential. Open **Advanced Settings** for
    the rest.
-4. Click **Validate Connection**, then **Add**.
+4. Click **Validate Connection**. If the collector does not already trust the vCenter certificate, VCF Operations shows it
+   in a review dialog: check it and **accept** it, then the test runs. Then click **Add**. (The vCenter Server field must
+   carry a name that is on the certificate; see "TLS: the vCenter certificate".)
 5. The cycle starts at the next collection (five minutes by default).
 
 ## What Test Connection checks
 
 Validate Connection first offers the certificate review dialog (not when Allow Insecure SSL is on), then logs in to the
-vCenter and reads its certificate. A failed login fails the test and the dialog shows why, in the sentences of "TLS: the
-vCenter certificate": a certificate not yet accepted, a name the certificate does not carry, an expired certificate (also
-under FIPS). With Allow Insecure SSL on, the test passes the certificate checks by not making them and **warns** that the
-certificate is not verified; with guest monitoring switched on as well it warns that guest monitoring will not run.
+vCenter and reads its certificate. A failed login fails the test and the dialog shows why: for a certificate not yet
+accepted, a name the certificate does not carry or an expired certificate it shows VCF Operations' own certificate message,
+with the pak's advice after it where it helps (see "TLS: the vCenter certificate"); other failures show the pak's sentence.
+With Allow Insecure SSL on, the test passes by not checking the certificate, and **writes a WARN line** to `collector.log` that
+the certificate is not verified (the test itself passes); with guest monitoring switched on as well, a second line says guest
+monitoring will not run.
 
 It does **not** check the Suite API or read the check-list files. A test runs
 before the account exists, and the Suite API client uses a credential the
@@ -583,6 +609,10 @@ The UI fills in the describe defaults; the REST API does not.
   `POST /api/adapters`: the server applies no `default=` from the describe, so an
   omitted identifier is not defaulted by the platform. (The pak reads an omitted
   check-list file field as its default name, and an empty string as "no list".)
+- **The certificate must be accepted before the account can collect.** An account made through the API with the default
+  Allow Insecure SSL (`false`) fails closed every cycle until the vCenter certificate is accepted: run
+  `POST /api/adapters/testConnection` and then `PATCH /api/adapters` with the accepted certificate (the UI's Validate
+  Connection does the same). Sending `allowInsecure` as `true` skips the checks (a lab only; guest monitoring stays off).
 - **A new instance starts STOPPED.** Start it with
   `PUT /api/adapters/{id}/monitoringstate/start`.
 - **`POST /api/adapters/testConnection` stores the credential** it was given as a

@@ -132,6 +132,16 @@ public final class TlsFailureTest {
         T.notContains(name, "not trusted by this collector", "a name mismatch is not an untrusted chain");
         T.contains(TlsFailure.explain(new TlsFatalAlert("certificate_unknown(46)", nameMismatch("vc.lab")), false),
                 "does not carry the name 'vc.lab'", "name mismatch, FIPS shape");
+        // the framework's own text for a name the certificate lacks, wrapped as the FIPS provider wraps it
+        T.contains(TlsFailure.explain(new TlsFatalAlert("certificate_unknown(46)", new CertificateException(
+                "No subject alternative name matching vc.lab in the target certificate")), false),
+                "does not carry the name 'vc.lab'", "the framework's name text, FIPS shape");
+        // 8.18.7: the platform trust manager with nothing accepted has an empty anchor set (W2)
+        Throwable anchors = new SSLHandshakeException("the trustAnchors parameter must be non-empty").initCause(
+                new java.security.InvalidAlgorithmParameterException("the trustAnchors parameter must be non-empty"));
+        T.contains(TlsFailure.explain(anchors, false), "not trusted by this collector", "8.18.7 empty anchors");
+        T.contains(TlsFailure.explain(new SSLHandshakeException("java.security.InvalidAlgorithmParameterException: the trustAnchors parameter must be non-empty"), false),
+                "not trusted by this collector", "8.18.7 text only");
         T.contains(TlsFailure.explain(new IOException("HTTPS hostname wrong:  should be <vc1.lab.test>"), false),
                 "does not carry the name 'vc1.lab.test'", "the post-handshake rejection of the JDK");
         // an expired or revoked certificate does not get the 'accept it' advice
@@ -162,7 +172,25 @@ public final class TlsFailureTest {
         T.check(TlsFailure.explain(new java.net.ConnectException("refused"), false) == null, "refused");
         T.check(TlsFailure.explain(new java.net.SocketTimeoutException("slow"), false) == null, "timeout");
         T.check(TlsFailure.explain(null, false) == null, "null");
+        advice();
         T.done("untrusted, name mismatch, expired and other failures each say what they are");
+    }
+
+    /** What Validate Connection adds after VCF Operations' own certificate message. */
+    static void advice() {
+        String base = "VCF Operations says: certificate problem.";
+        String u = TlsFailure.certificateAdvice(untrustedChain(), base, false);
+        T.check(u.startsWith(base), "the platform's text comes first");
+        T.contains(u, "Review the vCenter certificate here and accept it", "an untrusted chain is answered by accepting it");
+        T.eq(base, TlsFailure.certificateAdvice(nameMismatch("10.1.2.3"), base, false), "a name mismatch: the framework's text is enough");
+        T.eq(base, TlsFailure.certificateAdvice(untrustedChain(), base, true), "no usable host: unchanged");
+        Throwable expired = new SSLHandshakeException("validity").initCause(new java.security.cert.CertificateExpiredException("NotAfter"));
+        String e = TlsFailure.certificateAdvice(expired, base, false);
+        T.contains(e, "renew it on the vCenter", "expired is renewed");
+        T.notContains(e, "accept it", "and not accepted");
+        T.eq(base, TlsFailure.certificateAdvice(new java.net.ConnectException("refused"), base, false), "not a certificate failure: unchanged");
+        T.contains(TlsFailure.certificateAdvice(new SSLHandshakeException("the trustAnchors parameter must be non-empty"), base, false),
+                "accept it", "8.18.7 empty anchors are answered by accepting");
     }
 
     /** The client end to end: the message the caller gets, in each wrapping. */
@@ -173,7 +201,7 @@ public final class TlsFailureTest {
             String[] want = {"not trusted by this collector", "not trusted by this collector",
                 "does not carry the name '127.0.0.1'", "does not carry the name '127.0.0.1'"};
             for (int i = 0; i < shapes.length; i++) {
-                VcenterTls tls = VcenterTls.forTesting(false, new FailingFactory(shapes[i]));
+                VcenterTls tls = failing(shapes[i]);
                 int before = vc.requests.size();
                 T.RecLog log = new T.RecLog();
                 try (VimSoapClient c = new VimSoapClient("localhost:" + vc.port(), "svc", "very-secret-pw", tls, log, 5000, 10000, 10000)) {
@@ -187,16 +215,16 @@ public final class TlsFailureTest {
                 T.eq(before, vc.requests.size(), names[i] + ": nothing reached the server");
             }
             // an alert that is no certificate failure: the caller gets the alert and the checking state
-            VcenterTls other = VcenterTls.forTesting(true, new FailingFactory(() -> new TlsFatalAlert("handshake_failure(40)", null)));
+            VcenterTls other = failing(() -> new TlsFatalAlert("handshake_failure(40)", null));
             try (VimSoapClient c = new VimSoapClient("localhost:" + vc.port(), "svc", "pw", other, new T.RecLog(), 5000, 10000, 10000)) {
                 VimResult<About> r = c.ensureSession();
                 T.check(!r.isOk(), "alert fails");
                 T.contains(r.message(), "TlsFatalAlert: handshake_failure(40)", "alert named");
-                T.contains(r.message(), "certificate checking is off (Allow Insecure SSL)", "state named");
+                T.contains(r.message(), "certificate checking is on", "state named");
                 T.notContains(r.message(), "reading the service content failed", "no step prefix on a TLS failure");
             }
             // a failure that is no TLS failure keeps its step prefix
-            VcenterTls plain = VcenterTls.forTesting(true, new FailingFactory(() -> new java.net.ConnectException("refused")));
+            VcenterTls plain = failing(() -> new java.net.ConnectException("refused"));
             try (VimSoapClient c = new VimSoapClient("localhost:" + vc.port(), "svc", "pw", plain, new T.RecLog(), 5000, 10000, 10000)) {
                 VimResult<About> r = c.ensureSession();
                 T.contains(r.message(), "reading the service content failed", "step prefix");
@@ -212,6 +240,20 @@ public final class TlsFailureTest {
             }
         }
         T.done("through the client: each certificate failure reaches the caller as a sentence, in every wrapping");
+    }
+
+    static javax.net.ssl.SSLContext platform() {
+        try {
+            return javax.net.ssl.SSLContext.getDefault();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /** A verified posture whose every socket fails the way a provider fails a handshake (the name check is the caller's). */
+    static VcenterTls failing(Supplier<IOException> shape) {
+        return VcenterTls.create(false, platform(), (conn, factory) ->
+                conn.setSSLSocketFactory(new FailingFactory(shape)));
     }
 
     @SuppressWarnings("unchecked")

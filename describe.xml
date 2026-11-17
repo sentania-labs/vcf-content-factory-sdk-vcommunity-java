@@ -67,8 +67,8 @@
 			<!-- Allow Insecure SSL, the same identifier as the other paks (unifi, synology): default false, so a
 			     new account verifies the vCenter certificate (the platform's trust, with the name check; accept the
 			     certificate in Validate Connection). Only "true" (any case) turns verification off. Advanced. -->
-			<ResourceIdentifier key="allowInsecure" nameKey="14" type="string" required="false" dispOrder="7" default="false" identType="2"/>
-			<ResourceIdentifier key="cluster_check_period_hours" nameKey="16" type="string" required="false" dispOrder="9" default="24" identType="2" enum="true">
+			<ResourceIdentifier key="allowInsecure" nameKey="15" type="string" required="false" dispOrder="7" default="false" identType="2"/>
+			<ResourceIdentifier key="cluster_check_period_hours" nameKey="16" type="string" required="false" dispOrder="8" default="24" identType="2" enum="true">
 				<enum value="01" nameKey="17"/>
 				<enum value="02" nameKey="18"/>
 				<enum value="04" nameKey="19"/>
@@ -77,23 +77,23 @@
 				<enum value="12" nameKey="22"/>
 				<enum value="24" nameKey="23"/>
 			</ResourceIdentifier>
-			<ResourceIdentifier key="periodic_cluster_check_time" nameKey="24" type="string" required="false" dispOrder="10" default="00:00" identType="2"/>
-			<ResourceIdentifier key="cluster_check_worst_percent" nameKey="25" type="integer" required="false" dispOrder="11" default="5" identType="2"/>
-			<ResourceIdentifier key="monster_vm_cpu_percent_of_cores" nameKey="26" type="integer" required="false" dispOrder="12" default="50" identType="2"/>
-			<ResourceIdentifier key="monster_vm_memory_percent_of_dram" nameKey="27" type="integer" required="false" dispOrder="13" default="40" identType="2"/>
-			<ResourceIdentifier key="monster_vm_memory_min_gb" nameKey="28" type="integer" required="false" dispOrder="14" default="256" identType="2"/>
-			<ResourceIdentifier key="win_service_config_file" nameKey="29" type="string" required="false" dispOrder="15" default="windows_service_list" identType="2"/>
-			<ResourceIdentifier key="win_event_config_file" nameKey="30" type="string" required="false" dispOrder="16" default="windows_event_list" identType="2"/>
-			<ResourceIdentifier key="serviceMonitoring" nameKey="31" type="string" required="false" dispOrder="17" default="Disabled" identType="2" enum="true">
+			<ResourceIdentifier key="periodic_cluster_check_time" nameKey="24" type="string" required="false" dispOrder="9" default="00:00" identType="2"/>
+			<ResourceIdentifier key="cluster_check_worst_percent" nameKey="25" type="integer" required="false" dispOrder="10" default="5" identType="2"/>
+			<ResourceIdentifier key="monster_vm_cpu_percent_of_cores" nameKey="26" type="integer" required="false" dispOrder="11" default="50" identType="2"/>
+			<ResourceIdentifier key="monster_vm_memory_percent_of_dram" nameKey="27" type="integer" required="false" dispOrder="12" default="40" identType="2"/>
+			<ResourceIdentifier key="monster_vm_memory_min_gb" nameKey="28" type="integer" required="false" dispOrder="13" default="256" identType="2"/>
+			<ResourceIdentifier key="win_service_config_file" nameKey="29" type="string" required="false" dispOrder="14" default="windows_service_list" identType="2"/>
+			<ResourceIdentifier key="win_event_config_file" nameKey="30" type="string" required="false" dispOrder="15" default="windows_event_list" identType="2"/>
+			<ResourceIdentifier key="serviceMonitoring" nameKey="31" type="string" required="false" dispOrder="16" default="Disabled" identType="2" enum="true">
 				<enum value="Enabled"/>
 				<enum value="Disabled"/>
 			</ResourceIdentifier>
-			<ResourceIdentifier key="guest_tls_validation" nameKey="32" type="string" required="false" dispOrder="18" default="Pinned" identType="2" enum="true">
+			<ResourceIdentifier key="guest_tls_validation" nameKey="32" type="string" required="false" dispOrder="17" default="Pinned" identType="2" enum="true">
 				<enum value="Pinned"/>
 				<enum value="Strict"/>
 				<enum value="Disabled"/>
 			</ResourceIdentifier>
-			<ResourceIdentifier key="winEventMonitoring" nameKey="33" type="string" required="false" dispOrder="19" default="Disabled" identType="2" enum="true">
+			<ResourceIdentifier key="winEventMonitoring" nameKey="33" type="string" required="false" dispOrder="18" default="Disabled" identType="2" enum="true">
 				<enum value="Enabled"/>
 				<enum value="Disabled"/>
 			</ResourceIdentifier>

@@ -6,7 +6,7 @@ import com.vcfcf.adapters.vcommunity.list.ListKind;
 import java.util.HashMap;
 import java.util.Map;
 
-/** The 19 fields: defaults, fallbacks, failures, redaction. */
+/** The 18 fields: defaults, fallbacks, failures, redaction. */
 public final class ConfigTest {
 
     private static final String PIN64 = "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899";
