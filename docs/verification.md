@@ -1,8 +1,9 @@
 # What has been verified live
 
 Tested on lab instances of VCF Operations 8.18.7, 9.0.2 and 9.1.1 (the 9.1.1 collector runs in FIPS mode),
-on 2026-11-16. The release build was installed fresh on 9.1.1; the 8.18.7 and 9.0.2 results are from the
-preview builds just before it.
+on 2026-11-16. The released 3.0.0.29 pak is installed and collecting cleanly on all three. The fresh install following the
+guide was done on 9.1.1; on 8.18.7 and 9.0.2 the release was installed as an upgrade, and the feature checks
+there were made on the builds just before it.
 
 | What | 8.18.7 | 9.0.2 | 9.1.1 |
 |---|---|---|---|
