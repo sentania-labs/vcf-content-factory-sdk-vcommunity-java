@@ -142,6 +142,7 @@ public final class EngineTest {
         vcenterObjectMissing();
         suiteApiMissing();
         checkListProblems();
+        configurationWarnings();
         pushFailure();
         probeFailure();
         deadline();
@@ -290,6 +291,32 @@ public final class EngineTest {
         T.check(!res.metrics().containsKey("Collection|objects_unmatched"), "no lookup, no count");
         T.check(!res.metrics().containsKey("Collection|checklist_entries_skipped"), "no lists, no count");
         T.done("engine: no Suite API client is reported, not hidden");
+    }
+
+    /** An invalid setting: durable Configuration Warnings every cycle, outside the cycle's warning count; Test Connection says it. */
+    static void configurationWarnings() throws Exception {
+        VCommunityConfig bad = cfg("cluster_check_period_hours", "7", "guest_tls_validation", "Maybe");
+        Rig r = new Rig(bad);
+        for (int cycle = 0; cycle < 2; cycle++) {
+            CycleEngine.Result res = r.run();
+            T.eq(0, res.summary.warnings, "cycle " + cycle + ": a bad setting is not a warning of the cycle");
+            if (cycle == 0) {
+                // a property goes out on change and on every 12th cycle, like the other health properties
+                Object cw = r.ops.pushedProps.get(cycle).get("vc-res-1").get(HEALTH + "Configuration Warnings");
+                T.contains(String.valueOf(cw), "Cluster Check Period '7'", "the setting and its value");
+                T.contains(String.valueOf(cw), "Using 24 hours", "and what is used instead");
+                T.contains(String.valueOf(cw), "Maybe", "the guest TLS value too");
+            }
+            r.clock.addAndGet(300_000);
+            T.eq(0.0, r.ops.pushedStats.get(cycle).get("vc-res-1").get(HEALTH + "Warnings in Last Cycle"), "counter untouched");
+        }
+        Rig ok = new Rig(cfg());
+        ok.run();
+        T.eq("None in the configuration", ok.ops.pushedProps.get(0).get("vc-res-1").get(HEALTH + "Configuration Warnings"), "clean: None");
+        ConnectionTester.Report rep = ConnectionTester.run(bad, r.vim, (h, p, t) -> ThumbprintProbe.Result.found("cd".repeat(32)),
+                r.ops, new CheckListStore(r.log));
+        T.contains(String.join("|", rep.attentionLines()), "Cluster Check Period '7'", "Test Connection reports it");
+        T.done("configuration warnings are published and tested");
     }
 
     static void checkListProblems() throws Exception {

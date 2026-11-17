@@ -263,6 +263,17 @@ public final class VCommunityConfig {
         return new VCommunityConfig(b);
     }
 
+    /**
+     * The settings whose value is not allowed, one line each, naming the setting, the value and what is used
+     * instead (empty when every setting is usable). Published on every cycle as Configuration Warnings and shown
+     * by Test Connection; logged once per configuration change.
+     */
+    public List<String> configurationWarnings() {
+        List<String> all = new ArrayList<>(warnings);
+        if (guestTlsError != null) all.add(guestTlsError + ". Guest operations stay off until it is fixed.");
+        return all;
+    }
+
     /** The vCenter password; never log it. */
     public String password() { // REDACT-SECRET
         return password;
@@ -336,7 +347,7 @@ public final class VCommunityConfig {
      */
     public static String certificateCheckUrl(Function<String, String> field) {
         try {
-            String host = trimToNull(field.apply(F_HOST));
+            String host = trimToNull(unset(field.apply(F_HOST)));
             if (parseAllowInsecure(field.apply(F_ALLOW_INSECURE)) || host == null) return null;
             String ascii = host;
             if (host.indexOf(':') < 0 && !host.chars().allMatch(c -> c < 128)) {

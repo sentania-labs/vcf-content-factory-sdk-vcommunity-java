@@ -11,7 +11,7 @@
 - Optionally, a Windows account for the guest checks (off by default; see Guest monitoring below).
 
 **The minimum version.** The content of this pak is converted and gated for VCF
-Operations 8.18.x; that is the minimum version (owner decision, 2026-11-14). Collection was tested on 8.18.7, 9.0.2 and 9.1.1 with earlier builds (the certificate handling of this build is pending live proof). The pak's manifest says `vcops_minimum_version: 8.18.0`, so an older instance refuses the install.
+Operations 8.18.x; that is the minimum version (owner decision, 2026-11-14). Collection was tested on 8.18.7, 9.0.2 and 9.1.1 with earlier builds (the certificate handling and the setting handling of this build are pending live proof: see "TLS" and "Configuration Fields"). The pak's manifest says `vcops_minimum_version: 8.18.0`, so an older instance refuses the install.
 
 ## Moving from the Python pack
 
@@ -199,7 +199,7 @@ rest are under Advanced Settings.
 
 | Field | Key | Required | Default | Notes |
 |-------|-----|----------|---------|-------|
-| vCenter Server | `host` | Yes | | FQDN or IP of the vCenter, as it should be dialled. |
+| vCenter Server | `host` | Yes | | A name that is on the vCenter certificate (an IP address works only if the certificate lists it). Part of the account's identity: changing it means a new account (see "TLS: the vCenter certificate"). |
 | ESXi Advanced System Settings Config File | `esxi_adv_settings_config_file` | No | `esxi_advanced_system_settings` | Name (no `.xml`) of the check-list file naming the ESXi advanced settings to collect. |
 | ESXi Software Packages Config File | `esxi_vib_driver_config_file` | No | `esxi_packages` | Check-list file naming the ESXi packages (VIBs, drivers) whose versions are collected. |
 | VM Advanced Parameters Config File | `vm_adv_settings_config_file` | No | `vm_advanced_parameters` | Check-list file naming the VM advanced parameters (`.vmx` keys) to collect. |
@@ -228,8 +228,17 @@ preselects it. (A blank check-list file field is the one exception: it reads no 
 a switch that is neither Enabled nor Disabled, a guest TLS mode that is not one of the three) falls back to the default
 (a wrong guest TLS mode switches the guest phase off instead) and is reported by **one WARN line in the account log each
 time the account is configured** (saved, or the adapter started). It is not repeated every cycle and does not raise
-`Warnings in Last Cycle` or `First Warning` of Collection Health; the log line is where to look. (Builds before 28
-warned every cycle, so Collection Health showed a warning for as long as the value stood.)
+`Warnings in Last Cycle` or `First Warning` of Collection Health. It stays visible three ways: the property
+**`vCommunity|Collection Health|Configuration Warnings`** on the vCenter object (one text naming each setting that is not
+allowed, its value and what is used instead; `None in the configuration` when every setting is usable; it goes out with the
+other Collection Health properties, on change and in the full refresh every 12th cycle, and keeps its value in between);
+the lines of **Test Connection** (each as a WARNING in the result and a WARN in `collector.log`); and the WARN line in the
+account log. The shipped alert "vCommunity Collection Warnings" does not look at this property. (Builds before 28 warned every
+cycle, so Collection Health showed a warning for as long as the value stood.)
+
+**Two every-cycle warnings stay on purpose.** Guest monitoring switched on while Allow Insecure SSL is on, and guest
+monitoring switched on with no Windows credential, each log a WARN every cycle and count in `Warnings in Last Cycle`: the
+guest collector is not running although you asked for it, and the alert should keep telling you.
 
 Credential (kind `vsphere_user`): vCenter User Name, vCenter Password, and
 optionally Windows User Name and Windows Password.
@@ -294,7 +303,7 @@ refusal: two VMs that refuse within 24 hours pause the phase, as a changed crede
 (the framework keeps no state for an adapter), so it starts again with one VM alone: a restart loop costs one refused logon per
 restart. Tell your directory administrators these numbers: a wrong password, or a credential changed before a collection, costs at most
 two refused logons per start of the adapter and per day after that; a credential changed while VMs are running costs at most five once
-(each running VM refuses once). Windows records each refused logon as event 4625 on the
+(each running VM refuses once). The adapter stops after two refused logons in a run; that limits the damage but is not a guarantee: a directory with a lockout threshold of two or fewer locks the account. Windows records each refused logon as event 4625 on the
 guest (and 4771 / 4776 on the domain controllers); `vmtoolsd` may retry once per call.
 
 ### Security products
@@ -449,7 +458,11 @@ or they show no values. The first two ship **not enabled** in the default policy
 original pack (measured on all three lab instances); "vSphere Clusters not Green" is
 expected to behave the same (not measured). The alert "vCommunity Collection
 Warnings" also ships not enabled in the default policy, as in the original; enable it
-in the policy that governs the vCenter adapter's objects. The three stay super metrics,
+in the policy that governs the vCenter adapter's objects. Seen on 9.1.1, with the editor opened and nothing changed: the
+super metrics are listed under **Administration > Configurations > Super Metrics**, and a policy is edited under
+**Administration > Configurations > Policy Definition**, select the policy, **Edit**, with the **Metrics and Properties**
+tile (super metrics) and the **Alerts and Symptoms** tile (alert definitions); the toggles themselves were not exercised, and
+8.18.7 and 9.0.2 were not looked at. The three stay super metrics,
 not computed metrics of this pak (a percentile has no form in a computed metric, and
 they are the original pack's own content).
 
@@ -572,7 +585,10 @@ settings could not be read is counted as a withheld value.
 
 ## Step-by-Step Installation
 
-The menu paths below were seen on 9.1.1. 8.18.7 and 9.0.2 may word them differently.
+The menu paths below were seen on 9.1.1. 8.18.7 and 9.0.2 may word them differently. Three things to know before you start:
+the pak is unsigned (step 2); the vCenter must be entered by a name on its certificate (an IP address fails the name check
+and the field cannot be edited later); and the choices of the dropdown fields should show their defaults preselected, which
+has not been seen live yet (a field left on "--Select--" is stored as `null` and read as the default).
 
 1. **Administration > Integrations > Repository**, then **ADD**. The wizard has three steps: Select, End User License
    Agreement (tick "I accept"), Install. Click **FINISH** when it is done. (A path that does not exist on 9.1.1:
@@ -593,7 +609,7 @@ The menu paths below were seen on 9.1.1. 8.18.7 and 9.0.2 may word them differen
 
 ## Uninstalling
 
-Seen on 9.1.1: **Administration > Integrations > Repository**, the vCommunity tile, its **...** menu, **Uninstall**. The
+Seen on 9.1.1: **Administration > Integrations > Repository**, the **VCF Content Factory vCommunity** tile, its **...** menu, **Uninstall**. The
 dialog has no option about content: it only asks you to tick "I understand the risk and agree" and says that associated
 data and out-of-the-box content will be deleted. It takes about two minutes (a reinstall took about eight).
 
@@ -602,11 +618,11 @@ What the uninstall removed (measured on 9.1.1):
 - the adapter instance (the account) and its credential;
 - all six check-list files, **including any edit you made in a file with a default name**; a copy under another name is
   not one of them;
-- all the content of the pak: 170 views, 52 dashboards, 16 report templates, 3 super metrics, 10 symptoms and 4 alerts.
+- all the content of the pak: 170 views, 52 dashboards, 16 report templates, 3 super metrics, 10 symptoms and 4 alerts (the recommendation and the inventory tree were not counted).
 
 What it left:
 
-- the 120 built-in views and the policies, untouched;
+- the built-in views (120 on that instance) and the policies, untouched;
 - the metrics and properties already on the objects: old vCommunity keys stay where they were pushed, and stop being
   updated.
 
@@ -646,7 +662,7 @@ The account's own log is
 on the **collector node** that runs the account (the cluster node, or the Cloud Proxy or remote collector the account is
 assigned to), not on the node whose UI you are using. `<id>` is the adapter instance's internal numeric id (for example 3349), **not** the UUID the UI shows, and the UI does not
 show it: list the directory and read the newest file, or match it against the account by the `host` in the
-`VCommunityAdapter configured` line. The file is on the node the account runs on, which is not always the primary. The pak writes INFO lines to it, and the build ships
+`VCommunityAdapter configured` line. The pak writes INFO lines to it, and the build ships
 `conf/logging.properties` (`com.vcfcf.adapters.vcommunity=INFO`) so the account
 log is at INFO by default (8.18 ignores that file, and the adapter raises its own
 logger to INFO there). These lines are always written, no secret, no object
@@ -675,11 +691,12 @@ ended (reason: ...)`; neither says "logged out".
 
 If an account is edited the log shows `VCommunityAdapter configured` first and the logout line (`reason: reconfigure`)
 second; the new login appears at the next cycle. A setting with a value that is not allowed is warned about
-right after it, once.
+just before the `configured` line, once.
 
 ## Creating an account through the API
 
-The UI fills in the describe defaults; the REST API does not.
+The UI fills in the text field defaults (on 9.1.1 before build 28 it preselected no enumerated choice and stored the text
+`null`, which this build reads as not set); the REST API applies none.
 
 - **Send every non-credential identifier explicitly** (the describe declares 18) on
   `POST /api/adapters`: the server applies no `default=` from the describe, so an
@@ -701,7 +718,7 @@ The UI fills in the describe defaults; the REST API does not.
 - **"the vCenter's certificate does not carry the name ..."**: you entered the vCenter by a name (or an IP address) that is
   not on its certificate. Enter a name that is on it. Accepting the certificate does not help.
 - **The account used to work and now fails after an upgrade from a development build**: see "Upgrading from a
-  development build" below.
+  development build" above.
 - **Account down**: the vCenter cannot be reached from the collector (host name,
   route, port or firewall).
 - **`Collection|vcenter_object_resolved` is 0**: no object of kind

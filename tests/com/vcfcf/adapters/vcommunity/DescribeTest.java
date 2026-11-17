@@ -173,8 +173,9 @@ public final class DescribeTest {
                 T.eq(want.enums.length, enums.size(), at + " choice count");
                 for (int j = 0; j < want.enums.length; j++) {
                     T.eq(want.enums[j], enums.get(j).getAttribute("value"), at + " choice " + j);
-                    // the form preselects the choice flagged default="true" (the vendor example and the Synology
-                    // pak do this); one flagged choice, and it is the identifier's default
+                    // the form preselects the choice flagged default="true" (the vendor example and the working MPB Synology
+                    // describe, knowledge/context/mpb/wire_reference/synology_nas_working_describe.xml, do this); one flagged
+                    // choice, and it is the identifier's default
                     T.eq(want.enums[j].equals(want.dflt) ? "true" : "false",
                             enums.get(j).getAttribute("default"), at + " choice " + j + " default flag");
                     T.check(!enums.get(j).hasAttribute("displayOrder"), at + " choice has no displayOrder (not in the schema)");

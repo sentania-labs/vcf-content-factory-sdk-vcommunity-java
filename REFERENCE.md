@@ -81,6 +81,7 @@ Not declared here (another adapter's kind). Pushed when the vCenter object is ma
 | `vCommunity|Collection Health|Objects Not Matched` | metric |
 | `vCommunity|Collection Health|Cycle Seconds` | metric |
 | `vCommunity|Collection Health|First Failure` | property |
+| `vCommunity|Collection Health|Configuration Warnings` | property |
 | `vCommunity|Collection Health|Collector:<name>|Status` | property |
 | `vCommunity|Collection Health|Collector:<name>|Failures` | metric |
 

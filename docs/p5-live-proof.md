@@ -2,7 +2,7 @@
 
 Guest monitoring has had one live run (9.0.2, build 26; see the guest section of `docs/installing.md` and issues
 #28, #29, #30): it collected on two member servers and was refused on two domain controllers. The rest of this
-document is the full plan, most of which has not been run. Until then, nothing else in phase P5 has run against a real Windows guest. The fixture tests (`GuestOpsTest`, `GuestEngineTest`,
+document is the full plan, most of which has not been run. Apart from that run, nothing in phase P5 has run against a real Windows guest. The fixture tests (`GuestOpsTest`, `GuestEngineTest`,
 `GuestUnitTest`) prove the port against a fake vCenter, a fake ESXi host and the program texts it sends; they cannot
 prove what PowerShell, VMware Tools and Operations do with them. This is the run that does, written to be carried
 out without the author. Design reference: section 8 of `docs/design/vcommunity-java-port-design.md`; the
@@ -30,11 +30,11 @@ Guest OS Service Monitoring Status `Enabled`; Windows Event Log Monitoring Statu
 TLS Validation `Pinned`; Windows Service Configuration File `windows_service_list`; Windows Event Log Configuration
 File `windows_event_list`.
 
-The two lists (Administration > Configurations > Management Packs Configuration > Configuration Files on 9.1.1; they are stored as `SolutionConfig/<name>.xml`):
+The two lists. Do not edit the shipped files: clone each in Administration > Configurations > Management Packs Configuration > Configuration Files (9.1.1), type the `.xml` extension in the copy's name (`windows_service_list_p5.xml`, `windows_event_list_p5.xml`), edit the copies (they land in User Defined), and enter `windows_service_list_p5` and `windows_event_list_p5` (no `.xml`) in the account fields above. The copies hold:
 
-- `windows_service_list.xml`: `<windowsServices>Spooler,W32Time,wuauserv,NoSuchService</windowsServices>` (one name that does not
+- `windows_service_list_p5.xml`: `<windowsServices>Spooler,W32Time,wuauserv,NoSuchService</windowsServices>` (one name that does not
   exist on purpose)
-- `windows_event_list.xml`:
+- `windows_event_list_p5.xml`:
   ```xml
   <Events>
     <Log Name="System"><EventID>7036</EventID><EventID>7045</EventID></Log>
