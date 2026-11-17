@@ -17,8 +17,7 @@ Operations 8.18.x; that is the minimum version (owner decision, 2026-11-14). Col
 
 ## Moving from the Python pack
 
-**Uninstall the Python pack first, then install this one.** The Python pack is Onur Yuzseven's
-1.x "VCF Operations vCommunity" or Iwan Rahabok's 2.x "vCommunity" adapter. Running it and this pak
+**Uninstall the Python pack first, then install this one.** The Python pack is the vCommunity management pack, versions 0.1 to 0.8.1. Running it and this pak
 side by side is not supported: both write the same `vCommunity|...` keys onto the same vSphere
 objects, and both ship content with the same names (dashboards, views, reports, alerts), so
 every list shows twice and the two collect over each other. There is no way to make that work
@@ -48,7 +47,7 @@ What carries over (owner decision, 2026-11-14: names stay, ids are our own):
   move and re-apply them** in copies under other names (see "Check-list files").
 
 **Built-in views.** Some versions of the Python pack ship views under VCF Operations'
-own built-in view ids: Onur's 0.1.5 (41 views) and 0.1.6 to 0.3.1 (117), and Iwan Rahabok's 0.4.2 to
+own built-in view ids: 0.1.5 (41 views), 0.1.6 to 0.3.1 (117), and 0.4.2 to
 0.8.1 (120). Installing such a version overwrote those built-in views, and **uninstalling it
 deletes them** (measured on 8.18.7, 9.0.2 and 9.1.1; factory note
 `2026-11-12-vcommunity-upstream-builtin-view-ids`). Built-in dashboards that use them then show
@@ -66,7 +65,7 @@ uninstall, import that export:
 3. Leave "In case of conflict" on **Overwrite existing content** (the default) and import.
 4. The results table should show every view imported, none skipped or failed.
 
-Measured on 9.1.1 with Iwan Rahabok's 0.8.1 (2026-11-16): the uninstall deleted all 120 built-in views,
+Measured on 9.1.1 with vCommunity 0.8.1 (2026-11-16): the uninstall deleted all 120 built-in views,
 the import brought all 120 back (identical to before apart from whitespace in 12 descriptions),
 and the built-in dashboards rendered again. The same import was run on 9.0.2 and 8.18.7 (117
 views each) and is safe to repeat. Not verified: whether a restored view is protected from
@@ -83,7 +82,7 @@ between releases that keep their ids are in-place as usual.
 (2) have the clean built-in views export ready if your version is one of those named above;
 (3) uninstall the Python pack; (4) restore the built-in views if it
 shipped any; (5) install this pak; (6) re-apply your check lists.
-Steps 3 to 5 were run in this order on 9.1.1 (uninstall of Iwan Rahabok's 0.8.1, restore of the
+Steps 3 to 5 were run in this order on 9.1.1 (uninstall of vCommunity 0.8.1, restore of the
 built-in views, fresh install of this pak, which then collected normally and left the built-in
 views untouched). Steps 1 and 6, the check lists, were not part of that run.
 
@@ -357,11 +356,13 @@ guest (and 4771 / 4776 on the domain controllers); `vmtoolsd` may retry once per
 
 ### Security products
 
-The programs run as `powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand <text>`, started by `vmtoolsd.exe` as the Windows
-account. That command line is what endpoint detection products look for. Allow it by its parent (`vmtoolsd.exe`), the account and the
-program's text (it holds no account or password; decode it with `[Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('<text>'))`):
-three fixed programs, each of which reads one file it was given and writes one file, in a directory under `C:\Windows\Temp` named
-`VCFOperationsvCommunity-<number>-<program>-TEMP`. PowerShell script-block logging (event 4104) will record the program text.
+Guest monitoring runs PowerShell inside the guest: `powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand <text>`,
+started by `vmtoolsd.exe` as the Windows account. Endpoint security products commonly flag or block that pattern, and
+guest monitoring will not work where it is blocked. Review it with your security team before turning it on. What they
+will want to know: there are three fixed programs; each reads one file it was given and writes one file, in a directory
+under `C:\Windows\Temp` named `VCFOperationsvCommunity-<number>-<program>-TEMP`; the program text holds no account or
+password and can be decoded with `[Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('<text>'))`; PowerShell
+script-block logging (event 4104) records it.
 
 ### Failure causes
 

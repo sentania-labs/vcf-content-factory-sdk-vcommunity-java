@@ -9,7 +9,12 @@ history carries over from the Python pack.
 ## Status
 
 **3.0.0.29 is a preview for evaluation.** Expect rough edges, and please report what you find as
-[issues](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues).
+[issues](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues). Most useful right now:
+anything that is wrong or missing compared with the pack you run today, and anything in the install that
+surprised you.
+
+This is a community project. It is not a Broadcom product and is not supported by Broadcom Support. It is
+provided as is under the MIT license.
 
 | | |
 |---|---|
@@ -40,8 +45,9 @@ The ones most likely to affect an evaluation:
 **Things you need to switch on**
 - Alerts and super metrics are not enabled by the install. Enable them in your policy.
 
-**Not working**
-- Network Speed Degradation skips NICs on auto-negotiate, which is most 10 GbE and faster NICs ([#39](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/39)).
+**Limited or not working**
+- Network Speed Degradation only covers NICs with a fixed speed. Auto-negotiated NICs, which is most 10 GbE
+  and faster, are skipped ([#39](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/39)).
 - Cluster Memory Tiering Consumption has no value ([#7](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/7)).
 - VM Snapshots List is always empty ([#9](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/9)).
 - VOA reports show "No data" in their dashboard sections on 9.1.1 ([#10](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/10)).
@@ -49,8 +55,8 @@ The ones most likely to affect an evaluation:
   ([#34](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/34)).
 
 **Not yet verified**
-- Windows guest monitoring (off by default). In one test it collected from member servers and was refused by
-  domain controllers, which paused it for every VM
+- Windows guest monitoring (off by default, lab use only). In one test it logged on to two member servers and
+  was refused by two domain controllers, which paused it for every VM. The values it publishes have not been checked
   ([#28](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/28),
   [#30](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/30)).
 - The nenic, nfnic and VIB Info views have not been seen with data
@@ -60,18 +66,20 @@ The ones most likely to affect an evaluation:
 
 Running both packs side by side is not supported. Uninstall the Python pack, then install this one.
 
-1. Save any check-list files you edited.
+1. Save any check-list files you edited (the files that list which settings and packages to collect).
 2. Uninstall the Python pack.
 3. If built-in dashboards now show "The view does not exist", restore the built-in views (below).
-4. Install this pak and add the account.
-5. Re-apply your check lists.
+4. Install this pak.
+5. Re-create your check lists as copies, then add the account using their names.
 
 What to expect:
 - **Metric history carries over.** The keys have the same names on the same objects.
-- **Content is replaced.** Dashboards, views, reports and alerts are this pak's own copies with the same names.
-  Anything you cloned or customized is yours to re-point.
-- **Built-in views may be deleted.** Some Python pack versions overwrote VCF Operations' built-in views, and
-  uninstalling those versions deletes them. To restore them you need an export of the built-in views from a clean
+- **Content is replaced.** Dashboards, views, reports and alerts are this pak's own copies. Nine views have new
+  titles. Anything you cloned or customized is yours to re-point.
+- **Old placeholder values remain for a while.** Values such as `None` or `N/A` written by the Python pack stay on
+  existing objects until a real value replaces them.
+- **Built-in views may be removed.** vCommunity versions 0.1.5 to 0.8.1 install some views under built-in view
+  ids, so uninstalling them also removes those built-in views. To restore them you need an export of the built-in views from a clean
   instance of the same product version; ask the maintainer for one. A script for this will ship with the public
   release ([#32](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/32)).
 
@@ -83,7 +91,6 @@ Details and the restore steps are in [the guide](docs/installing.md#moving-from-
 - [Overview](docs/overview.md): what the pak collects and how
 - [What has been verified live](docs/verification.md)
 - [Development](docs/development.md): building from source, the release process, repository layout
-- [Design](docs/design/vcommunity-java-port-design.md)
 
 ## Credits
 

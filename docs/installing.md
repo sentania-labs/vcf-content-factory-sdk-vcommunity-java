@@ -10,7 +10,7 @@ Menu paths are as seen on VCF Operations 9.1. They differ slightly on 8.18 and 9
 - The built-in vCenter adapter already collecting the vCenter. This pak adds data to its objects.
 - A vCenter account with read access. For license and host package data it also needs Global > Licenses,
   Global > Settings and Host > Configuration > Image configuration.
-- The collector must reach the vCenter on port 443.
+- The collector or cloud proxy that runs the account must reach the vCenter on port 443.
 - Coming from the Python vCommunity pack? Read [Moving from the Python pack](#moving-from-the-python-pack) first.
 
 ## Install
@@ -22,7 +22,9 @@ Menu paths are as seen on VCF Operations 9.1. They differ slightly on 8.18 and 9
    eight minutes.
 4. Go to **Administration > Integrations > Accounts**, click **Add**, and pick **VCF Content Factory vCommunity**.
 5. Enter a name, the **vCenter Server**, and a credential (the **+** next to the credential field creates one).
-   Enter the vCenter by a name that is on its certificate, not an IP address. This field cannot be changed later.
+   Enter the vCenter by a name that is on its certificate, not an IP address.
+   The vCenter Server and the four "Config File" fields cannot be changed after the account is created. If you
+   plan to use your own [check lists](#check-lists), create them first and enter their names here.
 6. Click **Validate Connection**. Review and **accept** the certificate when asked. You should see
    "Test connection successful."
 7. Click **Add**. Collection starts within seconds, and the account shows "Collecting" after a few minutes.
@@ -35,11 +37,12 @@ Three things are off until you turn them on:
 
 | What | How to turn it on |
 |---|---|
-| Most dashboards (40 of 52) | Enable the ones you want in the dashboard list |
+| Most dashboards (40 of 52) | In the dashboard list, select a dashboard and enable it |
 | The 4 alerts and 3 super metrics | **Administration > Configurations > Policy Definition**, edit your active policy: **Alerts and Symptoms** for the alerts, **Metrics and Properties** for the super metrics |
 | Network Speed Degradation | Limited in this preview. See [below](#network-speed-degradation) |
 
-On dashboards with a picker, click a row and then choose **Internal interaction** to drive the other widgets.
+On dashboards with a list of objects to pick from, click a row and then choose **Internal interaction** from the
+menu that opens. The other widgets then show that object.
 
 ## Certificates
 
@@ -88,7 +91,9 @@ Do not edit the shipped files. An upgrade overwrites them. Make a copy instead:
 3. Name the copy and **type the `.xml` yourself**, for example `esxi_packages_mine.xml`. Without `.xml` the
    adapter cannot find it.
 4. The copy appears under **User Defined**. Edit it and uncomment the entries you want, separated by commas.
-5. Edit the account and enter the name **without** `.xml` in the matching field, for example `esxi_packages_mine`.
+5. When you add the account, enter the name **without** `.xml` in the matching field, for example
+   `esxi_packages_mine`. These fields cannot be changed on an existing account, so make your copies first. You can
+   keep editing the copy's contents afterwards.
 
 The nenic, nfnic and VIB Info views need `nenic`, `nfnic` and `nsx-host` in the packages list.
 
@@ -110,18 +115,20 @@ Know this before turning it on:
 
 - It tries **every** powered-on Windows VM with VMware Tools running, including domain controllers. There is
   no way to exclude VMs ([#17](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/17)).
-- If two VMs refuse the account, it stops for all VMs for 24 hours. This protects the account from lockout,
-  but one domain controller refusing a non-admin account is enough to trigger it
+- After two refused logons it stops for all VMs for 24 hours. This protects the account from lockout, but it
+  means two VMs that will not accept the account, such as domain controllers, stop collection everywhere
   ([#28](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/28)).
 - The Windows rights the account needs are not yet determined
   ([#30](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/30)).
-- Use a dedicated account, never one whose lockout would hurt.
+- Use a dedicated account, never one whose lockout would hurt. Do not use a domain administrator account or
+  grant extra rights on domain controllers to get past a refusal.
+- It runs PowerShell inside the guest through VMware Tools. Endpoint security products may block or flag
+  that. Review it with your security team before turning it on.
 
-To try it: add a Windows user name (`user@domain`) and password to the credential, list services in a copy of
+To try it in a lab: add a Windows user name and password to the credential, list services in a copy of
 `windows_service_list` and events in a copy of `windows_event_list`, then set the two monitoring settings to
 Enabled. Results and failures appear in the `Collector:guest` keys on the vCenter object. The
-[detailed reference](installing-reference.md#guest-monitoring-off-by-default) covers lockout numbers, security
-product allow-listing and failure codes.
+[detailed reference](installing-reference.md#guest-monitoring-off-by-default) covers the lockout limits, what security products will see, and failure codes.
 
 ## Upgrading
 
@@ -142,19 +149,22 @@ Running both packs side by side is not supported. Both write the same keys to th
 1. Save any check-list files you edited.
 2. Uninstall the Python pack.
 3. If built-in dashboards now show "The view does not exist", [restore the built-in views](#restoring-built-in-views).
-4. Install this pak and add the account.
-5. Re-apply your check lists as copies.
+4. Install this pak.
+5. Re-create your check lists as copies, then add the account using their names.
 
 What changes:
 
 - **Metric history carries over.** The key names are the same.
 - **Content is replaced** by this pak's copies under the same names. Re-point anything you cloned.
-- **Certificate handling is stricter.** The Python pack accepted any certificate by default. This pak verifies it.
+- **Certificates are checked differently.** The Python pack trusted the first certificate it saw. This pak checks
+  the certificate against the collector's trust store; accept it once in Validate Connection.
+- **Old placeholder values remain for a while.** Values such as `None` or `N/A` written earlier stay on existing
+  objects until a real value replaces them.
 
 ### Restoring built-in views
 
-Some Python pack versions overwrote VCF Operations' built-in views (Onur's 0.1.5 to 0.3.1 and Iwan's 0.4.2 to
-0.8.1). Uninstalling those versions deletes the built-in views.
+vCommunity versions 0.1.5 to 0.8.1 install some views under the ids of VCF Operations' built-in views, so
+uninstalling one of those versions also removes those built-in views. A fix has been proposed upstream.
 
 You need an export of the built-in views from a clean instance of the same VCF Operations version. Ask the
 maintainer for one; a script will ship with the public release
