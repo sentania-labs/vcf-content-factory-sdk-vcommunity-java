@@ -60,7 +60,7 @@ public final class HostCollector {
                         "subVendorId", "vendorName", "deviceName"))
                 .path("capability.storageVMotionSupported")
                 .path("configManager.imageConfigManager")
-                // for the cluster membership and the port group count (P4); not keys of their own
+                // for the cluster membership and the port group count; not keys of their own
                 .path("parent", PathSpec.shallow())
                 .path("config.network.portgroup", PathSpec.keepingInElements("spec.name"));
     }

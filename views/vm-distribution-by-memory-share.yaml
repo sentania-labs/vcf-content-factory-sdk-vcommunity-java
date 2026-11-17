@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+# Converted from vCommunity 0.8.1: content/reports/view - collection01/View - Collection01.xml
 id: 528040aa-8d85-5637-898a-e8abef57294a
 name: VM Distribution by Memory Share
 description: Donut chart showing how many virtual machines have each memory shares-per-MB value, one slice

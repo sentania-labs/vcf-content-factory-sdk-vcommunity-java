@@ -10,7 +10,7 @@
   ]
  },
  "status": 200,
- "host": "vcf-lab-mgmt-esx06.int.sentania.net",
+ "host": "esxi-host.example.test",
  "response": {
   "values": [
    {

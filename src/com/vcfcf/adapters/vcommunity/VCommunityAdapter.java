@@ -46,10 +46,10 @@ import javax.net.ssl.SSLContext;
  * VCF Content Factory vCommunity: a Java port of the vCommunity management
  * pack. It reads a vCenter over vim25 and pushes the {@code vCommunity|} keys
  * onto the vCenter adapter's own objects through the Suite API (design:
- * {@code knowledge/designs/managementpacks/vcommunity-java-port-design.md}).
+ * {@code docs/design/vcommunity-java-port-design.md}).
  *
- * <p>This build reads the property keys of the vCenter's own objects (phase P2)
- * and delivers three kinds of object of its own (phase P3): content libraries,
+ * <p>It reads the property keys of the vCenter's own objects
+ * and delivers three kinds of object of its own: content libraries,
  * the items in them, and VM templates.
  *
  * <p><b>Where the cycle runs.</b> At the top of the collection, in
@@ -660,7 +660,7 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
     /**
      * The pak's own log lines, through the adapter's {@code logInfo} /
      * {@code logWarn} / {@code logError}: those reach the per-instance log
-     * where a helper's own logger may not (vSAN Performance build 9).
+     * where a helper's own logger may not (the vSAN Performance pak).
      */
     private Log pakLog() {
         return new Log() {

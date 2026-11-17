@@ -60,8 +60,8 @@ import java.util.concurrent.TimeoutException;
  *   A3 lists     the check-list files, only those in use
  *   A4 binding   the vCenter's own object in VCF Operations, by VCID
  *   B  reads     the property keys of clusters, hosts, virtual machines, datastores
- *                and the vCenter itself ({@link PropertyCollection}, phase P2); beside
- *                it, on a thread of its own, the content libraries (REST, phase P3)
+ *                and the vCenter itself ({@link PropertyCollection}); beside
+ *                it, on a thread of its own, the content libraries (REST)
  *   C  own       the pak's own objects: libraries, library items and VM templates,
  *                with the kinds that were read in full ({@link OwnObjects})
  *   E  health    the Collection Health keys on that object; the self metrics

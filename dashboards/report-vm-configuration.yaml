@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/To be used in reports/Input dashboards.json
+# Converted from vCommunity 0.8.1: content/dashboards/To be used in reports/Input dashboards.json
 id: 5756c6e9-3239-5f4d-add3-d9549a99ef26
 name: 'Report: VM Configuration'
 description: "Part of a report covering configuration. Designed to be run on a weekly basis, and be compared\

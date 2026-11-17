@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - collection01/View - Collection01.xml, /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+# Converted from vCommunity 0.8.1: content/reports/view - collection01/View - Collection01.xml
 id: b47b0bac-4a71-55d9-89bf-f87b5751a51d
 name: VM Distribution by CPU Share
 description: Donut chart showing how many virtual machines have each CPU shares-per-vCPU value, one slice

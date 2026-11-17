@@ -69,7 +69,7 @@ public final class PropertyCollection {
     public static final String C_VM = "vm";
     public static final String C_DATASTORE = "datastore";
     public static final String C_VCENTER = "vcenter";
-    /** The Datacenters' membership and distributed port groups (P4); their figures are the derived phase's. */
+    /** The Datacenters' membership and distributed port groups; their figures are the derived phase's. */
     public static final String C_DATACENTER = "datacenter";
 
     static final int POOL = 4;
@@ -110,9 +110,9 @@ public final class PropertyCollection {
         public Map<String, String> datastoreNames;
         /** Folder MoRef value to name for the templates' parents; null when that read failed. */
         public Map<String, String> folderNames;
-        /** Who is in what, as this cycle's reads say it (P4); each part carries whether its read finished. */
+        /** Who is in what, as this cycle's reads say it; each part carries whether its read finished. */
         public Membership membership;
-        /** The Windows VMs and the ESXi thumbprints, for the guest phase (P5); null when it is not wanted. */
+        /** The Windows VMs and the ESXi thumbprints, for the guest phase; null when it is not wanted. */
         public com.vcfcf.adapters.vcommunity.guest.GuestRoster roster;
         /** VM Options entries skipped this cycle (invalid for vCenter, or a value this port cannot print); null when not measured. */
         public Integer optionsSkipped;

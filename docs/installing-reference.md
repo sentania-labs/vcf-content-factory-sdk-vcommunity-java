@@ -13,7 +13,7 @@ This is the long form: every measurement, message text and edge case. Start with
 - Optionally, a Windows account for the guest checks (off by default; see Guest monitoring below).
 
 **The minimum version.** The content of this pak is converted and gated for VCF
-Operations 8.18.x; that is the minimum version (owner decision, 2026-11-14). Collection was tested on 8.18.7, 9.0.2 and 9.1.1; what was seen live for the certificate handling and the settings is under "TLS: the vCenter certificate" (build 29 has been installed on 9.1.1 only). The pak's manifest says `vcops_minimum_version: 8.18.0`, so an older instance refuses the install.
+Operations 8.18.x; that is the minimum version. Collection was tested on 8.18.7, 9.0.2 and 9.1.1; what was seen live for the certificate handling and the settings is under "TLS: the vCenter certificate" (build 29 has been installed on 9.1.1 only). The pak's manifest says `vcops_minimum_version: 8.18.0`, so an older instance refuses the install.
 
 ## Moving from the Python pack
 
@@ -29,7 +29,7 @@ uninstalling one does not delete the other's.
 vCenter Thumbprint fields do not exist here: a new account verifies the vCenter certificate (accept it in Validate
 Connection) and the vCenter must be entered by a name on its certificate.
 
-What carries over (owner decision, 2026-11-14: names stay, ids are our own):
+What carries over (names stay, ids are this pak's own):
 
 - **Metrics and properties.** The keys are the same names on the same vSphere objects, so the
   history of those keys continues across the move. Measured on 8.18.7 (2026-11-16): after the
@@ -49,8 +49,7 @@ What carries over (owner decision, 2026-11-14: names stay, ids are our own):
 **Built-in views.** Some versions of the Python pack ship views under VCF Operations'
 own built-in view ids: 0.1.5 (41 views), 0.1.6 to 0.3.1 (117), and 0.4.2 to
 0.8.1 (120). Installing such a version overwrote those built-in views, and **uninstalling it
-deletes them** (measured on 8.18.7, 9.0.2 and 9.1.1; factory note
-`2026-11-12-vcommunity-upstream-builtin-view-ids`). Built-in dashboards that use them then show
+deletes them** (measured on 8.18.7, 9.0.2 and 9.1.1). Built-in dashboards that use them then show
 "The view does not exist". Before you uninstall one of those versions, have a clean export of the built-in
 views of the same VCF Operations version at hand, taken from an instance that never had the
 Python pack: an export from the affected instance holds the pack's copies. The export has to
@@ -435,8 +434,8 @@ title of each:
 a view VCF Operations already has. The pak does not install them: the dashboards
 and reports that used them point at the built-in view by its id
 (`docs/design/inputs/dropped.tsv` lists the 19). All 19 ids are in a clean
-export of each of 8.18.7, 9.0.2 and 9.1.1, as recorded in the factory's stock
-id baseline; they were not looked at on a running instance.
+export of each of 8.18.7, 9.0.2 and 9.1.1, as recorded in a baseline of built-in
+ids taken from each version; they were not looked at on a running instance.
 
 **No Summary pages are bound.** Six dashboards are named ". Object Summary Page for ..."
 (compute folder, distributed port groups, distributed switch, network folder, storage folder, VM

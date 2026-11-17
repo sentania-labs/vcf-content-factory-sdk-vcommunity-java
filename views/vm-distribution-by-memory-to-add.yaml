@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 1/View - Set 1.xml
+# Converted from vCommunity 0.8.1: content/reports/view - set 1/View - Set 1.xml
 id: 3373e13c-af15-5722-a1db-f22d865732c7
 name: VM Distribution by Memory to add
 description: Bar chart counting virtual machines by the amount of memory in GB recommended for addition,

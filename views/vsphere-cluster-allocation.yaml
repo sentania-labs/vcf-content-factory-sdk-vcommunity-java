@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 3/View - Set 3.xml
+# Converted from vCommunity 0.8.1: content/reports/view - set 3/View - Set 3.xml
 id: 5977e69d-3b25-5be0-a1ad-2c6487b0d017
 name: vSphere Cluster Allocation
 description: Trend line of cluster allocation. This complements the demand model as demand model cannot

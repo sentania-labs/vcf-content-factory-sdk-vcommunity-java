@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/reports/view - set 2/View - Set 2.xml
+# Converted from vCommunity 0.8.1: content/reports/view - set 2/View - Set 2.xml
 id: ce544d9d-9cf1-561f-b489-452a02c74fc5
 name: VM CPU Size Distribution
 description: Bar chart counting virtual machines by configured vCPU count, in buckets of 8 up to 32, then

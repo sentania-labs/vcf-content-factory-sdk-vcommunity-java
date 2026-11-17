@@ -1,4 +1,4 @@
-# Converted offline by vcfcf_extractor import-local from: /mnt/holding/vcf-content-factory/builds/vcommunity-fix-e1/vCommunity_0.8.1-fix-builtin-view-ids-e1-releasedimage.pak!content/dashboards/vm storage configuration/VM Storage Configuration.json
+# Converted from vCommunity 0.8.1: content/dashboards/vm storage configuration/VM Storage Configuration.json
 id: 16960d4a-8167-5798-94c8-e7b162d27f2c
 name: VM Storage Configuration
 description: "Highlight VM configuration that needs your attention. Use this dashboard to fix incorrect\
