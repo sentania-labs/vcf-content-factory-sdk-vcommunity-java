@@ -211,7 +211,6 @@ public final class CycleEngine {
         cycleNo++;
         warns.reset();
         vim.beginCycle();
-        for (String w : cfg.warnings) log.warn(w);
         Failures failures = new Failures();
         CollectionHealth.Summary s = new CollectionHealth.Summary();
 
@@ -657,6 +656,8 @@ public final class CycleEngine {
         s.firstFailure = failures.first();
         s.warnings = warns.count();
         s.firstWarning = warns.first();
+        List<String> cw = cfg.configurationWarnings();
+        s.configWarnings = cw.isEmpty() ? null : String.join(" ", cw).replaceAll("[\\p{Cntrl}]", " ");
         s.cycleSeconds = (clock.now() - t0) / 1000.0;
         for (String c : s.collectorStatus.keySet()) {
             s.collectorFailures.put(c, failures.forCollector(c));

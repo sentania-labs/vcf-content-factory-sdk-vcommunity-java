@@ -19,6 +19,8 @@ public final class CollectionHealth {
 
     public static final String PREFIX = "vCommunity|Collection Health|";
     public static final String NONE = "None in the last cycle";
+    /** Configuration Warnings when every setting is usable (the text is not about a cycle). */
+    public static final String NO_CONFIG_WARNINGS = "None in the configuration";
 
     /** Status of one collector (design 5.2). */
     public enum Status {
@@ -33,6 +35,8 @@ public final class CollectionHealth {
     public static final class Summary {
         public int warnings;
         public String firstWarning;
+        /** The settings with a value that is not allowed, one text, or null when none (not a count of the cycle's warnings). */
+        public String configWarnings;
         public int readsFailed;
         public int valuesWithheld;
         /** Null unless every check-list file read this cycle was parsed (else the count is unknown). */
@@ -66,6 +70,9 @@ public final class CollectionHealth {
         ps.stat(vcenterResourceId, PREFIX + "Warnings in Last Cycle", s.warnings);
         ps.prop(vcenterResourceId, PREFIX + "First Warning",
                 s.firstWarning == null ? NONE : s.firstWarning);
+        // Durable, every cycle, and outside Warnings in Last Cycle: a setting that is wrong stays visible for as long as it is
+        ps.prop(vcenterResourceId, PREFIX + "Configuration Warnings",
+                s.configWarnings == null ? NO_CONFIG_WARNINGS : s.configWarnings);
         ps.stat(vcenterResourceId, PREFIX + "Reads Failed in Last Cycle", s.readsFailed);
         ps.stat(vcenterResourceId, PREFIX + "Values Withheld in Last Cycle", s.valuesWithheld);
         if (s.checklistSkipped != null) {

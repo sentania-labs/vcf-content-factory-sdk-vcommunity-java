@@ -104,7 +104,7 @@ public final class VCommunityConfig {
 
         public static GuestTlsMode parse(String text) {
             String t = text == null ? "" : text.trim();
-            if (t.isEmpty()) return DEFAULT;
+            if (t.isEmpty() || t.equalsIgnoreCase("null")) return DEFAULT;
             for (GuestTlsMode m : values()) {
                 if (m.label.equalsIgnoreCase(t)) return m;
             }
@@ -198,9 +198,17 @@ public final class VCommunityConfig {
      * @throws IllegalArgumentException the account cannot be used; the message
      *         names the field and quotes no secret
      */
-    public static VCommunityConfig parse(Function<String, String> field, String user,
+    public static VCommunityConfig parse(Function<String, String> rawField, String user,
             String password, String winUser, String winPassword) {
         Builder b = new Builder();
+        // A form that preselects nothing stores the text "null" for a setting nobody touched; that, a blank
+        // and an absent value all mean "not set" and take the default without a word. A check-list file field
+        // keeps its own rule (a blank one reads no file, DV-62), but the text "null" is still "not set".
+        Function<String, String> field = k -> unset(rawField.apply(k));
+        Function<String, String> fileField = k -> {
+            String v = rawField.apply(k);
+            return v != null && "null".equalsIgnoreCase(v.trim()) ? null : v;
+        };
 
         b.host = trimToNull(field.apply(F_HOST));
         if (b.host == null) {
@@ -209,12 +217,12 @@ public final class VCommunityConfig {
         b.port = parsePort(field.apply(F_PORT));
         b.allowInsecure = parseAllowInsecure(field.apply(F_ALLOW_INSECURE));
 
-        b.esxiSettingsFile = fileName(field.apply(F_ESXI_SETTINGS_FILE), DEFAULT_ESXI_SETTINGS_FILE);
-        b.esxiPackagesFile = fileName(field.apply(F_ESXI_PACKAGES_FILE), DEFAULT_ESXI_PACKAGES_FILE);
-        b.vmParamsFile = fileName(field.apply(F_VM_PARAMS_FILE), DEFAULT_VM_PARAMS_FILE);
-        b.vmOptionsFile = fileName(field.apply(F_VM_OPTIONS_FILE), DEFAULT_VM_OPTIONS_FILE);
-        b.winServiceFile = fileName(field.apply(F_WIN_SERVICE_FILE), DEFAULT_WIN_SERVICE_FILE);
-        b.winEventFile = fileName(field.apply(F_WIN_EVENT_FILE), DEFAULT_WIN_EVENT_FILE);
+        b.esxiSettingsFile = fileName(fileField.apply(F_ESXI_SETTINGS_FILE), DEFAULT_ESXI_SETTINGS_FILE);
+        b.esxiPackagesFile = fileName(fileField.apply(F_ESXI_PACKAGES_FILE), DEFAULT_ESXI_PACKAGES_FILE);
+        b.vmParamsFile = fileName(fileField.apply(F_VM_PARAMS_FILE), DEFAULT_VM_PARAMS_FILE);
+        b.vmOptionsFile = fileName(fileField.apply(F_VM_OPTIONS_FILE), DEFAULT_VM_OPTIONS_FILE);
+        b.winServiceFile = fileName(fileField.apply(F_WIN_SERVICE_FILE), DEFAULT_WIN_SERVICE_FILE);
+        b.winEventFile = fileName(fileField.apply(F_WIN_EVENT_FILE), DEFAULT_WIN_EVENT_FILE);
 
         b.periodHours = parsePeriod(field.apply(F_PERIOD), b.warnings);
         int[] hm = parseCheckTime(field.apply(F_CHECK_TIME), b.warnings);
@@ -230,8 +238,10 @@ public final class VCommunityConfig {
                 DEFAULT_MONSTER_MEM_MIN_GB, "Monster VM Memory Minimum (GB)", b.warnings);
 
         // Case sensitive, as the original compares (parity).
-        b.serviceMonitoring = "Enabled".equals(field.apply(F_SERVICE_MONITORING));
-        b.eventMonitoring = "Enabled".equals(field.apply(F_EVENT_MONITORING));
+        b.serviceMonitoring = parseSwitch(field.apply(F_SERVICE_MONITORING),
+                "Guest OS Service Monitoring Status", b.warnings);
+        b.eventMonitoring = parseSwitch(field.apply(F_EVENT_MONITORING),
+                "Windows Event Log Monitoring Status", b.warnings);
 
         String guestRaw = field.apply(F_GUEST_TLS);
         b.guestTlsMode = GuestTlsMode.parse(guestRaw);
@@ -251,6 +261,17 @@ public final class VCommunityConfig {
         b.winUser = trimToNull(winUser);
         b.winPassword = winPassword == null || winPassword.isEmpty() ? null : winPassword;
         return new VCommunityConfig(b);
+    }
+
+    /**
+     * The settings whose value is not allowed, one line each, naming the setting, the value and what is used
+     * instead (empty when every setting is usable). Published on every cycle as Configuration Warnings and shown
+     * by Test Connection; logged once per configuration change.
+     */
+    public List<String> configurationWarnings() {
+        List<String> all = new ArrayList<>(warnings);
+        if (guestTlsError != null) all.add(guestTlsError + ". Guest operations stay off until it is fixed.");
+        return all;
     }
 
     /** The vCenter password; never log it. */
@@ -326,7 +347,7 @@ public final class VCommunityConfig {
      */
     public static String certificateCheckUrl(Function<String, String> field) {
         try {
-            String host = trimToNull(field.apply(F_HOST));
+            String host = trimToNull(unset(field.apply(F_HOST)));
             if (parseAllowInsecure(field.apply(F_ALLOW_INSECURE)) || host == null) return null;
             String ascii = host;
             if (host.indexOf(':') < 0 && !host.chars().allMatch(c -> c < 128)) {
@@ -345,8 +366,26 @@ public final class VCommunityConfig {
 
     // ------------------------------------------------------------------ parsing
 
+    /**
+     * A setting that was left alone: null, blank or the text {@code null} in any case. All three mean "not set",
+     * and the caller takes the default without a warning.
+     */
+    static String unset(String text) {
+        if (text == null) return null;
+        String t = text.trim();
+        return t.isEmpty() || t.equalsIgnoreCase("null") ? null : text;
+    }
+
+    /** Enabled/Disabled choice; not set is Disabled; any other text is Disabled and warned about once. */
+    private static boolean parseSwitch(String text, String label, List<String> warnings) {
+        if (text == null || "Disabled".equals(text)) return false;
+        if ("Enabled".equals(text)) return true; // case sensitive, as the original compares (parity)
+        warnings.add(label + " '" + shown(text) + "' is not one of: Enabled, Disabled. Using Disabled.");
+        return false;
+    }
+
     private static int parsePort(String text) {
-        String t = text == null ? "" : text.trim();
+        String t = unset(text) == null ? "" : text.trim();
         if (t.isEmpty()) return DEFAULT_PORT;
         int p;
         try {

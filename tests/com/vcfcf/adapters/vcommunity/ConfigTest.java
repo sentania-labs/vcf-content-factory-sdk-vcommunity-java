@@ -30,6 +30,7 @@ public final class ConfigTest {
         periodAndTime();
         wholeNumbers();
         allowInsecure();
+        unsetValues();
         failures();
         guestAndSwitches();
         filesAndIdentity();
@@ -127,6 +128,58 @@ public final class ConfigTest {
                 "monster_vm_cpu_percent_of_cores", "0"));
         T.eq(2, w.warnings.size(), "one warning per field");
         T.done("config whole numbers");
+    }
+
+    /** Each optional setting: absent, blank, the text null (any case, padded), a valid value, an invalid one. */
+    static void unsetValues() {
+        String[] unset = {null, "", "  ", "null", "NULL", " Null "};
+        // every field with its default, a valid non-default value, and an invalid one
+        Object[][] cases = {
+            {"cluster_check_period_hours", "12", "7", (java.util.function.Function<VCommunityConfig, Object>) c -> c.periodHours, 24, 12},
+            {"periodic_cluster_check_time", "06:30", "noon", (java.util.function.Function<VCommunityConfig, Object>) c -> c.checkHour * 100 + c.checkMinute, 0, 630},
+            {"cluster_check_worst_percent", "10", "51", (java.util.function.Function<VCommunityConfig, Object>) c -> c.worstPercent, 5, 10},
+            {"monster_vm_cpu_percent_of_cores", "60", "0", (java.util.function.Function<VCommunityConfig, Object>) c -> c.monsterCpuPercent, 50, 60},
+            {"monster_vm_memory_percent_of_dram", "30", "x", (java.util.function.Function<VCommunityConfig, Object>) c -> c.monsterMemPercent, 40, 30},
+            {"monster_vm_memory_min_gb", "128", "zero", (java.util.function.Function<VCommunityConfig, Object>) c -> c.monsterMemMinGb, 256, 128},
+            {"port", "8443", null, (java.util.function.Function<VCommunityConfig, Object>) c -> c.port, 443, 8443},
+            {"serviceMonitoring", "Enabled", "enabled", (java.util.function.Function<VCommunityConfig, Object>) c -> c.serviceMonitoring, false, true},
+            {"winEventMonitoring", "Enabled", "yes", (java.util.function.Function<VCommunityConfig, Object>) c -> c.eventMonitoring, false, true},
+            {"guest_tls_validation", "Strict", "Maybe", (java.util.function.Function<VCommunityConfig, Object>) c -> c.guestTlsMode, GuestTlsMode.PINNED, GuestTlsMode.STRICT},
+        };
+        for (Object[] k : cases) {
+            String key = (String) k[0];
+            @SuppressWarnings("unchecked")
+            java.util.function.Function<VCommunityConfig, Object> get = (java.util.function.Function<VCommunityConfig, Object>) k[3];
+            for (String u : unset) {
+                VCommunityConfig c = parse(fields(key, u));
+                T.eq(k[4], get.apply(c), key + " '" + u + "' is the default");
+                T.check(c.warnings.isEmpty() && c.guestTlsError == null, key + " '" + u + "' is silent: " + c.warnings);
+            }
+            VCommunityConfig ok = parse(fields(key, (String) k[1]));
+            T.eq(k[5], get.apply(ok), key + " valid value");
+            T.check(ok.warnings.isEmpty() && ok.guestTlsError == null, key + " valid is silent");
+            if (k[2] != null) {
+                VCommunityConfig bad = parse(fields(key, (String) k[2]));
+                // an unknown guest TLS mode has no fallback: guest operations stay off (DV-29)
+                T.eq(key.equals("guest_tls_validation") ? null : k[4], get.apply(bad), key + " invalid value falls back");
+                T.check(bad.warnings.size() + (bad.guestTlsError == null ? 0 : 1) == 1, key + " invalid is reported once: " + bad.warnings);
+            }
+        }
+        // a check-list file: the text null is the default; a blank field still reads no file (DV-62)
+        for (String u : new String[] {"null", "NULL", " null "}) {
+            VCommunityConfig c = parse(fields("esxi_adv_settings_config_file", u, "win_event_config_file", u));
+            T.eq("esxi_advanced_system_settings", c.esxiSettingsFile, "file '" + u + "' is the default");
+            T.eq("windows_event_list", c.winEventFile, "event file '" + u + "' is the default");
+            T.check(c.warnings.isEmpty(), "file null is silent");
+        }
+        T.eq("", parse(fields("esxi_adv_settings_config_file", "")).esxiSettingsFile, "a blank file field reads no file");
+        // Allow Insecure SSL: anything but the text true verifies
+        for (String u : unset) T.check(!parse(fields("allowInsecure", u)).allowInsecure, "allowInsecure '" + u + "' verifies");
+        T.check(parse(fields("allowInsecure", "TRUE")).allowInsecure, "TRUE is insecure");
+        T.check(!parse(fields("allowInsecure", "maybe")).allowInsecure, "any other text verifies");
+        // the review URL takes the same view of the port
+        T.eq("https://vc.example.test:443", VCommunityConfig.certificateCheckUrl(fields("port", "null")::get), "port null in the URL");
+        T.done("config unset values");
     }
 
     static void allowInsecure() {

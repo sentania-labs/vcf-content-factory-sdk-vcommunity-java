@@ -88,6 +88,7 @@ public final class ConnectionTester {
     public static Report run(VCommunityConfig cfg, VimSession vim, ThumbprintProbe.Probe probe,
             OpsApi ops, CheckListStore store, String notBuilt, boolean expected) throws Exception {
         Report r = new Report();
+        for (String w : cfg.configurationWarnings()) r.flag("WARNING: " + w);
         vim.beginCycle();
         VimResult<About> session = vim.ensureSession();
         if (!session.isOk()) {

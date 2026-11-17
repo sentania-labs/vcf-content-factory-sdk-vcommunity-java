@@ -5,7 +5,7 @@
 #   version       the release line: 3.x is this port (Onur's pack is 1.x, Ewan's 2.x).
 #   build_number  bump on every build; CHANGELOG.md gets a matching line. It is carried
 #                 forward across a version change (development builds 1 to 26 were under
-#                 1.0.0; the first release is 3.0.0 build 27), so a dev build never stamps
+#                 1.0.0; the first release is 3.0.0 build 29), so a dev build never stamps
 #                 a lower number than one already installed; the release tag is
 #                 v<version>.<build_number>.
 #   released      false while authoring; the official release is the .pak
@@ -33,7 +33,7 @@ description: >
   pack (views, dashboards, reports, super metrics, symptoms, alerts and a
   recommendation) and the six check-list files.
 version: 3.0.0
-build_number: 27
+build_number: 29
 tier: 2
 released: false
 

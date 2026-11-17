@@ -356,7 +356,7 @@ public final class GuestPhase {
         switch (plan.off) {
             case BAD_TLS_MODE:
                 in.failures.add(COLLECTOR, FailureCause.TLS_CONFIG, "guest_tls_validation", 0, plan.message);
-                log.warn(plan.message);
+                // logged once at configure, not every cycle (it would count as a warning each time)
                 return Status.FAILED;
             case VCENTER_TLS:
                 in.failures.add(COLLECTOR, FailureCause.guest("TLS-INSECURE"), "Allow Insecure SSL", 0, plan.message);
