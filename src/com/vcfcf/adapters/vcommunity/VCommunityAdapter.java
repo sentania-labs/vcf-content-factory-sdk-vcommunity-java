@@ -174,6 +174,10 @@ public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
             OpsPort ops = sas == null ? null : new OpsPort(sas);
             CycleEngine engine = new CycleEngine(cfg, vim, ThumbprintProbe.TLS, ops,
                     new CheckListStore(warns), warns, System::currentTimeMillis, libraries);
+            // A setting with a value that is not allowed is reported here, once per configuration change, and
+            // not through the cycle's counter: it would otherwise raise Warnings in Last Cycle on every cycle
+            // until someone edits the account. The default is used meanwhile.
+            for (String w : cfg.warnings) logWarn(w);
             if (cfg.guestTlsError != null) {
                 logWarn(cfg.guestTlsError + "; guest operations stay off until it is fixed");
             }

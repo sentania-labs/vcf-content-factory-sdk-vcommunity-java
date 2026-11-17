@@ -211,7 +211,6 @@ public final class CycleEngine {
         cycleNo++;
         warns.reset();
         vim.beginCycle();
-        for (String w : cfg.warnings) log.warn(w);
         Failures failures = new Failures();
         CollectionHealth.Summary s = new CollectionHealth.Summary();
 

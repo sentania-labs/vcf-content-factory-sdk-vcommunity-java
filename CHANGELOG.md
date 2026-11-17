@@ -3,7 +3,7 @@
 Releases are `v<version>.<build_number>` tags built by this repository's CI. Development builds are stamped
 `0.0.0.<build>` and are kept below, under "Development builds".
 
-## 3.0.0.27 (preview)
+## 3.0.0.28 (preview)
 
 The first public preview of VCF Content Factory vCommunity, a Java port of the vCommunity management pack. It descends
 from Onur Yuzseven's vCommunity (the 1.x line) as continued by Ewan (e1-rahabok, 0.8.1), and is the 3.x line. It needs
@@ -70,8 +70,21 @@ section 5.7)
 ## Development builds
 
 Before the first release the pak was built as development builds 1 to 26 (stamped `0.0.0.<build>`, under the version
-`1.0.0` in `adapter.yaml`); the counter is carried forward, so the release is build 27 under 3.0.0 and dev builds of it stamp
-`0.0.0.27`. Their entries follow, newest first.
+`1.0.0` in `adapter.yaml`); the counter is carried forward, so the release is build 28 under 3.0.0 (build 27 was the first number under 3.0.0) and dev builds of it stamp
+`0.0.0.28`. Their entries follow, newest first.
+
+### Build 28 (3.0.0.28)
+
+- fix(adapter): build 28 (DV-115). The account form on 9.1.1 preselects nothing for an enumerated field and stores the text
+  `null` for one nobody touched; `describe.xml` now flags the default choice of each enumerated field with `default="true"`
+  on the `<enum>` (the form the vendor SDK example and a working Synology pak use), as well as the identifier's own default.
+  An absent, blank or `null` (any case, trimmed) value of any optional setting is "not set": the default applies with no
+  warning. A value that is not allowed now warns once each time the account is configured, in the account log, and no
+  longer on every cycle, so it does not raise `Warnings in Last Cycle` for as long as the value stands; an invalid On/Off
+  value is reported too (it was silently Disabled), and a wrong Guest File Transfer TLS Validation stays a failed guest
+  collector without a per-cycle WARN. A blank check-list file field still reads no file (DV-62). Docs: 9.1.1 menu paths
+  (install, account, policy, check-list files, uninstall), the Uninstalling section, the check-list worked example, the
+  guest monitoring section from the first live run, and Known issues linked to the tracker.
 
 ### Build 27 (3.0.0.27)
 

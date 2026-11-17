@@ -1,6 +1,8 @@
 # P5 live proof: guest operations and events on a real Windows VM
 
-Nothing in phase P5 has run against a real Windows guest. The fixture tests (`GuestOpsTest`, `GuestEngineTest`,
+Guest monitoring has had one live run (9.0.2, build 26; see the guest section of `docs/installing.md` and issues
+#28, #29, #30): it collected on two member servers and was refused on two domain controllers. The rest of this
+document is the full plan, most of which has not been run. Until then, nothing else in phase P5 has run against a real Windows guest. The fixture tests (`GuestOpsTest`, `GuestEngineTest`,
 `GuestUnitTest`) prove the port against a fake vCenter, a fake ESXi host and the program texts it sends; they cannot
 prove what PowerShell, VMware Tools and Operations do with them. This is the run that does, written to be carried
 out without the author. Design reference: section 8 of `docs/design/vcommunity-java-port-design.md`; the
@@ -28,9 +30,9 @@ Guest OS Service Monitoring Status `Enabled`; Windows Event Log Monitoring Statu
 TLS Validation `Pinned`; Windows Service Configuration File `windows_service_list`; Windows Event Log Configuration
 File `windows_event_list`.
 
-The two lists (Administration, Configuration Files, `SolutionConfig`):
+The two lists (Administration > Configurations > Management Packs Configuration > Configuration Files on 9.1.1; they are stored as `SolutionConfig/<name>.xml`):
 
-- `windows_service_list.xml`: `<Services>Spooler,W32Time,wuauserv,NoSuchService</Services>` (one name that does not
+- `windows_service_list.xml`: `<windowsServices>Spooler,W32Time,wuauserv,NoSuchService</windowsServices>` (one name that does not
   exist on purpose)
 - `windows_event_list.xml`:
   ```xml

@@ -11,9 +11,7 @@
 - Optionally, a Windows account for the guest checks (off by default; see Guest monitoring below).
 
 **The minimum version.** The content of this pak is converted and gated for VCF
-Operations 8.18.x; that is the minimum version (owner decision, 2026-11-14). Collection was tested on 8.18.7, 9.0.2 and 9.1.1 with earlier builds (the certificate handling of this build is pending live proof). The `manifest.txt` the pak carries says
-`vcops_minimum_version 8.0.0` (a constant of the factory builder, not a decision of this pak), so an
-8.10 to 8.17 instance will accept the install: do not install it on anything older than 8.18.x.
+Operations 8.18.x; that is the minimum version (owner decision, 2026-11-14). Collection was tested on 8.18.7, 9.0.2 and 9.1.1 with earlier builds (the certificate handling of this build is pending live proof). The pak's manifest says `vcops_minimum_version: 8.18.0`, so an older instance refuses the install.
 
 ## Moving from the Python pack
 
@@ -42,12 +40,10 @@ What carries over (owner decision, 2026-11-14: names stay, ids are our own):
   definitions (they go away with the uninstall), not with this pak's alerts.
 - **Check-list files.** This pak ships the same six file names as the Python pack
   (`esxi_advanced_system_settings`, `esxi_packages`, `vm_advanced_parameters`, `vm_options`,
-  `windows_service_list`, `windows_event_list`). Uninstalling the Python pack with the
-  remove-content option removes its copies of those names, and this pak's pak upgrade replaces
-  them too (below). **Save your edited check lists before the move and re-apply them** in
-  copies under other names (see "Check-list files"). That the uninstall removes the files is
-  inferred from the platform's code on 9.0.2 and from the measured behavior of the source pack,
-  not measured for the Python pack's own files.
+  `windows_service_list`, `windows_event_list`). Uninstalling a pak removes the
+  check-list files it installed (measured for this pak on 9.1.1, see "Uninstalling"; not measured for the Python
+  pack's own files), and this pak's pak upgrade replaces them too (below). **Save your edited check lists before the
+  move and re-apply them** in copies under other names (see "Check-list files").
 
 **Built-in views.** Some versions of the Python pack ship views under VCF Operations'
 own built-in view ids: Onur's 0.1.5 (41 views) and 0.1.6 to 0.3.1 (117), and Ewan's 0.4.2 to
@@ -62,8 +58,9 @@ uninstall, import that export:
 
 1. Sign in as an administrator and open **Administration > Control Panel > Content Management**
    (the tile under "Content and Support"), then the **Import** tab. The path is the same on
-   8.18.7, 9.0.2 and 9.1.1.
-2. Browse to the export zip. The "File Content" table lists the views it holds.
+   8.18.7, 9.0.2 and 9.1.1 (seen on all three).
+2. Browse to the export zip. The "File Content" table shows one row per content type with a total (for example
+   "Views 120"), not the individual views.
 3. Leave "In case of conflict" on **Overwrite existing content** (the default) and import.
 4. The results table should show every view imported, none skipped or failed.
 
@@ -82,7 +79,7 @@ between releases that keep their ids are in-place as usual.
 
 **A safe order:** (1) save your edited check-list files and note anything you changed in the Python pack's content;
 (2) have the clean built-in views export ready if your version is one of those named above;
-(3) uninstall the Python pack with remove-content; (4) restore the built-in views if it
+(3) uninstall the Python pack; (4) restore the built-in views if it
 shipped any; (5) install this pak; (6) re-apply your check lists.
 Steps 3 to 5 were run in this order on 9.1.1 (uninstall of Ewan's 0.8.1, restore of the
 built-in views, fresh install of this pak, which then collected normally and left the built-in
@@ -112,8 +109,9 @@ disconnected NIC reports a speed of 0) does not count; a host none of whose NICs
 and only connected hosts count in the Datacenter and World numbers.
 
 To get the figure, enable the property `net|configuredSpeed` (Network | Configured Speed) as a HostSystem
-attribute in the policy that applies to your hosts. The steps in the policy editor are not verified, so this guide
-gives no menu paths. Measured live on 9.0.2 (build 22): after the property was enabled in policy, hosts whose NICs have
+attribute in the policy that applies to your hosts: **Administration > Configurations > Policy Definition**, select
+the policy (the Active one), **Edit**, then the **Metrics and Properties** tile (seen on 9.1.1; the editor was
+opened and nothing changed, so the exact toggle was not exercised, and 8.18.7 and 9.0.2 were not looked at). Measured live on 9.0.2 (build 22): after the property was enabled in policy, hosts whose NICs have
 a fixed speed in vCenter had `net:<nic>|configuredSpeed` by the second collection and published 100.0.
 
 A NIC whose link speed is left on auto-negotiate in vCenter gets **no** configured-speed property at all (not a 0),
@@ -220,9 +218,18 @@ rest are under Advanced Settings.
 | Guest File Transfer TLS Validation | `guest_tls_validation` | No | Pinned | Pinned, Strict or Disabled. A wrong value switches the guest phase off and the rest collects. |
 | Windows Event Log Monitoring Status | `winEventMonitoring` | No | Disabled | Enabled or Disabled (case sensitive). |
 
-A setting that is out of range (a period not in the list, a time that is not
-`HH:MM`, a percentage outside its range) falls back to its default with one
-warning in the log. A blank value falls back silently.
+**A setting that was left alone takes its default, silently.** The form on 9.1.1 shows "--Select--" for an
+enumerated field nobody touched and VCF Operations stores the text `null` for it; an absent value, a blank one and the
+text `null` (any case, spaces around it) all mean "not set" for every optional field above, and the default applies
+with no warning. The enumerated fields declare their default as the preselected choice, so a form that honours it
+preselects it. (A blank check-list file field is the one exception: it reads no file; the text `null` there is "not set".)
+
+**A value that is not allowed** (a period not in the list, a time that is not `HH:MM`, a percentage outside its range,
+a switch that is neither Enabled nor Disabled, a guest TLS mode that is not one of the three) falls back to the default
+(a wrong guest TLS mode switches the guest phase off instead) and is reported by **one WARN line in the account log each
+time the account is configured** (saved, or the adapter started). It is not repeated every cycle and does not raise
+`Warnings in Last Cycle` or `First Warning` of Collection Health; the log line is where to look. (Builds before 28
+warned every cycle, so Collection Health showed a warning for as long as the value stood.)
 
 Credential (kind `vsphere_user`): vCenter User Name, vCenter Password, and
 optionally Windows User Name and Windows Password.
@@ -239,12 +246,13 @@ rest of the account, as any credential field is) and the collector asks vCenter 
    `F-GUEST-TLS-INSECURE`) and Test Connection writes a WARN line (the test itself passes). (The original sends the account regardless; DV-103.)
 2. Fill the credential's Windows User Name and Windows Password fields. **Use an account made for this, never an account whose
    lockout would hurt** (see "Account lockout" below). The user name is passed to the guest as you type it (the adapter does not
-   change or check its form): *[TODO, owner: state the form the guest accepts here (local account, `DOMAIN\user`, or user@domain),
-   from the live test.]* The vCenter account needs the
+   change or check its form). The UPN form (`user@domain`) was accepted on two member servers (live run on 9.0.2); other
+   forms (local account, `DOMAIN\user`) were not tested. Which Windows rights the account needs is not settled (issue
+   [#30](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/30)). The vCenter account needs the
    `VirtualMachine.GuestOperations.Query`, `.Modify` and `.Execute` privileges on the VMs. The Windows account is sent to vCenter only, in
    the guest operations calls.
 3. Fill `windows_service_list` (service names, comma separated; only letters, digits, space and `_ . $ # @ ( ) + -`) and, for
-   events, `windows_event_list` (`<Events><Log Name="System"><EventID>7036</EventID></Log></Events>`). Only the services you list
+   events, `windows_event_list` (an `Events` root, see "Check-list files"). Only the services you list
    are published, one row for each name.
 4. Leave the TLS setting for guest transfers on Pinned (or Strict). The file transfer goes to the VM's ESXi
    host on port 443; the host's certificate must be the one vCenter has recorded for it. Pinned and Strict
@@ -253,20 +261,36 @@ rest of the account, as any credential field is) and the collector asks vCenter 
 5. Read the result in the `Collector:guest|Status`, `|Failures` and `|Causes` keys of the vCenter object and
    in `Collection|guest_vms_done` and `guest_vms_pending` of the adapter instance.
 
-**Which VMs are in scope.** Every powered-on Windows VM with VMware Tools running is asked, including infrastructure VMs
-such as domain controllers. There is no per-VM filter or exclusion list: to keep a VM out, power it off, stop its tools, or
-leave guest monitoring off. Only the services and events you list are collected from each of them.
+**What the first live run showed (9.0.2, build 26).** Guest collection has been run once against real Windows guests, and
+it is not ready for general use:
+
+- **Every powered-on Windows VM with VMware Tools running is in scope**, domain controllers included. There is no per-VM
+  filter or exclusion list, and no control over which VM goes first (the order is by vCenter object id). To keep a VM out,
+  power it off, stop its tools, or leave guest monitoring off. Only the services and events you list are collected.
+- **One refusal can stop everything.** The account (UPN form) was accepted on two member servers, and the collection ran
+  there. Two domain controllers refused it (the account has no local logon right on a domain controller), and that paused
+  guest collection for all VMs (see "Account lockout"). The values published for the two accepted VMs were not checked.
+- **The log and the health keys do not name the VM that refused** (`guest: F-GUEST-AUTH x2` and nothing more); issue
+  [#28](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/28).
+- **`Collector:guest|Status` read SKIPPED with no causes** right after the refused run (seen once, shortly before guest
+  monitoring was switched off again; it may be timing).
+- **A restart or a reconfigure of the adapter forgets the gate state** (below).
+- Whether guest collection should be its own pak, so that the rest does not carry this risk: issue
+  [#29](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/29). What Windows rights the
+  account needs, and how domain controllers and non-admin accounts behave: issue
+  [#30](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/30); design questions about the
+  gate: issue [#17](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/17).
 
 ### Account lockout
 
 A wrong Windows password must not lock the account. One rule decides whether a VM is asked (DV-97): a VM is started only while the
 refused logons of the last 24 hours plus the VMs whose first logon is not yet answered stay below two. So the adapter causes at
 most **two refused logons in 24 hours** for one credential, however many VMs there are. Until a logon has worked since the adapter
-started, **one VM is asked alone** and none after a refusal in that collection (one refused logon in the first collection, a second in
-the next at most); **the second refusal pauses guest monitoring for 24 hours** (or until the account is edited, which starts the
+started, **the first VM is asked alone**; once a logon is accepted, up to four run in parallel, and after a refusal none
+is started in that collection (one refused logon in the first collection, a second in the next at most); **the second refusal pauses guest monitoring for 24 hours** (or until the account is edited, which starts the
 adapter again). After the pause one VM is tried alone, and one refusal pauses it again. A VM that refused the account is not asked
 again for 24 hours, and a refusal ends that VM's run (no cleanup retry carries the account again). An accepted logon does not wipe a
-refusal: two VMs that refuse within 24 hours pause the phase, as a changed credential does. A restart of the adapter forgets all this
+refusal: two VMs that refuse within 24 hours pause the phase, as a changed credential does. A restart or a reconfigure of the adapter forgets all this
 (the framework keeps no state for an adapter), so it starts again with one VM alone: a restart loop costs one refused logon per
 restart. Tell your directory administrators these numbers: a wrong password, or a credential changed before a collection, costs at most
 two refused logons per start of the adapter and per day after that; a credential changed while VMs are running costs at most five once
@@ -317,11 +341,16 @@ holds:
 |---|---:|---|
 | Views | 170 | Carried over from the original pack. 101 of them began as edited copies of VCF Operations' own views; they carry new descriptions (nine also have new titles, below) and are shipped under ids minted for this pak (see "Moving from the Python pack"). |
 | Dashboards | 52 | The original pack's, including the "Report:" and "Object Summary Page" dashboards. |
-| Reports | 16 | The "VOA" report templates (capacity, configuration, inventory, performance, executive summary and the CSV export reports). Below 9.0.2 the five summary reports ship without their cover page text color (below). |
+| Report templates | 16 | The "VOA" report templates (capacity, configuration, inventory, performance, executive summary and the CSV export reports). Below 9.0.2 the five summary reports ship without their cover page text color (below). |
 | Super metrics | 3 | See "Super metrics" below. |
 | Symptom definitions | 10 | On ESXi hosts, virtual machines and the vCenter (VMwareAdapter Instance) objects. |
-| Alert definitions | 4 | ESXi Host NIC Disconnected, ESXi Host License Expiring, Windows Service Down and vCommunity Collection Warnings. One recommendation ships with the last. |
-| Check-list files | 6 | See "Check-list files" below. |
+| Alert definitions | 4 | ESXi Host NIC Disconnected, ESXi Host License Expiring, Windows Service Down and vCommunity Collection Warnings. |
+| Recommendations | 1 | Ships with the vCommunity Collection Warnings alert. |
+| Inventory trees | 1 | |
+| Configuration files | 6 | The check-list files, see "Check-list files" below. |
+
+The Content tab of the pak on 9.1.1 after the install showed these counts: 52 dashboards, 170 views, 16 report templates,
+4 alerts, 1 recommendation, 10 symptoms, 3 super metrics, 1 inventory tree, 6 configuration files.
 
 Alert definitions that read a key the pak publishes on a new object start from the
 second collection, because a new key has no earlier value to compare.
@@ -486,37 +515,54 @@ XML comments are ignored, so a file with every entry commented out is an empty
 list. The Windows event list is a different shape: an `Events` root with one `Log`
 element per event log and one `EventID` per number.
 
-**Clone a shipped file; do not edit it.** The copy can only be made in the VCF Operations user interface: there is no API for
-cloning or creating one of these files. In VCF Operations 9.0 the files are under
-Infrastructure Operations, Configurations, Management Packs Configuration, in
-System Defined; clone one, give the copy a name that differs from the shipped one
-in more than letter case, edit the copy, and enter the copy's name (no `.xml`) in
-the account field. Why: **a pak upgrade replaces every one of the six files that
-has a default name, even without "force content update"**. Measured on VCF Operations
-9.0.2 and 9.1.1 on 2026-11-14 (build 15 installed over an earlier build): four
-operator-edited files were overwritten byte for byte. So an edit to a file with a
-default name is lost on every pak upgrade. The supported way is:
+**Clone a shipped file; do not edit it.** A pak upgrade replaces every one of the six files that has a default name,
+even without "force content update" (measured on 9.0.2 and 9.1.1 on 2026-11-14: build 15 installed over an earlier build
+overwrote four operator-edited files byte for byte). So an edit to a file with a default name is lost on every upgrade.
+Work on a copy under another name and point the account's field at it. The copy can only be made in the VCF Operations
+user interface: there is no API for cloning or creating one of these files.
 
-- copy the file under another name and point the account's field at the copy. Each
-  file name is configurable in the account (the field takes the name without `.xml`):
+Where the files are (seen on 9.1.1): **Administration > Configurations > Management Packs Configuration**, section
+**Configuration Files**; the six shipped files are under **System Defined**. Their menu offers Edit, Delete, Clone, Move,
+Export, Import and Create New Folder. (Not looked at on 8.18.7 or 9.0.2; the older wording "Infrastructure Operations" is
+not a menu on 9.1.1.)
 
-  | Shipped file | Account field (key) |
-  |---|---|
-  | `esxi_advanced_system_settings` | ESXi Advanced System Settings Config File (`esxi_adv_settings_config_file`) |
-  | `esxi_packages` | ESXi Software Packages Config File (`esxi_vib_driver_config_file`) |
-  | `vm_advanced_parameters` | VM Advanced Parameters Config File (`vm_adv_settings_config_file`) |
-  | `vm_options` | VM Options Config File (`vm_configuration_config_file`) |
-  | `windows_service_list` | Windows Service Configuration File (`win_service_config_file`) |
-  | `windows_event_list` | Windows Event Log Configuration File (`win_event_config_file`) |
+Three things about cloning that are easy to get wrong (measured on 9.1.1):
 
-- back the files up before every upgrade, whichever names you use;
-- uninstalling with the remove-content option deletes the files the pak installed
-  (read from the platform's code on 9.0.2; not measured). A copy under another name
-  is not one of them.
+1. **Type the `.xml` extension when you name the copy.** The default name the dialog offers is `<file>.xml_Copy`. The
+   adapter reads `SolutionConfig/<name>.xml`: a copy saved as `esxi_packages_walk` is **not found** (the log says
+   `Configuration file 'esxi_packages_walk.xml' does not exist` and the cycle counts one failed read), while a copy saved
+   as `esxi_packages_walk2.xml` is read.
+2. **The copy lands in the "User Defined" folder**, even though the clone dialog shows System Defined. That is where to
+   look for it afterwards.
+3. **The account field takes the name without `.xml`.** For the copy `esxi_packages_walk2.xml`, enter
+   `esxi_packages_walk2`.
 
-If the Python pack was installed on the instance before, its six files
-(the same names) may already be in the store, and installing this pak replaces them
-the same way; uninstalling the Python pack removes its copies (inferred, see "Moving from the Python pack").
+Validate Connection does not read the check-list files: it passed while the account pointed at a copy that could not be read.
+The first collection does: look for `F-CHECKLIST-<name>` among the causes, or `reads failed` in the cycle line.
+
+A worked example, for the package list: (1) open the Configuration Files section and select `esxi_packages.xml` under
+System Defined; (2) **Clone**, name the copy `esxi_packages_mine.xml`; (3) find it under User Defined, **Edit** it, and
+move the entries you want out of the comment, with commas between them; (4) edit the account, set **ESXi Software Packages
+Config File** to `esxi_packages_mine` (no `.xml`), and save; (5) the next collection reads it.
+
+The six account fields, each taking the name without `.xml`:
+
+| Shipped file | Account field (key) |
+|---|---|
+| `esxi_advanced_system_settings` | ESXi Advanced System Settings Config File (`esxi_adv_settings_config_file`) |
+| `esxi_packages` | ESXi Software Packages Config File (`esxi_vib_driver_config_file`) |
+| `vm_advanced_parameters` | VM Advanced Parameters Config File (`vm_adv_settings_config_file`) |
+| `vm_options` | VM Options Config File (`vm_configuration_config_file`) |
+| `windows_service_list` | Windows Service Configuration File (`win_service_config_file`) |
+| `windows_event_list` | Windows Event Log Configuration File (`win_event_config_file`) |
+
+Two shapes, for the two lists that are not like the others. The service list has a `windowsServices` root holding a
+comma separated list of service names: `<windowsServices>Spooler,W32Time,wuauserv</windowsServices>`. The event list has
+an `Events` root with one `Log` per event log and one `EventID` per number:
+`<Events><Log Name="System"><EventID>7036</EventID></Log></Events>`. Back the files up before every upgrade, whichever
+names you use. Uninstalling the pak deletes the six files it installed (see "Uninstalling"); a copy under another name is
+not one of them. If the Python pack was installed before, its six files (the same names) may be in the store, and
+installing this pak replaces them the same way.
 
 **The two Tools keys need no list.** `Guest|Tools Sync Time` and `Guest|Tools Upgrade Policy` carry the VM's real
 values on every VM whatever the check lists hold (from build 26; the original pack, and builds before 26, sent the
@@ -526,15 +572,46 @@ settings could not be read is counted as a withheld value.
 
 ## Step-by-Step Installation
 
-1. Install the `.pak` file via **Administration > Solutions > Add**.
-2. Open **Data Sources > Integrations > Accounts**, click **Add Account** and
-   select **VCF Content Factory vCommunity**.
-3. Fill in **vCenter Server** and the credential. Open **Advanced Settings** for
-   the rest.
-4. Click **Validate Connection**. If the collector does not already trust the vCenter certificate, VCF Operations shows it
-   in a review dialog: check it and **accept** it, then the test runs. Then click **Add**. (The vCenter Server field must
-   carry a name that is on the certificate; see "TLS: the vCenter certificate".)
-5. The cycle starts at the next collection (five minutes by default).
+The menu paths below were seen on 9.1.1. 8.18.7 and 9.0.2 may word them differently.
+
+1. **Administration > Integrations > Repository**, then **ADD**. The wizard has three steps: Select, End User License
+   Agreement (tick "I accept"), Install. Click **FINISH** when it is done. (A path that does not exist on 9.1.1:
+   "Administration > Solutions > Add".)
+2. **The pak is unsigned.** The upload fails with only "Upload failed." unless **Ignore the PAK file signature checking** is
+   ticked; then confirm "You have selected a management pack that is unsigned. Install this management pack?".
+3. **Administration > Integrations > Accounts > ADD**, then the tile **VCF Content Factory vCommunity**. (There is no "Data
+   Sources" menu on 9.1.1.)
+4. Give the account a **Name** (required) and fill in **vCenter Server**. For the credential, give it a **Credential
+   name**, the vCenter user name and password; Windows User Name and Windows Password are optional. Open **Advanced
+   Settings** for the rest; leave a field alone and its default applies.
+5. Click **Validate Connection**. If the collector does not already trust the vCenter certificate, VCF Operations shows it
+   in a review dialog: check it and **accept** it, then the test runs and shows "Info: Test connection successful."
+   Then click **Add**. (The vCenter Server field must carry a name that is on the certificate; see "TLS: the vCenter
+   certificate".)
+6. The first collection runs about a second after Add, not at the next five-minute interval. The account shows
+   "Warning" (State: Collecting, Status: None) for the first minutes, then "Collecting".
+
+## Uninstalling
+
+Seen on 9.1.1: **Administration > Integrations > Repository**, the vCommunity tile, its **...** menu, **Uninstall**. The
+dialog has no option about content: it only asks you to tick "I understand the risk and agree" and says that associated
+data and out-of-the-box content will be deleted. It takes about two minutes (a reinstall took about eight).
+
+What the uninstall removed (measured on 9.1.1):
+
+- the adapter instance (the account) and its credential;
+- all six check-list files, **including any edit you made in a file with a default name**; a copy under another name is
+  not one of them;
+- all the content of the pak: 170 views, 52 dashboards, 16 report templates, 3 super metrics, 10 symptoms and 4 alerts.
+
+What it left:
+
+- the 120 built-in views and the policies, untouched;
+- the metrics and properties already on the objects: old vCommunity keys stay where they were pushed, and stop being
+  updated.
+
+Back up edited check lists before an uninstall, and see "Moving from the Python pack" for the case where a Python pack
+version had overwritten built-in views.
 
 ## What Test Connection checks
 
@@ -560,18 +637,16 @@ What the test logs, and where: its success line is written at INFO, and **a test
 has no per-account log**, so under the pak's logging setup an INFO line from a
 test is not written to any file. Only what needs attention is written, at WARN,
 one line each (`Test Connection: ...`), into the collector's `collector.log`.
-A passing test therefore leaves no log line; the dialog is its result. (Showing a
-success message in the dialog is not done: it is not known whether the dialog
-displays one for a passing test.)
+A passing test therefore leaves no log line; the dialog shows "Info: Test connection successful." (seen on 9.1.1).
 
 ## Logs
 
 The account's own log is
 `/storage/log/vcops/log/adapters/VCommunityAdapter/VCommunityAdapter_<id>.log`
 on the **collector node** that runs the account (the cluster node, or the Cloud Proxy or remote collector the account is
-assigned to), not on the node whose UI you are using. `<id>` is the adapter instance's internal id (the number the platform
-gives it), **not** its UUID: list the directory and read the newest file, or match it against the account in the
-adapter instance list. The pak writes INFO lines to it, and the build ships
+assigned to), not on the node whose UI you are using. `<id>` is the adapter instance's internal numeric id (for example 3349), **not** the UUID the UI shows, and the UI does not
+show it: list the directory and read the newest file, or match it against the account by the `host` in the
+`VCommunityAdapter configured` line. The file is on the node the account runs on, which is not always the primary. The pak writes INFO lines to it, and the build ships
 `conf/logging.properties` (`com.vcfcf.adapters.vcommunity=INFO`) so the account
 log is at INFO by default (8.18 ignores that file, and the adapter raises its own
 logger to INFO there). These lines are always written, no secret, no object
@@ -598,8 +673,9 @@ A logout the vCenter refuses reads `vCenter logout did not complete (reason: ...
 and one for a session that had already ended reads `vCenter session had already
 ended (reason: ...)`; neither says "logged out".
 
-If an account is edited you should see the logout line, then `VCommunityAdapter
-configured` and a new-session login line on the next cycle.
+If an account is edited the log shows `VCommunityAdapter configured` first and the logout line (`reason: reconfigure`)
+second; the new login appears at the next cycle. A setting with a value that is not allowed is warned about
+right after it, once.
 
 ## Creating an account through the API
 
