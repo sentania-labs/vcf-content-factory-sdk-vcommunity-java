@@ -7,8 +7,8 @@ Releases are `v<version>.<build_number>` tags built by this repository's CI. Dev
 
 The first public preview of VCF Content Factory vCommunity, a Java port of the vCommunity management pack. It descends
 from Onur Yuzseven's vCommunity (the 1.x line) as continued by Ewan (e1-rahabok, 0.8.1), and is the 3.x line. It needs
-VCF Operations 8.18 or later. Collection was tested on 8.18.7, 9.0.2 and 9.1.1 with earlier builds; the verified-by-default
-certificate handling in this build is pending live proof. Send feedback as GitHub issues on this repository.
+VCF Operations 8.18 or later. Collection was tested on 8.18.7, 9.0.2 and 9.1.1; the verified-by-default
+certificate handling was seen live with build 27 on 8.18.7 and 9.0.2 and with build 29 on 9.1.1 (build 29 has been installed on 9.1.1 only). Send feedback as GitHub issues on this repository.
 
 **What stays the same as the Python pack 0.8.1**
 - The metric and property key names (`vCommunity|...`) are the same, on the same vSphere objects, so existing
@@ -60,14 +60,19 @@ section 5.7)
   Pinned modes and its thumbprint field are removed (DV-114). Guest monitoring does not run while Allow Insecure SSL is on.
   The `vCommunity|Certificate|...` keys are still published in both settings, on every cycle that connects (with verification
   on, an untrusted certificate fails the login first, so `Changed` appears only for a new certificate the collector trusts).
-  **Not yet verified live.** Enter the vCenter by a name on its
+  **Seen live** (2026-11-16): fail closed and the accept dialog on an upgraded account on 8.18.7 (build 27); verified on first cycle with
+  no dialog on 9.0.2, where the lab CA was already trusted (build 27); accept dialog and verified collection on a fresh 9.1.1 install
+  on a FIPS collector (build 29). Known preview behaviours: a new account with an untrusted certificate looks healthy (#34), the
+  certificate sentences are cut off in the account log (#35), and Validate Connection shows no warning with Allow Insecure SSL on (#36).
+  Enter the vCenter by a name on its
   certificate: an IP address fails the name check unless the certificate lists it, and because the vCenter Server field is the
   account's identity, an account entered by IP needs a new account to fix.
 - **Untouched settings are silent** (DV-115). The 9.1.1 account form preselects nothing for a dropdown and stores the text
   `null`; an absent, blank or `null` value of any optional setting takes its default without a warning, and the dropdowns
   declare their default choice. A value that is not allowed warns once per configuration change and is shown in
   `vCommunity|Collection Health|Configuration Warnings`; an invalid On/Off value is now reported where the Python pack
-  silently disabled it. **Not yet verified live.**
+  silently disabled it. Seen live on 9.1.1 with build 29: the dropdowns showed their defaults, an invalid value warned once and showed in
+  `Configuration Warnings`; the dropdown preselection was not looked at on 8.18.7 or 9.0.2 with build 29.
 - **Guest monitoring is not ready for general use.** It has had one live run (9.0.2): it collected on two member servers and
   was refused on two domain controllers, which paused it for every VM; it has no per-VM scope. See issues #28, #29, #30 and
   #17, and `docs/installing.md`, "Guest monitoring".
