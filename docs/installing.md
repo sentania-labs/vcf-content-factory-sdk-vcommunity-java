@@ -37,7 +37,7 @@ Three things are off until you turn them on:
 |---|---|
 | Most dashboards (40 of 52) | Enable the ones you want in the dashboard list |
 | The 4 alerts and 3 super metrics | **Administration > Configurations > Policy Definition**, edit your active policy: **Alerts and Symptoms** for the alerts, **Metrics and Properties** for the super metrics |
-| Network Speed Degradation | See [below](#network-speed-degradation) |
+| Network Speed Degradation | Limited in this preview. See [below](#network-speed-degradation) |
 
 On dashboards with a picker, click a row and then choose **Internal interaction** to drive the other widgets.
 
@@ -94,13 +94,12 @@ The nenic, nfnic and VIB Info views need `nenic`, `nfnic` and `nsx-host` in the 
 
 ## Network Speed Degradation
 
-This compares each host NIC's actual speed with its configured speed. It needs two things:
+**Limited in this preview.** It compares each host NIC's actual speed with its configured speed, so it only
+covers NICs that have a fixed speed set in vCenter. NICs on auto-negotiate, which is the normal setting for
+10 GbE and faster, are skipped ([#39](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/39)). Do not set a fixed speed just to get this metric.
 
-1. The host property **Network | Configured Speed** (`net|configuredSpeed`) enabled in your policy
-   (Policy Definition > edit the policy > Metrics and Properties). It is off by default.
-2. NICs with a fixed speed set in vCenter. A NIC on auto-negotiate has no configured speed and is skipped.
-
-Hosts with no qualifying NIC show no value.
+If you do have fixed-speed NICs, enable the host property **Network | Configured Speed** (`net|configuredSpeed`)
+in your policy (Policy Definition > edit the policy > Metrics and Properties). It is off by default.
 
 ## Guest monitoring
 

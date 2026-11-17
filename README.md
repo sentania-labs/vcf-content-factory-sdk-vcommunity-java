@@ -39,10 +39,8 @@ The ones most likely to affect an evaluation:
 
 **Things you need to switch on**
 - Alerts and super metrics are not enabled by the install. Enable them in your policy.
-- Network Speed Degradation needs the host property `net|configuredSpeed` enabled in policy, and only works for
-  NICs with a fixed speed. See [the guide](docs/installing.md#network-speed-degradation).
-
 **Not working**
+- Network Speed Degradation skips NICs on auto-negotiate, which is most 10 GbE and faster NICs ([#39](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/39)).
 - Cluster Memory Tiering Consumption has no value ([#7](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/7)).
 - VM Snapshots List is always empty ([#9](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/9)).
 - VOA reports show "No data" in their dashboard sections on 9.1.1 ([#10](https://github.com/sentania-labs/vcf-content-factory-sdk-vcommunity-java/issues/10)).
