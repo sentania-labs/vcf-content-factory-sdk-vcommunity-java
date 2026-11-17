@@ -946,7 +946,7 @@ two spaces, the class in the build 11 pak was checked and has them, and `PyObjec
 the Python dump's string byte for byte. So the text leaves the collector with two spaces and one is what is read back from
 Operations: a run of spaces is lost after the push (the Suite API property ingestion, as far as the dump shows; no Java
 value of that dump holds two spaces anywhere, and no Python value but this key does). It is not a formatter fault and
-nothing in the port can keep the second space through that ingestion; whether it does is a live check (`docs/p5-live-proof.md`,
+nothing in the port can keep the second space through that ingestion; whether it does is a live check (`docs/design/guest-live-test-plan.md`,
 the properties row). The key stays as a difference of the platform, not of the port.
 
 Reproduced in P4 without a seam, because no realistic input makes them visible in a published value: a host whose DRAM
@@ -1145,7 +1145,7 @@ R219 and R221 to R225 (74), each with a value assertion in `docs/p4-key-coverage
 and `winEventMonitoring` default `Disabled`, parity). It cannot be called done until the experiments in 8.7
 pass on a real hardened Windows guest and on all three platform lines.
 
-*Built in P5 (build 12), see 8.8; the experiments of 8.7 have not been run: `docs/p5-live-proof.md` is the procedure.*
+*Built in P5 (build 12), see 8.8; the experiments of 8.7 have not been run: `docs/design/guest-live-test-plan.md` is the procedure.*
 
 ### 8.1 Gate and plan (`GuestPlan`, SDK-free)
 
@@ -1324,7 +1324,7 @@ real vim25 client and a real TLS transfer against a fake vCenter and ESXi host t
 - **Not built:** the explicit-cancel fallback for events if G5 shows no auto-cancel (8.6); a sweep of directories a crashed or
   restarted collector left in a guest (the memory of leftovers is not kept across a restart); DV-55 (Q1 is still undecided, so the blank-once on switch-off is not implemented and the feature-off properties
   keep their last value, as before P5); a per-VM backoff after a single refusal.
-- **Still to run:** G1 to G9 on a real guest (`docs/p5-live-proof.md`).
+- **Still to run:** G1 to G9 on a real guest (`docs/design/guest-live-test-plan.md`).
 
 ### 8.9 The P5 review (build 13)
 
@@ -1598,7 +1598,7 @@ tolerance for timing-skewed KPIs); every difference must map to a DV id listed i
 | P2 Properties | 4.3-4.8 and 4.10 property rows, licensing mask, check lists, VM Options isolation | differential over the property rows: equal or registered; a deliberately bad VM Options entry costs only its key |
 | P3 Own objects | libraries, items, templates, relationship, traversal | objects, identifiers, Content Library > Library Item in the UI tree; differential on R227-R252. **Built in build 7** (4.11.1, `docs/p3-key-coverage.tsv`); the live proof is still to run |
 | P4 Derived metrics | section 7, 4.9, 4.12, Datacenter, resource pools, port groups, periodic check across one full window | fixture tests green; differential within tolerance over 24 hours with at least one periodic window and one Delta. **Built in build 10** (7.4, `docs/p4-key-coverage.tsv`); the live proof is still to run |
-| P5 Guest and events | section 8, T2 | experiments G1-G9 pass; keys and events on a Windows VM and on the hardened DC. **Built in build 12** (8.8, `docs/p5-key-coverage.tsv`); the live proof is `docs/p5-live-proof.md`, still to run |
+| P5 Guest and events | section 8, T2 | experiments G1-G9 pass; keys and events on a Windows VM and on the hardened DC. **Built in build 12** (8.8, `docs/p5-key-coverage.tsv`); the live proof is `docs/design/guest-live-test-plan.md`, still to run |
 | P6 Content | section 10, after the tooling items land | stock-id guard clean on all three lines; dashboards counted after install (52); views render; alerts fire after two samples |
 | P7 Scale and release | 9.4 runs; sdk-adapter-reviewer gate; defect gate (RULE-012) | heap and deadline within budget; RULE-019 install record (installed and collecting, account state checked after the restart watch) on 8.18.7, 9.0.2 and 9.1.1 in `knowledge/context/reviews/`; `v1.0.0` tag through CI |
 
