@@ -24,7 +24,7 @@ Menu paths are as seen on VCF Operations 9.1. They differ slightly on 8.18 and 9
 5. Enter a name, the **vCenter Server**, and a credential (the **+** next to the credential field creates one).
    Enter the vCenter by a name that is on its certificate, not an IP address.
    The vCenter Server and the four "Config File" fields cannot be changed after the account is created. If you
-   plan to use your own [check lists](#check-lists), create them first and enter their names here.
+   plan to use your own [configuration files](#configuration-files), create them first and enter their names here.
 6. Click **Validate Connection**. Review and **accept** the certificate when asked. You should see
    "Test connection successful."
 7. Click **Add**. Collection starts within seconds, and the account shows "Collecting" after a few minutes.
@@ -64,7 +64,7 @@ not run while it is on.
 |---|---|---|
 | vCenter Server | | Name of the vCenter, as it appears on its certificate. Cannot be changed later |
 | Port | 443 | vCenter HTTPS port |
-| Four "Config File" fields | the shipped file names | Which [check list](#check-lists) to use. Cannot be changed later |
+| Four "Config File" fields | the shipped file names | Which [configuration file](#configuration-files) to use. Cannot be changed later |
 | Allow Insecure SSL | false | `true` turns off certificate checks (lab only) |
 | Cluster Check Period | 24 hours | How often the periodic cluster check closes a window |
 | Cluster Check Time (UTC) | 00:00 | When a window ends |
@@ -73,12 +73,12 @@ not run while it is on.
 | Guest OS Service Monitoring Status | Disabled | See [Guest monitoring](#guest-monitoring) |
 | Windows Event Log Monitoring Status | Disabled | See [Guest monitoring](#guest-monitoring) |
 | Guest File Transfer TLS Validation | Pinned | Leave as is |
-| Windows Service / Event Log Configuration File | the shipped file names | Check lists for guest monitoring |
+| Windows Service / Event Log Configuration File | the shipped file names | Configuration files for guest monitoring |
 
 If a setting has a value that isn't allowed, the default is used and the vCenter object's property
 `vCommunity|Collection Health|Configuration Warnings` names it.
 
-## Check lists
+## Configuration files
 
 Some data is only collected for items you list: ESXi advanced settings, ESXi packages, VM advanced parameters
 and VM options. The pak ships one file for each, with every entry commented out.
@@ -132,25 +132,25 @@ Enabled. Results and failures appear in the `Collector:guest` keys on the vCente
 
 ## Upgrading
 
-Upgrade in place by uploading the new pak. Shipped check-list files are overwritten; your copies are kept.
+Upgrade in place by uploading the new pak. Shipped configuration files are overwritten; your copies are kept.
 
 ## Uninstalling
 
 **Administration > Integrations > Repository**, the pak's **...** menu, **Uninstall**. It takes about two minutes.
 
 - Removed: the account, its credential, the pak's dashboards, views, reports, alerts and super metrics, and
-  the six shipped check-list files.
-- Kept: your check-list copies, the built-in views, your policies, and the data already collected.
+  the six shipped configuration files.
+- Kept: your configuration file copies, the built-in views, your policies, and the data already collected.
 
 ## Moving from the Python pack
 
 Running both packs side by side is not supported. Both write the same keys to the same objects.
 
-1. Save any check-list files you edited.
+1. Save any configuration files you edited.
 2. Uninstall the Python pack.
 3. If built-in dashboards now show "The view does not exist", [restore the built-in views](#restoring-built-in-views).
 4. Install this pak.
-5. Re-create your check lists as copies, then add the account using their names.
+5. Re-create your configuration files as copies, then add the account using their names.
 
 What changes:
 
@@ -183,8 +183,8 @@ maintainer for one; a script will ship with the public release
 | Certificate messages | See [Certificates](#certificates) |
 | Account down | The collector cannot reach the vCenter: check name, route, port, firewall |
 | No data on vSphere objects | The built-in vCenter adapter is not collecting this vCenter, or two accounts point at it |
-| A check-list copy is ignored | It was named without `.xml`, or the account field includes `.xml` |
-| Views or columns are empty | Many depend on policy settings or check lists. See [After installing](#after-installing) and [Check lists](#check-lists) |
+| A configuration file copy is ignored | It was named without `.xml`, or the account field includes `.xml` |
+| Views or columns are empty | Many depend on policy settings or configuration files. See [After installing](#after-installing) and [Configuration files](#configuration-files) |
 
 The account's log is on the collector node that runs it:
 `/storage/log/vcops/log/adapters/VCommunityAdapter/VCommunityAdapter_<id>.log`. Health is on the vCenter object

@@ -11,7 +11,7 @@ later. See the [README](README.md) for known issues and the [install guide](docs
 - Metric and property names, so history and anything built on them carries over.
 - The dashboards, views, reports and alerts, converted. Nine views have new titles, and 19 views that only
   renamed a built-in view are replaced by the built-in view itself.
-- The check-list files, in the same format.
+- The configuration files, in the same format.
 
 **Changed**
 - Content is installed under this pak's own ids. It no longer overwrites or deletes built-in views.

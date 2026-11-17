@@ -38,7 +38,7 @@ Most dashboards, and all alerts and super metrics, are off until you enable them
   scores use the built-in adapter's metrics. If one of those metrics is switched off in your policy, the part of
   the score that needs it is left out.
 - **Some data is opt-in.** Advanced settings, packages and VM options are only collected for the items you list
-  in a [check list](installing.md#check-lists).
+  in a [configuration file](installing.md#configuration-files).
 - **It tells you when something is wrong.** The vCenter object carries `vCommunity|Collection Health` keys that
   show each collector's status, what failed and why.
 

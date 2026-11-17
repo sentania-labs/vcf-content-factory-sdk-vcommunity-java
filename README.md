@@ -66,11 +66,11 @@ The ones most likely to affect an evaluation:
 
 Running both packs side by side is not supported. Uninstall the Python pack, then install this one.
 
-1. Save any check-list files you edited (the files that list which settings and packages to collect).
+1. Save any configuration files you edited (the files that list which settings and packages to collect).
 2. Uninstall the Python pack.
 3. If built-in dashboards now show "The view does not exist", restore the built-in views (below).
 4. Install this pak.
-5. Re-create your check lists as copies, then add the account using their names.
+5. Re-create your configuration files as copies, then add the account using their names.
 
 What to expect:
 - **Metric history carries over.** The keys have the same names on the same objects.
@@ -87,25 +87,26 @@ Details and the restore steps are in [the guide](docs/installing.md#moving-from-
 
 ## Documentation
 
-- [Install guide](docs/installing.md): account fields, certificates, check lists, guest monitoring, uninstalling, troubleshooting
+- [Install guide](docs/installing.md): account fields, certificates, configuration files, guest monitoring, uninstalling, troubleshooting
 - [Overview](docs/overview.md): what the pak collects and how
 - [What has been verified live](docs/verification.md)
 - [Development](docs/development.md): building from source, the release process, repository layout
 
 ## Credits
 
-This pak is derived from the vCommunity Management Pack for VCF Operations, with its authors' permission.
+This pak is derived from the vCommunity Management Pack for VCF Operations.
 
-- **Onur Yuzseven** created the original pack and its adapter
+- **Onur Yuzseven** created vCommunity and its adapter
   ([VCF-Operations-vCommunity](https://github.com/vmbro/VCF-Operations-vCommunity)).
-- **Iwan "e1" Rahabok** designed the pack and its dashboards, reports and super metrics, and continued it
+- **Iwan "e1" Rahabok** designed its dashboards, reports and super metrics, and continued the pack
   ([VCF-vCommunity-Adapter](https://github.com/e1-rahabok/VCF-vCommunity-Adapter)).
 - **Brock Peterson** contributed to the pack and wrote the blog series that explains it.
-- **Mark Arbogast** and **Robert Mesropyan** are credited upstream as assisting Onur Yuzseven.
-- **Dave Kaber**, **Alan Renouf** and the contributor recorded as atm8119 appear in the upstream history.
-
-Full acknowledgments are in [NOTICE](NOTICE).
+- **Mark Arbogast** and **Robert Mesropyan** are credited by the vCommunity project as assisting Onur Yuzseven.
+- **Dave Kaber**, **Alan Renouf** and the contributor recorded as atm8119 appear in the vCommunity commit history.
 
 ## License
 
-MIT, Copyright (c) 2026 Scott Bowe. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+MIT, Copyright (c) 2026 Scott Bowe. See [LICENSE](LICENSE).
+
+The content converted from vCommunity 0.8.1 (published under the PolyForm Noncommercial License) is released
+here under MIT with the agreement of the vCommunity authors. See [NOTICE](NOTICE).
