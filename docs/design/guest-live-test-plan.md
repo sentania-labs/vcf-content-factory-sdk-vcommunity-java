@@ -168,7 +168,7 @@ further warning.
 | A program that does not end | on VM A hold the program: start `powershell.exe` with a debugger attached, or use a guest under heavy CPU load so the program takes more than five minutes | after 300 s the program is stopped (`F-GUEST-TIMEOUT`) and the directory is removed; the other programs of the VM still run |
 | Powered off VM | power off VM A | no guest operation, no `F-GUEST-TOOLS` for a powered-off VM |
 | Large log | a Windows event whose message is over 2,000 characters | the event arrives cut at 2,000 characters with `...` |
-| Hostile service name | on VM A create a service whose display name contains `|` (`sc.exe create guestpipe binPath= C:\Windows\notepad.exe DisplayName= "A|B"`) and add `p5pipe` to the list | no `Services:A|B` key; `F-GUEST-ROW` appears in `Causes`; the other services are published. Delete the service after |
+| Hostile service name | on VM A create a service whose display name contains `|` (`sc.exe create guestpipe binPath= C:\Windows\notepad.exe DisplayName= "A|B"`) and add `guestpipe` to the list | no `Services:A|B` key; `F-GUEST-ROW` appears in `Causes`; the other services are published. Delete the service after |
 | Disabled again | set both monitoring switches back to `Disabled` | after one collection no guest operation is made: the collector log shows none, vCenter's task list shows no `StartProgramInGuest`, and the old guest properties stay as they were |
 
 ## 7. Secrets and clean-up (every run)
