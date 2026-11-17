@@ -242,7 +242,7 @@ rest are under Advanced Settings.
 | VM Options Config File | `vm_configuration_config_file` | No | `vm_options` | Check-list file naming the VM configuration properties to collect, as dotted property paths. |
 | Port | `port` | Yes | 443 | HTTPS port of the vCenter. |
 | Allow Insecure SSL | `allowInsecure` | No | `false` | Only the text `true` turns off the certificate checks (see "TLS: the vCenter certificate"). Guest monitoring does not run while it is on. |
-| Cluster Check Period (hours) | `cluster_check_period_hours` | No | 24 | One of 01, 02, 04, 06, 08, 12, 24; the form labels them "01 hour", "02 hours" ... "24 hours". |
+| Cluster Check Period (hours) | `cluster_check_period_hours` | No | 24 | One of 01, 02, 04, 06, 08, 12, 24; the form shows them with a unit, for example "24 hours". |
 | Cluster Check Time (UTC) | `periodic_cluster_check_time` | No | 00:00 | Time of day, `HH:MM` UTC, at which a window ends. |
 | Cluster Check Worst Percent | `cluster_check_worst_percent` | No | 5 | 0 to 50: the share of a window's worst samples set aside. |
 | Monster VM CPU (% of host cores) | `monster_vm_cpu_percent_of_cores` | No | 50 | 1 to 100. |
